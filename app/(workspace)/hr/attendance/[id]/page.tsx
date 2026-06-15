@@ -12,6 +12,8 @@ import {
   dayType as classifyDay,
   effectiveMultiplier,
   fetchHolidayDates,
+  shiftDurationHours,
+  splitWorkedHours,
   DEFAULT_RATE_POLICY,
 } from "@/lib/frappe/day-rates";
 import {
@@ -60,7 +62,16 @@ export default async function AttendanceDetailPage({
     : DEFAULT_RATE_POLICY;
   const holidays = await fetchHolidayDates(shift?.holidayList);
   const dt = classifyDay(a.attendanceDate, holidays);
-  const mult = effectiveMultiplier(dt, policy);
+  const dayMult = effectiveMultiplier(dt, policy);
+  // Hours-based overtime: anything past the shift's window gets the overtime
+  // multiplier instead of the day-rate one.
+  const shiftDuration = shiftDurationHours(shift?.startTime, shift?.endTime);
+  const { regular: regularHours, overtime: overtimeHours } = splitWorkedHours(
+    a.workingHours,
+    shiftDuration,
+  );
+  const overtimeMult = shift?.overtimeMultiplier ?? 1.5;
+  const weightedTotal = regularHours * dayMult + overtimeHours * overtimeMult;
 
   const submit = submitAttendanceAction.bind(null, id);
   const cancel = cancelAttendanceAction.bind(null, id);
@@ -110,28 +121,90 @@ export default async function AttendanceDetailPage({
       <section className="card p-6">
         <div className="mb-5 flex flex-col gap-1">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-ash-500">
-            Pay-rate classification
+            Pay-rate breakdown
           </h2>
           <p className="text-xs text-ash-500">
-            Based on{" "}
             {shift
-              ? `the ${a.shift} policy`
-              : "default policy (no shift linked)"}
-            {shift?.holidayList ? ` and the “${shift.holidayList}” holiday list` : ""}
-            .
+              ? `Based on the ${a.shift} policy${shift.holidayList ? ` and the “${shift.holidayList}” holiday list` : ""}.`
+              : "No shift linked — falling back to default policy (no overtime detection)."}
+            {shiftDuration !== null
+              ? ` Shift window is ${shiftDuration.toFixed(2)} h; anything past that is overtime.`
+              : ""}
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <RateTile label="Day type" value={dt} />
-          <RateTile label="Multiplier" value={`×${mult.toFixed(2)}`} highlight />
-          {a.workingHours !== null && (
-            <RateTile
-              label="Weighted hours"
-              value={`${(a.workingHours * mult).toFixed(2)} h`}
-              hint={`${a.workingHours} h × ${mult.toFixed(2)}`}
-            />
-          )}
+          <RateTile
+            label="Day-rate multiplier"
+            value={`×${dayMult.toFixed(2)}`}
+          />
+          <RateTile
+            label="Overtime multiplier"
+            value={`×${overtimeMult.toFixed(2)}`}
+          />
+          <RateTile
+            label="Weighted total"
+            value={
+              a.workingHours === null
+                ? "—"
+                : `${weightedTotal.toFixed(2)} h`
+            }
+            hint={
+              a.workingHours === null
+                ? undefined
+                : `${(regularHours * dayMult).toFixed(2)} + ${(overtimeHours * overtimeMult).toFixed(2)}`
+            }
+            highlight
+          />
         </div>
+
+        {a.workingHours !== null && (
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="rounded-card border border-hairline bg-canvas p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
+                Regular hours
+              </p>
+              <p className="mt-1 text-2xl font-semibold text-ink-900">
+                {regularHours.toFixed(2)} h
+              </p>
+              <p className="mt-1 text-xs text-ash-600">
+                Within shift window · ×{dayMult.toFixed(2)} ={" "}
+                <span className="font-medium text-ash-900">
+                  {(regularHours * dayMult).toFixed(2)} h weighted
+                </span>
+              </p>
+            </div>
+            <div
+              className={
+                "rounded-card border p-4 " +
+                (overtimeHours > 0
+                  ? "border-amber-200 bg-amber-50/50"
+                  : "border-hairline bg-canvas")
+              }
+            >
+              <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
+                Overtime hours
+              </p>
+              <p
+                className={
+                  "mt-1 text-2xl font-semibold " +
+                  (overtimeHours > 0 ? "text-amber-900" : "text-ink-900")
+                }
+              >
+                {overtimeHours.toFixed(2)} h
+              </p>
+              <p className="mt-1 text-xs text-ash-600">
+                {overtimeHours > 0
+                  ? `Past shift end · ×${overtimeMult.toFixed(2)} = `
+                  : "Shift ended on time · "}
+                <span className="font-medium text-ash-900">
+                  {(overtimeHours * overtimeMult).toFixed(2)} h weighted
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
       </section>
 
       <section className="card p-6">

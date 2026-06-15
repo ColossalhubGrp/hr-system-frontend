@@ -47,16 +47,39 @@ export async function fetchLeaves(opts: {
   status?: string;
   leaveType?: string;
   employee?: string;
+  /**
+   * Restrict the result set to applications by these employee ids. Used by
+   * Line-Manager views (`/team/leave`) — the manager is allowed to see all
+   * leave for their direct + indirect reports and no one else.
+   * If the array is empty, the query short-circuits and returns no rows.
+   */
+  employees?: string[];
   page?: number;
   pageSize?: number;
 }): Promise<LeaveListResult> {
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(100, Math.max(10, opts.pageSize ?? 25));
 
-  const filters: Array<[string, string, string]> = [];
+  // Empty team-scope means "I'm a manager with no reports" — render nothing
+  // rather than fall through to "show me everyone".
+  if (opts.employees && opts.employees.length === 0) {
+    return {
+      rows: [],
+      total: 0,
+      page,
+      pageSize,
+      facets: { leaveTypes: [], statuses: STATUSES },
+      counts: { open: 0, approved: 0, rejected: 0, days: 0 },
+    };
+  }
+
+  const filters: Array<[string, string, string | string[]]> = [];
   if (opts.status) filters.push(["status", "=", opts.status]);
   if (opts.leaveType) filters.push(["leave_type", "=", opts.leaveType]);
   if (opts.employee) filters.push(["employee", "=", opts.employee]);
+  if (opts.employees && opts.employees.length > 0) {
+    filters.push(["employee", "in", opts.employees]);
+  }
 
   const args: ListArgs = {
     doctype: "Leave Application",

@@ -5,7 +5,7 @@ import { NextResponse, type NextRequest } from "next/server";
  * needs a `sid` cookie. Bare cookie presence is enough at the middleware
  * layer; Frappe enforces the real permission check on every API call we make.
  */
-const PUBLIC_PATHS = ["/login", "/api/auth"];
+const PUBLIC_PATHS = ["/login", "/alumni/login", "/api/auth"];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -17,7 +17,9 @@ export function middleware(req: NextRequest) {
   const sid = req.cookies.get("sid")?.value;
   if (!sid || sid === "Guest") {
     const url = req.nextUrl.clone();
-    url.pathname = "/login";
+    // Unauthenticated requests to /alumni/* go to the alumni-specific gate
+    // so the user doesn't bounce between the two login pages.
+    url.pathname = pathname.startsWith("/alumni") ? "/alumni/login" : "/login";
     if (pathname !== "/" && pathname !== "/dashboard") {
       url.searchParams.set("redirect", pathname);
     }

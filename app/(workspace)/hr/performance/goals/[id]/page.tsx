@@ -83,6 +83,11 @@ export default async function GoalDetailPage({
             },
             { label: "Appraisal cycle", value: g.appraisalCycle },
             { label: "KRA", value: g.kra },
+            // Only present when the goal was filed under BSC; hidden otherwise
+            // so OKR users don't see a perpetual "—" row.
+            ...(g.perspective
+              ? [{ label: "BSC perspective", value: g.perspective }]
+              : []),
             { label: "Start", value: g.startDate },
             { label: "End", value: g.endDate },
             { label: "Status", value: g.status },

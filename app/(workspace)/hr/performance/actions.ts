@@ -28,6 +28,11 @@ import {
   toFormState,
   type StdFormState,
 } from "@/lib/frappe/form-errors";
+import {
+  setCycleFramework,
+  type EvaluationFramework,
+} from "@/lib/frappe/appraisal-framework";
+import { getMyAccess } from "@/lib/frappe/roles";
 
 export type FormState = StdFormState;
 export type DecisionState = { error?: string };
@@ -45,6 +50,10 @@ function fieldErrors(parsed: z.SafeParseError<unknown>): FormState {
 
 // --- Goal ----------------------------------------------------------------
 
+// Goals are now created standalone — no Appraisal Cycle binding required at
+// creation time. The cycle pulls in goals later via its `selected_goals`
+// child table. Goal.appraisal_cycle stays in the schema (legacy + back-compat
+// for goals created before the flow change) but the form no longer sets it.
 const goalSchema = z.object({
   goal_name: z.string().trim().min(1, "Name is required."),
   description: z.string().trim().optional(),
@@ -53,7 +62,10 @@ const goalSchema = z.object({
   progress: z.string().trim().optional(),
   start_date: z.string().trim().optional(),
   end_date: z.string().trim().optional(),
-  appraisal_cycle: z.string().trim().optional(),
+  // BSC-only — ignored when the field isn't in the form.
+  perspective: z
+    .enum(["", "Financial", "Customer", "Internal Process", "Learning & Growth"])
+    .optional(),
 });
 
 function toGoalInput(d: z.infer<typeof goalSchema>): GoalInput {
@@ -67,7 +79,7 @@ function toGoalInput(d: z.infer<typeof goalSchema>): GoalInput {
       progress !== undefined && Number.isFinite(progress) ? progress : undefined,
     start_date: d.start_date,
     end_date: d.end_date,
-    appraisal_cycle: d.appraisal_cycle,
+    perspective: d.perspective || undefined,
   };
 }
 
@@ -77,13 +89,18 @@ export async function createGoalAction(
 ): Promise<FormState> {
   const parsed = goalSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+  // Run the Frappe call inside the try so we can surface backend errors,
+  // but redirect OUTSIDE the catch — Next.js's redirect() throws a
+  // NEXT_REDIRECT sentinel that must propagate up to the framework, and
+  // catching it would convert a successful save into a generic error UI.
+  let id: string;
   try {
-    const id = await createGoal(toGoalInput(parsed.data));
-    revalidatePath("/hr/performance?tab=goals");
-    redirect(`/hr/performance/goals/${encodeURIComponent(id)}`);
+    id = await createGoal(toGoalInput(parsed.data));
   } catch (err) {
     return toFormState(err);
   }
+  revalidatePath("/hr/performance?tab=goals");
+  redirect(`/hr/performance/goals/${encodeURIComponent(id)}`);
 }
 
 export async function updateGoalAction(
@@ -95,12 +112,12 @@ export async function updateGoalAction(
   if (!parsed.success) return fieldErrors(parsed);
   try {
     await updateGoal(id, toGoalInput(parsed.data));
-    revalidatePath("/hr/performance?tab=goals");
-    revalidatePath(`/hr/performance/goals/${encodeURIComponent(id)}`);
-    redirect(`/hr/performance/goals/${encodeURIComponent(id)}`);
   } catch (err) {
     return toFormState(err);
   }
+  revalidatePath("/hr/performance?tab=goals");
+  revalidatePath(`/hr/performance/goals/${encodeURIComponent(id)}`);
+  redirect(`/hr/performance/goals/${encodeURIComponent(id)}`);
 }
 
 // --- Appraisal -----------------------------------------------------------
@@ -261,7 +278,20 @@ const cycleSchema = z
     start_date: isoDate,
     end_date: isoDate,
     company: z.string().trim().optional(),
-    kra_evaluation_method: z.enum(["Manual", "Automated"]).optional(),
+    // Mirrors the Frappe HR Select options on Appraisal Cycle.
+    kra_evaluation_method: z
+      .enum(["Manual Rating", "Automated Based on Goal Progress"])
+      .optional(),
+    evaluation_framework: z
+      .enum(["KRA & Goals", "OKR", "Balanced Scorecard"])
+      .optional(),
+    /**
+     * Goal IDs picked from the new "Select goals" step. Posted by the form
+     * as a comma-separated string (one hidden field per checked box would
+     * also work, but this keeps the form simple). We parse it into a list
+     * below.
+     */
+    selected_goals: z.string().trim().optional(),
   })
   .refine((d) => d.end_date >= d.start_date, {
     message: "End must be on or after start.",
@@ -274,17 +304,62 @@ export async function createCycleAction(
 ): Promise<FormState> {
   const parsed = cycleSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+  // CSV of goal IDs → child rows. Empty/whitespace skipped silently so
+  // pressing "Create cycle" without picking anything still works.
+  const goalIds = (parsed.data.selected_goals ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const input: CycleInput = {
+    cycle_name: parsed.data.cycle_name,
+    start_date: parsed.data.start_date,
+    end_date: parsed.data.end_date,
+    company: parsed.data.company,
+    kra_evaluation_method: parsed.data.kra_evaluation_method,
+    evaluation_framework: parsed.data.evaluation_framework,
+    selected_goals: goalIds.map((goal) => ({ goal })),
+  };
+  let id: string;
   try {
-    const input: CycleInput = {
-      cycle_name: parsed.data.cycle_name,
-      start_date: parsed.data.start_date,
-      end_date: parsed.data.end_date,
-      company: parsed.data.company,
-      kra_evaluation_method: parsed.data.kra_evaluation_method,
-    };
-    const id = await createAppraisalCycle(input);
+    id = await createAppraisalCycle(input);
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath("/hr/performance");
+  // Land directly on the new cycle's detail page so HR can verify the
+  // selected goals immediately.
+  redirect(`/hr/performance/cycles/${encodeURIComponent(id)}`);
+}
+
+const cycleGoalsSchema = z.object({
+  goals: z.string().trim().optional(),
+});
+
+/**
+ * Replace the `selected_goals` child rows on an existing cycle. Form posts a
+ * CSV of goal IDs (one row per checked box). Used by the cycle-detail page
+ * to add/remove goals after the cycle was created.
+ */
+export async function setCycleSelectedGoalsAction(
+  cycleId: string,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = cycleGoalsSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  try {
+    const goalIds = (parsed.data.goals ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const { setCycleSelectedGoals } = await import("@/lib/frappe/performance");
+    await setCycleSelectedGoals(
+      cycleId,
+      goalIds.map((goal) => ({ goal })),
+    );
+    revalidatePath(`/hr/performance/cycles/${encodeURIComponent(cycleId)}`);
     revalidatePath("/hr/performance");
-    redirect(`/hr/performance?cycle=${encodeURIComponent(id)}`);
+    return {};
   } catch (err) {
     return toFormState(err);
   }
@@ -311,4 +386,47 @@ export async function createTemplateAction(
   } catch (err) {
     return toFormState(err);
   }
+}
+
+// --- Evaluation framework -----------------------------------------------
+
+export type FrameworkState = StdFormState & { saved?: EvaluationFramework };
+
+/**
+ * HR-only: set the `evaluation_framework` field on an Appraisal Cycle.
+ * Defense-in-depth — Frappe's row perms already restrict who can write the
+ * field, but we also reject non-HR callers HERE so the error message is clear
+ * instead of a generic 403.
+ */
+export async function setCycleFrameworkAction(
+  cycleId: string,
+  _prev: FrameworkState,
+  form: FormData,
+): Promise<FrameworkState> {
+  const raw = String(form.get("framework") ?? "");
+  const valid: EvaluationFramework[] = ["KRA & Goals", "OKR", "Balanced Scorecard"];
+  if (!valid.includes(raw as EvaluationFramework)) {
+    return { error: "Pick one of KRA & Goals, OKR, or Balanced Scorecard." };
+  }
+  const framework = raw as EvaluationFramework;
+
+  const access = await getMyAccess();
+  if (!access.isHrAdmin) {
+    return {
+      error:
+        "Only HR Manager and System Manager roles can change the evaluation framework.",
+    };
+  }
+
+  try {
+    await setCycleFramework(cycleId, framework);
+  } catch (err) {
+    return toFormState(err) as FrameworkState;
+  }
+  revalidatePath("/hr/performance");
+  revalidatePath(`/hr/performance/cycles/${encodeURIComponent(cycleId)}`);
+  revalidatePath(
+    `/hr/performance/cycles/${encodeURIComponent(cycleId)}/framework`,
+  );
+  return { saved: framework };
 }

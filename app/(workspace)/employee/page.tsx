@@ -9,6 +9,7 @@ import {
   fetchDirectoryFacets,
   listEmployees,
 } from "@/lib/frappe/employees";
+import { requireGroup } from "@/lib/frappe/require-role";
 
 export const metadata = {
   title: "Employees · Colossal HR",
@@ -26,6 +27,9 @@ export default async function EmployeeDirectoryPage({
 }: {
   searchParams: SP;
 }) {
+  // Directory shows every employee — HR roles only. Pure employees use
+  // /me for their own profile.
+  await requireGroup("HR_ANY", "/employee");
   const page = Number(searchParams.page ?? 1) || 1;
   const pageSize = 25;
 

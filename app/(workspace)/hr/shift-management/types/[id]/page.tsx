@@ -163,6 +163,27 @@ export default async function ShiftTypeDetailPage({
 
       <section className="card p-6">
         <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-ash-500">
+          Overtime
+        </h2>
+        <p className="mb-5 text-xs text-ash-500">
+          Hours worked past this shift's end time get the overtime multiplier
+          instead of the day-rate one above. Shift window:{" "}
+          {trimTime(shift.startTime) ?? "—"} → {trimTime(shift.endTime) ?? "—"}.
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:max-w-md sm:grid-cols-1">
+          <div className="rounded-card border border-hairline bg-surface p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
+              Past shift end
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-ink-900">
+              ×{shift.overtimeMultiplier.toFixed(2)}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="card p-6">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-ash-500">
           Schedule preview · next 14 days
         </h2>
         <p className="mb-5 text-xs text-ash-500">
@@ -226,7 +247,9 @@ function RateTile({
 
 function trimTime(t: string | null): string | null {
   if (!t) return null;
-  return t.length >= 5 ? t.slice(0, 5) : t;
+  // Frappe returns either "09:00:00" or "9:00:00"; strip the trailing ":SS"
+  // regardless of leading zero so we don't end up with "9:00:" trailing colon.
+  return t.replace(/:\d{2}$/, "");
 }
 
 function isoToday(): string {

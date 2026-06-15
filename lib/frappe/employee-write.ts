@@ -161,6 +161,27 @@ export async function createEmployee(input: EmployeeFormInput): Promise<string> 
  * via `save` would clobber child tables (addresses, education, etc.) we don't
  * surface in this form.
  */
+/**
+ * Toggle the native `geofence_exempt` field on an Employee. Restricted to
+ * HR/Shift Admin — caller MUST check `MyAccess.isShiftAdmin` before invoking;
+ * the matching Server Action re-checks for defense-in-depth.
+ */
+export async function setEmployeeGeofenceExempt(
+  employeeId: string,
+  exempt: boolean,
+): Promise<void> {
+  await frappeCall<{ name: string }>({
+    method: "frappe.client.set_value",
+    args: {
+      doctype: "Employee",
+      name: employeeId,
+      fieldname: { geofence_exempt: exempt ? 1 : 0 },
+    },
+    verb: "POST",
+    as: "user",
+  });
+}
+
 export async function updateEmployee(
   id: string,
   input: EmployeeFormInput,
@@ -177,3 +198,4 @@ export async function updateEmployee(
     as: "user",
   });
 }
+

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ChevronLeft, Mail, Phone, Building2, Pencil } from "lucide-react";
+import { ChevronLeft, Mail, Phone, Building2, Pencil, FileText } from "lucide-react";
 import type { EmployeeFull } from "@/lib/frappe/employees";
 import { EmployeeAvatar } from "./avatar";
 import { StatusBadge } from "./status-badge";
@@ -8,9 +8,21 @@ import { StatusBadge } from "./status-badge";
 /**
  * The persistent banner card at the top of an employee's profile. Matches the
  * mockup's stacked layout: back-link → identity row → contact chips.
+ *
+ * `canIssueLetters` controls the HR-only "Letters" CTA in the top-right —
+ * driven by the workspace's role-bundle check, not local state.
  */
-export function EmployeeHeader({ emp }: { emp: EmployeeFull }) {
+export function EmployeeHeader({
+  emp,
+  canIssueLetters = false,
+  canEdit = false,
+}: {
+  emp: EmployeeFull;
+  canIssueLetters?: boolean;
+  canEdit?: boolean;
+}) {
   const editHref = `/employee/${encodeURIComponent(emp.id)}/edit` as Route;
+  const lettersHref = `/employee/${encodeURIComponent(emp.id)}/letters` as Route;
 
   return (
     <section className="card flex flex-col gap-5 p-6">
@@ -22,13 +34,26 @@ export function EmployeeHeader({ emp }: { emp: EmployeeFull }) {
           <ChevronLeft className="h-3.5 w-3.5" />
           Back to directory
         </Link>
-        <Link
-          href={editHref}
-          className="inline-flex items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ash-800 transition hover:bg-canvas focus-ring"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-          Edit
-        </Link>
+        <div className="flex items-center gap-2">
+          {canIssueLetters && (
+            <Link
+              href={lettersHref}
+              className="inline-flex items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ash-800 transition hover:bg-canvas focus-ring"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Letters
+            </Link>
+          )}
+          {canEdit && (
+            <Link
+              href={editHref}
+              className="inline-flex items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 py-1.5 text-xs font-semibold text-ash-800 transition hover:bg-canvas focus-ring"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">

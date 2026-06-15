@@ -30,15 +30,15 @@ import {
   listGoals,
   listPips,
 } from "@/lib/frappe/performance";
+import { getActiveAppraisalCycleFramework } from "@/lib/frappe/appraisal-framework";
+import { getMyAccess } from "@/lib/frappe/roles";
+import {
+  PerformanceMethodBanner,
+  framingForFramework,
+  goalsTabLabel,
+} from "@/components/performance/method-banner";
 
 export const metadata = { title: "Performance · Colossal HR" };
-
-const TABS = [
-  { id: "appraisals", label: "Appraisals" },
-  { id: "goals", label: "Goals" },
-  { id: "feedback", label: "Feedback" },
-  { id: "pip", label: "PIP" },
-];
 
 type Tab = "appraisals" | "goals" | "feedback" | "pip";
 
@@ -57,7 +57,11 @@ export default async function PerformancePage({
   const tab = tabFrom(searchParams.tab);
   const page = Number(searchParams.page ?? 1) || 1;
 
-  const [appraisalCycles, appraisals, goals, feedback, pips] = await Promise.all([
+  // Read the active cycle's framework + signed-in user's HR role bundle so
+  // we can adapt the framing AND show the "Change" link only to HR Admin.
+  const [activeCycle, access, appraisalCycles, appraisals, goals, feedback, pips] = await Promise.all([
+    getActiveAppraisalCycleFramework(),
+    getMyAccess(),
     listAppraisalCycles(),
     tab === "appraisals"
       ? listAppraisals({
@@ -91,19 +95,32 @@ export default async function PerformancePage({
   ]);
 
   const counts = appraisals?.counts ?? { draft: 0, submitted: 0, cancelled: 0 };
+  const framework = activeCycle?.framework ?? null;
+  const framing = framingForFramework(framework);
+
+  // Framework tabs flip labels (Goals → OKRs / Scorecard) without changing
+  // route ids, so deep links keep working.
+  const tabs = [
+    { id: "appraisals", label: "Appraisals" },
+    { id: "goals", label: goalsTabLabel(framework) },
+    { id: "feedback", label: "Feedback" },
+    { id: "pip", label: "PIP" },
+  ];
 
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
         icon={Target}
         crumb="HR · Performance"
-        title="Performance"
-        subtitle="Appraisals, goals, peer feedback, and improvement plans."
+        title={framing.title}
+        subtitle={framing.subtitle}
         actions={<HeaderActions tab={tab} />}
       />
 
+      <PerformanceMethodBanner cycle={activeCycle} canEdit={access.isHrAdmin} />
+
       <SubTabs
-        tabs={TABS}
+        tabs={tabs}
         active={tab}
         hrefFor={(id) =>
           id === "appraisals" ? "/hr/performance" : `/hr/performance?tab=${id}`

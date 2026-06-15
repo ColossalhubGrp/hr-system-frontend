@@ -66,6 +66,7 @@ export default async function EditShiftTypePage({
           saturdayDayMultiplier: shift.saturdayDayMultiplier,
           sundayDayMultiplier: shift.sundayDayMultiplier,
           holidayDayMultiplier: shift.holidayDayMultiplier,
+          overtimeMultiplier: shift.overtimeMultiplier,
           allowedLocations: shift.allowedLocations,
         }}
       />

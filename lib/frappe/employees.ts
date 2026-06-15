@@ -68,6 +68,9 @@ export type EmployeeFull = {
   employmentType: string | null;
   grade: string | null;
   employeeNumber: string | null;
+  /** When true, attendance check-ins for this employee bypass geofence
+   *  validation. Set by HR/Shift Manager only. */
+  geofenceExempt: boolean;
 };
 
 type ListArgs = {
@@ -232,6 +235,7 @@ type RawEmployeeDoc = RawEmployeeRow & {
   employment_type: string | null;
   grade: string | null;
   employee_number: string | null;
+  geofence_exempt: 0 | 1 | boolean | null;
 };
 
 function toRow(r: RawEmployeeRow): EmployeeListRow {
@@ -276,6 +280,7 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     employmentType: d.employment_type,
     grade: d.grade,
     employeeNumber: d.employee_number,
+    geofenceExempt: Boolean(d.geofence_exempt),
   };
 }
 

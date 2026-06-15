@@ -8,8 +8,17 @@ import {
 } from "@/components/employee/employee-tabs";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { AttendanceStrip } from "@/components/employee/attendance-strip";
+import { GeofenceToggle } from "@/components/employee/geofence-toggle";
+import { ConvertToAlumniButton } from "@/components/employee/convert-to-alumni";
 import { fetchEmployeeAttendance } from "@/lib/frappe/attendance";
 import { getEmployee, type EmployeeFull } from "@/lib/frappe/employees";
+import { getMyAccess } from "@/lib/frappe/roles";
+import { readSession } from "@/lib/frappe/session";
+import { redirect } from "next/navigation";
+import {
+  convertToAlumniAction,
+  setEmployeeGeofenceExemptAction,
+} from "./actions";
 
 type SP = { tab?: string };
 
@@ -35,6 +44,20 @@ export default async function EmployeeDetailPage({
   const emp = await getEmployee(id);
   if (!emp) notFound();
 
+  // Access control: HR (HR_ANY) can view anyone; non-HR users can only view
+  // their OWN profile. Redirect to /forbidden otherwise so the user sees a
+  // clear explanation (not a 404).
+  const session = readSession();
+  const access = await getMyAccess();
+  const isOwn = Boolean(
+    session.userId && emp.userId && session.userId === emp.userId,
+  );
+  if (!access.isHrAny && !isOwn) {
+    redirect(
+      `/forbidden?need=HR_ANY&from=${encodeURIComponent(`/employee/${id}`)}`,
+    );
+  }
+
   const activeTab: EmployeeTabId = isEmployeeTab(searchParams.tab)
     ? searchParams.tab
     : "overview";
@@ -47,11 +70,23 @@ export default async function EmployeeDetailPage({
       ? await fetchEmployeeAttendance(emp.id, 28).catch(() => null)
       : null;
 
+  // `access` was resolved during the role check above; reuse it for the
+  // geofence-editor visibility on the Attendance tab.
   return (
     <div className="flex flex-col gap-5">
-      <EmployeeHeader emp={emp} />
+      <EmployeeHeader
+        emp={emp}
+        canIssueLetters={access.isHrAny}
+        canEdit={access.isHrAny}
+      />
       <EmployeeTabs basePath={basePath} active={activeTab} />
-      <TabPanel id={activeTab} emp={emp} attendance={attendance} />
+      <TabPanel
+        id={activeTab}
+        emp={emp}
+        attendance={attendance}
+        canEditGeofence={access.isShiftAdmin}
+        canConvertToAlumni={access.isHrAdmin || access.isItAdmin}
+      />
     </div>
   );
 }
@@ -60,9 +95,17 @@ type TabPanelProps = {
   id: EmployeeTabId;
   emp: EmployeeFull;
   attendance: Awaited<ReturnType<typeof fetchEmployeeAttendance>> | null;
+  canEditGeofence: boolean;
+  canConvertToAlumni: boolean;
 };
 
-function TabPanel({ id, emp, attendance }: TabPanelProps) {
+function TabPanel({
+  id,
+  emp,
+  attendance,
+  canEditGeofence,
+  canConvertToAlumni,
+}: TabPanelProps) {
   const tab = EMPLOYEE_TABS.find((t) => t.id === id);
   return (
     <section
@@ -73,7 +116,7 @@ function TabPanel({ id, emp, attendance }: TabPanelProps) {
       <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">
         {tab?.label}
       </h2>
-      {renderTab(id, emp, attendance)}
+      {renderTab(id, emp, attendance, canEditGeofence, canConvertToAlumni)}
     </section>
   );
 }
@@ -82,6 +125,8 @@ function renderTab(
   id: EmployeeTabId,
   emp: EmployeeFull,
   attendance: TabPanelProps["attendance"],
+  canEditGeofence: boolean,
+  canConvertToAlumni: boolean,
 ): React.ReactNode {
   switch (id) {
     case "overview":
@@ -131,7 +176,8 @@ function renderTab(
           ]}
         />
       );
-    case "attendance":
+    case "attendance": {
+      const geofenceAction = setEmployeeGeofenceExemptAction.bind(null, emp.id);
       return (
         <div className="flex flex-col gap-6">
           <FieldGrid
@@ -139,6 +185,11 @@ function renderTab(
               { label: "Default shift", value: emp.defaultShift },
               { label: "Holiday list", value: emp.holidayList },
             ]}
+          />
+          <GeofenceToggle
+            action={geofenceAction}
+            current={emp.geofenceExempt}
+            canEdit={canEditGeofence}
           />
           {attendance ? (
             <AttendanceStrip summary={attendance} />
@@ -151,6 +202,7 @@ function renderTab(
           )}
         </div>
       );
+    }
     case "approvers":
       return (
         <FieldGrid
@@ -180,15 +232,41 @@ function renderTab(
           ]}
         />
       );
-    case "exit":
+    case "exit": {
+      const convertAction = convertToAlumniAction.bind(null, emp.id);
+      const today = new Date(2026, 5, 13).toISOString().slice(0, 10);
       return (
-        <FieldGrid
-          fields={[
-            { label: "Status", value: emp.status },
-            { label: "Relieving date", value: fmtDate(emp.relievingDate) },
-          ]}
-        />
+        <div className="flex flex-col gap-6">
+          <FieldGrid
+            fields={[
+              { label: "Status", value: emp.status },
+              { label: "Relieving date", value: fmtDate(emp.relievingDate) },
+            ]}
+          />
+          {canConvertToAlumni && (
+            <div className="rounded-card border border-fall/25 bg-fall/[0.04] p-5">
+              <h3 className="text-sm font-semibold text-fall">Danger zone</h3>
+              <p className="mt-1 text-xs text-ash-700">
+                Converting to Alumni revokes every active role, sets the
+                employee status to Left, and gives the person access to the
+                read-only alumni portal at <code>/alumni/login</code> only.
+                Use this when finalising an exit.
+              </p>
+              <div className="mt-4">
+                <ConvertToAlumniButton
+                  action={convertAction}
+                  employeeId={emp.id}
+                  employeeName={emp.name}
+                  linkedUser={emp.userId}
+                  currentStatus={emp.status}
+                  defaultRelievingDate={emp.relievingDate ?? today}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       );
+    }
   }
 }
 

@@ -11,18 +11,27 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import { GoalPicker, type PickableGoal } from "./goal-picker";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
 const EMPTY: FormState = {};
 
+const FRAMEWORKS = ["KRA & Goals", "OKR", "Balanced Scorecard"] as const;
+
 export function CycleForm({
   action,
   companies,
+  goals,
+  defaultFramework = "KRA & Goals",
   cancelHref,
 }: {
   action: Action;
   companies: string[];
+  /** Standalone goals available for the new cycle to pick up. */
+  goals: PickableGoal[];
+  /** Org-wide default from HR Settings — pre-selected, HR can override. */
+  defaultFramework?: (typeof FRAMEWORKS)[number];
   cancelHref: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -79,14 +88,42 @@ export function CycleForm({
             placeholder="—"
           />
         </Field>
-        <Field label="KRA evaluation" htmlFor="kra_evaluation_method">
+        <Field
+          label="Evaluation framework"
+          htmlFor="evaluation_framework"
+          hint="Drives whether the cycle is scored as KRAs+Goals, OKRs, or Balanced Scorecard."
+        >
+          <SelectInput
+            id="evaluation_framework"
+            name="evaluation_framework"
+            options={[...FRAMEWORKS]}
+            defaultValue={defaultFramework}
+          />
+        </Field>
+        <Field
+          label="KRA evaluation"
+          htmlFor="kra_evaluation_method"
+          hint="Manual Rating = HR scores each KRA. Automated = score derives from goal progress."
+        >
           <SelectInput
             id="kra_evaluation_method"
             name="kra_evaluation_method"
-            options={["Manual", "Automated"]}
-            defaultValue="Manual"
+            options={["Manual Rating", "Automated Based on Goal Progress"]}
+            defaultValue="Manual Rating"
           />
         </Field>
+      </FormSection>
+
+      <FormSection title="Select goals">
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          <p className="text-sm text-ash-600">
+            Choose the goals this cycle will formally track. Goals are now
+            created standalone first — pick the ones in scope here. You can
+            also add or remove goals after the cycle is created from the
+            cycle detail page.
+          </p>
+          <GoalPicker goals={goals} />
+        </div>
       </FormSection>
 
       <div className="sticky bottom-0 -mx-1 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">

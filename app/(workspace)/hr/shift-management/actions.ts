@@ -26,6 +26,17 @@ import {
   type ShiftLocationInput,
 } from "@/lib/frappe/shift-locations";
 import {
+  createShiftSchedule,
+  createShiftScheduleAssignment,
+  deleteShiftSchedule,
+  deleteShiftScheduleAssignment,
+  materialiseScheduleRange,
+  updateShiftSchedule,
+  updateShiftScheduleAssignment,
+  type ShiftScheduleAssignmentInput,
+  type ShiftScheduleInput,
+} from "@/lib/frappe/shift-schedules";
+import {
   formToRecord,
   toFormState,
   type StdFormState,
@@ -53,6 +64,7 @@ const shiftTypeSchema = z.object({
   saturday_day_multiplier: z.string().trim().optional(),
   sunday_day_multiplier: z.string().trim().optional(),
   holiday_day_multiplier: z.string().trim().optional(),
+  overtime_multiplier: z.string().trim().optional(),
 });
 
 function parseShiftType(form: FormData) {
@@ -81,6 +93,7 @@ function toInput(
     saturday_day_multiplier: numOrUndef(data.saturday_day_multiplier),
     sunday_day_multiplier: numOrUndef(data.sunday_day_multiplier),
     holiday_day_multiplier: numOrUndef(data.holiday_day_multiplier),
+    overtime_multiplier: numOrUndef(data.overtime_multiplier),
   };
 }
 
@@ -470,4 +483,214 @@ export async function deleteShiftLocationAction(
   }
   revalidatePath("/hr/shift-management");
   redirect("/hr/shift-management?tab=locations");
+}
+
+// --- Shift Schedule -----------------------------------------------------
+
+const dowFlag = z.union([z.literal("on"), z.literal("")]).optional();
+
+const shiftScheduleSchema = z.object({
+  schedule_name: z.string().trim().min(1, "Schedule name is required."),
+  shift_type: z.string().trim().min(1, "Shift type is required."),
+  company: z.string().trim().optional(),
+  holiday_list: z.string().trim().optional(),
+  enabled: dowFlag,
+  monday: dowFlag,
+  tuesday: dowFlag,
+  wednesday: dowFlag,
+  thursday: dowFlag,
+  friday: dowFlag,
+  saturday: dowFlag,
+  sunday: dowFlag,
+  notes: z.string().trim().optional(),
+});
+
+function toScheduleInput(
+  d: z.infer<typeof shiftScheduleSchema>,
+): ShiftScheduleInput {
+  return {
+    schedule_name: d.schedule_name,
+    shift_type: d.shift_type,
+    company: d.company,
+    holiday_list: d.holiday_list,
+    enabled: d.enabled === "on",
+    monday: d.monday === "on",
+    tuesday: d.tuesday === "on",
+    wednesday: d.wednesday === "on",
+    thursday: d.thursday === "on",
+    friday: d.friday === "on",
+    saturday: d.saturday === "on",
+    sunday: d.sunday === "on",
+    notes: d.notes,
+  };
+}
+
+export async function createShiftScheduleAction(
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = shiftScheduleSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  try {
+    const id = await createShiftSchedule(toScheduleInput(parsed.data));
+    revalidatePath("/hr/shift-management");
+    redirect(`/hr/shift-management/schedules/${encodeURIComponent(id)}`);
+  } catch (err) {
+    return toFormState(err);
+  }
+}
+
+export async function updateShiftScheduleAction(
+  id: string,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = shiftScheduleSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  try {
+    await updateShiftSchedule(id, toScheduleInput(parsed.data));
+    revalidatePath("/hr/shift-management");
+    revalidatePath(`/hr/shift-management/schedules/${encodeURIComponent(id)}`);
+    redirect(`/hr/shift-management/schedules/${encodeURIComponent(id)}`);
+  } catch (err) {
+    return toFormState(err);
+  }
+}
+
+export async function deleteShiftScheduleAction(
+  id: string,
+  _prev: DecisionState,
+): Promise<DecisionState> {
+  try {
+    await deleteShiftSchedule(id);
+  } catch (err) {
+    return toFormState(err) as DecisionState;
+  }
+  revalidatePath("/hr/shift-management");
+  redirect("/hr/shift-management?tab=schedules");
+}
+
+// --- Shift Schedule Assignment -----------------------------------------
+
+const scheduleAssignmentSchema = z
+  .object({
+    shift_schedule: z.string().trim().min(1, "Schedule is required."),
+    employee: z.string().trim().min(1, "Employee is required."),
+    start_date: isoDate,
+    end_date: z.string().trim().optional(),
+    status: z.enum(["Active", "Inactive"]).optional(),
+    company: z.string().trim().optional(),
+    notes: z.string().trim().optional(),
+  })
+  .refine((d) => !d.end_date || d.end_date >= d.start_date, {
+    message: "End date must be on or after start date.",
+    path: ["end_date"],
+  });
+
+function toScheduleAssignmentInput(
+  d: z.infer<typeof scheduleAssignmentSchema>,
+): ShiftScheduleAssignmentInput {
+  return {
+    shift_schedule: d.shift_schedule,
+    employee: d.employee,
+    start_date: d.start_date,
+    end_date: d.end_date || undefined,
+    status: d.status,
+    company: d.company,
+    notes: d.notes,
+  };
+}
+
+export async function createShiftScheduleAssignmentAction(
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = scheduleAssignmentSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  try {
+    const id = await createShiftScheduleAssignment(
+      toScheduleAssignmentInput(parsed.data),
+    );
+    revalidatePath("/hr/shift-management");
+    redirect(`/hr/shift-management/schedule-assignments/${encodeURIComponent(id)}`);
+  } catch (err) {
+    return toFormState(err);
+  }
+}
+
+export async function updateShiftScheduleAssignmentAction(
+  id: string,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const parsed = scheduleAssignmentSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  try {
+    await updateShiftScheduleAssignment(id, toScheduleAssignmentInput(parsed.data));
+    revalidatePath("/hr/shift-management");
+    revalidatePath(
+      `/hr/shift-management/schedule-assignments/${encodeURIComponent(id)}`,
+    );
+    redirect(`/hr/shift-management/schedule-assignments/${encodeURIComponent(id)}`);
+  } catch (err) {
+    return toFormState(err);
+  }
+}
+
+export async function deleteShiftScheduleAssignmentAction(
+  id: string,
+  _prev: DecisionState,
+): Promise<DecisionState> {
+  try {
+    await deleteShiftScheduleAssignment(id);
+  } catch (err) {
+    return toFormState(err) as DecisionState;
+  }
+  revalidatePath("/hr/shift-management");
+  redirect("/hr/shift-management?tab=schedule-assignments");
+}
+
+// --- Materialise --------------------------------------------------------
+
+const materialiseSchema = z
+  .object({
+    from: isoDate,
+    to: isoDate,
+  })
+  .refine((d) => d.to >= d.from, {
+    message: "End date must be on or after start date.",
+    path: ["to"],
+  });
+
+export type MaterialiseState = StdFormState & {
+  created?: number;
+  skipped?: number;
+  failures?: Array<{ date: string; error: string }>;
+};
+
+export async function materialiseScheduleAction(
+  args: { scheduleId: string; employee: string; company?: string },
+  _prev: MaterialiseState,
+  form: FormData,
+): Promise<MaterialiseState> {
+  const parsed = materialiseSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed) as MaterialiseState;
+  try {
+    const result = await materialiseScheduleRange({
+      scheduleId: args.scheduleId,
+      employee: args.employee,
+      from: parsed.data.from,
+      to: parsed.data.to,
+      company: args.company,
+    });
+    revalidatePath("/hr/shift-management");
+    revalidatePath("/hr/shift-management?tab=roster");
+    return {
+      created: result.created,
+      skipped: result.skipped,
+      failures: result.failures,
+    };
+  } catch (err) {
+    return toFormState(err) as MaterialiseState;
+  }
 }

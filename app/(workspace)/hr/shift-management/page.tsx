@@ -11,6 +11,7 @@ import {
   MapPin,
   CalendarRange,
   Layers,
+  UserCog,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
@@ -28,6 +29,10 @@ import {
   SHIFT_REQUEST_STATUSES,
 } from "@/lib/frappe/shifts";
 import { listShiftLocations } from "@/lib/frappe/shift-locations";
+import {
+  listShiftScheduleAssignments,
+  listShiftSchedules,
+} from "@/lib/frappe/shift-schedules";
 
 export const metadata = { title: "Shift management · Colossal HR" };
 
@@ -36,16 +41,27 @@ const TABS = [
   { id: "assignments", label: "Assignments" },
   { id: "requests", label: "Requests" },
   { id: "locations", label: "Locations" },
+  { id: "schedules", label: "Schedules" },
+  { id: "schedule-assignments", label: "Schedule Assignments" },
   { id: "roster", label: "Roster" },
 ];
 
-type Tab = "types" | "assignments" | "requests" | "locations" | "roster";
+type Tab =
+  | "types"
+  | "assignments"
+  | "requests"
+  | "locations"
+  | "schedules"
+  | "schedule-assignments"
+  | "roster";
 
 function tabFrom(v: string | undefined): Tab {
   if (
     v === "assignments" ||
     v === "requests" ||
     v === "locations" ||
+    v === "schedules" ||
+    v === "schedule-assignments" ||
     v === "roster"
   )
     return v;
@@ -97,6 +113,12 @@ export default async function ShiftManagementPage({
       {tab === "locations" && (
         <Locations searchParams={searchParams} page={page} />
       )}
+      {tab === "schedules" && (
+        <Schedules searchParams={searchParams} page={page} />
+      )}
+      {tab === "schedule-assignments" && (
+        <ScheduleAssignments searchParams={searchParams} page={page} />
+      )}
       {tab === "roster" && <Roster />}
     </div>
   );
@@ -114,6 +136,14 @@ function NewButton({ tab }: { tab: Tab }) {
     locations: {
       href: "/hr/shift-management/locations/new",
       label: "New location",
+    },
+    schedules: {
+      href: "/hr/shift-management/schedules/new",
+      label: "New schedule",
+    },
+    "schedule-assignments": {
+      href: "/hr/shift-management/schedule-assignments/new",
+      label: "Assign schedule",
     },
   };
   if (tab === "roster") {
@@ -585,4 +615,149 @@ function isWeekend(d: Date): boolean {
 
 function isoDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// ============================================ Schedules ====================
+
+async function Schedules({
+  searchParams,
+  page,
+}: {
+  searchParams: SP;
+  page: number;
+}) {
+  const result = await listShiftSchedules({
+    enabled:
+      searchParams.status === "Enabled"
+        ? "Yes"
+        : searchParams.status === "Disabled"
+          ? "No"
+          : undefined,
+    page,
+    pageSize: 25,
+  });
+  return (
+    <>
+      <FilterRow
+        selects={[
+          { key: "status", label: "Status", options: ["Enabled", "Disabled"] },
+        ]}
+      />
+      <DataTable
+        rows={result.rows}
+        rowKey={(r) => r.id}
+        rowHref={(r) =>
+          `/hr/shift-management/schedules/${encodeURIComponent(r.id)}`
+        }
+        empty="No schedules yet. Define one — e.g. “Morning rotation · Mon–Fri.”"
+        columns={[
+          {
+            header: "Name",
+            cell: (r) => (
+              <span className="inline-flex items-center gap-2 font-medium text-ash-900">
+                <CalendarRange className="h-3.5 w-3.5 text-ash-400" />
+                {r.scheduleName}
+              </span>
+            ),
+          },
+          {
+            header: "Shift",
+            className: "text-ash-800",
+            cell: (r) => r.shiftType,
+          },
+          {
+            header: "Days",
+            className: "hidden md:table-cell text-ash-700",
+            cell: (r) => r.daysSummary,
+          },
+          {
+            header: "Company",
+            className: "hidden lg:table-cell text-ash-700",
+            cell: (r) => r.company ?? "—",
+          },
+          {
+            header: "Status",
+            cell: (r) => (
+              <StatusPill status={r.enabled ? "Enabled" : "Disabled"} />
+            ),
+          },
+        ]}
+      />
+      <DirectoryPagination
+        page={result.page}
+        pageSize={result.pageSize}
+        total={result.total}
+      />
+    </>
+  );
+}
+
+// ===================================== Schedule Assignments =================
+
+async function ScheduleAssignments({
+  searchParams,
+  page,
+}: {
+  searchParams: SP;
+  page: number;
+}) {
+  const result = await listShiftScheduleAssignments({
+    status: searchParams.status || undefined,
+    page,
+    pageSize: 25,
+  });
+  return (
+    <>
+      <FilterRow
+        selects={[
+          { key: "status", label: "Status", options: ["Active", "Inactive"] },
+        ]}
+      />
+      <DataTable
+        rows={result.rows}
+        rowKey={(r) => r.id}
+        rowHref={(r) =>
+          `/hr/shift-management/schedule-assignments/${encodeURIComponent(r.id)}`
+        }
+        empty="No schedule assignments yet. Pick a schedule and put an employee on it for a date range."
+        columns={[
+          {
+            header: "Employee",
+            cell: (r) => (
+              <EmployeeCell id={r.employee} name={r.employeeName} />
+            ),
+          },
+          {
+            header: "Schedule",
+            className: "inline-flex items-center gap-1.5 text-ash-800",
+            cell: (r) => (
+              <span className="inline-flex items-center gap-1.5">
+                <UserCog className="h-3.5 w-3.5 text-ash-400" />
+                {r.shiftSchedule}
+              </span>
+            ),
+          },
+          {
+            header: "Start",
+            className: "hidden md:table-cell text-ash-700",
+            cell: (r) => fmtDate(r.startDate),
+          },
+          {
+            header: "End",
+            className: "hidden md:table-cell text-ash-700",
+            cell: (r) => (r.endDate ? fmtDate(r.endDate) : "Open-ended"),
+          },
+          {
+            header: "Status",
+            cell: (r) => <StatusPill status={r.status} />,
+          },
+        ]}
+      />
+      <DirectoryPagination
+        page={result.page}
+        pageSize={result.pageSize}
+        total={result.total}
+      />
+    </>
+  );
 }

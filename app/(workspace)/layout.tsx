@@ -2,13 +2,15 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { isAuthenticated, readSession, resolveAvatarUrl } from "@/lib/frappe/session";
+import { getMyAccess } from "@/lib/frappe/roles";
 
 /**
  * Workspace shell: full-height purple rail on the left, scrollable canvas on
  * the right with the topbar floating in. We deliberately don't put the topbar
- * inside the scroll container so the search/notif stay pinned.
+ * inside the scroll container so the search/notif stay pinned. The Sidebar is
+ * filtered server-side by the signed-in user's role bundle.
  */
-export default function WorkspaceLayout({
+export default async function WorkspaceLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -20,6 +22,13 @@ export default function WorkspaceLayout({
   }
 
   const session = readSession();
+  const access = await getMyAccess();
+
+  // Alumni-only sessions have their own walled-garden portal and never see
+  // the HR workspace shell.
+  if (access.isAlumniOnly) {
+    redirect("/alumni");
+  }
   const user = {
     name: session.fullName ?? session.userId ?? "Signed in",
     email: session.userId ?? undefined,
@@ -28,7 +37,24 @@ export default function WorkspaceLayout({
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-canvas">
-      <Sidebar />
+      <Sidebar
+        access={{
+          isHrAdmin: access.isHrAdmin,
+          isHrAny: access.isHrAny,
+          isPayrollAdmin: access.isPayrollAdmin,
+          isPayrollReviewer: access.isPayrollReviewer,
+          isPayrollAny: access.isPayrollAny,
+          isShiftAdmin: access.isShiftAdmin,
+          isLineManager: access.isLineManager,
+          isRecruiter: access.isRecruiter,
+          isExecutiveViewer: access.isExecutiveViewer,
+          isAuditor: access.isAuditor,
+          isDataSteward: access.isDataSteward,
+          isItAdmin: access.isItAdmin,
+          isSettingsAny: access.isSettingsAny,
+          isEmployee: access.isEmployee,
+        }}
+      />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar user={user} notifications={0} />
         <main className="flex-1 overflow-y-auto px-6 pb-8 pt-4">

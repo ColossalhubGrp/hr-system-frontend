@@ -441,6 +441,19 @@ function compact<T extends Record<string, unknown>>(
 
 // Goal --------------------------------------------------------------------
 
+export type BscPerspective =
+  | "Financial"
+  | "Customer"
+  | "Internal Process"
+  | "Learning & Growth";
+
+export const BSC_PERSPECTIVES: BscPerspective[] = [
+  "Financial",
+  "Customer",
+  "Internal Process",
+  "Learning & Growth",
+];
+
 export type GoalFull = {
   id: string;
   goalName: string;
@@ -453,13 +466,17 @@ export type GoalFull = {
   endDate: string | null;
   appraisalCycle: string | null;
   kra: string | null;
+  /** BSC mode only — which Balanced Scorecard perspective this goal sits in. */
+  perspective: BscPerspective | null;
 };
 
 export async function getGoal(id: string): Promise<GoalFull | null> {
   try {
     type Raw = {
       name: string;
-      goal_name: string;
+      // The Frappe field is `goal` (short title, Data, required) — not
+      // `goal_name`. Pre-existing bug fixed as part of the goals-first flow.
+      goal: string | null;
       description: string | null;
       employee: string | null;
       employee_name: string | null;
@@ -469,6 +486,7 @@ export async function getGoal(id: string): Promise<GoalFull | null> {
       end_date: string | null;
       appraisal_cycle: string | null;
       kra: string | null;
+      perspective: string | null;
     };
     const doc = await frappeCall<Raw>({
       method: "frappe.client.get",
@@ -477,7 +495,7 @@ export async function getGoal(id: string): Promise<GoalFull | null> {
     });
     return {
       id: doc.name,
-      goalName: doc.goal_name,
+      goalName: doc.goal ?? doc.name,
       description: doc.description,
       employee: doc.employee,
       employeeName: doc.employee_name,
@@ -487,6 +505,7 @@ export async function getGoal(id: string): Promise<GoalFull | null> {
       endDate: doc.end_date,
       appraisalCycle: doc.appraisal_cycle,
       kra: doc.kra,
+      perspective: isPerspective(doc.perspective) ? doc.perspective : null,
     };
   } catch (err) {
     if (err instanceof FrappeRequestError && err.status === 404) return null;
@@ -494,6 +513,20 @@ export async function getGoal(id: string): Promise<GoalFull | null> {
   }
 }
 
+function isPerspective(v: string | null | undefined): v is BscPerspective {
+  return (
+    v === "Financial" ||
+    v === "Customer" ||
+    v === "Internal Process" ||
+    v === "Learning & Growth"
+  );
+}
+
+/**
+ * GoalInput uses `goal_name` for ergonomics (the form sends a field called
+ * `goal_name`), but the underlying Frappe field is `goal` — see field meta.
+ * `createGoal` translates the alias when building the insert payload.
+ */
 export type GoalInput = {
   goal_name: string;
   description?: string;
@@ -504,14 +537,18 @@ export type GoalInput = {
   end_date?: string;
   appraisal_cycle?: string;
   kra?: string;
+  perspective?: string;
 };
 
 export async function createGoal(input: GoalInput): Promise<string> {
+  const { goal_name, ...rest } = input;
   const doc = {
     doctype: "Goal",
     status: "In Progress",
     progress: 0,
-    ...compact(input),
+    // Frappe's required field is `goal` — map our ergonomic `goal_name` onto it.
+    goal: goal_name,
+    ...compact(rest),
   };
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
@@ -526,9 +563,15 @@ export async function updateGoal(
   id: string,
   input: Partial<GoalInput>,
 ): Promise<void> {
+  // Same alias mapping as createGoal — Frappe's required title field is `goal`.
+  const { goal_name, ...rest } = input;
+  const payload = {
+    ...(goal_name !== undefined ? { goal: goal_name } : {}),
+    ...compact(rest),
+  };
   await frappeCall<{ name: string }>({
     method: "frappe.client.set_value",
-    args: { doctype: "Goal", name: id, fieldname: compact(input) },
+    args: { doctype: "Goal", name: id, fieldname: payload },
     verb: "POST",
     as: "user",
   });
@@ -821,19 +864,122 @@ export async function createPip(input: PipInput): Promise<string> {
 
 // Appraisal Cycle ---------------------------------------------------------
 
+/**
+ * A goal that can be picked into a cycle. The cycle-creation form lists
+ * every existing standalone Goal so HR can select which ones the cycle
+ * formally tracks.
+ */
+export type SelectableGoal = {
+  id: string;
+  goalName: string;
+  employee: string | null;
+  employeeName: string | null;
+  status: string;
+  progress: number;
+};
+
+/**
+ * Lists Goals that are candidates for the "Select goals" step of a new
+ * Appraisal Cycle. By default surfaces only goals NOT yet attached to any
+ * cycle (`appraisal_cycle is null`) — the new flow encourages standalone
+ * goals — but takes `includeAttached: true` to show everything when editing
+ * an existing cycle that may already include some.
+ */
+export async function listSelectableGoals(opts?: {
+  includeAttached?: boolean;
+  limit?: number;
+}): Promise<SelectableGoal[]> {
+  const limit = Math.min(500, Math.max(20, opts?.limit ?? 200));
+  // Status filter: exclude Archived/Closed goals. Frappe's "in"/"not in"
+  // operator wants the value as a comma-string OR a list — we send the
+  // list for safety.
+  const filters: Array<[string, string, string[] | string | null]> = [
+    ["status", "not in", ["Archived", "Closed"]],
+  ];
+  type Row = {
+    name: string;
+    goal: string | null;
+    employee: string | null;
+    employee_name: string | null;
+    status: string;
+    progress: number | null;
+  };
+  // Two parallel reads:
+  //   - Every candidate goal (status filter applied).
+  //   - Every goal id ALREADY referenced in any cycle's `selected_goals` child
+  //     table. The child rows are queryable as their own doctype.
+  const [rows, attachedRows] = await Promise.all([
+    frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Goal",
+        fields: ["name", "goal", "employee", "employee_name", "status", "progress"],
+        filters: JSON.stringify(filters),
+        order_by: "modified desc",
+        limit_page_length: limit,
+      },
+      as: "user",
+    }).catch(() => [] as Row[]),
+    opts?.includeAttached
+      ? Promise.resolve({ goals: [] as string[] })
+      : frappeCall<{ goals: string[] }>({
+          method: "recruitment_app.api.me.goals_attached_to_cycles",
+          as: "user",
+        }).catch(() => ({ goals: [] as string[] })),
+  ]);
+  const attached = new Set(
+    (Array.isArray(attachedRows)
+      ? (attachedRows as Array<{ goal: string }>).map((r) => r.goal)
+      : (attachedRows as { goals: string[] }).goals
+    ).filter(Boolean),
+  );
+  const filtered = opts?.includeAttached
+    ? rows
+    : rows.filter((r) => !attached.has(r.name));
+  return filtered.map((r) => ({
+    id: r.name,
+    goalName: r.goal ?? r.name,
+    employee: r.employee,
+    employeeName: r.employee_name,
+    status: r.status,
+    progress: Number(r.progress ?? 0),
+  }));
+}
+
+/** Rows in the new `selected_goals` child table on Appraisal Cycle. */
+export type SelectedGoalRow = {
+  goal: string;
+  /** Optional 0–100 weighting; defaults to 0 (no weighting). */
+  weight?: number;
+};
+
 export type CycleInput = {
   cycle_name: string;
   start_date: string;
   end_date: string;
   company?: string;
-  kra_evaluation_method?: "Manual" | "Automated";
+  kra_evaluation_method?: "Manual Rating" | "Automated Based on Goal Progress";
+  evaluation_framework?: "KRA & Goals" | "OKR" | "Balanced Scorecard";
+  /** Goals chosen into the cycle. Rendered as the `selected_goals` child
+   *  table on the Appraisal Cycle doc. */
+  selected_goals?: SelectedGoalRow[];
 };
 
 export async function createAppraisalCycle(input: CycleInput): Promise<string> {
-  const doc = {
+  // The child table accepts a list of row objects in Frappe REST inserts.
+  // `compact()` would drop the array if empty, which is what we want
+  // (no key = no child rows = nothing to write).
+  const { selected_goals, ...scalar } = input;
+  const doc: Record<string, unknown> = {
     doctype: "Appraisal Cycle",
-    ...compact(input),
+    ...compact(scalar),
   };
+  if (selected_goals && selected_goals.length > 0) {
+    doc.selected_goals = selected_goals.map((r) => ({
+      goal: r.goal,
+      ...(r.weight !== undefined ? { weight: r.weight } : {}),
+    }));
+  }
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
     args: { doc },
@@ -841,6 +987,113 @@ export async function createAppraisalCycle(input: CycleInput): Promise<string> {
     as: "user",
   });
   return saved.name;
+}
+
+/**
+ * Read the full Appraisal Cycle including its `selected_goals` child table.
+ * Used by the cycle-detail view to render which goals were rolled into the
+ * cycle and to support add/remove later.
+ */
+export type CycleFull = {
+  id: string;
+  cycleName: string;
+  startDate: string | null;
+  endDate: string | null;
+  status: string | null;
+  company: string | null;
+  evaluationFramework: string | null;
+  selectedGoals: Array<{
+    goal: string;
+    goalName: string | null;
+    employee: string | null;
+    weight: number;
+  }>;
+};
+
+export async function getAppraisalCycle(id: string): Promise<CycleFull | null> {
+  try {
+    type Raw = {
+      name: string;
+      cycle_name: string;
+      start_date: string | null;
+      end_date: string | null;
+      status: string | null;
+      company: string | null;
+      evaluation_framework: string | null;
+      selected_goals?: Array<{
+        goal: string;
+        goal_name?: string | null;
+        employee?: string | null;
+        weight?: number | null;
+      }>;
+    };
+    const doc = await frappeCall<Raw>({
+      method: "frappe.client.get",
+      args: { doctype: "Appraisal Cycle", name: id },
+      as: "user",
+    });
+    return {
+      id: doc.name,
+      cycleName: doc.cycle_name,
+      startDate: doc.start_date,
+      endDate: doc.end_date,
+      status: doc.status,
+      company: doc.company,
+      evaluationFramework: doc.evaluation_framework,
+      selectedGoals: (doc.selected_goals ?? []).map((r) => ({
+        goal: r.goal,
+        goalName: r.goal_name ?? null,
+        employee: r.employee ?? null,
+        weight: Number(r.weight ?? 0),
+      })),
+    };
+  } catch (err) {
+    if (err instanceof FrappeRequestError && err.status === 404) return null;
+    throw err;
+  }
+}
+
+/**
+ * Replace the `selected_goals` child rows on an existing cycle. Used by the
+ * cycle-detail page when HR adds/removes goals after the cycle was created.
+ * Frappe's `frappe.client.set_value` can't update child tables, so we fetch
+ * the full doc, swap the array, and update via `set_value` on the row keys
+ * is fragile — instead we use the proper update flow.
+ */
+export async function setCycleSelectedGoals(
+  cycleId: string,
+  rows: SelectedGoalRow[],
+): Promise<void> {
+  // Fetch, mutate, save — the standard pattern for child-table writes.
+  const doc = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    args: { doctype: "Appraisal Cycle", name: cycleId },
+    as: "user",
+  });
+  doc.selected_goals = rows.map((r) => ({
+    goal: r.goal,
+    ...(r.weight !== undefined ? { weight: r.weight } : {}),
+  }));
+  await frappeCall<unknown>({
+    method: "frappe.client.set_value",
+    verb: "POST",
+    args: {
+      doctype: "Appraisal Cycle",
+      name: cycleId,
+      fieldname: "selected_goals",
+      value: doc.selected_goals,
+    },
+    as: "user",
+  }).catch(async () => {
+    // Some Frappe versions don't accept child tables via set_value — fall
+    // back to a full doc save.
+    await frappeCall<unknown>({
+      method: "frappe.client.save",
+      verb: "POST",
+      args: { doc },
+      as: "user",
+    });
+  });
 }
 
 // Appraisal Template ------------------------------------------------------

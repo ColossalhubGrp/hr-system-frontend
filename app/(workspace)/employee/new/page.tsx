@@ -3,11 +3,14 @@ import type { Route } from "next";
 import { ChevronLeft, UserRoundPlus } from "lucide-react";
 import { EmployeeForm } from "@/components/employee/employee-form";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
+import { requireGroup } from "@/lib/frappe/require-role";
 import { createEmployeeAction } from "../actions";
 
 export const metadata = { title: "New employee · Colossal HR" };
 
 export default async function NewEmployeePage() {
+  // Creating an Employee is HR-only.
+  await requireGroup("HR_ANY", "/employee/new");
   const options = await fetchEmployeeFormOptions();
 
   return (

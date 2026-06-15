@@ -4,7 +4,10 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, Target } from "lucide-react";
 import { GoalForm } from "@/components/performance/goal-form";
 import { getGoal } from "@/lib/frappe/performance";
-import { listAppraisalCyclesNames } from "@/lib/frappe/lookups";
+import {
+  getCycleFramework,
+  type EvaluationFramework,
+} from "@/lib/frappe/appraisal-framework";
 import { updateGoalAction } from "../../../actions";
 
 export const metadata = { title: "Edit goal · Colossal HR" };
@@ -15,11 +18,14 @@ export default async function EditGoalPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const [g, cycles] = await Promise.all([
-    getGoal(id),
-    listAppraisalCyclesNames(),
-  ]);
+  const g = await getGoal(id);
   if (!g) notFound();
+  // Framework still drives terminology (Objective / Goal / Scorecard entry).
+  // For goals attached to a legacy cycle we infer from the cycle's framework;
+  // standalone goals fall back to KRA & Goals labels.
+  let framework: EvaluationFramework | null = null;
+  if (g.appraisalCycle) framework = await getCycleFramework(g.appraisalCycle);
+  if (g.perspective && framework === "KRA & Goals") framework = "Balanced Scorecard";
 
   const action = updateGoalAction.bind(null, id);
   const backHref = `/hr/performance/goals/${encodeURIComponent(id)}` as Route;
@@ -46,7 +52,7 @@ export default async function EditGoalPage({
       <GoalForm
         mode="edit"
         action={action}
-        cycles={cycles}
+        framework={framework}
         cancelHref={backHref}
         initial={{
           goalName: g.goalName,
@@ -57,6 +63,7 @@ export default async function EditGoalPage({
           startDate: g.startDate,
           endDate: g.endDate,
           appraisalCycle: g.appraisalCycle,
+          perspective: g.perspective,
         }}
       />
     </div>

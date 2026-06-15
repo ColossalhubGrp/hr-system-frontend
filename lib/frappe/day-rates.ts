@@ -76,6 +76,59 @@ export async function fetchHolidayDates(
 }
 
 /**
+ * Convert a Frappe time string ("9:00:00" or "09:00:00") to hours-since-midnight.
+ * Returns null if the input is missing.
+ */
+function timeToHours(t: string | null | undefined): number | null {
+  if (!t) return null;
+  const parts = t.split(":").map(Number);
+  const h = parts[0];
+  const m = parts[1];
+  const s = parts[2];
+  if (h === undefined || Number.isNaN(h)) return null;
+  if (m !== undefined && Number.isNaN(m)) return null;
+  return h + (m ?? 0) / 60 + (s ?? 0) / 3600;
+}
+
+/**
+ * Duration of the shift window (end - start), in hours. Handles crossing
+ * midnight by wrapping (e.g. 22:00 → 06:00 → 8h). Returns null if either
+ * time is missing.
+ */
+export function shiftDurationHours(
+  startTime: string | null | undefined,
+  endTime: string | null | undefined,
+): number | null {
+  const s = timeToHours(startTime);
+  const e = timeToHours(endTime);
+  if (s === null || e === null) return null;
+  const diff = e - s;
+  // Negative diff means the shift crosses midnight (e.g. 22:00 → 06:00).
+  return diff > 0 ? diff : diff + 24;
+}
+
+/**
+ * Split actually-worked hours into the portion within the shift window and
+ * the portion past the end time (the overtime). If we don't know the shift
+ * duration, all hours fall into `regular`.
+ *
+ * working_hours comes from Frappe's Attendance.working_hours, which already
+ * accounts for breaks and is what payroll consumes.
+ */
+export function splitWorkedHours(
+  workingHours: number | null | undefined,
+  shiftDuration: number | null,
+): { regular: number; overtime: number } {
+  const w = Number(workingHours ?? 0);
+  if (!Number.isFinite(w) || w <= 0) return { regular: 0, overtime: 0 };
+  if (!shiftDuration || shiftDuration <= 0) {
+    return { regular: w, overtime: 0 };
+  }
+  if (w <= shiftDuration) return { regular: w, overtime: 0 };
+  return { regular: shiftDuration, overtime: w - shiftDuration };
+}
+
+/**
  * Build a per-day classification for an inclusive date range, ready for
  * rendering as a schedule preview.
  */

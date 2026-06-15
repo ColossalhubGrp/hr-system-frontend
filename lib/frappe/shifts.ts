@@ -125,6 +125,8 @@ export type ShiftTypeFull = {
   saturdayDayMultiplier: number;
   sundayDayMultiplier: number;
   holidayDayMultiplier: number;
+  /** Bump on any hour worked past this shift's end time. Default ×1.5. */
+  overtimeMultiplier: number;
   /** Shift Location names linked via the `allowed_locations` child table. */
   allowedLocations: string[];
 };
@@ -146,6 +148,7 @@ export async function getShiftType(id: string): Promise<ShiftTypeFull | null> {
       saturday_day_multiplier?: number | null;
       sunday_day_multiplier?: number | null;
       holiday_day_multiplier?: number | null;
+      overtime_multiplier?: number | null;
       allowed_locations?: Array<{ shift_location?: string | null }> | null;
     };
     const doc = await frappeCall<Raw>({
@@ -169,6 +172,7 @@ export async function getShiftType(id: string): Promise<ShiftTypeFull | null> {
       saturdayDayMultiplier: Number(doc.saturday_day_multiplier ?? 1.5),
       sundayDayMultiplier: Number(doc.sunday_day_multiplier ?? 2),
       holidayDayMultiplier: Number(doc.holiday_day_multiplier ?? 2.5),
+      overtimeMultiplier: Number(doc.overtime_multiplier ?? 1.5),
       allowedLocations: (doc.allowed_locations ?? [])
         .map((r) => r.shift_location)
         .filter((s): s is string => Boolean(s)),
@@ -193,6 +197,7 @@ export type ShiftTypeInput = {
   saturday_day_multiplier?: number;
   sunday_day_multiplier?: number;
   holiday_day_multiplier?: number;
+  overtime_multiplier?: number;
 };
 
 function compact<T extends Record<string, unknown>>(o: T): Record<string, unknown> {
@@ -226,6 +231,7 @@ export async function createShiftType(input: ShiftTypeInput): Promise<string> {
       saturday_day_multiplier: input.saturday_day_multiplier,
       sunday_day_multiplier: input.sunday_day_multiplier,
       holiday_day_multiplier: input.holiday_day_multiplier,
+      overtime_multiplier: input.overtime_multiplier,
     }),
   };
   const saved = await frappeCall<{ name: string }>({
@@ -266,6 +272,7 @@ export async function updateShiftType(
     saturday_day_multiplier: input.saturday_day_multiplier,
     sunday_day_multiplier: input.sunday_day_multiplier,
     holiday_day_multiplier: input.holiday_day_multiplier,
+    overtime_multiplier: input.overtime_multiplier,
   });
   await frappeCall<{ name: string }>({
     method: "frappe.client.set_value",

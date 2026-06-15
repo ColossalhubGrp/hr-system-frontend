@@ -43,6 +43,7 @@ export function ShiftTypeForm({
     saturdayDayMultiplier?: number;
     sundayDayMultiplier?: number;
     holidayDayMultiplier?: number;
+    overtimeMultiplier?: number;
     allowedLocations?: string[];
   };
 }) {
@@ -271,6 +272,20 @@ export function ShiftTypeForm({
             step="0.05"
             min="0"
             defaultValue={(initial?.holidayDayMultiplier ?? 2.5).toString()}
+          />
+        </Field>
+        <Field
+          label="Overtime"
+          htmlFor="overtime_multiplier"
+          hint="Applied to any hours worked past the shift's end time."
+        >
+          <TextInput
+            id="overtime_multiplier"
+            name="overtime_multiplier"
+            type="number"
+            step="0.05"
+            min="0"
+            defaultValue={(initial?.overtimeMultiplier ?? 1.5).toString()}
           />
         </Field>
       </FormSection>

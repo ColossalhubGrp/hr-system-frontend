@@ -18,15 +18,34 @@ export type Session = {
 export function readSession(): Session {
   const jar = cookies();
   const sid = jar.get("sid")?.value;
-  const userId = decodeURIComponent(jar.get("user_id")?.value ?? "");
-  const fullName = decodeURIComponent(jar.get("full_name")?.value ?? "");
-  const avatarRaw = decodeURIComponent(jar.get("user_image")?.value ?? "");
+  // Decode-until-stable. Next.js auto-decodes cookies once on get(). For new
+  // sessions (single-encoded after the loginAction fix) the manual decode
+  // here is a no-op; for older sessions still carrying double-encoded
+  // values (`HR%2520Director`) the second pass reaches the readable form.
+  const userId = safeDecode(jar.get("user_id")?.value ?? "");
+  const fullName = safeDecode(jar.get("full_name")?.value ?? "");
+  const avatarRaw = safeDecode(jar.get("user_image")?.value ?? "");
   return {
     sid,
     userId: userId || null,
     fullName: fullName || null,
     avatarUrl: avatarRaw || null,
   };
+}
+
+function safeDecode(input: string): string {
+  let current = input;
+  for (let i = 0; i < 2; i++) {
+    let next: string;
+    try {
+      next = decodeURIComponent(current);
+    } catch {
+      return current;
+    }
+    if (next === current) return current;
+    current = next;
+  }
+  return current;
 }
 
 export function hasSession() {

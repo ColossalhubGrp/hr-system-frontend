@@ -83,14 +83,14 @@ export default async function SettingsHome() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-1">
-        <div className="flex items-center gap-2 text-xs text-ash-500">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Settings className="h-3.5 w-3.5" />
           Settings
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Workspace settings
         </h1>
-        <p className="text-sm text-ash-600">
+        <p className="text-sm text-muted-foreground">
           Configuration that shapes the rest of the workspace. Each section
           requires a different role bundle — you're only seeing the cards your
           access lets you actually use.
@@ -98,8 +98,8 @@ export default async function SettingsHome() {
       </header>
 
       {totalVisible === 0 && (
-        <p className="rounded-card border border-dashed border-hairline bg-canvas/50 px-6 py-10 text-center text-sm text-ash-600">
-          <Lock className="mx-auto mb-2 h-4 w-4 text-ash-500" />
+        <p className="rounded-xl border border-dashed bg-muted/30 px-6 py-10 text-center text-sm text-muted-foreground">
+          <Lock className="mx-auto mb-2 h-4 w-4" />
           Your roles don't currently include any settings administration.
           Ask an HR Director or IT Admin to grant the right role bundle.
         </p>
@@ -150,10 +150,10 @@ function Section({
   return (
     <section className="flex flex-col gap-2">
       <header className="flex items-baseline gap-2">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-ash-500">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {title}
         </h2>
-        <p className="text-[11px] text-ash-500">{subtitle}</p>
+        <p className="text-[11px] text-muted-foreground">{subtitle}</p>
       </header>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {children}
@@ -171,9 +171,9 @@ function SettingCard({
   return (
     <Link
       href={href as Route}
-      className="block rounded-card border border-hairline bg-surface p-5 shadow-card transition hover:border-ink-300 focus-ring"
+      className="block rounded-xl border bg-card p-5 shadow transition hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
     >
-      <div className="mb-2 flex items-center gap-2 text-ink-800">
+      <div className="mb-2 flex items-center gap-2 text-foreground">
         {icon}
         <span className="font-semibold">{title}</span>
       </div>

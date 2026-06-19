@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { serverEnv } from "@/lib/env";
+import { frappeGuestCall } from "@/lib/frappe/guest-call";
 
 type State = { error?: string };
 
@@ -57,8 +58,20 @@ export async function loginAction(
     const eq = pair?.indexOf("=") ?? -1;
     if (!pair || eq < 0) continue;
     const name = pair.slice(0, eq).trim();
-    const value = pair.slice(eq + 1).trim();
+    const rawValue = pair.slice(eq + 1).trim();
     if (!name) continue;
+    // Frappe URL-encodes cookie values (e.g. `full_name=HR%20Director`).
+    // Next.js's cookies().set() encodes the value AGAIN when it serializes
+    // the Set-Cookie header, so writing the raw Frappe value verbatim leaves
+    // client-side `document.cookie` reads stuck at `HR%20Director` after one
+    // decode. Decode here so the cookie carries the plain string and a
+    // single decodeURIComponent on either side yields the correct value.
+    let value = rawValue;
+    try {
+      value = decodeURIComponent(rawValue);
+    } catch {
+      // Leave value unchanged if Frappe ever sends a non-decodable token.
+    }
     jar.set(name, value, {
       httpOnly: name === "sid",
       sameSite: "lax",
@@ -68,7 +81,44 @@ export async function loginAction(
     });
   }
 
-  redirect("/dashboard");
+  // Honor the `redirect` hidden field the form passes through — that's what
+  // lets a visit to /recruitment/jobs (which middleware bounces to
+  // /login?redirect=/recruitment/jobs) land back where it started after
+  // sign-in. Restrict to same-origin, non-protocol-relative paths to block
+  // open-redirect abuse.
+  const requested = String(form.get("redirect") ?? "").trim();
+  const target = isSafeInternalPath(requested) ? requested : "/dashboard";
+  redirect(target);
+}
+
+function isSafeInternalPath(p: string): boolean {
+  return (
+    p.length > 0 &&
+    p.startsWith("/") &&
+    !p.startsWith("//") &&
+    !p.startsWith("/\\")
+  );
+}
+
+/**
+ * Asks Frappe to resend the activation email for an account that hasn't
+ * been activated yet. Called from the inline "Didn't receive…" block on the
+ * login form. Backend method: recruitment_app.api.auth.resend_activation_email.
+ */
+export async function resendActivationAction(
+  email: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const trimmed = email.trim();
+  if (!trimmed) return { ok: false, error: "Enter your email first." };
+  const res = await frappeGuestCall<{ success?: boolean; message?: string }>(
+    "recruitment_app.api.auth.resend_activation_email",
+    { email: trimmed },
+  );
+  if (!res.ok) return { ok: false, error: res.error };
+  if (res.data && res.data.success === false) {
+    return { ok: false, error: res.data.message ?? "Failed to resend activation." };
+  }
+  return { ok: true };
 }
 
 export async function logoutAction(): Promise<void> {

@@ -5,6 +5,11 @@ import { cn } from "@/lib/cn";
  * a doctype has a Select field for status — Expense Claim, Appraisal, Loan,
  * Training Result, etc. Each module overrides the tone map for unusual values
  * by passing `tones`; falls back to common buckets otherwise.
+ *
+ * After the shadcn migration the negative / neutral buckets switched to
+ * `destructive` / `muted` semantic tokens so they track the theme; the
+ * rise / amber tones stay literal because we don't have semantic tokens
+ * for "approved-positive" and "in-progress-warning" yet.
  */
 const DEFAULT_TONES: Record<string, string> = {
   // positive
@@ -25,10 +30,10 @@ const DEFAULT_TONES: Record<string, string> = {
   Scheduled: "bg-amber-100 text-amber-800 ring-amber-200",
 
   // negative
-  Rejected: "bg-fall/10 text-fall ring-fall/20",
-  Cancelled: "bg-ash-100 text-ash-700 ring-ash-200",
-  Closed: "bg-ash-100 text-ash-700 ring-ash-200",
-  Inactive: "bg-ash-100 text-ash-700 ring-ash-200",
+  Rejected: "bg-destructive/10 text-destructive ring-destructive/20",
+  Cancelled: "bg-muted text-muted-foreground ring-border",
+  Closed: "bg-muted text-muted-foreground ring-border",
+  Inactive: "bg-muted text-muted-foreground ring-border",
 };
 
 export function StatusPill({
@@ -43,7 +48,7 @@ export function StatusPill({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-chip px-2.5 py-1 text-xs font-medium ring-1 ring-inset",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset",
         tone,
       )}
     >

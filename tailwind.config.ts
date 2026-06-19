@@ -1,6 +1,9 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  // shadcn/ui ships dark-mode primitives by default. Driven via the `dark`
+  // class so it composes with the existing brand colours below.
+  darkMode: ["class"],
   content: [
     "./app/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -9,6 +12,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // -- Existing brand tokens (preserved 1:1) ----------------------------
         // Sidebar / brand purple — matched to the mockups.
         ink: {
           50: "#EEF0FB",
@@ -36,6 +40,44 @@ const config: Config = {
         // Trend semantics.
         rise: "#22C55E",
         fall: "#EF4444",
+
+        // -- shadcn/ui semantic tokens --------------------------------------
+        // These read from CSS variables defined in globals.css. Each one is
+        // mapped to a brand value so shadcn components inherit the existing
+        // ink/canvas/surface palette instead of zinc.
+        border: "hsl(var(--border))",
+        input: "hsl(var(--input))",
+        ring: "hsl(var(--ring))",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
+        primary: {
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--secondary-foreground))",
+        },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
+        muted: {
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
+        },
+        accent: {
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--accent-foreground))",
+        },
+        popover: {
+          DEFAULT: "hsl(var(--popover))",
+          foreground: "hsl(var(--popover-foreground))",
+        },
+        card: {
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
+        },
       },
       fontFamily: {
         sans: [
@@ -54,15 +96,35 @@ const config: Config = {
         rail: "0 8px 32px rgba(22, 19, 65, 0.18)",
       },
       borderRadius: {
+        // -- Existing brand-specific radii (preserved) ----------------------
         card: "20px",
         chip: "999px",
+        // -- shadcn's CSS-variable-driven radii -----------------------------
+        // These bind to --radius for the standard shadcn primitives.
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       fontSize: {
         kpi: ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
       },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+      },
+      animation: {
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+      },
     },
   },
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 };
 
 export default config;

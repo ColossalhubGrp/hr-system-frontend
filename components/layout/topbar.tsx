@@ -1,9 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Search, Bell, ChevronDown, LogOut } from "lucide-react";
+import { Search, Bell, LogOut } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
 import { cn } from "@/lib/cn";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 type Props = {
   user?: { name: string; email?: string; avatarUrl?: string };
@@ -11,36 +20,38 @@ type Props = {
 };
 
 /**
- * Floats above the workspace canvas. The search pill is a controlled input wired
- * to nothing yet — global search is a Phase 2 feature (SRS §6.1.2). Bell shows a
- * dot when unread > 0; user menu collapses to the avatar on narrow viewports.
+ * Floats above the workspace canvas. Migrated to shadcn — search uses
+ * <Input>, the user menu uses <DropdownMenu>, the notification bell uses
+ * <Button variant="ghost">.
  */
 export function Topbar({ user, notifications = 0 }: Props) {
   return (
-    <div className="flex items-center justify-end gap-4 px-6 pt-5">
+    <div className="flex items-center justify-end gap-3 px-6 pt-5">
       <label className="relative hidden md:block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ash-500" />
-        <input
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
           type="search"
           placeholder="Search"
-          className="h-10 w-[280px] rounded-chip border border-hairline bg-surface pl-9 pr-4 text-sm placeholder:text-ash-500 focus-ring"
+          className="h-10 w-[280px] rounded-full pl-9"
         />
       </label>
 
-      <button
+      <Button
         type="button"
+        variant="ghost"
+        size="icon"
         aria-label={
           notifications > 0
             ? `${notifications} unread notifications`
             : "Notifications"
         }
-        className="relative grid h-10 w-10 place-items-center rounded-full bg-surface shadow-card focus-ring"
+        className="relative h-10 w-10 rounded-full bg-card shadow-card"
       >
-        <Bell className="h-4 w-4 text-ash-700" />
+        <Bell className="h-4 w-4 text-muted-foreground" />
         {notifications > 0 && (
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rise ring-2 ring-surface" />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rise ring-2 ring-background" />
         )}
-      </button>
+      </Button>
 
       {user && <UserMenu user={user} />}
     </div>
@@ -52,75 +63,47 @@ function UserMenu({
 }: {
   user: { name: string; email?: string; avatarUrl?: string };
 }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function onClick(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setOpen(false);
-    }
-    window.addEventListener("mousedown", onClick);
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("mousedown", onClick);
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full bg-surface py-1 pl-1 pr-3 shadow-card focus-ring"
-      >
-        <Avatar name={user.name} avatarUrl={user.avatarUrl} />
-        <span className="hidden text-sm font-medium text-ash-900 sm:inline">
-          {user.name}
-        </span>
-        <ChevronDown
-          className={cn(
-            "h-4 w-4 text-ash-500 transition-transform",
-            open && "rotate-180",
-          )}
-        />
-      </button>
-
-      {open && (
-        <div
-          role="menu"
-          className="absolute right-0 top-12 z-30 w-64 overflow-hidden rounded-2xl border border-hairline bg-surface shadow-rail"
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className="h-10 gap-2 rounded-full bg-card pl-1 pr-3 shadow-card hover:bg-card/80"
         >
-          <div className="flex items-center gap-3 border-b border-hairline px-4 py-3">
-            <Avatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-ash-900">
-                {user.name}
+          <Avatar name={user.name} avatarUrl={user.avatarUrl} />
+          <span className="hidden text-sm font-medium text-foreground sm:inline">
+            {user.name}
+          </span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuLabel className="flex items-center gap-3 px-3 py-2">
+          <Avatar name={user.name} avatarUrl={user.avatarUrl} size="lg" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">
+              {user.name}
+            </p>
+            {user.email && (
+              <p className="truncate text-xs text-muted-foreground">
+                {user.email}
               </p>
-              {user.email && (
-                <p className="truncate text-xs text-ash-500">{user.email}</p>
-              )}
-            </div>
+            )}
           </div>
-          <form action={logoutAction}>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <form action={logoutAction}>
+          <DropdownMenuItem asChild>
             <button
               type="submit"
-              role="menuitem"
-              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-ash-800 transition hover:bg-canvas focus-ring"
+              className="flex w-full cursor-pointer items-center gap-2 px-3 py-2 text-left text-sm"
             >
-              <LogOut className="h-4 w-4 text-ash-500" />
+              <LogOut className="h-4 w-4 text-muted-foreground" />
               Sign out
             </button>
-          </form>
-        </div>
-      )}
-    </div>
+          </DropdownMenuItem>
+        </form>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
@@ -137,7 +120,7 @@ function Avatar({
   return (
     <span
       className={cn(
-        "grid place-items-center overflow-hidden rounded-full bg-ink-100 font-semibold text-ink-700",
+        "grid place-items-center overflow-hidden rounded-full bg-primary/15 font-semibold text-primary",
         dim,
       )}
     >

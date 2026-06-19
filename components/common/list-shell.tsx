@@ -36,7 +36,7 @@ export function FilterRow({
               patch(search.key, e.currentTarget.value.trim());
             }
           }}
-          className="h-10 w-full max-w-xs rounded-chip border border-hairline bg-surface px-4 text-sm placeholder:text-ash-500 focus-ring sm:flex-1"
+          className="h-10 w-full max-w-xs rounded-full border border-input bg-background px-4 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring sm:flex-1"
         />
       )}
       {selects?.map((s) => (
@@ -45,7 +45,7 @@ export function FilterRow({
           <select
             value={params.get(s.key) ?? ""}
             onChange={(e) => patch(s.key, e.target.value)}
-            className="h-10 rounded-chip border border-hairline bg-surface pl-3 pr-8 text-sm text-ash-800 focus-ring"
+            className="h-10 rounded-full border border-input bg-background pl-3 pr-8 text-sm text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             <option value="">All {s.label.toLowerCase()}s</option>
             {s.options.map((o) => (
@@ -58,7 +58,7 @@ export function FilterRow({
       ))}
       <span
         aria-live="polite"
-        className={`text-xs text-ash-500 ${pending ? "opacity-100" : "opacity-0"}`}
+        className={`text-xs text-muted-foreground ${pending ? "opacity-100" : "opacity-0"}`}
       >
         Updating…
       </span>
@@ -68,7 +68,7 @@ export function FilterRow({
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return (
-    <div className="grid place-items-center rounded-card border border-dashed border-hairline bg-surface py-12 text-sm text-ash-500">
+    <div className="grid place-items-center rounded-xl border border-dashed border-border bg-card py-12 text-sm text-muted-foreground">
       {children}
     </div>
   );

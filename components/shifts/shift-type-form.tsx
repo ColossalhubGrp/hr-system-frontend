@@ -11,6 +11,7 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import { ColorPickerField } from "@/components/shifts/color-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -81,15 +82,10 @@ export function ShiftTypeForm({
         </Field>
         <Field
           label="Color"
-          htmlFor="color"
-          hint="Hex code (#1E1B53), optional."
+          htmlFor="color-hex"
+          hint="Pick a preset or open the swatch. Optional."
         >
-          <TextInput
-            id="color"
-            name="color"
-            defaultValue={initial?.color ?? undefined}
-            placeholder="#1E1B53"
-          />
+          <ColorPickerField name="color" defaultValue={initial?.color} />
         </Field>
         <Field
           label="Start time"

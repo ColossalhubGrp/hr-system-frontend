@@ -1,4 +1,21 @@
 import { cn } from "@/lib/cn";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+
+/**
+ * Form-bits — shared form primitives used across 30+ pages.
+ *
+ * After the shadcn migration, these wrap shadcn's <Card>, <Label>,
+ * <Input>, <Textarea> while preserving the **exact same API** for
+ * callers — they don't have to change a thing.
+ *
+ * The SelectInput keeps a native <select> on purpose: most call sites
+ * post it inside a <form action={serverAction}> and Radix's <Select>
+ * doesn't participate in native form submission. We style the native
+ * element to match shadcn's input chrome so visually it blends in.
+ */
 
 export function FormSection({
   title,
@@ -10,19 +27,19 @@ export function FormSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="card p-6">
-      <header className="mb-5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ash-500">
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           {title}
-        </h2>
-        {description && (
-          <p className="mt-1 text-xs text-ash-500">{description}</p>
-        )}
-      </header>
-      <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
-        {children}
-      </div>
-    </section>
+        </CardTitle>
+        {description && <CardDescription>{description}</CardDescription>}
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+          {children}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -45,34 +62,37 @@ export function Field({
 }) {
   return (
     <div className={cn("flex flex-col gap-1.5", wide && "sm:col-span-2")}>
-      <label
+      <Label
         htmlFor={htmlFor}
-        className="flex items-center gap-1 text-sm font-medium text-ash-700"
+        className="flex items-center gap-1 text-sm font-medium text-foreground"
       >
         {label}
-        {required && <span className="text-fall">*</span>}
-      </label>
+        {required && <span className="text-destructive">*</span>}
+      </Label>
       {children}
       {error ? (
-        <p className="text-xs text-fall">{error}</p>
+        <p className="text-xs text-destructive">{error}</p>
       ) : hint ? (
-        <p className="text-xs text-ash-500">{hint}</p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       ) : null}
     </div>
   );
 }
-
-const baseInput =
-  "h-10 w-full rounded-xl border border-hairline bg-surface px-3 text-sm text-ash-900 placeholder:text-ash-500 focus-ring disabled:bg-canvas disabled:text-ash-500";
 
 export function TextInput(
   props: React.InputHTMLAttributes<HTMLInputElement> & { invalid?: boolean },
 ) {
   const { invalid, className, ...rest } = props;
   return (
-    <input
+    <Input
       {...rest}
-      className={cn(baseInput, invalid && "border-fall", className)}
+      className={cn(
+        // Promote shadcn input height from 9 → 10 to match the rest of
+        // the workspace's denser form rhythm.
+        "h-10",
+        invalid && "border-destructive focus-visible:ring-destructive",
+        className,
+      )}
     />
   );
 }
@@ -84,17 +104,21 @@ export function TextArea(
 ) {
   const { invalid, className, ...rest } = props;
   return (
-    <textarea
+    <Textarea
       {...rest}
       rows={rest.rows ?? 3}
       className={cn(
-        "w-full rounded-xl border border-hairline bg-surface p-3 text-sm text-ash-900 placeholder:text-ash-500 focus-ring",
-        invalid && "border-fall",
+        invalid && "border-destructive focus-visible:ring-destructive",
         className,
       )}
     />
   );
 }
+
+// Native <select> sized + styled to match shadcn's Input chrome. Kept native
+// so callers can post it as a regular form field.
+const nativeSelectClass =
+  "flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none pr-8 bg-[length:1rem] bg-no-repeat bg-[position:right_0.75rem_center] bg-[url('data:image/svg+xml;utf8,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2020%2020%22%20fill=%22currentColor%22><path%20fill-rule=%22evenodd%22%20d=%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule=%22evenodd%22%20/></svg>')]";
 
 export function SelectInput({
   options,
@@ -110,7 +134,7 @@ export function SelectInput({
   return (
     <select
       {...rest}
-      className={cn(baseInput, "pr-8", invalid && "border-fall", className)}
+      className={cn(nativeSelectClass, invalid && "border-destructive focus-visible:ring-destructive", className)}
     >
       <option value="">{placeholder ?? "—"}</option>
       {options.map((o) => (

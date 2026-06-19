@@ -3,6 +3,15 @@ import type { Route } from "next";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { EmptyState } from "./list-shell";
+import { Card } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export type DataTableColumn<T> = {
   /** Header text or node. */
@@ -24,9 +33,7 @@ export type DataTableProps<T> = {
   rowKey: (row: T) => string;
   /**
    * When set, the table adds a trailing chevron column that links to this
-   * URL per row. Rows themselves stay non-wrapped so cells can hold their
-   * own links (e.g. an employee name linking to the employee page while the
-   * row's chevron opens the leave / claim / appraisal detail).
+   * URL per row.
    */
   rowHref?: (row: T) => string;
   /** Aria label for the chevron link. Defaults to `Open {rowKey}`. */
@@ -36,11 +43,12 @@ export type DataTableProps<T> = {
 };
 
 /**
- * Standard list-page table: rounded card frame, sticky header tones, hover
- * row background, optional trailing chevron column for row-open links.
+ * Standard list-page table — rebased on shadcn's <Table> + <Card>.
  *
- * Generic over the row type, so the call site can keep its strongly-typed
- * row shape and just project columns from it.
+ * The wrapping <Card> gives us the bordered surface and subtle shadow;
+ * the table itself uses shadcn's row/cell padding tokens. Column-level
+ * className still propagates to both <th> and <td> so callers can keep
+ * their responsive hiding rules.
  */
 export function DataTable<T>({
   rows,
@@ -55,49 +63,46 @@ export function DataTable<T>({
   }
 
   return (
-    <div className="overflow-hidden rounded-card border border-hairline bg-surface shadow-card">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-hairline bg-canvas/50 text-left text-xs font-medium uppercase tracking-wide text-ash-500">
+    <Card className="overflow-hidden p-0">
+      <Table>
+        <TableHeader>
+          <TableRow>
             {columns.map((c, i) => (
-              <th key={i} className={cn("px-5 py-3", c.className)}>
+              <TableHead key={i} className={cn("px-5 py-3 text-xs uppercase tracking-wide", c.className)}>
                 {c.header}
-              </th>
+              </TableHead>
             ))}
-            {rowHref && <th className="px-2 py-3" aria-label="Open" />}
-          </tr>
-        </thead>
-        <tbody>
+            {rowHref && <TableHead className="px-2 py-3" aria-label="Open" />}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {rows.map((row, ri) => {
             const key = rowKey(row);
             return (
-              <tr
-                key={key}
-                className="border-b border-hairline last:border-b-0 transition hover:bg-canvas/60"
-              >
+              <TableRow key={key}>
                 {columns.map((c, ci) => (
-                  <td key={ci} className={cn("px-5 py-3", c.className)}>
+                  <TableCell key={ci} className={cn("px-5 py-3", c.className)}>
                     {c.cell(row, ri)}
-                  </td>
+                  </TableCell>
                 ))}
                 {rowHref && (
-                  <td className="px-2 py-3 text-right">
+                  <TableCell className="px-2 py-3 text-right">
                     <Link
                       href={rowHref(row) as Route}
                       aria-label={
                         rowAriaLabel ? rowAriaLabel(row) : `Open ${key}`
                       }
-                      className="inline-grid h-8 w-8 place-items-center rounded-full text-ash-500 transition hover:bg-canvas focus-ring"
+                      className="inline-grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-accent focus-ring"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Link>
-                  </td>
+                  </TableCell>
                 )}
-              </tr>
+              </TableRow>
             );
           })}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

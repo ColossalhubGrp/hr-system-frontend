@@ -76,16 +76,28 @@ export const NAV: NavItem[] = [
 
   {
     label: "Recruitment",
-    href: "/recruitment",
+    // Land on the HR-side jobs panel — the most-used recruitment surface —
+    // rather than the dashboard, which loads heavier widgets.
+    href: "/recruitment/hr/jobs",
     icon: Briefcase,
     requires: "RECRUITER",
     children: [
-      {
-        label: "Open in app",
-        href: "https://recruitment.colossalhub.com/",
-        external: true,
-        requires: "RECRUITER",
-      },
+      // HR-side surfaces — copied verbatim from the recruitment app.
+      // The recruitment app draws a distinction between the public Jobs board
+      // (/jobs) and the HR-side jobs control panel (/hr/jobs); both are
+      // surfaced here so HR users can reach either.
+      { label: "HR Dashboard", href: "/recruitment/hr/dashboard", requires: "RECRUITER" },
+      { label: "HR Jobs", href: "/recruitment/hr/jobs", requires: "RECRUITER" },
+      { label: "Jobs (public)", href: "/recruitment/jobs", requires: "RECRUITER" },
+      { label: "Candidates", href: "/recruitment/candidates", requires: "RECRUITER" },
+      { label: "Upload CVs", href: "/recruitment/candidates/upload", requires: "RECRUITER" },
+      { label: "Shortlist Reports", href: "/recruitment/reports", requires: "RECRUITER" },
+      { label: "Interview Reviews", href: "/recruitment/interviewsreview", requires: "RECRUITER" },
+      { label: "Interview Reports", href: "/recruitment/interviewreports", requires: "RECRUITER" },
+      { label: "Feedback", href: "/recruitment/feedback", requires: "RECRUITER" },
+      { label: "Billing", href: "/recruitment/billing", requires: "RECRUITER" },
+      { label: "Billing analytics", href: "/recruitment/billing/analytics", requires: "RECRUITER" },
+      { label: "HR Messages", href: "/recruitment/hr/messages", requires: "RECRUITER" },
     ],
   },
 

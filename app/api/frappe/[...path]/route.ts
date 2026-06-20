@@ -11,8 +11,8 @@ import { resolveRoleFromSid } from '@/lib/recruitment/security/sid-roles';
 const extractStatusCode = (error: unknown, fallback = 500) => {
   const message = error instanceof Error ? error.message : String(error || '');
   const match =
-    message.match(/Frappe API error:\s*(\d{3})/i) ||
-    message.match(/Frappe upload error:\s*(\d{3})/i);
+    message.match(/(Frappe )?API error:\s*(\d{3})/i) ||
+    message.match(/(Frappe )?Upload error:\s*(\d{3})/i);
   if (!match) return fallback;
   const status = Number(match[1]);
   return Number.isFinite(status) ? status : fallback;

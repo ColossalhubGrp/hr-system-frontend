@@ -112,7 +112,7 @@ export default async function ShiftLocationDetailPage({
 
       <DeleteConfirm
         title={`Delete ${loc.id}`}
-        description="Frappe will refuse if any shift type still lists this as an allowed location."
+        description="The system will refuse if any shift type still lists this as an allowed location."
         action={onDelete}
       />
     </div>

@@ -123,7 +123,7 @@ export function ShiftTypeForm({
 
       <FormSection
         title="Auto-attendance"
-        description="When auto-attendance is on, Frappe rolls check-ins into Attendance records on the shift's threshold."
+        description="When auto-attendance is on, the system rolls check-ins into Attendance records on the shift's threshold."
       >
         <div className="flex flex-col gap-3 sm:col-span-2">
           <label className="inline-flex items-center gap-2 text-sm text-ash-800">

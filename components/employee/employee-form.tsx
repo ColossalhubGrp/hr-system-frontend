@@ -364,7 +364,7 @@ export function EmployeeForm({
           <Field
             label="Linked user account"
             htmlFor="user_id"
-            hint="The Frappe user this employee signs in as."
+            hint="The user account this employee signs in as."
             error={fe.user_id}
           >
             <TextInput

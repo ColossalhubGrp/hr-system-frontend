@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const serverEnvSchema = z.object({
   FRAPPE_URL: z.string().url(),
-  FRAPPE_API_KEY: z.string().min(1, "Generate one via Frappe User > API Access."),
+  FRAPPE_API_KEY: z.string().min(1, "Generate one via the User profile > API Access."),
   FRAPPE_API_SECRET: z.string().min(1),
 });
 

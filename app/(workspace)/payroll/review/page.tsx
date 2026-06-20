@@ -36,10 +36,10 @@ export default async function PayrollReviewPage() {
         <p className="flex items-start gap-2 text-xs text-ash-600">
           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
           <span>
-            Approving a payroll run submits the underlying Payroll Entry doc in
-            Frappe (docstatus 0 → 1), which freezes amounts and propagates
-            sign-off to all linked Salary Slips. This is reversible only via
-            Cancel, which a Payroll Officer must do.
+            Approving a payroll run submits the underlying Payroll Entry record
+            in the system (draft → submitted), which freezes amounts and
+            propagates sign-off to all linked Salary Slips. This is reversible
+            only via Cancel, which a Payroll Officer must do.
           </span>
         </p>
       </div>

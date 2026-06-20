@@ -72,7 +72,7 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     const cookie = frappeCookieHeader();
     if (!cookie) {
       throw new FrappeRequestError(
-        `User-scoped Frappe call ${opts.method} attempted without a session cookie.`,
+        `User-scoped call ${opts.method} attempted without a session cookie.`,
         401,
       );
     }
@@ -102,7 +102,7 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
       detail = await res.text();
     }
     throw new FrappeRequestError(
-      `Frappe call ${opts.method} failed: ${res.status} ${res.statusText}`,
+      `Call ${opts.method} failed: ${res.status} ${res.statusText}`,
       res.status,
       detail,
     );
@@ -111,7 +111,7 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
   const json = (await res.json()) as { message?: T };
   if (!("message" in json)) {
     throw new FrappeRequestError(
-      `Frappe call ${opts.method} returned an unexpected envelope.`,
+      `Call ${opts.method} returned an unexpected envelope.`,
       res.status,
       json,
     );

@@ -107,7 +107,7 @@ export default async function ShiftScheduleDetailPage({
 
       <DeleteConfirm
         title={`Delete ${sched.id}`}
-        description="Frappe will refuse if any schedule assignment still points at this schedule."
+        description="The system will refuse if any schedule assignment still points at this schedule."
         action={onDelete}
       />
     </div>

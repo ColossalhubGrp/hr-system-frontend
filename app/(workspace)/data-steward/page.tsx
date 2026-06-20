@@ -34,7 +34,7 @@ export default async function DataStewardPage() {
         <p className="text-sm text-ash-600">
           Read-only inventory of the metrics powering the org dashboards,
           the reference data they depend on, and current data-quality
-          probes. Edits go through Frappe Desk or the relevant module pages.
+          probes. Edits go through the admin console or the relevant module pages.
         </p>
       </header>
 

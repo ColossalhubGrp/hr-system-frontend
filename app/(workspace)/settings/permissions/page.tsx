@@ -89,7 +89,7 @@ export default async function PermissionsPage() {
           </h1>
           <p className="text-sm text-ash-600">
             {rows.length} per-doctype grants across {SRS_ROLES.length} SRS
-            roles. Edit individual rows in Frappe Desk via{" "}
+            roles. Edit individual rows in the admin console via{" "}
             <code>/app/role-permission-manager</code>.
           </p>
         </header>

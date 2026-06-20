@@ -211,7 +211,7 @@ export default async function ShiftTypeDetailPage({
 
       <DeleteConfirm
         title={`Delete ${shift.id}`}
-        description="Removes the shift type from this site. Frappe will refuse if any assignment, request, or employee still references it — cancel or move those first."
+        description="Removes the shift type from this site. The system will refuse if any assignment, request, or employee still references it — cancel or move those first."
         confirmTitle={`Permanently delete ${shift.id}?`}
         action={onDelete}
       />

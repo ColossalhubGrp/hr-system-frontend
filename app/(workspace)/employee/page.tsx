@@ -100,7 +100,7 @@ export default async function EmployeeDirectoryPage({
       {listSettled.status === "rejected" && (
         <p className="rounded-card border border-fall/30 bg-fall/[0.06] px-4 py-3 text-sm text-fall">
           We couldn't load the directory just now. Refresh, or check that your
-          Frappe credentials are valid.
+          account credentials are valid.
         </p>
       )}
     </div>

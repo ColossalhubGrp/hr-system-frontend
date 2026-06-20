@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Recordings stream is a per-request range-fetch proxy. Mark dynamic so
+// Next.js doesn't try to prerender it at build (it can't — handler reads
+// request.url + Range headers per call) and the build stays warning-free.
+export const dynamic = 'force-dynamic';
+
 // Resolved MinIO URL per sessionId, cached in-process. Saves a HEAD probe
 // on every chunk request — without this, every Range request the browser
 // fires (and there are dozens during scrubbing) would cost an extra round

@@ -66,7 +66,7 @@ export async function frappeRequest<T>(
     const key = apiKey || FRAPPE_API_KEY;
     const secret = apiSecret || FRAPPE_API_SECRET;
     if (!key || !secret) {
-      throw new Error('Frappe API credentials not configured');
+      throw new Error('API credentials not configured');
     }
     const authString = Buffer.from(`${key}:${secret}`).toString('base64');
     headers.Authorization = `Basic ${authString}`;
@@ -103,7 +103,7 @@ export async function frappeRequest<T>(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Frappe API error: ${response.status} - ${errorText}`);
+      throw new Error(`API error: ${response.status} - ${errorText}`);
     }
 
     const data: ApiResponse<T> = await response.json();
@@ -117,7 +117,7 @@ export async function frappeRequest<T>(
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error('Unknown error occurred while calling Frappe API');
+    throw new Error('Unknown error occurred while calling the API');
   }
 }
 
@@ -152,7 +152,7 @@ export async function frappeUploadFile(
     const key = apiKey || FRAPPE_API_KEY;
     const secret = apiSecret || FRAPPE_API_SECRET;
     if (!key || !secret) {
-      throw new Error('Frappe API credentials not configured');
+      throw new Error('API credentials not configured');
     }
     authHeader = `Basic ${Buffer.from(`${key}:${secret}`).toString('base64')}`;
   }
@@ -200,7 +200,7 @@ export async function frappeUploadFile(
 
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Frappe upload error: ${response.status} - ${errorText}`);
+      throw new Error(`Upload error: ${response.status} - ${errorText}`);
     }
 
     const data: ApiResponse<{ file_url: string }> = await response.json();
@@ -214,7 +214,7 @@ export async function frappeUploadFile(
     if (error instanceof Error) {
       throw error;
     }
-    throw new Error('Unknown error occurred while uploading file to Frappe');
+    throw new Error('Unknown error occurred while uploading file');
   }
 }
 

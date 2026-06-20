@@ -17,7 +17,7 @@ const ICON: Record<EvaluationFramework, React.ComponentType<{ className?: string
 
 const TAGLINE: Record<EvaluationFramework, string> = {
   "KRA & Goals":
-    "Frappe's classic Key Result Area / Goal tree with MBO-style progress.",
+    "Classic Key Result Area / Goal tree with MBO-style progress.",
   OKR: "Qualitative objective with 2–5 measurable key results; Google 0.0–1.0 grading.",
   "Balanced Scorecard":
     "Strategic objectives across four perspectives — Financial, Customer, Internal Process, Learning & Growth.",

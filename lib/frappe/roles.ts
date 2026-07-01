@@ -145,6 +145,15 @@ export const ROLE_GROUPS = {
     ROLE.SYSTEM_MANAGER,
   ],
 
+  /**
+   * Site Administrator — the platform operator who owns the deployment.
+   * NOT a per-tenant role: this is the person who hosts the system,
+   * controls cross-company subscriptions, and is the ultimate fallback
+   * support contact. In Frappe, "System Manager" implies this — every
+   * tenant's HR/IT admins are customers, not operators.
+   */
+  PLATFORM_OPERATOR: [ROLE.SYSTEM_MANAGER],
+
   /** Post-exit alumni — see their own historical records only. */
   ALUMNI_ONLY: [ROLE.ALUMNI],
 
@@ -257,6 +266,9 @@ export type MyAccess = {
   /** Can reach the /settings area at all — cards filter further inside. */
   isSettingsAny: boolean;
 
+  /** The platform operator (System Manager). Owns the deployment. */
+  isPlatformOperator: boolean;
+
   /** Post-exit alumni — only role they have (UI routes to /alumni). */
   isAlumniOnly: boolean;
 
@@ -297,6 +309,7 @@ export async function getMyAccess(): Promise<MyAccess> {
     isDataSteward: isInGroup(roles, "DATA_STEWARD"),
     isItAdmin: isInGroup(roles, "IT_ADMIN"),
     isSettingsAny: isInGroup(roles, "SETTINGS_ANY"),
+    isPlatformOperator: isInGroup(roles, "PLATFORM_OPERATOR"),
     isAlumniOnly: isAlumni && !activeWorkforce,
     isEmployee: isInGroup(roles, "EMPLOYEE_ANY"),
   };

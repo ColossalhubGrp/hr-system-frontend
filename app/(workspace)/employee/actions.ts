@@ -35,7 +35,28 @@ const baseSchema = z.object({
   designation: z.string().trim().optional(),
   branch: z.string().trim().optional(),
   employment_type: z.string().trim().optional(),
-  grade: z.string().trim().optional(),
+  pay_grade: z.string().trim().optional(),
+  // FormData delivers strings — coerce. NEC-locked inputs still send
+  // their (grade-inherited) values because we use readOnly, not
+  // disabled, on the form side.
+  basic_usd: z.coerce.number().nonnegative().optional(),
+  basic_zig: z.coerce.number().nonnegative().optional(),
+  nec_industry: z.string().trim().optional(),
+  nec_dues_usd: z.coerce.number().nonnegative().optional(),
+  // Boolean travels through FormData as "0"/"1"; coerce → number → cast.
+  nec_dues_override: z
+    .union([z.literal("0"), z.literal("1")])
+    .transform((v) => (v === "1" ? 1 : 0) as 0 | 1)
+    .optional(),
+  // ZIMRA tax credits — same "0"/"1" wire shape as nec_dues_override.
+  is_elderly: z
+    .union([z.literal("0"), z.literal("1")])
+    .transform((v) => (v === "1" ? 1 : 0) as 0 | 1)
+    .optional(),
+  is_disabled: z
+    .union([z.literal("0"), z.literal("1")])
+    .transform((v) => (v === "1" ? 1 : 0) as 0 | 1)
+    .optional(),
   date_of_joining: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD."),
   employee_number: z.string().trim().optional(),
 

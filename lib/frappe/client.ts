@@ -108,13 +108,11 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     );
   }
 
+  // Frappe wraps whitelisted-method responses as `{message: <payload>}`.
+  // Void methods (anything that returns Python `None`) produce a
+  // response with NO `message` key — that's fine, return undefined and
+  // let the caller decide. Only error responses (non-2xx) were caught
+  // above; here we just unwrap whatever's present.
   const json = (await res.json()) as { message?: T };
-  if (!("message" in json)) {
-    throw new FrappeRequestError(
-      `Call ${opts.method} returned an unexpected envelope.`,
-      res.status,
-      json,
-    );
-  }
-  return json.message as T;
+  return (json?.message ?? undefined) as T;
 }

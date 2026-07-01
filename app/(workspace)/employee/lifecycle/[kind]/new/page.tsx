@@ -60,7 +60,7 @@ export default async function NewLifecyclePage({
     companies: opts.companies,
     departments: opts.departments,
     designations: opts.designations,
-    grades: opts.grades,
+    payGrades: opts.payGrades,
     defaultEmployee: searchParams.employee,
   };
 

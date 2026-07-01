@@ -14,7 +14,30 @@ export type EmployeeFormOptions = {
   employmentTypes: string[];
   holidayLists: string[];
   shifts: string[];
-  grades: string[];
+  /** Pay grades from Setup → Pay Grades (Payroll Pay Grade). Drives
+   *  Employee.pay_grade AND the lifecycle sub-flows (Onboarding /
+   *  Promotion) after patch 30 repointed their Link options here.
+   *  Falls back to `DEFAULT_GRADES` when the tenant hasn't set up
+   *  payroll yet, so basic HR still has a usable grade picker. */
+  payGrades: string[];
+  /** Per-grade metadata the edit form needs to enforce the NEC-
+   *  ceiling rule. Keyed by grade code. Missing (or empty when the
+   *  tenant hasn't loaded a grading system yet) → the form falls
+   *  through to editable + zero. */
+  payGradeInfo: Record<
+    string,
+    { salary_usd: number; salary_zig: number; is_nec_grade: boolean }
+  >;
+  /** NEC industries from Setup → NEC / industry. Drives the industry
+   *  dropdown on the Employee edit form; picking one + an inside-NEC
+   *  grade auto-fills basic salary from that industry's schedule. */
+  necIndustries: string[];
+  /** Per-industry dues rates for the auto-computed NEC dues field.
+   *  Empty when the tenant hasn't published a rate yet. */
+  necIndustryInfo: Record<
+    string,
+    { dues_amount_usd: number; dues_pct: number; employer_share_pct: number }
+  >;
 };
 
 const EMPLOYMENT_FALLBACK = [
@@ -28,6 +51,22 @@ const EMPLOYMENT_FALLBACK = [
   "Apprentice",
 ];
 
+/**
+ * Baseline role-tier labels the grade picker falls back to when the
+ * tenant hasn't populated Payroll Pay Grade yet (e.g. hasn't
+ * subscribed to Payroll). Once the admin loads a real grading system
+ * in /payroll/setup/pay-grades, those grades take over automatically.
+ */
+const DEFAULT_GRADES = [
+  "Junior",
+  "Officer",
+  "Senior Officer",
+  "Manager",
+  "Senior Manager",
+  "Director",
+  "Executive Director",
+];
+
 export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
   const [
     companies,
@@ -37,7 +76,8 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     employmentTypes,
     holidayLists,
     shifts,
-    grades,
+    payGradeRows,
+    necIndustryRows,
   ] = await Promise.all([
     listNames("Company"),
     listNames("Department"),
@@ -46,8 +86,30 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     listNames("Employment Type"),
     listNames("Holiday List"),
     listNames("Shift Type"),
-    listNames("Employee Grade"),
+    listPayGradesFull(),
+    listNecIndustriesFull(),
   ] as const);
+  const necIndustries = necIndustryRows.map((r) => r.name);
+  const necIndustryInfo: EmployeeFormOptions["necIndustryInfo"] = {};
+  for (const r of necIndustryRows) {
+    necIndustryInfo[r.name] = {
+      dues_amount_usd: Number(r.dues_amount_usd ?? 0),
+      dues_pct: Number(r.dues_pct ?? 0),
+      employer_share_pct: Number(r.employer_share_pct ?? 50),
+    };
+  }
+
+  const payGrades = payGradeRows.length > 0
+    ? payGradeRows.map((r) => r.code)
+    : DEFAULT_GRADES;
+  const payGradeInfo: EmployeeFormOptions["payGradeInfo"] = {};
+  for (const r of payGradeRows) {
+    payGradeInfo[r.code] = {
+      salary_usd: Number(r.salary_usd ?? 0),
+      salary_zig: Number(r.salary_zig ?? 0),
+      is_nec_grade: Boolean(r.is_nec_grade),
+    };
+  }
 
   return {
     companies,
@@ -58,8 +120,61 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
       employmentTypes.length > 0 ? employmentTypes : EMPLOYMENT_FALLBACK,
     holidayLists,
     shifts,
-    grades,
+    payGrades,
+    payGradeInfo,
+    necIndustries,
+    necIndustryInfo,
   };
+}
+
+type NecIndustryFullRow = {
+  name: string;
+  dues_amount_usd: number | null;
+  dues_pct: number | null;
+  employer_share_pct: number | null;
+};
+
+async function listNecIndustriesFull(): Promise<NecIndustryFullRow[]> {
+  try {
+    const rows = await frappeCall<NecIndustryFullRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Payroll NEC Industry",
+        fields: ["name", "dues_amount_usd", "dues_pct", "employer_share_pct"],
+        order_by: "industry_name asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    return rows ?? [];
+  } catch {
+    return [];
+  }
+}
+
+type PayGradeRow = {
+  code: string;
+  salary_usd: number | null;
+  salary_zig: number | null;
+  is_nec_grade: 0 | 1 | boolean | null;
+};
+
+async function listPayGradesFull(): Promise<PayGradeRow[]> {
+  try {
+    const rows = await frappeCall<PayGradeRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Payroll Pay Grade",
+        fields: ["code", "salary_usd", "salary_zig", "is_nec_grade"],
+        order_by: "code asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    return rows ?? [];
+  } catch {
+    return [];
+  }
 }
 
 async function listNames(doctype: string): Promise<string[]> {
@@ -100,7 +215,33 @@ export type EmployeeFormInput = {
   designation?: string;
   branch?: string;
   employment_type?: string;
-  grade?: string;
+  /** Link → Payroll Pay Grade (Setup → Pay Grades). Replaces the
+   *  legacy `grade` field which linked to ERPNext's Employment Grade. */
+  pay_grade?: string;
+  /** Basic monthly salary in USD. Read-only in the form when the
+   *  chosen pay_grade is inside the tenant's NEC ceiling
+   *  (`is_nec_grade=1`), editable when above. */
+  basic_usd?: number;
+  /** Basic monthly salary in ZiG. Same NEC-editability rule as
+   *  basic_usd. */
+  basic_zig?: number;
+  /** Link → Payroll NEC Industry. When set together with an
+   *  inside-NEC pay_grade, the salary auto-fills from that industry's
+   *  grade_schedule (falling back to Payroll Pay Grade's flat salary
+   *  if the NEC hasn't published a figure for that grade yet). */
+  nec_industry?: string;
+  /** Monthly NEC dues (employee side) — writes verbatim. When
+   *  `nec_dues_override` is 0, the edit form computes this from the
+   *  industry rate before submitting; when 1, admin-entered. */
+  nec_dues_usd?: number;
+  /** 1 = user-entered override; 0 = auto-computed from industry rate.
+   *  FormData carries "0"/"1" strings via coerce. */
+  nec_dues_override?: 0 | 1;
+  /** ZIMRA elderly-persons credit eligibility (55+). Engine applies
+   *  the tenant's `elderly_credit_monthly_usd` when set. */
+  is_elderly?: 0 | 1;
+  /** ZIMRA blind / disabled credit eligibility. */
+  is_disabled?: 0 | 1;
   date_of_joining: string;
   employee_number?: string;
 

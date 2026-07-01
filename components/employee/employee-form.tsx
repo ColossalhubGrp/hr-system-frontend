@@ -53,7 +53,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "contact", label: "Contact Details" },
   { id: "attendance", label: "Attendance" },
   { id: "approvers", label: "Approvers" },
-  { id: "salary", label: "Salary" },
+  { id: "salary", label: "Payroll" },
   { id: "profile", label: "Profile" },
   { id: "exit", label: "Exit" },
 ];
@@ -73,7 +73,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "company",
     "status",
   ],
-  joining: ["date_of_joining", "employee_number", "employment_type", "grade"],
+  joining: ["date_of_joining", "employee_number", "employment_type", "pay_grade", "nec_industry", "basic_usd", "basic_zig", "nec_dues_override", "nec_dues_usd", "is_elderly", "is_disabled"],
   contact: [
     "cell_number",
     "user_id",
@@ -106,6 +106,79 @@ export function EmployeeForm({
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   const [tab, setTab] = useState<TabId>("overview");
+  // Pay grade + basic salary are controlled so we can apply the NEC-
+  // ceiling rule reactively: grades at/below the tenant's ceiling
+  // (is_nec_grade=1) inherit the grade's salary and lock the input;
+  // grades above are editable per employee.
+  const [payGrade, setPayGrade] = useState<string>(initial?.payGrade ?? "");
+  const [necIndustry, setNecIndustry] = useState<string>(initial?.necIndustry ?? "");
+  const [basicUsd, setBasicUsd] = useState<number>(initial?.basicUsd ?? 0);
+  const [basicZig, setBasicZig] = useState<number>(initial?.basicZig ?? 0);
+  const [salarySource, setSalarySource] = useState<"industry" | "grade" | "none">("none");
+  // NEC dues mirror the salary pattern: default is "Auto" (inherit
+  // from industry.dues_amount_usd or dues_pct × basic_usd, split by
+  // employer_share_pct), with an override toggle for negotiated /
+  // grandfathered arrangements.
+  const [necDuesOverride, setNecDuesOverride] = useState<boolean>(
+    Boolean(initial?.necDuesOverride),
+  );
+  const [necDuesUsd, setNecDuesUsd] = useState<number>(initial?.necDuesUsd ?? 0);
+  // ZIMRA credit flags — engine reads these on process and subtracts
+  // the tenant's credit amounts from combined PAYE before AIDS Levy.
+  const [isElderly, setIsElderly] = useState<boolean>(Boolean(initial?.isElderly));
+  const [isDisabled, setIsDisabled] = useState<boolean>(Boolean(initial?.isDisabled));
+  const industryDues = necIndustry ? options.necIndustryInfo[necIndustry] : undefined;
+  const suggestedDuesUsd = (() => {
+    if (!industryDues) return 0;
+    const total = industryDues.dues_amount_usd
+      || (basicUsd * industryDues.dues_pct) / 100;
+    const employerPct = industryDues.employer_share_pct || 0;
+    return Math.max(0, Number(((total * (100 - employerPct)) / 100).toFixed(2)));
+  })();
+  useEffect(() => {
+    if (!necDuesOverride) setNecDuesUsd(suggestedDuesUsd);
+  }, [necDuesOverride, suggestedDuesUsd]);
+  const gradeInfo = payGrade ? options.payGradeInfo[payGrade] : undefined;
+  const isNecLocked = Boolean(gradeInfo?.is_nec_grade);
+  useEffect(() => {
+    // When the grade is inside NEC, salary is authoritative. Prefer
+    // the industry's per-grade schedule (Payroll NEC Industry.
+    // grade_schedule); fall back to Payroll Pay Grade's flat salary
+    // if the NEC hasn't published a figure for that grade yet.
+    // Grades above NEC leave the inputs editable and unchanged.
+    if (!isNecLocked || !gradeInfo) {
+      setSalarySource("none");
+      return;
+    }
+    let cancelled = false;
+    if (necIndustry) {
+      import("@/app/(workspace)/payroll/setup/actions")
+        .then((m) => m.fetchIndustrySalary(necIndustry, payGrade))
+        .then((r) => {
+          if (cancelled) return;
+          if (r.source === "industry") {
+            setBasicUsd(r.salary_usd);
+            setBasicZig(r.salary_zig);
+            setSalarySource("industry");
+          } else {
+            setBasicUsd(gradeInfo.salary_usd);
+            setBasicZig(gradeInfo.salary_zig);
+            setSalarySource("grade");
+          }
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setBasicUsd(gradeInfo.salary_usd);
+          setBasicZig(gradeInfo.salary_zig);
+          setSalarySource("grade");
+        });
+    } else {
+      setBasicUsd(gradeInfo.salary_usd);
+      setBasicZig(gradeInfo.salary_zig);
+      setSalarySource("grade");
+    }
+    return () => { cancelled = true; };
+  }, [isNecLocked, gradeInfo, necIndustry, payGrade]);
 
   // After a failed submit, jump to the first tab that contains an errored
   // field — without this the user sees a generic banner and has no idea which
@@ -138,7 +211,7 @@ export function EmployeeForm({
     designation: initial?.designation ?? "",
     branch: initial?.branch ?? "",
     employment_type: initial?.employmentType ?? "",
-    grade: initial?.grade ?? "",
+    pay_grade: initial?.payGrade ?? "",
     date_of_joining: initial?.dateOfJoining ?? "",
     employee_number: initial?.employeeNumber ?? "",
     cell_number: initial?.mobile ?? "",
@@ -338,14 +411,188 @@ export function EmployeeForm({
               placeholder="—"
             />
           </Field>
-          <Field label="Grade" htmlFor="grade">
+          <Field
+            label="Pay grade"
+            htmlFor="pay_grade"
+            hint={
+              payGrade
+                ? isNecLocked
+                  ? `${payGrade} is inside NEC — salary is inherited from the grade.`
+                  : `${payGrade} is above the NEC ceiling — salary is editable per employee.`
+                : undefined
+            }
+          >
             <SelectInput
-              id="grade"
-              name="grade"
-              defaultValue={v.grade}
-              options={options.grades}
+              id="pay_grade"
+              name="pay_grade"
+              value={payGrade}
+              onChange={(e) => setPayGrade(e.target.value)}
+              options={options.payGrades}
               placeholder="—"
             />
+          </Field>
+          <Field
+            label="NEC / industry"
+            htmlFor="nec_industry"
+            hint={
+              isNecLocked
+                ? "Sets which NEC's schedule the salary auto-fills from."
+                : "Sectoral classification — used for statutory returns."
+            }
+          >
+            <SelectInput
+              id="nec_industry"
+              name="nec_industry"
+              value={necIndustry}
+              onChange={(e) => setNecIndustry(e.target.value)}
+              options={options.necIndustries}
+              placeholder="—"
+            />
+          </Field>
+          <Field
+            label="Basic (USD)"
+            htmlFor="basic_usd"
+            hint={
+              isNecLocked
+                ? salarySource === "industry"
+                  ? `Inherited from ${necIndustry} schedule.`
+                  : "Inherited from the grade's flat salary (NEC hasn't published a figure for this grade)."
+                : "Editable — this employee's basic in USD."
+            }
+          >
+            <TextInput
+              id="basic_usd"
+              name="basic_usd"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min={0}
+              value={basicUsd || ""}
+              onChange={(e) => setBasicUsd(Number(e.target.value) || 0)}
+              readOnly={isNecLocked}
+              aria-readonly={isNecLocked}
+              className={cn(
+                isNecLocked && "cursor-not-allowed bg-muted/40 text-muted-foreground",
+              )}
+            />
+          </Field>
+          <Field
+            label="Basic (ZiG)"
+            htmlFor="basic_zig"
+            hint={
+              isNecLocked
+                ? salarySource === "industry"
+                  ? `Inherited from ${necIndustry} schedule.`
+                  : "Inherited from the grade's flat ZiG salary."
+                : "Editable — this employee's basic in ZiG."
+            }
+          >
+            <TextInput
+              id="basic_zig"
+              name="basic_zig"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min={0}
+              value={basicZig || ""}
+              onChange={(e) => setBasicZig(Number(e.target.value) || 0)}
+              readOnly={isNecLocked}
+              aria-readonly={isNecLocked}
+              className={cn(
+                isNecLocked && "cursor-not-allowed bg-muted/40 text-muted-foreground",
+              )}
+            />
+          </Field>
+          <Field
+            label="NEC dues source"
+            htmlFor="nec_dues_override"
+            hint={
+              necDuesOverride
+                ? "Override — amount below is used verbatim on every payslip."
+                : necIndustry
+                  ? `Auto — computed from ${necIndustry}'s published rate.`
+                  : "Auto — pick an NEC industry above to inherit a rate."
+            }
+          >
+            <SelectInput
+              id="nec_dues_override"
+              name="nec_dues_override_label"
+              value={necDuesOverride ? "Override" : "Auto"}
+              onChange={(e) => setNecDuesOverride(e.target.value === "Override")}
+              options={["Auto", "Override"]}
+              placeholder="Auto"
+            />
+            {/* Submit as 0/1 alongside the human-readable select. */}
+            <input type="hidden" name="nec_dues_override" value={necDuesOverride ? "1" : "0"} />
+          </Field>
+          <Field
+            label="NEC dues (USD, monthly)"
+            htmlFor="nec_dues_usd"
+            hint={
+              necDuesOverride
+                ? "Editable — the amount deducted from this employee's slip."
+                : industryDues
+                  ? industryDues.dues_amount_usd
+                    ? `US$${industryDues.dues_amount_usd.toFixed(2)} fixed × ${100 - (industryDues.employer_share_pct || 0)}% employee share`
+                    : industryDues.dues_pct
+                      ? `${industryDues.dues_pct}% of basic × ${100 - (industryDues.employer_share_pct || 0)}% employee share`
+                      : "Industry hasn't published a rate — fill in Override for now."
+                  : "Pick an industry to auto-compute, or switch to Override."
+            }
+          >
+            <TextInput
+              id="nec_dues_usd"
+              name="nec_dues_usd"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              min={0}
+              value={necDuesUsd || ""}
+              onChange={(e) => setNecDuesUsd(Number(e.target.value) || 0)}
+              readOnly={!necDuesOverride}
+              aria-readonly={!necDuesOverride}
+              className={cn(
+                !necDuesOverride && "cursor-not-allowed bg-muted/40 text-muted-foreground",
+              )}
+            />
+          </Field>
+          <Field
+            label="Elderly (55+)"
+            htmlFor="is_elderly"
+            hint={
+              isElderly
+                ? "ZIMRA elderly credit applied to monthly PAYE."
+                : "Set Yes for employees 55+ — engine subtracts the elderly credit before AIDS Levy."
+            }
+          >
+            <SelectInput
+              id="is_elderly"
+              name="is_elderly_label"
+              value={isElderly ? "Yes" : "No"}
+              onChange={(e) => setIsElderly(e.target.value === "Yes")}
+              options={["No", "Yes"]}
+              placeholder="No"
+            />
+            <input type="hidden" name="is_elderly" value={isElderly ? "1" : "0"} />
+          </Field>
+          <Field
+            label="Blind / disabled"
+            htmlFor="is_disabled"
+            hint={
+              isDisabled
+                ? "ZIMRA disabled-persons credit applied to monthly PAYE."
+                : "Set Yes if the employee qualifies under ZIMRA's blind or disabled persons list."
+            }
+          >
+            <SelectInput
+              id="is_disabled"
+              name="is_disabled_label"
+              value={isDisabled ? "Yes" : "No"}
+              onChange={(e) => setIsDisabled(e.target.value === "Yes")}
+              options={["No", "Yes"]}
+              placeholder="No"
+            />
+            <input type="hidden" name="is_disabled" value={isDisabled ? "1" : "0"} />
           </Field>
         </Grid>
       </TabPane>

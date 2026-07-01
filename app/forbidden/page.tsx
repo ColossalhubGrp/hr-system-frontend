@@ -19,7 +19,7 @@ const GROUP_HUMAN: Record<string, string> = {
 export default async function ForbiddenPage({
   searchParams,
 }: {
-  searchParams: { from?: string; need?: string };
+  searchParams: { from?: string; need?: string; reason?: string; app?: string };
 }) {
   const roles = await getMyRoles();
   const mine = Array.from(roles).sort();
@@ -30,6 +30,34 @@ export default async function ForbiddenPage({
         ROLE_GROUPS[need as keyof typeof ROLE_GROUPS] ?? [],
       ) as string[]
     : null;
+
+  // Subscription-deny: the company doesn't own this app. Different
+  // message; the user's roles aren't the problem.
+  if (searchParams.reason === "subscription") {
+    const app = searchParams.app ?? "this module";
+    return (
+      <div className="mx-auto flex max-w-xl flex-col gap-5 py-12">
+        <Card>
+          <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
+            <ShieldAlert className="h-10 w-10 text-amber-500" />
+            <h1 className="text-xl font-semibold text-foreground">
+              Your subscription doesn't include {app}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              This module isn't part of your company's current plan. Ask
+              your IT Admin to add it from Admin → Subscriptions, or talk
+              to your account manager about upgrading.
+            </p>
+            <div className="mt-4 flex gap-2">
+              <Button asChild size="sm">
+                <Link href={"/me" as Route}>Back to my workspace</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-5 py-12">

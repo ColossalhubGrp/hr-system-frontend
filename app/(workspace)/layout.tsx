@@ -1,8 +1,10 @@
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { Toaster } from "@/components/ui/sonner";
 import { isAuthenticated, readSession, resolveAvatarUrl } from "@/lib/frappe/session";
 import { getMyAccess } from "@/lib/frappe/roles";
+import { getMySubscription } from "@/lib/subscriptions/server";
 
 /**
  * Workspace shell: full-height purple rail on the left, scrollable canvas on
@@ -22,7 +24,17 @@ export default async function WorkspaceLayout({
   }
 
   const session = readSession();
-  const access = await getMyAccess();
+  const [access, subscription] = await Promise.all([
+    getMyAccess(),
+    getMySubscription(),
+  ]);
+
+  // App codes the user's company is subscribed to. Always-on apps (core)
+  // are forced in even when the catalog query failed entirely.
+  const subscribedApps = new Set<string>([
+    "core",
+    ...subscription.apps.filter((a) => a.enabled).map((a) => a.code),
+  ]);
 
   // Alumni-only sessions have their own walled-garden portal and never see
   // the HR workspace shell.
@@ -52,7 +64,9 @@ export default async function WorkspaceLayout({
           isDataSteward: access.isDataSteward,
           isItAdmin: access.isItAdmin,
           isSettingsAny: access.isSettingsAny,
+          isPlatformOperator: access.isPlatformOperator,
           isEmployee: access.isEmployee,
+          subscribedApps,
         }}
       />
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -61,6 +75,7 @@ export default async function WorkspaceLayout({
           {children}
         </main>
       </div>
+      <Toaster position="top-right" />
     </div>
   );
 }

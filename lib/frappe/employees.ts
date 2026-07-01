@@ -71,6 +71,28 @@ export type EmployeeFull = {
   /** When true, attendance check-ins for this employee bypass geofence
    *  validation. Set by HR/Shift Manager only. */
   geofenceExempt: boolean;
+  // ── Zimbabwe statutory + pay structure (Phase 5) ────────────────
+  nationalId: string | null;
+  taxNumber: string | null;        // ZIMRA / ITF
+  nssaNumber: string | null;
+  bankName: string | null;
+  bankAccount: string | null;
+  basicUsd: number;
+  basicZig: number;
+  pensionPct: number;              // percent — 5 = 5%
+  medicalAidUsd: number;
+  necDuesUsd: number;
+  /** When true, `necDuesUsd` is authoritative. When false, dues are
+   *  auto-computed from the industry rate at edit time. */
+  necDuesOverride: boolean;
+  /** ZIMRA elderly credit eligibility (55+). Engine applies the
+   *  tenant's `elderly_credit_monthly_usd` when set. */
+  isElderly: boolean;
+  /** ZIMRA blind / disabled credit eligibility. */
+  isDisabled: boolean;
+  necIndustry: string | null;
+  payGrade: string | null;
+  payPoint: string | null;
 };
 
 type ListArgs = {
@@ -236,6 +258,23 @@ type RawEmployeeDoc = RawEmployeeRow & {
   grade: string | null;
   employee_number: string | null;
   geofence_exempt: 0 | 1 | boolean | null;
+  // Phase 5 ZW Custom Fields
+  national_id: string | null;
+  tax_number: string | null;
+  nssa_number: string | null;
+  bank_name: string | null;
+  bank_account: string | null;
+  basic_usd: number | null;
+  basic_zig: number | null;
+  pension_pct: number | null;
+  medical_aid_usd: number | null;
+  nec_dues_usd: number | null;
+  nec_dues_override: 0 | 1 | boolean | null;
+  is_elderly: 0 | 1 | boolean | null;
+  is_disabled: 0 | 1 | boolean | null;
+  nec_industry: string | null;
+  pay_grade: string | null;
+  pay_point: string | null;
 };
 
 function toRow(r: RawEmployeeRow): EmployeeListRow {
@@ -281,6 +320,22 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     grade: d.grade,
     employeeNumber: d.employee_number,
     geofenceExempt: Boolean(d.geofence_exempt),
+    nationalId: d.national_id,
+    taxNumber: d.tax_number,
+    nssaNumber: d.nssa_number,
+    bankName: d.bank_name,
+    bankAccount: d.bank_account,
+    basicUsd: Number(d.basic_usd ?? 0),
+    basicZig: Number(d.basic_zig ?? 0),
+    pensionPct: Number(d.pension_pct ?? 0),
+    medicalAidUsd: Number(d.medical_aid_usd ?? 0),
+    necDuesUsd: Number(d.nec_dues_usd ?? 0),
+    necDuesOverride: Boolean(d.nec_dues_override),
+    isElderly: Boolean(d.is_elderly),
+    isDisabled: Boolean(d.is_disabled),
+    necIndustry: d.nec_industry,
+    payGrade: d.pay_grade,
+    payPoint: d.pay_point,
   };
 }
 

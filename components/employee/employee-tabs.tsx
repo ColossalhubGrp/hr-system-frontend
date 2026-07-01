@@ -18,7 +18,7 @@ export const EMPLOYEE_TABS: { id: EmployeeTabId; label: string }[] = [
   { id: "contact", label: "Contact Details" },
   { id: "attendance", label: "Attendance" },
   { id: "approvers", label: "Approvers" },
-  { id: "salary", label: "Salary" },
+  { id: "salary", label: "Payroll" },
   { id: "profile", label: "Profile" },
   { id: "exit", label: "Exit" },
 ];

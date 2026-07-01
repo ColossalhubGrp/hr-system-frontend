@@ -1,4 +1,5 @@
 import { requireGroup } from "@/lib/frappe/require-role";
+import { requireApp } from "@/lib/subscriptions/gate";
 
 /**
  * Analytics dashboard. Open to any Executive Viewer (read-only senior
@@ -11,6 +12,7 @@ export default async function AnalyticsLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await requireApp("analytics", "/analytics");
   await requireGroup("EXECUTIVE_VIEWER", "/analytics");
   return <>{children}</>;
 }

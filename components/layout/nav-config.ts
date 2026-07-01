@@ -128,18 +128,24 @@ export const NAV: NavItem[] = [
 
   {
     label: "Payroll",
-    href: "/payroll",
+    // Landing point when the group is expanded — the Dashboard is
+    // the "story" surface, so it goes first + is what users see.
+    href: "/payroll/dashboard",
     icon: Wallet,
-    // PAYROLL_ANY = admin ∪ reviewer. Sub-items tighten further: only
-    // PAYROLL_ADMIN sees slip lists / structures / entry runs; only
-    // PAYROLL_REVIEWER sees the review queue. Members of both bundles
-    // (HR Director, System Manager) see everything.
+    // PAYROLL_ANY = admin ∪ reviewer. Members of both bundles (HR
+    // Director, System Manager) see everything.
     requires: "PAYROLL_ANY",
     children: [
-      { label: "Salary Slips", href: "/payroll", requires: "PAYROLL_ADMIN" },
-      { label: "Salary Structures", href: "/payroll/structures", requires: "PAYROLL_ADMIN" },
-      { label: "Payroll Entries", href: "/payroll/entries", requires: "PAYROLL_ADMIN" },
-      { label: "Review queue", href: "/payroll/review", requires: "PAYROLL_REVIEWER" },
+      // Most sub-surfaces (Overview / People / Transactions / Accounting
+      // / Reports / Docs / Tax Notices / Tax Exemptions / Audit) live
+      // in the in-page tab bar. Only the three that don't fit there
+      // are sidebar entries:
+      //   • Dashboard — landing surface with charts & KPIs
+      //   • Payroll  — Pay Runs list (the operational hub)
+      //   • Setup    — 6 master-data sub-tabs of its own
+      { label: "Dashboard", href: "/payroll/dashboard", requires: "PAYROLL_ANY" },
+      { label: "Payroll", href: "/payroll", requires: "PAYROLL_ANY" },
+      { label: "Setup", href: "/payroll/setup", requires: "PAYROLL_ADMIN" },
     ],
   },
 
@@ -169,6 +175,32 @@ export const NAV: NavItem[] = [
     href: "/data-steward",
     icon: Database,
     requires: "DATA_STEWARD",
+  },
+
+  // Admin workspace — reference-data manager + (future) audit / IT tools.
+  // Gated on HR_ADMIN (same as the /admin layout); IT admins also fall into
+  // this bundle by virtue of having System Manager.
+  {
+    label: "Admin",
+    href: "/admin/references",
+    icon: ShieldCheck,
+    requires: "HR_ADMIN",
+    children: [
+      { label: "Reference data", href: "/admin/references", requires: "HR_ADMIN" },
+    ],
+  },
+
+  // Platform — site Administrator only. NOT for per-tenant HR/IT admins;
+  // this is where the platform operator (System Manager / site owner)
+  // controls cross-company subscriptions and multi-tenant settings.
+  {
+    label: "Platform",
+    href: "/platform/subscriptions",
+    icon: Package,
+    requires: "PLATFORM_OPERATOR",
+    children: [
+      { label: "Subscriptions", href: "/platform/subscriptions", requires: "PLATFORM_OPERATOR" },
+    ],
   },
 
   // Settings is shared between HR-policy admins and IT admins. The landing

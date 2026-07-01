@@ -7,6 +7,7 @@ import { ChevronRight, ExternalLink } from "lucide-react";
 import { NAV, type NavItem } from "./nav-config";
 import { BrandMark } from "./brand-mark";
 import { cn } from "@/lib/cn";
+import { appCodeForPath } from "@/lib/subscriptions/path";
 
 export type AccessBundle = {
   isHrAdmin: boolean;
@@ -22,7 +23,11 @@ export type AccessBundle = {
   isDataSteward: boolean;
   isItAdmin: boolean;
   isSettingsAny: boolean;
+  isPlatformOperator: boolean;
   isEmployee: boolean;
+  /** App codes the user's company is subscribed to. Set elements like
+   *  "hr", "recruitment", "payroll". Always-on apps (core) live here too. */
+  subscribedApps: Set<string>;
 };
 
 function canSee(
@@ -44,6 +49,7 @@ function canSee(
     case "DATA_STEWARD":     return access.isDataSteward;
     case "IT_ADMIN":         return access.isItAdmin;
     case "SETTINGS_ANY":     return access.isSettingsAny;
+    case "PLATFORM_OPERATOR":return access.isPlatformOperator;
     case "EMPLOYEE_ANY":     return access.isEmployee;
     case "ALUMNI_ONLY":      return false; // never in main sidebar
     default:                 return false;
@@ -58,16 +64,27 @@ function canSee(
 export function Sidebar({ access }: { access: AccessBundle }) {
   const pathname = usePathname();
 
-  // Filter NAV by what the user can see.
+  // Filter NAV by (a) role + (b) whether the user's company has
+  // subscribed to the app the nav entry belongs to. Both must pass.
+  const isSubscribed = (href: string): boolean => {
+    const code = appCodeForPath(href);
+    if (!code) return true; // unmapped routes (no gating) — always show
+    return access.subscribedApps.has(code);
+  };
+
   const visible: NavItem[] = useMemo(() => {
     return NAV.filter((item) => canSee(item.requires, access))
+      .filter((item) => isSubscribed(item.href))
       .map((item) => {
         if (!item.children) return item;
-        const kids = item.children.filter((c) => canSee(c.requires, access));
+        const kids = item.children
+          .filter((c) => canSee(c.requires, access))
+          .filter((c) => isSubscribed(c.href));
         if (kids.length === 0 && item.requires) return null; // collapse
         return { ...item, children: kids.length ? kids : undefined };
       })
       .filter((x): x is NavItem => x !== null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [access]);
 
   const initiallyOpen = useMemo(() => {
@@ -110,8 +127,13 @@ export function Sidebar({ access }: { access: AccessBundle }) {
             return (
               <li key={item.label}>
                 {item.children ? (
-                  <button
-                    type="button"
+                  // Parent with children: the label is a real Link so the
+                  // parent's href navigates; clicking it ALSO expands the
+                  // children. Previously this was a pure toggle button,
+                  // which meant /payroll could only be reached by typing
+                  // the URL. The chevron stays as a visual hint.
+                  <Link
+                    href={item.href as never}
                     onClick={() => toggle(item.label)}
                     className={cn(
                       "group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition focus-ring",
@@ -137,7 +159,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                         isActive ? "text-ink-700" : "text-white/60",
                       )}
                     />
-                  </button>
+                  </Link>
                 ) : (
                   <Link
                     href={item.href as never}

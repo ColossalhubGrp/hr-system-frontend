@@ -23,7 +23,10 @@ type Opts = {
   companies: string[];
   departments: string[];
   designations: string[];
-  grades: string[];
+  /** Pay grades from Setup → Pay Grades (Payroll Pay Grade). After
+   *  patch 30, Employee Onboarding.employee_grade and Employee
+   *  Promotion.new_grade both accept these values too. */
+  payGrades: string[];
   /** Optional pre-fill (e.g. when filing on behalf of a specific employee from
    *  their profile). */
   defaultEmployee?: string;
@@ -119,7 +122,7 @@ export function OnboardingForm({
           <SelectInput id="designation" name="designation" options={opts.designations} placeholder="—" />
         </Field>
         <Field label="Grade" htmlFor="employee_grade">
-          <SelectInput id="employee_grade" name="employee_grade" options={opts.grades} placeholder="—" />
+          <SelectInput id="employee_grade" name="employee_grade" options={opts.payGrades} placeholder="—" />
         </Field>
       </FormSection>
       <Bar cancelHref={cancelHref} label="Create onboarding" />
@@ -248,7 +251,7 @@ export function PromotionForm({
           <SelectInput id="new_designation" name="new_designation" options={opts.designations} placeholder="—" />
         </Field>
         <Field label="New grade" htmlFor="new_grade">
-          <SelectInput id="new_grade" name="new_grade" options={opts.grades} placeholder="—" />
+          <SelectInput id="new_grade" name="new_grade" options={opts.payGrades} placeholder="—" />
         </Field>
         <Field label="Reason" htmlFor="reason" wide>
           <TextArea id="reason" name="reason" rows={3} />

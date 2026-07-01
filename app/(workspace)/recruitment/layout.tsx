@@ -1,4 +1,5 @@
 import { requireGroup } from "@/lib/frappe/require-role";
+import { requireApp } from "@/lib/subscriptions/gate";
 
 /**
  * Recruitment workspace — everything copied verbatim from the standalone
@@ -12,6 +13,7 @@ export default async function RecruitmentLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await requireApp("recruitment", "/recruitment");
   await requireGroup("RECRUITER", "/recruitment");
   return <>{children}</>;
 }

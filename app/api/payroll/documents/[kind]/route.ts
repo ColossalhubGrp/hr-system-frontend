@@ -37,6 +37,12 @@ const METHODS = {
     paramMap: { pe: "payroll_entry" },
     contentType: "text/csv",
   },
+  zimra: {
+    method: "tenant_manager.payroll_engine.api.tarms.export_zimra_monthly",
+    paramMap: { run: "payroll_run" },
+    contentType:
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  },
 } as const satisfies Record<string, { method: string; paramMap: Record<string, string>; contentType: string }>;
 
 export async function GET(

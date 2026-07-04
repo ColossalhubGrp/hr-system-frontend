@@ -73,7 +73,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "company",
     "status",
   ],
-  joining: ["date_of_joining", "employee_number", "employment_type", "pay_grade", "nec_industry", "basic_usd", "basic_zig", "nec_dues_override", "nec_dues_usd", "is_elderly", "is_disabled"],
+  joining: ["date_of_joining", "employee_number", "employment_type", "pay_grade", "nec_industry", "basic_usd", "basic_zig", "nec_dues_override", "nec_dues_usd", "is_elderly", "is_disabled", "tax_method", "salary_currency_mode"],
   contact: [
     "cell_number",
     "user_id",
@@ -127,6 +127,15 @@ export function EmployeeForm({
   // the tenant's credit amounts from combined PAYE before AIDS Levy.
   const [isElderly, setIsElderly] = useState<boolean>(Boolean(initial?.isElderly));
   const [isDisabled, setIsDisabled] = useState<boolean>(Boolean(initial?.isDisabled));
+  // ZIMRA tax method + currency mode. Both default to the most
+  // permissive option (FDS + MIXED) so admins can leave them alone
+  // for regular full-year employees.
+  const [taxMethod, setTaxMethod] = useState<"FDS" | "NON_FDS">(
+    initial?.taxMethod ?? "FDS",
+  );
+  const [salaryCurrencyMode, setSalaryCurrencyMode] = useState<
+    "USD_ONLY" | "ZIG_ONLY" | "MIXED"
+  >(initial?.salaryCurrencyMode ?? "MIXED");
   const industryDues = necIndustry ? options.necIndustryInfo[necIndustry] : undefined;
   const suggestedDuesUsd = (() => {
     if (!industryDues) return 0;
@@ -593,6 +602,46 @@ export function EmployeeForm({
               placeholder="No"
             />
             <input type="hidden" name="is_disabled" value={isDisabled ? "1" : "0"} />
+          </Field>
+          <Field
+            label="ZIMRA tax method"
+            htmlFor="tax_method"
+            hint={
+              taxMethod === "FDS"
+                ? "Final Deduction System — cumulative YTD calc, credits apply."
+                : "Independent monthly calc, no YTD, credits DO NOT apply. Use for mid-year joiners/leavers, multi-employer cases, or pension recipients."
+            }
+          >
+            <SelectInput
+              id="tax_method"
+              name="tax_method"
+              value={taxMethod}
+              onChange={(e) => setTaxMethod(e.target.value as "FDS" | "NON_FDS")}
+              options={["FDS", "NON_FDS"]}
+              placeholder="FDS"
+            />
+          </Field>
+          <Field
+            label="Salary currency mode"
+            htmlFor="salary_currency_mode"
+            hint={
+              salaryCurrencyMode === "MIXED"
+                ? "Both USD and ZiG income taxed together: combine to USD-equivalent, apply USD table, apportion back."
+                : salaryCurrencyMode === "USD_ONLY"
+                  ? "Only USD income is taxed. ZiG income is ignored for PAYE."
+                  : "Only ZiG income is taxed. USD income is ignored for PAYE."
+            }
+          >
+            <SelectInput
+              id="salary_currency_mode"
+              name="salary_currency_mode"
+              value={salaryCurrencyMode}
+              onChange={(e) =>
+                setSalaryCurrencyMode(e.target.value as "USD_ONLY" | "ZIG_ONLY" | "MIXED")
+              }
+              options={["MIXED", "USD_ONLY", "ZIG_ONLY"]}
+              placeholder="MIXED"
+            />
           </Field>
         </Grid>
       </TabPane>

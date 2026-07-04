@@ -137,8 +137,12 @@ export function DonutChart({
     ],
   };
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row">
-      <div className="relative" style={{ width: 200, height: 200 }}>
+    // Always stack — donut on top, legend below — so the legend has
+    // the full card width for its label / percent / value columns.
+    // The old sm:flex-row broke at ~100% zoom because the card
+    // itself isn't 640px wide even when the viewport is.
+    <div className="flex flex-col items-center gap-4">
+      <div className="relative shrink-0" style={{ width: 176, height: 176 }}>
         <Doughnut
           data={data}
           options={{
@@ -164,23 +168,28 @@ export function DonutChart({
             <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
               {centerLabel}
             </div>
-            <div className="mt-0.5 text-lg font-bold text-foreground">
+            <div className="mt-0.5 text-base font-bold text-foreground">
               {centerValue}
             </div>
           </div>
         )}
       </div>
-      <ul className="flex-1 space-y-2 text-sm">
+      <ul className="w-full space-y-2 text-sm">
         {slices.map((s) => {
           const pct = total > 0 ? (s.value / total) * 100 : 0;
           return (
-            <li key={s.label} className="flex items-center gap-3">
-              <span className="h-3 w-3 shrink-0 rounded-sm" style={{ background: s.color }} />
-              <span className="flex-1 truncate text-foreground/80">{s.label}</span>
-              <span className="text-xs font-semibold text-muted-foreground">
+            <li key={s.label} className="flex items-center gap-2 min-w-0">
+              <span
+                className="h-3 w-3 shrink-0 rounded-sm"
+                style={{ background: s.color }}
+              />
+              <span className="flex-1 min-w-0 truncate text-foreground/80">
+                {s.label}
+              </span>
+              <span className="shrink-0 text-xs font-semibold text-muted-foreground tabular-nums">
                 {pct.toFixed(1)}%
               </span>
-              <span className="ml-3 tabular-nums font-semibold text-foreground">
+              <span className="shrink-0 tabular-nums font-semibold text-foreground text-right">
                 {num(s.value)}
               </span>
             </li>

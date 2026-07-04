@@ -311,12 +311,21 @@ export default async function PayRunDetail({
                 </p>
               )}
             </div>
-            <Link
-              href={"/payroll/reports" as Route}
-              className="text-sm font-semibold text-primary hover:underline"
-            >
-              Statutory returns →
-            </Link>
+            <div className="flex items-center gap-3">
+              <a
+                href={`/api/payroll/documents/zimra?run=${encodeURIComponent(run.name)}`}
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-input bg-transparent px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted/40"
+                download
+              >
+                Download ZIMRA return (xlsx)
+              </a>
+              <Link
+                href={"/payroll/reports" as Route}
+                className="text-sm font-semibold text-primary hover:underline"
+              >
+                Statutory returns →
+              </Link>
+            </div>
           </div>
 
           <Card className="overflow-x-auto p-0">

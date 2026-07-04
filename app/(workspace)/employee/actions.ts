@@ -57,6 +57,8 @@ const baseSchema = z.object({
     .union([z.literal("0"), z.literal("1")])
     .transform((v) => (v === "1" ? 1 : 0) as 0 | 1)
     .optional(),
+  tax_method: z.enum(["FDS", "NON_FDS"]).optional(),
+  salary_currency_mode: z.enum(["USD_ONLY", "ZIG_ONLY", "MIXED"]).optional(),
   date_of_joining: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD."),
   employee_number: z.string().trim().optional(),
 

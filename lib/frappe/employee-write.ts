@@ -242,6 +242,11 @@ export type EmployeeFormInput = {
   is_elderly?: 0 | 1;
   /** ZIMRA blind / disabled credit eligibility. */
   is_disabled?: 0 | 1;
+  /** FDS (Final Deduction System — cumulative + credits) vs NON_FDS
+   *  (independent per-period, no credits). */
+  tax_method?: "FDS" | "NON_FDS";
+  /** Which ZIMRA table(s) the engine applies for this employee. */
+  salary_currency_mode?: "USD_ONLY" | "ZIG_ONLY" | "MIXED";
   date_of_joining: string;
   employee_number?: string;
 

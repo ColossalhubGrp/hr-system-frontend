@@ -90,6 +90,12 @@ export type EmployeeFull = {
   isElderly: boolean;
   /** ZIMRA blind / disabled credit eligibility. */
   isDisabled: boolean;
+  /** FDS = cumulative Final Deduction System. NON_FDS = independent
+   *  monthly calc (no YTD, no credits). Defaults to FDS. */
+  taxMethod: "FDS" | "NON_FDS";
+  /** USD_ONLY / ZIG_ONLY / MIXED — drives which ZIMRA tax table(s)
+   *  the engine uses. */
+  salaryCurrencyMode: "USD_ONLY" | "ZIG_ONLY" | "MIXED";
   necIndustry: string | null;
   payGrade: string | null;
   payPoint: string | null;
@@ -272,6 +278,8 @@ type RawEmployeeDoc = RawEmployeeRow & {
   nec_dues_override: 0 | 1 | boolean | null;
   is_elderly: 0 | 1 | boolean | null;
   is_disabled: 0 | 1 | boolean | null;
+  tax_method: string | null;
+  salary_currency_mode: string | null;
   nec_industry: string | null;
   pay_grade: string | null;
   pay_point: string | null;
@@ -333,6 +341,11 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     necDuesOverride: Boolean(d.nec_dues_override),
     isElderly: Boolean(d.is_elderly),
     isDisabled: Boolean(d.is_disabled),
+    taxMethod: (d.tax_method === "NON_FDS" ? "NON_FDS" : "FDS"),
+    salaryCurrencyMode:
+      d.salary_currency_mode === "USD_ONLY" ? "USD_ONLY"
+      : d.salary_currency_mode === "ZIG_ONLY" ? "ZIG_ONLY"
+      : "MIXED",
     necIndustry: d.nec_industry,
     payGrade: d.pay_grade,
     payPoint: d.pay_point,

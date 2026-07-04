@@ -51,9 +51,9 @@ export default async function PayrollAuditTab() {
           Audit
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Recent edits to Pay Runs, Salary Slips, Salary Structures, Tax
-          Rules, GL Mappings, and Employee payroll fields. Sourced from
-          Frappe's built-in Version log — every save is recorded.
+          Recent edits to pay runs, payslips, employee payroll fields,
+          pay grades, NEC industries, and settings. Every save across
+          the payroll module is recorded automatically.
         </p>
       </header>
 
@@ -63,7 +63,7 @@ export default async function PayrollAuditTab() {
             <TableRow>
               <TableHead className="px-5">When</TableHead>
               <TableHead className="px-5">User</TableHead>
-              <TableHead className="px-5">Doctype / Record</TableHead>
+              <TableHead className="px-5">Record</TableHead>
               <TableHead className="px-5">Changes</TableHead>
             </TableRow>
           </TableHeader>

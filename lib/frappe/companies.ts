@@ -41,6 +41,26 @@ export type CompanyInput = {
 // Reads
 // ---------------------------------------------------------------------------
 
+/**
+ * Returns the calling user's own tenant Company (via User Permission), or
+ * null for cross-tenant admins (System Manager / Administrator). The
+ * /settings/company page uses this to redirect non-admins straight to
+ * their own company's edit form instead of exposing a list that could
+ * leak other tenants' company names.
+ */
+export async function getMyCompany(): Promise<string | null> {
+  try {
+    const res = await frappeCall<{ company: string | null }>({
+      method: "recruitment_app.api.me.my_company",
+      as: "user",
+    });
+    return res?.company ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
 export async function listCompanies(): Promise<CompanyRow[]> {
   type Row = {
     name: string;

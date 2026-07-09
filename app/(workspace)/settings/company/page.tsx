@@ -1,8 +1,9 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { redirect } from "next/navigation";
 import { ChevronLeft, Building2, Plus, Pencil } from "lucide-react";
 import { requireGroup } from "@/lib/frappe/require-role";
-import { listCompanies } from "@/lib/frappe/companies";
+import { listCompanies, getMyCompany } from "@/lib/frappe/companies";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,6 +38,17 @@ export const metadata = {
  */
 export default async function CompanySettingsPage() {
   await requireGroup("HR_ADMIN", "/settings/company");
+
+  // Multi-tenant guard: HR Director / HR Manager users scoped to one Company
+  // via User Permission see ONLY their own company's edit form — never the
+  // cross-tenant list. System Manager / Administrator have no such
+  // permission and continue to see the full list below. See
+  // recruitment_app.api.me.my_company for how "my own company" is resolved.
+  const myCompany = await getMyCompany();
+  if (myCompany) {
+    redirect(`/settings/company/${encodeURIComponent(myCompany)}` as Route);
+  }
+
   const [companies, access] = await Promise.all([
     listCompanies(),
     getMyAccess(),

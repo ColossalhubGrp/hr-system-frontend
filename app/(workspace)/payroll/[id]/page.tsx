@@ -75,6 +75,30 @@ export default async function PayRunDetail({
     isOpen ? Promise.resolve([]) : listPayslipsForRun(id),
     isOpen ? Promise.resolve({ byEmployee: new Map<string, number>(), total: 0, label: null }) : listPreviousRunNetMap(id),
   ]);
+
+  // Tax-method lookup for the payslip register's per-row FDS / NON_FDS
+  // pill. One bulk fetch keyed on the employees actually paid on this run.
+  const taxMethodByEmp = new Map<string, "FDS" | "NON_FDS">();
+  if (slips.length > 0) {
+    const { frappeCall } = await import("@/lib/frappe/client");
+    try {
+      const empRows = await frappeCall<Array<{ name: string; tax_method: string | null }>>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "Employee",
+          fields: ["name", "tax_method"],
+          filters: JSON.stringify([["name", "in", slips.map((s) => s.employee)]]),
+          limit_page_length: 5000,
+        },
+        as: "user",
+      });
+      for (const r of empRows ?? []) {
+        taxMethodByEmp.set(r.name, (r.tax_method === "NON_FDS" ? "NON_FDS" : "FDS"));
+      }
+    } catch {
+      /* non-fatal — column just won't show a pill */
+    }
+  }
   const codeOptions = codes.map((c) => ({
     code: c.code,
     kind: c.kind,
@@ -359,7 +383,26 @@ export default async function PayRunDetail({
                             {initials(s.employee_name)}
                           </div>
                           <div>
-                            <div className="font-semibold text-foreground">{s.employee_name}</div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-foreground">{s.employee_name}</span>
+                              {taxMethodByEmp.has(s.employee) && (
+                                <span
+                                  className={cn(
+                                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                                    taxMethodByEmp.get(s.employee) === "FDS"
+                                      ? "bg-primary/10 text-primary"
+                                      : "bg-amber-100 text-amber-700",
+                                  )}
+                                  title={
+                                    taxMethodByEmp.get(s.employee) === "FDS"
+                                      ? "Final Deduction System — cumulative + tax credits"
+                                      : "Independent monthly calc — no YTD, no credits"
+                                  }
+                                >
+                                  {taxMethodByEmp.get(s.employee)}
+                                </span>
+                              )}
+                            </div>
                             <div className="text-xs text-muted-foreground">{s.employee}</div>
                           </div>
                         </div>

@@ -19,9 +19,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PasswordInput } from "@/components/auth/password-input";
 import { registerAction, type RegisterState } from "./actions";
 
+export type CompanyOption = { id: string; name: string };
 type AccountType = "hr" | "candidate";
 
 const ACCOUNT_OPTIONS: {
@@ -46,10 +54,11 @@ const ACCOUNT_OPTIONS: {
 
 const INITIAL: RegisterState = {};
 
-export function RegisterForm() {
+export function RegisterForm({ companies }: { companies: CompanyOption[] }) {
   const [state, dispatch] = useFormState(registerAction, INITIAL);
 
   const [accountType, setAccountType] = useState<AccountType | "">("");
+  const [company, setCompany] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -223,17 +232,31 @@ export function RegisterForm() {
 
         {requiresCompany && (
           <Field label="Company" htmlFor="company" error={fe.company}>
-            <div className="relative">
-              <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                id="company"
-                name="company"
-                required={requiresCompany}
-                autoComplete="organization"
-                placeholder="Acme Corp"
-                className="pl-9"
-              />
-            </div>
+            {companies.length === 0 ? (
+              <p className="rounded-lg border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2.5 text-xs text-amber-700">
+                No companies are set up yet. Ask your administrator to create
+                one before registering.
+              </p>
+            ) : (
+              <Select value={company} onValueChange={setCompany}>
+                <SelectTrigger
+                  id="company"
+                  className="h-10 pl-9 relative"
+                  aria-invalid={Boolean(fe.company) || undefined}
+                >
+                  <Building2 className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <SelectValue placeholder="Select your company" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies.map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <input type="hidden" name="company" value={company} />
           </Field>
         )}
 

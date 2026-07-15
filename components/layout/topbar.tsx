@@ -5,6 +5,7 @@ import { logoutAction } from "@/app/login/actions";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChatDrawer } from "@/components/chat/chat-drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +36,8 @@ export function Topbar({ user, notifications = 0 }: Props) {
           className="h-10 w-[280px] rounded-full pl-9"
         />
       </label>
+
+      <ChatDrawer />
 
       <Button
         type="button"

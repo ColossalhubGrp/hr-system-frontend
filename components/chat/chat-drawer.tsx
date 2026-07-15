@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   ArrowUp,
   BookOpen,
@@ -324,8 +325,8 @@ function BotBubble({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <div className="max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-bl-sm bg-muted/60 px-3.5 py-2.5 text-sm text-foreground">
-        {msg.text}
+      <div className="max-w-[92%] rounded-2xl rounded-bl-sm bg-muted/60 px-3.5 py-2.5 text-sm text-foreground">
+        <MarkdownAnswer text={msg.text} />
       </div>
       {msg.citations.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
@@ -385,4 +386,47 @@ function cleanAnswer(text: string): string {
   // Strip the internal REFUSE: prefix — the UI signals refusal via
   // absent citations and a friendlier tone.
   return text.replace(/^REFUSE:\s*/i, "");
+}
+
+/**
+ * Renders the LLM's markdown output with the tight, compact spacing a
+ * chat bubble needs — react-markdown's default paragraph and list
+ * margins are set for article prose and look wrong stacked in a bubble.
+ * The `[S1]` citation tokens are already inline text; the chip row
+ * below renders the clickable versions.
+ */
+function MarkdownAnswer({ text }: { text: string }) {
+  return (
+    <div className="space-y-2 [&_p]:leading-relaxed [&_strong]:font-semibold">
+      <ReactMarkdown
+        components={{
+          p: ({ children }) => <p className="whitespace-pre-wrap">{children}</p>,
+          ul: ({ children }) => (
+            <ul className="ml-4 list-disc space-y-1">{children}</ul>
+          ),
+          ol: ({ children }) => (
+            <ol className="ml-4 list-decimal space-y-1">{children}</ol>
+          ),
+          li: ({ children }) => <li className="pl-1">{children}</li>,
+          code: ({ children }) => (
+            <code className="rounded bg-background px-1 py-0.5 text-[12px]">
+              {children}
+            </code>
+          ),
+          a: ({ href, children }) => (
+            <a
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline underline-offset-2"
+            >
+              {children}
+            </a>
+          ),
+        }}
+      >
+        {text}
+      </ReactMarkdown>
+    </div>
+  );
 }

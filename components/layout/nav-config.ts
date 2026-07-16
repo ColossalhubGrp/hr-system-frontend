@@ -124,6 +124,10 @@ export const NAV: NavItem[] = [
     href: "/analytics",
     icon: BarChart3,
     requires: "EXECUTIVE_VIEWER",
+    children: [
+      { label: "Overview", href: "/analytics", requires: "EXECUTIVE_VIEWER" },
+      { label: "Ask (AI)", href: "/analytics/ask", requires: "EXECUTIVE_VIEWER" },
+    ],
   },
 
   {

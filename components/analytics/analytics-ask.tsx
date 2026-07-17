@@ -75,28 +75,17 @@ export function AnalyticsAsk() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: q }),
       });
-      const data = (await res.json()) as AnalyzeResponse | { error: string };
-      if (!res.ok || "error" in data) {
-        const err = "error" in data ? data.error : `HTTP ${res.status}`;
-        setTurns((t) => [
-          ...t,
-          {
-            role: "assistant",
-            question: q,
-            refused: true,
-            refusal_reason: err,
-            narrative: null,
-            data: null,
-            viz: null,
-            followups: [],
-            plan: null,
-            audit_log_id: "",
-            total_latency_ms: 0,
-            stage_latencies: {},
-          },
-        ]);
+      if (!res.ok) {
+        // Route-handler error path — best-effort extract .error, else HTTP status.
+        let err = `HTTP ${res.status}`;
+        try {
+          const body = (await res.json()) as { error?: unknown };
+          if (body && typeof body.error === "string") err = body.error;
+        } catch { /* non-JSON body */ }
+        setTurns((t) => [...t, refusedAssistantTurn(q, err)]);
         return;
       }
+      const data = (await res.json()) as AnalyzeResponse;
       setTurns((t) => [
         ...t,
         {
@@ -114,23 +103,10 @@ export function AnalyticsAsk() {
           stage_latencies: data.stage_latencies,
         },
       ]);
-    } catch (err) {
+    } catch {
       setTurns((t) => [
         ...t,
-        {
-          role: "assistant",
-          question: q,
-          refused: true,
-          refusal_reason: "Couldn't reach the analytics service. Try again.",
-          narrative: null,
-          data: null,
-          viz: null,
-          followups: [],
-          plan: null,
-          audit_log_id: "",
-          total_latency_ms: 0,
-          stage_latencies: {},
-        },
+        refusedAssistantTurn(q, "Couldn't reach the analytics service. Try again."),
       ]);
     } finally {
       setPending(false);
@@ -349,6 +325,23 @@ function MetricBadge({
 }
 
 // ── Composer ───────────────────────────────────────────────────────
+
+function refusedAssistantTurn(question: string, reason: string): Turn {
+  return {
+    role: "assistant",
+    question,
+    refused: true,
+    refusal_reason: reason,
+    narrative: null,
+    data: null,
+    viz: null,
+    followups: [],
+    plan: null,
+    audit_log_id: "",
+    total_latency_ms: 0,
+    stage_latencies: {},
+  };
+}
 
 function Composer({
   value,

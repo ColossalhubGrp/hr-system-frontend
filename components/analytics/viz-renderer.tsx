@@ -1,10 +1,19 @@
 "use client";
 
+import { useState } from "react";
+import {
+  ArrowDownWideNarrow,
+  ArrowUpNarrowWide,
+  BarChart2,
+  Download,
+  Table as TableIcon,
+} from "lucide-react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   Legend,
   Line,
   LineChart,
@@ -15,7 +24,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { AnalyzeData, MetricFormat, VizSpec } from "./types";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/cn";
+import type { AnalyzeData, VizSpec } from "./types";
 
 /**
  * Chart dispatcher. Reads the coordinator's `viz.viz_type` and
@@ -92,19 +103,53 @@ function KpiTile({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
 // ── Bar chart (single category dim) ───────────────────────────────
 
 function BarView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
-  const chartData = data.rows.map((r) => ({
-    label: safeLabel(r[viz.category_field ?? ""]),
-    value: toNumber(r[viz.value_field]),
-  }));
+  const [sortDesc, setSortDesc] = useState(true);
+  const chartData = data.rows
+    .map((r) => ({
+      label: safeLabel(r[viz.category_field ?? ""]),
+      value: toNumber(r[viz.value_field]),
+    }))
+    .sort((a, b) => (sortDesc ? b.value - a.value : a.value - b.value));
+
   return (
-    <ChartCard title={viz.hint}>
+    <ChartCard
+      title={viz.hint}
+      subtitle={`${data.row_count} rows`}
+      data={data}
+      extraToolbar={
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label={sortDesc ? "Sort ascending" : "Sort descending"}
+          className="h-7 w-7"
+          onClick={() => setSortDesc((v) => !v)}
+        >
+          {sortDesc ? (
+            <ArrowDownWideNarrow className="h-3.5 w-3.5" />
+          ) : (
+            <ArrowUpNarrowWide className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      }
+    >
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
-        <BarChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
+        <BarChart data={chartData} margin={{ top: 24, right: 12, left: 0, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
           <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={54} />
           <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompact(v)} />
-          <Tooltip formatter={(v: number) => formatValue(v, data.metric.format, data.metric.unit)} />
-          <Bar dataKey="value" fill={SERIES_COLORS[0]} radius={[6, 6, 0, 0]} barSize={40} />
+          <Tooltip
+            cursor={{ fill: "rgba(79,70,229,0.06)" }}
+            formatter={(v: number) => formatValue(v, data.metric.format, data.metric.unit)}
+          />
+          <Bar dataKey="value" fill={SERIES_COLORS[0]} radius={[6, 6, 0, 0]} barSize={40}>
+            <LabelList
+              dataKey="value"
+              position="top"
+              formatter={(v: number) => formatCompact(v)}
+              style={{ fill: "hsl(var(--foreground))", fontSize: 10, fontWeight: 600 }}
+            />
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>
@@ -119,7 +164,7 @@ function LineView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
     value: toNumber(r[viz.value_field]),
   }));
   return (
-    <ChartCard title={viz.hint}>
+    <ChartCard title={viz.hint} subtitle={`${data.row_count} rows`} data={data}>
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
@@ -150,7 +195,7 @@ function DonutView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
   }));
   const total = chartData.reduce((s, x) => s + x.value, 0);
   return (
-    <ChartCard title={viz.hint}>
+    <ChartCard title={viz.hint} subtitle={`${data.row_count} rows`} data={data}>
       <div className="flex flex-col items-center gap-4 sm:flex-row">
         <div className="relative shrink-0" style={{ width: 200, height: 200 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -225,7 +270,7 @@ function GroupedBarView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
     return row;
   });
   return (
-    <ChartCard title={viz.hint}>
+    <ChartCard title={viz.hint} subtitle={`${data.row_count} rows`} data={data}>
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <BarChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
@@ -266,7 +311,7 @@ function StackedLineView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
     return row;
   });
   return (
-    <ChartCard title={viz.hint}>
+    <ChartCard title={viz.hint} subtitle={`${data.row_count} rows`} data={data}>
       <ResponsiveContainer width="100%" height={CHART_HEIGHT}>
         <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
@@ -294,46 +339,136 @@ function StackedLineView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
 
 function TableView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
   return (
-    <ChartCard title={viz.hint}>
-      <div className="max-h-[420px] overflow-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {data.columns.map((c) => (
-                <th key={c} className="px-3 py-2 text-left">{prettyColumn(c)}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.rows.map((r, i) => (
-              <tr key={i} className="border-b last:border-none">
-                {data.columns.map((c) => (
-                  <td key={c} className="px-3 py-2">
-                    {c === viz.value_field
-                      ? formatValue(r[c], data.metric.format, data.metric.unit)
-                      : String(r[c] ?? "—")}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+    <ChartCard title={viz.hint} subtitle={`${data.row_count} rows`} data={data}>
+      <RawTable data={data} />
     </ChartCard>
   );
 }
 
 // ── Shared card + formatters ──────────────────────────────────────
 
-function ChartCard({ title, children }: { title: string; children: React.ReactNode }) {
+/**
+ * Lightdash-alike chart shell: title + row-count subtitle on the
+ * left, action toolbar on the right (download CSV, swap chart↔table
+ * view). Wraps around any chart body.
+ */
+function ChartCard({
+  title,
+  subtitle,
+  data,
+  extraToolbar,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  data?: AnalyzeData;
+  extraToolbar?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const [asTable, setAsTable] = useState(false);
   return (
-    <div className="rounded-xl border bg-card p-4">
-      <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        {title}
-      </p>
-      {children}
+    <div className="rounded-xl border bg-card">
+      <div className="flex items-start justify-between gap-3 border-b px-4 py-3">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {title}
+          </p>
+          {subtitle && (
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{subtitle}</p>
+          )}
+        </div>
+        {data && (
+          <div className="flex items-center gap-1">
+            {extraToolbar}
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={asTable ? "Show chart" : "Show as table"}
+              className="h-7 w-7"
+              onClick={() => setAsTable((v) => !v)}
+            >
+              {asTable ? <BarChart2 className="h-3.5 w-3.5" /> : <TableIcon className="h-3.5 w-3.5" />}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Download CSV"
+              className="h-7 w-7"
+              onClick={() => downloadCsv(title, data)}
+            >
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+      </div>
+      <div className="p-4">
+        {asTable && data ? <RawTable data={data} /> : children}
+      </div>
     </div>
   );
+}
+
+/**
+ * The plain data table — used as the fallback viz AND as the
+ * "table view" toggle on any chart via ChartCard.
+ */
+function RawTable({ data }: { data: AnalyzeData }) {
+  return (
+    <div className="max-h-[420px] overflow-auto">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b bg-muted/40 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {data.columns.map((c) => (
+              <th key={c} className="px-3 py-2 text-left">{prettyColumn(c)}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.rows.map((r, i) => (
+            <tr key={i} className="border-b last:border-none">
+              {data.columns.map((c) => (
+                <td key={c} className="px-3 py-2">
+                  {typeof r[c] === "number"
+                    ? formatValue(r[c], data.metric.format, data.metric.unit)
+                    : String(r[c] ?? "—")}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function downloadCsv(title: string, data: AnalyzeData) {
+  const header = data.columns.map(csvEscape).join(",");
+  const rows = data.rows
+    .map((r) => data.columns.map((c) => csvEscape(String(r[c] ?? ""))).join(","))
+    .join("\n");
+  const csv = `${header}\n${rows}\n`;
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${slugify(title)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function csvEscape(v: string): string {
+  if (v.includes(",") || v.includes('"') || v.includes("\n")) {
+    return `"${v.replace(/"/g, '""')}"`;
+  }
+  return v;
+}
+
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "chart";
 }
 
 function formatValue(value: unknown, format: string, unit: string): string {

@@ -45,11 +45,17 @@ export interface Followup {
   question: string;
 }
 
+export interface Clarification {
+  question: string;
+  options: { label: string; question: string }[];
+}
+
 export interface AnalyzeResponse {
   question: string;
   plan: unknown | null;
   refused: boolean;
   refusal_reason: string | null;
+  clarification: Clarification | null;
   data: AnalyzeData | null;
   viz: VizSpec | null;
   narrative: string | null;
@@ -67,6 +73,7 @@ export type Turn =
       question: string;
       refused: boolean;
       refusal_reason: string | null;
+      clarification: Clarification | null;
       narrative: string | null;
       data: AnalyzeData | null;
       viz: VizSpec | null;

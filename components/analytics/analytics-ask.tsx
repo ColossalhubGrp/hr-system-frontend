@@ -93,6 +93,7 @@ export function AnalyticsAsk() {
           question: q,
           refused: data.refused,
           refusal_reason: data.refusal_reason,
+          clarification: data.clarification,
           narrative: data.narrative,
           data: data.data,
           viz: data.viz,
@@ -259,6 +260,8 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
       <div className="min-w-0 flex-1 space-y-4 pt-1">
         {turn.refused ? (
           <RefusalCard reason={turn.refusal_reason} />
+        ) : turn.clarification ? (
+          <ClarificationCard clarification={turn.clarification} onPick={onAsk} />
         ) : (
           <>
             <div className="prose prose-sm max-w-none text-sm text-foreground">
@@ -286,6 +289,39 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
           <FollowupChips items={turn.followups} onPick={onAsk} />
         )}
       </div>
+    </div>
+  );
+}
+
+function ClarificationCard({
+  clarification,
+  onPick,
+}: {
+  clarification: NonNullable<Extract<Turn, { role: "assistant" }>["clarification"]>;
+  onPick: (q: string) => void;
+}) {
+  return (
+    <div className="rounded-xl border bg-card p-4">
+      <p className="text-sm text-foreground">{clarification.question}</p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {clarification.options.map((opt) => (
+          <button
+            key={opt.label}
+            type="button"
+            onClick={() => onPick(opt.question)}
+            className={cn(
+              "rounded-full border border-input bg-background px-3 py-1.5 text-xs font-medium text-foreground",
+              "transition-colors hover:border-primary/40 hover:bg-primary/[0.06]",
+            )}
+            title={opt.question}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+      <p className="mt-3 text-[10px] text-muted-foreground">
+        Or type a more specific question below.
+      </p>
     </div>
   );
 }
@@ -332,6 +368,7 @@ function refusedAssistantTurn(question: string, reason: string): Turn {
     question,
     refused: true,
     refusal_reason: reason,
+    clarification: null,
     narrative: null,
     data: null,
     viz: null,

@@ -104,7 +104,7 @@ function BarView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
           <XAxis dataKey="label" tick={{ fontSize: 11 }} interval={0} angle={-15} textAnchor="end" height={54} />
           <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => formatCompact(v)} />
           <Tooltip formatter={(v: number) => formatValue(v, data.metric.format, data.metric.unit)} />
-          <Bar dataKey="value" fill={SERIES_COLORS[0]} radius={[6, 6, 0, 0]} maxBarThickness={40} />
+          <Bar dataKey="value" fill={SERIES_COLORS[0]} radius={[6, 6, 0, 0]} barSize={40} />
         </BarChart>
       </ResponsiveContainer>
     </ChartCard>
@@ -239,7 +239,7 @@ function GroupedBarView({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
               dataKey={s}
               fill={SERIES_COLORS[i % SERIES_COLORS.length]}
               radius={[4, 4, 0, 0]}
-              maxBarThickness={28}
+              barSize={28}
             />
           ))}
         </BarChart>

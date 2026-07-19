@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { VizRenderer } from "./viz-renderer";
+import { MultiMetricRenderer } from "./multi-metric-renderer";
 import { FollowupChips } from "./followup-chips";
 import type { AnalyzeResponse, Turn } from "./types";
 
@@ -97,6 +98,7 @@ export function AnalyticsAsk() {
           narrative: data.narrative,
           data: data.data,
           viz: data.viz,
+          multi: data.multi,
           followups: data.followups,
           plan: data.plan,
           audit_log_id: data.audit_log_id,
@@ -276,10 +278,17 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
             {turn.data && turn.viz && (
               <VizRenderer data={turn.data} viz={turn.viz} />
             )}
+            {turn.multi && <MultiMetricRenderer multi={turn.multi} />}
             {turn.data?.metric && (
               <MetricBadge
                 name={turn.data.metric.name}
                 code={turn.data.metric.code}
+                latency_ms={turn.total_latency_ms}
+              />
+            )}
+            {turn.multi && turn.multi.slices.length > 0 && (
+              <MultiMetricBadges
+                slices={turn.multi.slices}
                 latency_ms={turn.total_latency_ms}
               />
             )}
@@ -360,6 +369,29 @@ function MetricBadge({
   );
 }
 
+function MultiMetricBadges({
+  slices,
+  latency_ms,
+}: {
+  slices: NonNullable<Extract<Turn, { role: "assistant" }>["multi"]>["slices"];
+  latency_ms: number;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+      {slices.map((s) => (
+        <span key={s.data.metric.code} className="flex items-center gap-1">
+          <span className="rounded-full bg-muted/60 px-2 py-0.5 font-medium text-foreground">
+            {s.data.metric.name}
+          </span>
+          <span className="font-mono">{s.data.metric.code}</span>
+        </span>
+      ))}
+      <span aria-hidden>·</span>
+      <span>{latency_ms} ms</span>
+    </div>
+  );
+}
+
 // ── Composer ───────────────────────────────────────────────────────
 
 function refusedAssistantTurn(question: string, reason: string): Turn {
@@ -372,6 +404,7 @@ function refusedAssistantTurn(question: string, reason: string): Turn {
     narrative: null,
     data: null,
     viz: null,
+    multi: null,
     followups: [],
     plan: null,
     audit_log_id: "",

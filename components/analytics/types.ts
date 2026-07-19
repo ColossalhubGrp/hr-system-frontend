@@ -50,6 +50,20 @@ export interface Clarification {
   options: { label: string; question: string }[];
 }
 
+/**
+ * One (plan, data, viz) triple in a multi-metric answer. The combo
+ * chart renderer aligns two of these on their shared dimension.
+ */
+export interface MultiSlice {
+  plan: unknown;
+  data: AnalyzeData;
+  viz: VizSpec;
+}
+
+export interface MultiPayload {
+  slices: MultiSlice[];
+}
+
 export interface AnalyzeResponse {
   question: string;
   plan: unknown | null;
@@ -58,6 +72,7 @@ export interface AnalyzeResponse {
   clarification: Clarification | null;
   data: AnalyzeData | null;
   viz: VizSpec | null;
+  multi: MultiPayload | null;
   narrative: string | null;
   followups: Followup[];
   audit_log_id: string;
@@ -77,6 +92,7 @@ export type Turn =
       narrative: string | null;
       data: AnalyzeData | null;
       viz: VizSpec | null;
+      multi: MultiPayload | null;
       followups: Followup[];
       plan: unknown | null;
       audit_log_id: string;

@@ -22,11 +22,34 @@ export interface MetricMeta {
   format: MetricFormat | string;
 }
 
+export type CompareMode = "previous_period" | "previous_year";
+
+export interface CompareRow {
+  key: string;
+  current: number;
+  prior: number;
+  delta_pct: number | null;
+}
+
+export interface CompareScalar {
+  current: number;
+  prior: number;
+  delta_pct: number | null;
+}
+
+export interface CompareData {
+  mode: CompareMode;
+  prior_time_range: { start: string; end: string };
+  rows: CompareRow[];
+  scalar: CompareScalar | null;
+}
+
 export interface AnalyzeData {
   columns: string[];
   rows: Record<string, unknown>[];
   row_count: number;
   metric: MetricMeta;
+  compare?: CompareData | null;
 }
 
 export interface VizSpec {

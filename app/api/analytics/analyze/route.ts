@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
   }
 
-  let body: { question?: string };
+  let body: { question?: string; compare_to?: string };
   try {
     body = await req.json();
   } catch {
@@ -61,12 +61,20 @@ export async function POST(req: Request) {
   if (question.length > 500) {
     return NextResponse.json({ error: "Question is too long (max 500 chars)." }, { status: 400 });
   }
+  // Compare toggle — pass through only known values; anything else
+  // gets dropped so the backend's whitelist check never trips.
+  const compareTo =
+    body.compare_to === "previous_period" || body.compare_to === "previous_year"
+      ? body.compare_to
+      : undefined;
 
   try {
+    const args: Record<string, string> = { question };
+    if (compareTo) args.compare_to = compareTo;
     const data = await frappeCall<AnalyzeResponse>({
       method: "tenant_manager.analytics.api.analytics.analyze",
       verb: "POST",
-      args: { question },
+      args,
       as: "user",
     });
     return NextResponse.json(data);

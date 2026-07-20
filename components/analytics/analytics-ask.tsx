@@ -276,7 +276,12 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
               )}
             </div>
             {turn.data && turn.viz && (
-              <VizRenderer data={turn.data} viz={turn.viz} />
+              <VizRenderer
+                data={turn.data}
+                viz={turn.viz}
+                question={turn.question}
+                canCompare={hasTimeRange(turn.plan)}
+              />
             )}
             {turn.multi && <MultiMetricRenderer multi={turn.multi} />}
             {turn.data?.metric && (
@@ -393,6 +398,17 @@ function MultiMetricBadges({
 }
 
 // ── Composer ───────────────────────────────────────────────────────
+
+/**
+ * The compare-vs-prior toggle only makes sense when the plan has a
+ * time_range to shift. Peek into the plan blob (already sent to the
+ * client for debugging) and check.
+ */
+function hasTimeRange(plan: unknown): boolean {
+  if (!plan || typeof plan !== "object") return false;
+  const tr = (plan as { time_range?: unknown }).time_range;
+  return !!tr && typeof tr === "object";
+}
 
 function refusedAssistantTurn(question: string, reason: string): Turn {
   return {

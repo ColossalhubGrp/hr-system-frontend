@@ -25,12 +25,16 @@ import {
   BarChart2,
   BarChartHorizontal,
   ChevronsUpDown,
+  Clock,
   Download,
   ImageDown,
   LineChart as LineIcon,
+  Loader2,
   Maximize2,
   PieChart as PieIcon,
   Table as TableIcon,
+  TrendingDown,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,7 +50,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/cn";
-import type { AnalyzeData, VizSpec } from "./types";
+import type { AnalyzeData, AnalyzeResponse, CompareMode, VizSpec } from "./types";
 
 /**
  * Chart dispatcher — reads viz.viz_type from the coordinator and
@@ -65,7 +69,18 @@ import type { AnalyzeData, VizSpec } from "./types";
  *     re-renders bigger.
  */
 
-export function VizRenderer({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
+export function VizRenderer({
+  data,
+  viz,
+  question,
+  canCompare = true,
+}: {
+  data: AnalyzeData;
+  viz: VizSpec;
+  question: string;
+  /** false when the metric has no time_range and compare is irrelevant. */
+  canCompare?: boolean;
+}) {
   if (data.row_count === 0) {
     return (
       <div className="rounded-xl border border-dashed border-input bg-muted/20 p-8 text-center text-sm text-muted-foreground">
@@ -73,40 +88,94 @@ export function VizRenderer({ data, viz }: { data: AnalyzeData; viz: VizSpec }) 
       </div>
     );
   }
-  return <ChartCard data={data} viz={viz} />;
+  return <ChartCard data={data} viz={viz} question={question} canCompare={canCompare} />;
 }
 
 // ── ChartCard: toolbar + state + body ─────────────────────────────
 
 type ChartMode = "auto" | "bar" | "bar_h" | "line" | "area" | "donut" | "table";
+type CompareChoice = "none" | CompareMode;
 
-function ChartCard({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
+function ChartCard({
+  data,
+  viz,
+  question,
+  canCompare,
+}: {
+  data: AnalyzeData;
+  viz: VizSpec;
+  question: string;
+  canCompare: boolean;
+}) {
   const [mode, setMode] = useState<ChartMode>("auto");
   const [sortDesc, setSortDesc] = useState(true);
   const [topN, setTopN] = useState<number>(Math.min(data.row_count, 25));
   const [expanded, setExpanded] = useState(false);
   const chartRef = useRef<HTMLDivElement>(null);
 
+  // Compare state — self-contained. `compareChoice` is what the user
+  // picked; `compareData` is the re-fetched payload from /analyze with
+  // `compare_to` set. When choice is "none", we render the props.data
+  // as-is (no compare bars/badges).
+  const [compareChoice, setCompareChoice] = useState<CompareChoice>("none");
+  const [compareData, setCompareData] = useState<AnalyzeData | null>(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+  const [compareError, setCompareError] = useState<string | null>(null);
+
+  const activeData = compareData ?? data;
+
+  const handleCompareChange = async (choice: CompareChoice) => {
+    setCompareChoice(choice);
+    setCompareError(null);
+    if (choice === "none") {
+      setCompareData(null);
+      return;
+    }
+    setCompareLoading(true);
+    try {
+      const res = await fetch("/api/analytics/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, compare_to: choice }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = (await res.json()) as AnalyzeResponse;
+      if (payload.refused || !payload.data) {
+        throw new Error(payload.refusal_reason ?? "Compare unavailable.");
+      }
+      if (!payload.data.compare) {
+        throw new Error("This metric has no time window to compare against.");
+      }
+      setCompareData(payload.data);
+    } catch (err) {
+      setCompareError(err instanceof Error ? err.message : "Compare failed.");
+      setCompareData(null);
+      setCompareChoice("none");
+    } finally {
+      setCompareLoading(false);
+    }
+  };
+
   const effectiveType = mode === "auto" ? viz.viz_type : mode;
   const hasSort = ["bar", "bar_h", "donut"].includes(effectiveType);
-  const hasTopN = data.row_count > 5 && ["bar", "bar_h", "line", "area", "donut", "table"].includes(effectiveType);
+  const hasTopN = activeData.row_count > 5 && ["bar", "bar_h", "line", "area", "donut", "table"].includes(effectiveType);
 
   const sortedData = useMemo(() => {
-    if (!hasSort) return data.rows;
+    if (!hasSort) return activeData.rows;
     const key = viz.value_field;
-    return [...data.rows].sort((a, b) => {
+    return [...activeData.rows].sort((a, b) => {
       const av = toNumber(a[key]);
       const bv = toNumber(b[key]);
       return sortDesc ? bv - av : av - bv;
     });
-  }, [data.rows, viz.value_field, hasSort, sortDesc]);
+  }, [activeData.rows, viz.value_field, hasSort, sortDesc]);
 
   const displayed = useMemo(
     () => (hasTopN ? sortedData.slice(0, topN) : sortedData),
     [sortedData, hasTopN, topN],
   );
 
-  const shownData: AnalyzeData = { ...data, rows: displayed, row_count: displayed.length };
+  const shownData: AnalyzeData = { ...activeData, rows: displayed, row_count: displayed.length };
 
   return (
     <>
@@ -124,7 +193,7 @@ function ChartCard({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
             </p>
           </div>
           <Toolbar
-            data={data}
+            data={activeData}
             currentType={effectiveType}
             onTypeChange={setMode}
             hasSort={hasSort}
@@ -133,12 +202,21 @@ function ChartCard({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
             hasTopN={hasTopN}
             topN={topN}
             onTopN={setTopN}
-            maxN={data.row_count}
+            maxN={activeData.row_count}
             onExpand={() => setExpanded(true)}
             chartRef={chartRef}
             title={viz.hint}
+            canCompare={canCompare}
+            compareChoice={compareChoice}
+            onCompareChange={handleCompareChange}
+            compareLoading={compareLoading}
           />
         </div>
+        {compareError && (
+          <p className="border-b border-amber-500/30 bg-amber-500/10 px-4 py-2 text-[11px] text-amber-800 dark:text-amber-200">
+            {compareError}
+          </p>
+        )}
         <div ref={chartRef} className="p-4">
           <ChartBody type={effectiveType} data={shownData} viz={viz} />
         </div>
@@ -194,6 +272,10 @@ function Toolbar(props: {
   onExpand: () => void;
   chartRef: React.RefObject<HTMLDivElement>;
   title: string;
+  canCompare: boolean;
+  compareChoice: CompareChoice;
+  onCompareChange: (c: CompareChoice) => void;
+  compareLoading: boolean;
 }) {
   const {
     data,
@@ -209,9 +291,20 @@ function Toolbar(props: {
     onExpand,
     chartRef,
     title,
+    canCompare,
+    compareChoice,
+    onCompareChange,
+    compareLoading,
   } = props;
   return (
     <div className="flex items-center gap-1">
+      {canCompare && (
+        <CompareControl
+          value={compareChoice}
+          onChange={onCompareChange}
+          loading={compareLoading}
+        />
+      )}
       {hasTopN && (
         <div className="mr-1 hidden items-center gap-1 rounded-md border bg-background px-2 py-1 text-[11px] sm:flex">
           <span className="text-muted-foreground">Top</span>
@@ -312,6 +405,62 @@ function IconBtn({
   );
 }
 
+const COMPARE_LABELS: Record<CompareChoice, string> = {
+  none: "No compare",
+  previous_period: "vs prior period",
+  previous_year: "vs prior year",
+};
+
+function CompareControl({
+  value,
+  onChange,
+  loading,
+}: {
+  value: CompareChoice;
+  onChange: (c: CompareChoice) => void;
+  loading: boolean;
+}) {
+  const active = value !== "none";
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          className={cn(
+            "mr-1 flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] transition-colors",
+            active
+              ? "border-primary/40 bg-primary/[0.08] text-primary"
+              : "border-input bg-background text-muted-foreground hover:text-foreground",
+          )}
+          aria-label="Compare to previous period"
+          title="Compare to previous period"
+        >
+          {loading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <Clock className="h-3.5 w-3.5" />
+          )}
+          <span className="hidden sm:inline">{COMPARE_LABELS[value]}</span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-44">
+        {(["none", "previous_period", "previous_year"] as CompareChoice[]).map((c) => (
+          <DropdownMenuItem
+            key={c}
+            onSelect={() => onChange(c)}
+            className={cn(
+              "text-xs",
+              c === value && "bg-primary/[0.08] font-semibold",
+            )}
+          >
+            {COMPARE_LABELS[c]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 // ── Body dispatcher ────────────────────────────────────────────────
 
 function ChartBody({
@@ -364,6 +513,7 @@ const AXIS_TICK = { fontSize: 11, fill: "hsl(var(--muted-foreground))" };
 
 function KpiTile({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
   const raw = data.rows[0]?.[viz.value_field];
+  const scalar = data.compare?.scalar;
   return (
     <div className="py-6 text-center">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -372,11 +522,81 @@ function KpiTile({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
       <p className="mt-2 text-5xl font-extrabold tracking-tight text-foreground">
         {formatValue(raw, data.metric.format, data.metric.unit)}
       </p>
-      {data.metric.unit && (
-        <p className="mt-2 text-xs text-muted-foreground">{data.metric.unit}</p>
+      {scalar ? (
+        <div className="mt-3 flex flex-col items-center gap-1">
+          <DeltaBadge deltaPct={scalar.delta_pct} />
+          <p className="text-[11px] text-muted-foreground">
+            prior:{" "}
+            <span className="font-semibold text-foreground">
+              {formatValue(scalar.prior, data.metric.format, data.metric.unit)}
+            </span>
+            {data.compare?.prior_time_range?.start && (
+              <>
+                {" "}
+                <span className="text-muted-foreground/70">
+                  ({data.compare.prior_time_range.start} → {data.compare.prior_time_range.end})
+                </span>
+              </>
+            )}
+          </p>
+        </div>
+      ) : (
+        data.metric.unit && (
+          <p className="mt-2 text-xs text-muted-foreground">{data.metric.unit}</p>
+        )
       )}
     </div>
   );
+}
+
+/**
+ * Compact "+12.3%" / "–4.1%" pill with an up/down arrow. Coloured
+ * green/red respecting the metric's `higher_is_better` — for now
+ * default is "up = green"; refinement lives with the metric meta.
+ */
+function DeltaBadge({ deltaPct, small }: { deltaPct: number | null; small?: boolean }) {
+  if (deltaPct === null) {
+    return (
+      <span className={cn(
+        "inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-muted-foreground",
+        small ? "text-[10px]" : "text-xs",
+      )}>
+        n/a
+      </span>
+    );
+  }
+  const up = deltaPct >= 0;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold tabular-nums",
+        small ? "text-[10px]" : "text-xs",
+        up ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-rose-500/15 text-rose-700 dark:text-rose-300",
+      )}
+    >
+      {up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+      {up ? "+" : ""}
+      {deltaPct.toFixed(1)}%
+    </span>
+  );
+}
+
+/**
+ * Compare lookup: given a category label, return the prior value +
+ * delta% from data.compare.rows. Keyed on the same concat the server
+ * used (see compare.py align()).
+ */
+function priorForLabel(data: AnalyzeData, label: string): { prior: number; delta_pct: number | null } | null {
+  const rows = data.compare?.rows;
+  if (!rows) return null;
+  // Server keys are "|"-joined dim column values. For single-dim charts
+  // that reduces to just the value itself. For multi-dim we still match
+  // on the raw label the BarView emitted; the server key uses raw
+  // dimension values, not our safeLabel("(unset)") replacement, so we
+  // fall back to matching on the raw stored key too.
+  const hit = rows.find((r) => r.key === label || (label === "(unset)" && (r.key === "" || r.key === "null")));
+  if (!hit) return null;
+  return { prior: hit.prior, delta_pct: hit.delta_pct };
 }
 
 // ── Bar (vertical + horizontal) ───────────────────────────────────
@@ -392,11 +612,20 @@ function BarView({
   tall?: boolean;
   horizontal?: boolean;
 }) {
-  const chartData = data.rows.map((r) => ({
-    label: safeLabel(r[viz.category_field ?? ""]),
-    value: toNumber(r[viz.value_field]),
-  }));
+  const hasCompare = !!data.compare?.rows?.length;
+  const chartData = data.rows.map((r) => {
+    const label = safeLabel(r[viz.category_field ?? ""]);
+    const value = toNumber(r[viz.value_field]);
+    const prior = hasCompare ? priorForLabel(data, label) : null;
+    return {
+      label,
+      value,
+      prior: prior?.prior ?? 0,
+      delta_pct: prior?.delta_pct ?? null,
+    };
+  });
   const height = tall ? CHART_HEIGHT_TALL : CHART_HEIGHT;
+  const barSize = horizontal ? 18 : hasCompare ? 22 : 40;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
@@ -425,15 +654,46 @@ function BarView({
         )}
         <Tooltip
           cursor={{ fill: "rgba(79,70,229,0.06)" }}
-          content={<CustomTooltip metric={data.metric} />}
+          content={<CustomTooltip metric={data.metric} hasCompare={hasCompare} />}
         />
-        <Bar dataKey="value" fill={SERIES_COLORS[0]} radius={4} barSize={horizontal ? 20 : 40}>
+        {hasCompare && (
+          <Bar
+            dataKey="prior"
+            name="Prior"
+            fill={SERIES_COLORS[0]}
+            fillOpacity={0.28}
+            radius={4}
+            barSize={barSize}
+          />
+        )}
+        <Bar
+          dataKey="value"
+          name={data.metric.name}
+          fill={SERIES_COLORS[0]}
+          radius={4}
+          barSize={barSize}
+        >
           <LabelList
             dataKey="value"
             position={horizontal ? "right" : "top"}
             formatter={(v: number) => formatCompact(v)}
             style={{ fill: "hsl(var(--foreground))", fontSize: 10, fontWeight: 600 }}
           />
+          {hasCompare && (
+            <LabelList
+              dataKey="delta_pct"
+              position={horizontal ? "insideRight" : "insideTop"}
+              formatter={(v: number | null) =>
+                v === null ? "" : (v >= 0 ? "+" : "") + v.toFixed(1) + "%"
+              }
+              style={{
+                fill: "hsl(var(--foreground))",
+                fontSize: 9,
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+              }}
+            />
+          )}
         </Bar>
       </BarChart>
     </ResponsiveContainer>
@@ -457,10 +717,13 @@ function LineView({
   if (stacked && viz.series_field) {
     return <StackedLineInner data={data} viz={viz} height={height} />;
   }
-  const chartData = data.rows.map((r) => ({
-    label: safeLabel(r[viz.time_field ?? viz.category_field ?? ""]),
-    value: toNumber(r[viz.value_field]),
-  }));
+  const hasCompare = !!data.compare?.rows?.length;
+  const chartData = data.rows.map((r) => {
+    const label = safeLabel(r[viz.time_field ?? viz.category_field ?? ""]);
+    const value = toNumber(r[viz.value_field]);
+    const prior = hasCompare ? priorForLabel(data, label) : null;
+    return { label, value, prior: prior?.prior ?? null };
+  });
   return (
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={chartData} margin={{ top: 24, right: 12, left: 0, bottom: 8 }}>
@@ -469,11 +732,25 @@ function LineView({
         <YAxis tick={AXIS_TICK} tickFormatter={(v) => formatCompact(v)} />
         <Tooltip
           cursor={{ stroke: SERIES_COLORS[0], strokeWidth: 1, strokeDasharray: "3 3" }}
-          content={<CustomTooltip metric={data.metric} />}
+          content={<CustomTooltip metric={data.metric} hasCompare={hasCompare} />}
         />
+        {hasCompare && (
+          <Line
+            type="monotone"
+            dataKey="prior"
+            name="Prior"
+            stroke={SERIES_COLORS[0]}
+            strokeOpacity={0.55}
+            strokeWidth={1.75}
+            strokeDasharray="5 4"
+            dot={{ r: 2, fill: SERIES_COLORS[0], fillOpacity: 0.55 }}
+            activeDot={{ r: 4 }}
+          />
+        )}
         <Line
           type="monotone"
           dataKey="value"
+          name={data.metric.name}
           stroke={SERIES_COLORS[0]}
           strokeWidth={2.5}
           dot={{ r: 3, fill: SERIES_COLORS[0] }}
@@ -767,13 +1044,24 @@ function CustomTooltip({
   payload,
   label,
   metric,
+  hasCompare,
 }: {
   active?: boolean;
-  payload?: { name?: string; value: unknown; color?: string; dataKey?: string }[];
+  payload?: {
+    name?: string;
+    value: unknown;
+    color?: string;
+    dataKey?: string;
+    payload?: { delta_pct?: number | null };
+  }[];
   label?: string;
   metric: { format: string; unit: string };
+  hasCompare?: boolean;
 }) {
   if (!active || !payload || payload.length === 0) return null;
+  const deltaPct = hasCompare
+    ? payload.find((p) => p.dataKey === "value")?.payload?.delta_pct
+    : undefined;
   return (
     <div className="rounded-lg border bg-card px-3 py-2 shadow-lg">
       {label && (
@@ -784,17 +1072,23 @@ function CustomTooltip({
           {p.color && (
             <span
               className="h-2.5 w-2.5 shrink-0 rounded-sm"
-              style={{ background: p.color }}
+              style={{ background: p.color, opacity: p.dataKey === "prior" ? 0.55 : 1 }}
             />
           )}
           <span className="text-muted-foreground">
-            {p.dataKey === "value" ? "" : (p.name ?? p.dataKey)}
+            {p.dataKey === "prior" ? "Prior" : p.name ?? p.dataKey ?? ""}
           </span>
           <span className="ml-auto font-semibold text-foreground tabular-nums">
             {formatValue(p.value, metric.format, metric.unit)}
           </span>
         </div>
       ))}
+      {deltaPct !== undefined && deltaPct !== null && (
+        <div className="mt-1.5 flex items-center justify-end gap-1 border-t pt-1.5">
+          <span className="text-[10px] text-muted-foreground">delta</span>
+          <DeltaBadge deltaPct={deltaPct} small />
+        </div>
+      )}
     </div>
   );
 }

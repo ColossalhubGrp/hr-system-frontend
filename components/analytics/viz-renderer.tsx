@@ -518,6 +518,13 @@ const AXIS_TICK = { fontSize: 11, fill: "hsl(var(--muted-foreground))" };
 // at the top. Do not swap `verticalAlign` back to `"bottom"`.
 const TOP_LEGEND_STYLE = { fontSize: 11, paddingBottom: 8 } as const;
 
+// Distinct color for the "Prior" series in compare mode. Using a
+// visibly lighter shade rather than fillOpacity because Recharts'
+// Legend swatch renders with the raw `fill` value and ignores
+// opacity — so an opacity-only prior series looked identical to
+// current in the legend.
+const PRIOR_COLOR = "#c7d2fe"; // indigo-200
+
 // ── KPI Tile ──────────────────────────────────────────────────────
 
 function KpiTile({ data, viz }: { data: AnalyzeData; viz: VizSpec }) {
@@ -675,8 +682,7 @@ function BarView({
           <Bar
             dataKey="prior"
             name="Prior"
-            fill={SERIES_COLORS[0]}
-            fillOpacity={0.28}
+            fill={PRIOR_COLOR}
             radius={4}
             barSize={barSize}
           />
@@ -760,11 +766,10 @@ function LineView({
             type="monotone"
             dataKey="prior"
             name="Prior"
-            stroke={SERIES_COLORS[0]}
-            strokeOpacity={0.55}
-            strokeWidth={1.75}
+            stroke={PRIOR_COLOR}
+            strokeWidth={2}
             strokeDasharray="5 4"
-            dot={{ r: 2, fill: SERIES_COLORS[0], fillOpacity: 0.55 }}
+            dot={{ r: 2, fill: PRIOR_COLOR }}
             activeDot={{ r: 4 }}
           />
         )}

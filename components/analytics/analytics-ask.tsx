@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { VizRenderer } from "./viz-renderer";
 import { MultiMetricRenderer } from "./multi-metric-renderer";
+import { CalculationTrace } from "./calculation-trace";
 import { FollowupChips } from "./followup-chips";
 import type { AnalyzeResponse, Turn } from "./types";
 
@@ -286,6 +287,15 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
               />
             )}
             {turn.multi && <MultiMetricRenderer multi={turn.multi} />}
+            {turn.data?.provenance && (
+              <CalculationTrace provenance={turn.data.provenance} />
+            )}
+            {turn.multi?.slices?.map(
+              (s, i) =>
+                s.data.provenance && (
+                  <CalculationTrace key={i} provenance={s.data.provenance} />
+                ),
+            )}
             {turn.data?.metric && (
               <MetricBadge
                 name={turn.data.metric.name}

@@ -46,12 +46,38 @@ export interface CompareData {
   scalar: CompareScalar | null;
 }
 
+/**
+ * Full trace of how the numbers in an answer were derived. Every
+ * result carries one so the "How this was calculated" panel can
+ * show the SQL, params, and metric definition without a second
+ * roundtrip.
+ */
+export interface Provenance {
+  sql: string;
+  params: Record<string, string>;
+  metric: {
+    code: string;
+    name: string;
+    description: string;
+    computation_type: "simple" | "computed" | "sql" | string | null;
+    source_doctype: string | null;
+    aggregation: string | null;
+    aggregation_field: string | null;
+    custom_sql: string | null;
+    base_filters: unknown;
+    formula: string | null;
+    unit: string;
+    format: string;
+  };
+}
+
 export interface AnalyzeData {
   columns: string[];
   rows: Record<string, unknown>[];
   row_count: number;
   metric: MetricMeta;
   compare?: CompareData | null;
+  provenance?: Provenance | null;
 }
 
 export interface VizSpec {

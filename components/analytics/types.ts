@@ -20,6 +20,8 @@ export interface MetricMeta {
   name: string;
   unit: string;
   format: MetricFormat | string;
+  /** True when the metric can be time-shifted for compare-vs-prior mode. */
+  supports_compare?: boolean;
 }
 
 export type CompareMode = "previous_period" | "previous_year";

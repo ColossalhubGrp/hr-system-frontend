@@ -280,7 +280,9 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
                 data={turn.data}
                 viz={turn.viz}
                 question={turn.question}
-                canCompare={hasTimeRange(turn.plan)}
+                canCompare={
+                  turn.data.metric.supports_compare ?? hasTimeRange(turn.plan)
+                }
               />
             )}
             {turn.multi && <MultiMetricRenderer multi={turn.multi} />}

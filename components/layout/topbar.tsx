@@ -5,7 +5,12 @@ import { logoutAction } from "@/app/login/actions";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChatDrawer } from "@/components/chat/chat-drawer";
+// Basic HR-policy chatbot drawer (US-45) — hidden from the UI while
+// the analytics assistant at /analytics/ask is the primary AI surface.
+// Re-enable by uncommenting the import + the <ChatDrawer /> mount
+// below. All backing code (chat-drawer.tsx, /api/chat/*, chatbot
+// services) is intentionally left intact for a fast future revival.
+// import { ChatDrawer } from "@/components/chat/chat-drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +42,7 @@ export function Topbar({ user, notifications = 0 }: Props) {
         />
       </label>
 
-      <ChatDrawer />
+      {/* <ChatDrawer /> — hidden. See import block for revival notes. */}
 
       <Button
         type="button"

@@ -245,7 +245,10 @@ function ComboChart({
           }
         />
         <Legend
-          wrapperStyle={{ fontSize: 11 }}
+          verticalAlign="top"
+          align="left"
+          iconType="rect"
+          wrapperStyle={{ fontSize: 11, paddingBottom: 8 }}
           onClick={(o) => {
             const key = o?.dataKey;
             if (typeof key === "string") onToggle(key);

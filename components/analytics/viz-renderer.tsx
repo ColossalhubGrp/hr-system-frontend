@@ -504,10 +504,19 @@ const SERIES_COLORS = [
   "#4f46e5", "#0ea5e9", "#10b981", "#f59e0b",
   "#ef4444", "#8b5cf6", "#14b8a6", "#f97316",
 ];
-const CHART_HEIGHT = 280;
-const CHART_HEIGHT_TALL = 520;
+// +30px vs pre-legend baseline so the top legend doesn't compress the
+// plot area or overlap value labels ($45.2k, 5, 12.3%, …) rendered
+// above bars/lines/areas.
+const CHART_HEIGHT = 310;
+const CHART_HEIGHT_TALL = 550;
 
 const AXIS_TICK = { fontSize: 11, fill: "hsl(var(--muted-foreground))" };
+
+// Every Recharts chart uses this top-aligned Legend so the chart's
+// color↔series mapping is immediately visible without hovering.
+// House rule: every chart in the analytics chatbot MUST show a legend
+// at the top. Do not swap `verticalAlign` back to `"bottom"`.
+const TOP_LEGEND_STYLE = { fontSize: 11, paddingBottom: 8 } as const;
 
 // ── KPI Tile ──────────────────────────────────────────────────────
 
@@ -656,6 +665,12 @@ function BarView({
           cursor={{ fill: "rgba(79,70,229,0.06)" }}
           content={<CustomTooltip metric={data.metric} hasCompare={hasCompare} />}
         />
+        <Legend
+          verticalAlign="top"
+          align="left"
+          iconType="rect"
+          wrapperStyle={TOP_LEGEND_STYLE}
+        />
         {hasCompare && (
           <Bar
             dataKey="prior"
@@ -734,6 +749,12 @@ function LineView({
           cursor={{ stroke: SERIES_COLORS[0], strokeWidth: 1, strokeDasharray: "3 3" }}
           content={<CustomTooltip metric={data.metric} hasCompare={hasCompare} />}
         />
+        <Legend
+          verticalAlign="top"
+          align="left"
+          iconType="line"
+          wrapperStyle={TOP_LEGEND_STYLE}
+        />
         {hasCompare && (
           <Line
             type="monotone"
@@ -795,7 +816,10 @@ function StackedLineInner({ data, viz, height }: { data: AnalyzeData; viz: VizSp
           content={<CustomTooltip metric={data.metric} />}
         />
         <Legend
-          wrapperStyle={{ fontSize: 11 }}
+          verticalAlign="top"
+          align="left"
+          iconType="line"
+          wrapperStyle={TOP_LEGEND_STYLE}
           onClick={(o) => setHidden((prev) => {
             const next = new Set(prev);
             if (o?.dataKey && typeof o.dataKey === "string") {
@@ -853,9 +877,16 @@ function AreaView({
           cursor={{ stroke: SERIES_COLORS[0], strokeWidth: 1, strokeDasharray: "3 3" }}
           content={<CustomTooltip metric={data.metric} />}
         />
+        <Legend
+          verticalAlign="top"
+          align="left"
+          iconType="rect"
+          wrapperStyle={TOP_LEGEND_STYLE}
+        />
         <Area
           type="monotone"
           dataKey="value"
+          name={data.metric.name}
           stroke={SERIES_COLORS[0]}
           strokeWidth={2.5}
           fill="url(#areaGradient)"
@@ -884,16 +915,25 @@ function DonutView({
   const total = chartData.reduce((s, x) => s + x.value, 0);
   const size = tall ? 300 : 200;
   return (
-    <div className="flex flex-col items-center gap-4 sm:flex-row">
-      <div className="relative shrink-0" style={{ width: size, height: size }}>
+    <div className="flex flex-col items-stretch gap-4 sm:flex-row">
+      <div
+        className="relative shrink-0"
+        style={{ width: size, height: size + 40 }}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
+            <Legend
+              verticalAlign="top"
+              align="left"
+              iconType="rect"
+              wrapperStyle={TOP_LEGEND_STYLE}
+            />
             <Pie
               data={chartData}
               dataKey="value"
               nameKey="label"
               cx="50%"
-              cy="50%"
+              cy="55%"
               innerRadius={size * 0.3}
               outerRadius={size * 0.45}
               strokeWidth={2}
@@ -905,7 +945,10 @@ function DonutView({
             <Tooltip content={<CustomTooltip metric={data.metric} />} />
           </PieChart>
         </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+        <div
+          className="pointer-events-none absolute inset-x-0 flex flex-col items-center justify-center text-center"
+          style={{ top: 40, bottom: 0 }}
+        >
           <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
             Total
           </div>
@@ -982,7 +1025,10 @@ function GroupedBarView({
           content={<CustomTooltip metric={data.metric} />}
         />
         <Legend
-          wrapperStyle={{ fontSize: 11 }}
+          verticalAlign="top"
+          align="left"
+          iconType="rect"
+          wrapperStyle={TOP_LEGEND_STYLE}
           onClick={(o) => setHidden((prev) => {
             const next = new Set(prev);
             if (o?.dataKey && typeof o.dataKey === "string") {

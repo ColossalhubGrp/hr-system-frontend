@@ -49,9 +49,33 @@ export interface CompareData {
 /**
  * Full trace of how the numbers in an answer were derived. Every
  * result carries one so the "How this was calculated" panel can
- * show the SQL, params, and metric definition without a second
- * roundtrip.
+ * show the SQL, params, metric definition, AND the semantic-layer
+ * resolution (which Semantic Model served, which Formula Version
+ * overrode, if any) without a second roundtrip.
  */
+export interface FormulaVersionRef {
+  name: string;
+  owner_model: string;
+  override_kind: string;
+  status:
+    | "Candidate"
+    | "Under Review"
+    | "Published"
+    | "Rejected"
+    | "Superseded"
+    | string;
+  version: number;
+  change_reason: string;
+  has_assumptions: boolean;
+  assumption_notes: string;
+}
+
+export interface SemanticResolution {
+  active_model: string | null;
+  model_chain: string[];
+  formula_version?: FormulaVersionRef;
+}
+
 export interface Provenance {
   sql: string;
   params: Record<string, string>;
@@ -69,6 +93,8 @@ export interface Provenance {
     unit: string;
     format: string;
   };
+  /** Semantic-layer resolution (Phase 1.3+). */
+  semantic?: SemanticResolution;
 }
 
 export interface AnalyzeData {

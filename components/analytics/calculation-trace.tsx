@@ -42,6 +42,81 @@ export function CalculationTrace({ provenance }: { provenance: Provenance }) {
       </button>
       {open && (
         <div className="space-y-4 border-t px-4 py-3 text-xs text-foreground">
+          {provenance.semantic && (
+            <Section title="Semantic layer">
+              <dl className="grid grid-cols-1 gap-1 sm:grid-cols-[max-content_1fr] sm:gap-x-4">
+                <Row
+                  k="Active model"
+                  v={
+                    provenance.semantic.active_model ? (
+                      <code className="font-mono text-[11px]">
+                        {provenance.semantic.active_model}
+                      </code>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        (base catalog, no tenant model)
+                      </span>
+                    )
+                  }
+                />
+                {provenance.semantic.model_chain.length > 1 && (
+                  <Row
+                    k="Inheritance"
+                    v={
+                      <span className="font-mono text-[11px]">
+                        {provenance.semantic.model_chain.join(" → ")}
+                      </span>
+                    }
+                  />
+                )}
+                {provenance.semantic.formula_version ? (
+                  <>
+                    <Row
+                      k="Override"
+                      v={
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                            statusPillClass(provenance.semantic.formula_version.status),
+                          )}
+                        >
+                          {provenance.semantic.formula_version.status} · v
+                          {provenance.semantic.formula_version.version} ·{" "}
+                          {provenance.semantic.formula_version.override_kind}
+                        </span>
+                      }
+                    />
+                    {provenance.semantic.formula_version.change_reason && (
+                      <Row
+                        k="Change reason"
+                        v={provenance.semantic.formula_version.change_reason}
+                      />
+                    )}
+                    {provenance.semantic.formula_version.has_assumptions && (
+                      <Row
+                        k="Assumptions"
+                        v={
+                          <span className="text-amber-700 dark:text-amber-300">
+                            {provenance.semantic.formula_version.assumption_notes ||
+                              "This override uses best-fit proxies — double-check before citing."}
+                          </span>
+                        }
+                      />
+                    )}
+                  </>
+                ) : (
+                  <Row
+                    k="Override"
+                    v={
+                      <span className="text-muted-foreground">
+                        None — canonical definition served this answer.
+                      </span>
+                    }
+                  />
+                )}
+              </dl>
+            </Section>
+          )}
           <Section title="Metric definition">
             <dl className="grid grid-cols-1 gap-1 sm:grid-cols-[max-content_1fr] sm:gap-x-4">
               <Row k="Name" v={m.name} />
@@ -128,6 +203,23 @@ function SqlBlock({ children }: { children: string }) {
       <code className="font-mono whitespace-pre-wrap break-words">{children}</code>
     </pre>
   );
+}
+
+function statusPillClass(status: string): string {
+  switch (status) {
+    case "Published":
+      return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
+    case "Candidate":
+      return "bg-blue-500/15 text-blue-700 dark:text-blue-300";
+    case "Under Review":
+      return "bg-amber-500/15 text-amber-700 dark:text-amber-300";
+    case "Rejected":
+      return "bg-rose-500/15 text-rose-700 dark:text-rose-300";
+    case "Superseded":
+      return "bg-muted text-muted-foreground";
+    default:
+      return "bg-muted text-foreground";
+  }
 }
 
 function humanComputation(t: string): string {

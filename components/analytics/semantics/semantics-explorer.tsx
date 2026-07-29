@@ -1,14 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  BadgeCheck,
-  Boxes,
-  ChevronRight,
   ChevronDown,
-  CircleDashed,
-  Eye,
-  FileEdit,
+  ChevronRight,
   GitBranch,
   Layers,
   Loader2,
@@ -18,11 +13,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type {
-  SemanticListResponse,
-  SemanticDomain,
-  SemanticMetric,
   OverrideStatus,
+  SemanticDomain,
+  SemanticListResponse,
+  SemanticMetric,
 } from "./types";
+import { MetricDetail } from "./metric-detail";
 
 /**
  * The main /analytics/semantics client component. Renders a left rail
@@ -70,16 +66,6 @@ export function SemanticsExplorer() {
     // to fire once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const selectedMetric = useMemo(() => {
-    if (!data || !selected) return null;
-    for (const d of data.domains) {
-      for (const m of d.metrics) {
-        if (m.code === selected) return { metric: m, domain: d };
-      }
-    }
-    return null;
-  }, [data, selected]);
 
   if (loading && !data) {
     return (
@@ -140,11 +126,11 @@ export function SemanticsExplorer() {
           />
         </aside>
         <main className="flex-1 overflow-y-auto rounded-xl border bg-card">
-          {selectedMetric ? (
-            <MetricSummaryCard
-              metric={selectedMetric.metric}
-              domain={selectedMetric.domain}
+          {selected ? (
+            <MetricDetail
+              code={selected}
               editable={data.editable}
+              key={selected}
             />
           ) : (
             <EmptySelection editable={data.editable} />
@@ -338,68 +324,6 @@ function MetricRow({
 
 // ── Main-area cards ────────────────────────────────────────────────
 
-function MetricSummaryCard({
-  metric,
-  domain,
-  editable,
-}: {
-  metric: SemanticMetric;
-  domain: SemanticDomain;
-  editable: boolean;
-}) {
-  return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            {domain.title}
-          </p>
-          <h2 className="mt-1 text-xl font-semibold text-foreground">
-            {metric.title}
-          </h2>
-          <p className="mt-1 font-mono text-[11px] text-muted-foreground">
-            {metric.code}
-          </p>
-          {metric.description && (
-            <p className="mt-3 max-w-2xl text-sm text-muted-foreground">
-              {metric.description}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {metric.has_override ? (
-            <StatusPill status={metric.override_status} version={metric.override_version} size="lg" />
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full border bg-background px-2.5 py-1 text-[11px] text-muted-foreground">
-              <BadgeCheck className="h-3 w-3" />
-              canonical
-            </span>
-          )}
-        </div>
-      </div>
-
-      <dl className="grid grid-cols-2 gap-4 text-xs sm:grid-cols-4">
-        <Stat label="Computation" value={humanComputation(metric.computation_type)} />
-        <Stat label="Format" value={metric.format} />
-        <Stat label="Unit" value={metric.unit || "—"} />
-        <Stat label="Dimensions" value={String(metric.dimension_count)} />
-      </dl>
-
-      <div className="rounded-xl border border-dashed border-input bg-muted/20 p-4 text-center">
-        <FileEdit className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
-        <p className="text-sm font-medium text-foreground">
-          {editable ? "Edit drawer + version history ships in Phase 1.4c." : "Editing is disabled for your role."}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {editable
-            ? "You'll be able to author a Candidate override here and walk it through Under Review → Published."
-            : "Ask an HR Director, HR Manager, or BI Data Steward to make changes."}
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function EmptySelection({ editable }: { editable: boolean }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-3 p-12 text-center">
@@ -425,17 +349,6 @@ function EmptySelection({ editable }: { editable: boolean }) {
 }
 
 // ── Small pieces ───────────────────────────────────────────────────
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border bg-background/50 p-3">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-medium text-foreground">{value}</p>
-    </div>
-  );
-}
 
 function StatusPill({
   status,
@@ -490,15 +403,3 @@ function pillClass(status: string): string {
   }
 }
 
-function humanComputation(t: string): string {
-  switch (t) {
-    case "simple":
-      return "Simple aggregation";
-    case "computed":
-      return "Computed (formula)";
-    case "sql":
-      return "Custom SQL";
-    default:
-      return t;
-  }
-}

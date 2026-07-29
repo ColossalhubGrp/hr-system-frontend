@@ -72,7 +72,7 @@ export async function POST(req: Request) {
     const args: Record<string, string> = { question };
     if (compareTo) args.compare_to = compareTo;
     const data = await frappeCall<AnalyzeResponse>({
-      method: "colossal_bi.analytics.api.analytics.analyze",
+      method: "colossal_bi.bi_analytics.api.analytics.analyze",
       verb: "POST",
       args,
       as: "user",

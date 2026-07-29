@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
   try {
     const data = await frappeCall<AskResponse>({
-      method: "colossal_bi.chatbot.api.chatbot.ask",
+      method: "colossal_bi.bi_chatbot.api.chatbot.ask",
       verb: "POST",
       args: { question },
       as: "user",

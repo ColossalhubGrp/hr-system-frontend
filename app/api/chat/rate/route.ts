@@ -23,7 +23,7 @@ export async function POST(req: Request) {
 
   try {
     const data = await frappeCall<{ ok: boolean; ticket: string | null }>({
-      method: "tenant_manager.chatbot.api.chatbot.rate",
+      method: "colossal_bi.chatbot.api.chatbot.rate",
       verb: "POST",
       args: {
         audit_log_id: body.audit_log_id,

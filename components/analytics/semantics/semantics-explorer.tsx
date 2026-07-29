@@ -19,6 +19,7 @@ import type {
   SemanticMetric,
 } from "./types";
 import { MetricDetail } from "./metric-detail";
+import { RelationshipsExplorer } from "./relationships-explorer";
 
 /**
  * The main /analytics/semantics client component. Renders a left rail
@@ -29,12 +30,15 @@ import { MetricDetail } from "./metric-detail";
  * definitions have been touched.
  */
 
+type Tab = "metrics" | "relationships";
+
 export function SemanticsExplorer() {
   const [data, setData] = useState<SemanticListResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [tab, setTab] = useState<Tab>("metrics");
 
   const load = async () => {
     setLoading(true);
@@ -108,35 +112,66 @@ export function SemanticsExplorer() {
         onReload={load}
         loading={loading}
       />
-      <div className="flex flex-1 gap-4 overflow-hidden px-6 pb-6">
-        <aside className="w-[340px] shrink-0 overflow-y-auto rounded-xl border bg-card">
-          <DomainList
-            domains={data.domains}
-            expanded={expanded}
-            onToggle={(code) =>
-              setExpanded((prev) => {
-                const next = new Set(prev);
-                if (next.has(code)) next.delete(code);
-                else next.add(code);
-                return next;
-              })
-            }
-            selected={selected}
-            onSelect={setSelected}
-          />
-        </aside>
-        <main className="flex-1 overflow-y-auto rounded-xl border bg-card">
-          {selected ? (
-            <MetricDetail
-              code={selected}
-              editable={data.editable}
-              key={selected}
+      <TabBar tab={tab} onChange={setTab} />
+      {tab === "metrics" ? (
+        <div className="flex flex-1 gap-4 overflow-hidden px-6 pb-6">
+          <aside className="w-[340px] shrink-0 overflow-y-auto rounded-xl border bg-card">
+            <DomainList
+              domains={data.domains}
+              expanded={expanded}
+              onToggle={(code) =>
+                setExpanded((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(code)) next.delete(code);
+                  else next.add(code);
+                  return next;
+                })
+              }
+              selected={selected}
+              onSelect={setSelected}
             />
-          ) : (
-            <EmptySelection editable={data.editable} />
+          </aside>
+          <main className="flex-1 overflow-y-auto rounded-xl border bg-card">
+            {selected ? (
+              <MetricDetail
+                code={selected}
+                editable={data.editable}
+                key={selected}
+              />
+            ) : (
+              <EmptySelection editable={data.editable} />
+            )}
+          </main>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <RelationshipsExplorer />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Tab bar ────────────────────────────────────────────────────────
+
+function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
+  return (
+    <div className="flex items-center gap-1 border-b px-6">
+      {(["metrics", "relationships"] as Tab[]).map((t) => (
+        <button
+          key={t}
+          type="button"
+          onClick={() => onChange(t)}
+          className={cn(
+            "border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors",
+            tab === t
+              ? "border-primary text-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground",
           )}
-        </main>
-      </div>
+        >
+          {t === "metrics" ? "Metrics & Overrides" : "Relationships"}
+        </button>
+      ))}
     </div>
   );
 }

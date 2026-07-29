@@ -63,6 +63,40 @@ export interface FormulaVersion {
   can_transition: boolean;
 }
 
+export type RelationshipConfidence =
+  | "Link"
+  | "Heuristic Pending"
+  | "Approved"
+  | "Rejected";
+
+export interface SemanticRelationship {
+  name: string;
+  code: string;
+  from_doctype: string;
+  from_field: string;
+  from_field_type: string;
+  to_doctype: string;
+  to_field: string;
+  confidence: RelationshipConfidence | string;
+  reason: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  rejected_reason: string | null;
+  modified: string | null;
+}
+
+export interface RelationshipListResponse {
+  relationships: SemanticRelationship[];
+  counts: {
+    Link: number;
+    "Heuristic Pending": number;
+    Approved: number;
+    Rejected: number;
+    total: number;
+  };
+  editable: boolean;
+}
+
 export interface SemanticMetricDetail {
   code: string;
   title: string;

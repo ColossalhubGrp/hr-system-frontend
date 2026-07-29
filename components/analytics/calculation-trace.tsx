@@ -124,7 +124,10 @@ export function CalculationTrace({ provenance }: { provenance: Provenance }) {
               {m.description && <Row k="Description" v={m.description} />}
               {m.computation_type && <Row k="Computation" v={humanComputation(m.computation_type)} />}
               {m.source_doctype && <Row k="Source" v={m.source_doctype} />}
-              {m.aggregation && (
+              {/* Aggregation is only meaningful for `simple` metrics; sql / computed
+                  express their aggregation inline. Hiding avoids the misleading
+                  "Aggregation: COUNT" on a SUM-based SQL template. */}
+              {m.computation_type === "simple" && m.aggregation && (
                 <Row
                   k="Aggregation"
                   v={

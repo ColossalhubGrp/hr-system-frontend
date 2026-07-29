@@ -14,6 +14,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import type { FormulaVersion, SemanticMetricDetail } from "./types";
+import { NewOverrideForm } from "./new-override-form";
+import { TransitionActions } from "./transition-actions";
 
 /**
  * The main-area detail view for one metric. Fetches its full
@@ -41,6 +43,7 @@ export function MetricDetail({
   const [detail, setDetail] = useState<SemanticMetricDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [authoring, setAuthoring] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -93,10 +96,25 @@ export function MetricDetail({
 
   return (
     <div className="space-y-6 p-6">
-      <DetailHeader detail={detail} editable={editable} />
+      <DetailHeader
+        detail={detail}
+        editable={editable}
+        onAuthorClick={() => setAuthoring(true)}
+        authoring={authoring}
+      />
+      {authoring && (
+        <NewOverrideForm
+          detail={detail}
+          onClose={() => setAuthoring(false)}
+          onCreated={() => {
+            setAuthoring(false);
+            load();
+          }}
+        />
+      )}
       <DefinitionCompare detail={detail} />
       <DimensionList detail={detail} />
-      <VersionHistory versions={detail.versions} />
+      <VersionHistory versions={detail.versions} onChanged={load} />
     </div>
   );
 }
@@ -106,9 +124,13 @@ export function MetricDetail({
 function DetailHeader({
   detail,
   editable,
+  onAuthorClick,
+  authoring,
 }: {
   detail: SemanticMetricDetail;
   editable: boolean;
+  onAuthorClick: () => void;
+  authoring: boolean;
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
@@ -140,9 +162,8 @@ function DetailHeader({
             canonical
           </span>
         )}
-        {editable && (
-          // Placeholder trigger — the wired-up form ships in 1.4c-2.
-          <Button variant="outline" size="sm" disabled title="Ships in Phase 1.4c-2">
+        {editable && !authoring && (
+          <Button variant="outline" size="sm" onClick={onAuthorClick}>
             <FileEdit className="mr-1.5 h-3.5 w-3.5" /> New override
           </Button>
         )}
@@ -234,7 +255,9 @@ function DefinitionPanel({
       <dl className="grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1 text-[11px]">
         <Row k="Computation" v={humanComputation(body.computation_type)} />
         {body.source_doctype && <Row k="Source" v={body.source_doctype} />}
-        {body.aggregation && (
+        {/* Aggregation only meaningful for `simple` metrics — sql / computed
+            metrics express the aggregation inline in their SQL / formula. */}
+        {body.computation_type === "simple" && body.aggregation && (
           <Row
             k="Aggregation"
             v={
@@ -303,7 +326,13 @@ function DimensionList({ detail }: { detail: SemanticMetricDetail }) {
 
 // ── Version history ────────────────────────────────────────────────
 
-function VersionHistory({ versions }: { versions: FormulaVersion[] }) {
+function VersionHistory({
+  versions,
+  onChanged,
+}: {
+  versions: FormulaVersion[];
+  onChanged: () => void;
+}) {
   return (
     <section>
       <div className="mb-2 flex items-center gap-2">
@@ -319,7 +348,7 @@ function VersionHistory({ versions }: { versions: FormulaVersion[] }) {
       ) : (
         <ul className="space-y-2">
           {versions.map((v) => (
-            <VersionRow key={v.name} version={v} />
+            <VersionRow key={v.name} version={v} onChanged={onChanged} />
           ))}
         </ul>
       )}
@@ -327,7 +356,13 @@ function VersionHistory({ versions }: { versions: FormulaVersion[] }) {
   );
 }
 
-function VersionRow({ version }: { version: FormulaVersion }) {
+function VersionRow({
+  version,
+  onChanged,
+}: {
+  version: FormulaVersion;
+  onChanged: () => void;
+}) {
   const [expanded, setExpanded] = useState(false);
   return (
     <li
@@ -408,6 +443,7 @@ function VersionRow({ version }: { version: FormulaVersion }) {
             {version.reviewed_by && <span>Reviewed by: {short(version.reviewed_by)}</span>}
             {version.effective_date && <span>Effective: {version.effective_date}</span>}
           </div>
+          <TransitionActions version={version} onDone={onChanged} />
         </div>
       )}
     </li>

@@ -122,9 +122,11 @@ export function RelationshipsExplorer() {
         </div>
       )}
 
-      {/* Table */}
-      <div className="overflow-hidden rounded-xl border">
-        <table className="w-full text-xs">
+      {/* Table — outer div scrolls horizontally so narrow viewports can still
+          reach the Actions column; the Actions column itself is sticky-pinned
+          to the right so it stays visible even during scroll. */}
+      <div className="overflow-x-auto rounded-xl border">
+        <table className="w-full min-w-[820px] text-xs">
           <thead className="bg-muted/40 text-[10px] uppercase tracking-wide text-muted-foreground">
             <tr>
               <th className="px-4 py-2 text-left font-semibold">From</th>
@@ -132,7 +134,11 @@ export function RelationshipsExplorer() {
               <th className="px-2 py-2 text-left font-semibold">To</th>
               <th className="px-2 py-2 text-left font-semibold">Confidence</th>
               <th className="px-2 py-2 text-left font-semibold">Reason</th>
-              {data?.editable && <th className="px-4 py-2 text-right font-semibold">Actions</th>}
+              {data?.editable && (
+                <th className="sticky right-0 bg-muted/40 px-4 py-2 text-right font-semibold shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.12)]">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -255,18 +261,18 @@ function RelationshipRow({
         <td className="px-2 py-2">
           <ConfPill c={rel.confidence} />
         </td>
-        <td className="max-w-[380px] px-2 py-2 text-muted-foreground">
-          <span className="truncate" title={rel.reason}>
+        <td className="max-w-[240px] px-2 py-2 text-muted-foreground">
+          <div className="truncate" title={rel.reason}>
             {rel.reason || "—"}
-          </span>
+          </div>
           {rel.confidence === "Rejected" && rel.rejected_reason && (
-            <div className="mt-1 text-rose-700 dark:text-rose-300">
+            <div className="mt-1 truncate text-rose-700 dark:text-rose-300" title={rel.rejected_reason}>
               rejected: {rel.rejected_reason}
             </div>
           )}
         </td>
         {editable && (
-          <td className="whitespace-nowrap px-4 py-2 text-right">
+          <td className="sticky right-0 whitespace-nowrap bg-card px-4 py-2 text-right shadow-[-4px_0_6px_-4px_rgba(0,0,0,0.12)]">
             {canAct && !rejectOpen && (
               <div className="inline-flex gap-1.5">
                 {rel.confidence !== "Approved" && (
@@ -276,6 +282,7 @@ function RelationshipRow({
                     onClick={approve}
                     disabled={busy !== null}
                     className="h-7 px-2 text-[11px]"
+                    title="Approve — the query engine will use this JOIN"
                   >
                     {busy === "approve" ? (
                       <Loader2 className="mr-1 h-3 w-3 animate-spin" />
@@ -292,6 +299,7 @@ function RelationshipRow({
                     onClick={() => setRejectOpen(true)}
                     disabled={busy !== null}
                     className="h-7 px-2 text-[11px] border-rose-500/40 text-rose-700 hover:bg-rose-500/10 dark:text-rose-300"
+                    title="Reject — never re-proposed on later profiler runs"
                   >
                     <X className="mr-1 h-3 w-3" /> Reject
                   </Button>

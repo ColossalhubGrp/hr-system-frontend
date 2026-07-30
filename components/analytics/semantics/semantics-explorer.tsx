@@ -20,6 +20,7 @@ import type {
 } from "./types";
 import { MetricDetail } from "./metric-detail";
 import { RelationshipsExplorer } from "./relationships-explorer";
+import { BusinessContextEditor } from "./business-context-editor";
 
 /**
  * The main /analytics/semantics client component. Renders a left rail
@@ -30,7 +31,7 @@ import { RelationshipsExplorer } from "./relationships-explorer";
  * definitions have been touched.
  */
 
-type Tab = "metrics" | "relationships";
+type Tab = "metrics" | "relationships" | "context";
 
 export function SemanticsExplorer() {
   const [data, setData] = useState<SemanticListResponse | null>(null);
@@ -143,9 +144,13 @@ export function SemanticsExplorer() {
             )}
           </main>
         </div>
-      ) : (
+      ) : tab === "relationships" ? (
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <RelationshipsExplorer />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <BusinessContextEditor />
         </div>
       )}
     </div>
@@ -154,22 +159,28 @@ export function SemanticsExplorer() {
 
 // ── Tab bar ────────────────────────────────────────────────────────
 
+const TAB_LABELS: Record<Tab, string> = {
+  metrics: "Metrics & Overrides",
+  relationships: "Relationships",
+  context: "Business Context",
+};
+
 function TabBar({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
   return (
     <div className="flex items-center gap-1 border-b px-6">
-      {(["metrics", "relationships"] as Tab[]).map((t) => (
+      {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
         <button
           key={t}
           type="button"
           onClick={() => onChange(t)}
           className={cn(
-            "border-b-2 px-3 py-2 text-xs font-medium capitalize transition-colors",
+            "border-b-2 px-3 py-2 text-xs font-medium transition-colors",
             tab === t
               ? "border-primary text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground",
           )}
         >
-          {t === "metrics" ? "Metrics & Overrides" : "Relationships"}
+          {TAB_LABELS[t]}
         </button>
       ))}
     </div>

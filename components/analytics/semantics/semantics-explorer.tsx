@@ -21,6 +21,7 @@ import type {
 import { MetricDetail } from "./metric-detail";
 import { RelationshipsExplorer } from "./relationships-explorer";
 import { BusinessContextEditor } from "./business-context-editor";
+import { DatasetsExplorer } from "./datasets-explorer";
 
 /**
  * The main /analytics/semantics client component. Renders a left rail
@@ -31,7 +32,7 @@ import { BusinessContextEditor } from "./business-context-editor";
  * definitions have been touched.
  */
 
-type Tab = "metrics" | "relationships" | "context";
+type Tab = "metrics" | "relationships" | "datasets" | "context";
 
 export function SemanticsExplorer() {
   const [data, setData] = useState<SemanticListResponse | null>(null);
@@ -148,6 +149,10 @@ export function SemanticsExplorer() {
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <RelationshipsExplorer />
         </div>
+      ) : tab === "datasets" ? (
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <DatasetsExplorer />
+        </div>
       ) : (
         <div className="flex-1 overflow-y-auto px-6 pb-6">
           <BusinessContextEditor />
@@ -162,6 +167,7 @@ export function SemanticsExplorer() {
 const TAB_LABELS: Record<Tab, string> = {
   metrics: "Metrics & Overrides",
   relationships: "Relationships",
+  datasets: "Data",
   context: "Business Context",
 };
 

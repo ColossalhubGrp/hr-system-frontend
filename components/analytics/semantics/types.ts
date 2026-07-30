@@ -97,6 +97,45 @@ export interface RelationshipListResponse {
   editable: boolean;
 }
 
+export interface DatasetRow {
+  name: string;
+  code: string;
+  title: string;
+  data_source: string;
+  status: "Active" | "Deprecated" | "Failed" | string;
+  source_table: string | null;
+  source_doctype: string | null;
+  row_count: number | null;
+  last_profiled_at: string | null;
+  description: string;
+  modified: string | null;
+}
+
+export interface DatasetListResponse {
+  datasets: DatasetRow[];
+  counts_by_source: Record<string, number>;
+  editable: boolean;
+}
+
+export interface IngestedColumn {
+  original_name: string;
+  safe_name: string;
+  sql_type: string;
+  inferred_kind: "int" | "float" | "date" | "bool" | "text" | string;
+  nullable: boolean;
+  sample_values: string[];
+}
+
+export interface IngestCsvResponse {
+  dataset_code: string;
+  data_source: string;
+  physical_table: string;
+  row_count: number;
+  columns: IngestedColumn[];
+  sample_rows: Record<string, unknown>[];
+  warnings: string[];
+}
+
 export interface SemanticMetricDetail {
   code: string;
   title: string;

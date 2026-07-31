@@ -63,22 +63,6 @@ const DEFAULT_SCHEMAS: Record<string, string> = {
   redshift: "public",
 };
 
-/**
- * Which credential shape each source type uses. DB-shape sources
- * take host/port/user/pass; warehouse-shape sources take a service-
- * account JSON blob + project/dataset. Keeping this as a runtime
- * lookup rather than TS-conditional types keeps the FormState flat
- * (all fields present, per-shape render decides which to show).
- */
-const SHAPE_BY_TYPE: Record<string, "db" | "warehouse"> = {
-  postgres:  "db",
-  mysql:     "db",
-  redshift:  "db",
-  sqlserver: "db",
-  bigquery:  "warehouse",
-  snowflake: "warehouse",   // Phase 2.7c prep
-};
-
 const SUPPORTED: Array<{ value: DataSourceType; label: string; ready: boolean }> = [
   { value: "postgres",  label: "PostgreSQL",  ready: true },
   { value: "mysql",     label: "MySQL",       ready: true },    // Phase 2.6b
@@ -137,9 +121,6 @@ const EMPTY_FORM: FormState = {
   region: "",
 };
 
-function shapeOf(t: DataSourceType): "db" | "warehouse" {
-  return SHAPE_BY_TYPE[t] ?? "db";
-}
 
 type Step = "form" | "pick-table";
 
@@ -351,7 +332,15 @@ export function ConnectExternalDbModal({
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="max-w-2xl">
+      {/* max-h + flex column so a long form (BigQuery's JSON textarea
+          in particular) doesn't push the modal off-screen — the
+          interior step wraps in overflow-y-auto so the header stays
+          pinned and the body scrolls independently. `grid` from
+          shadcn's DialogContent still applies to the un-flex classes;
+          `flex flex-col` wins over `grid` via later-class-priority
+          and the DialogClose is absolute-positioned so it doesn't
+          participate in either layout. */}
+      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-base">
             <Database className="h-4 w-4" />
@@ -439,7 +428,11 @@ function FormStep({
   onCancel: () => void;
 }) {
   return (
-    <div className="space-y-3">
+    // flex-1 + overflow-y-auto + min-h-0 = the standard "scroll
+    // inside a flex-column parent" recipe. min-h-0 is critical:
+    // without it, flex items refuse to shrink below their content
+    // height and the parent's max-h just clips instead of scrolling.
+    <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto pr-1">
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {SUPPORTED.map((s) => (
           <button
@@ -905,7 +898,7 @@ function PickTableStep({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto pr-1">
       <p className="text-xs text-muted-foreground">
         Data Source <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px]">{dataSourceCode}</code>.
         Pick a table to expose as a Dataset — its columns will be

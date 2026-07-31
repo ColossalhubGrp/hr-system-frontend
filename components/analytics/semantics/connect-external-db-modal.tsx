@@ -115,6 +115,9 @@ export function ConnectExternalDbModal({
   /** Called after a Dataset is successfully created so the parent can reload. */
   onCreated: (created: CreateDatasetFromTableResponse) => void;
 }) {
+  // Reference to `doAdvance` is used by the FormStep's post-save
+  // Continue button (rare — only when the backend's on-save health
+  // check disagrees with the pre-save Test).
   const [step, setStep] = useState<Step>("form");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
@@ -178,36 +181,33 @@ export function ConnectExternalDbModal({
     setError(null);
     setHealth({ ok: null, message: "Testing…" });
     try {
-      // We don't have a saved code yet on this path — the backend's
-      // test_connection needs a persisted Data Source row. So we
-      // create + test in one shot by delegating to create_external
-      // BUT only when the user has already saved once (savedCode !=
-      // null). Before save, the button is disabled — that's the
-      // "test after save" convention. The label just says "Save &
-      // test" then to keep it honest.
-      if (!savedCode) {
-        setError("Test after Save — the backend needs a persisted Data Source to ping.");
-        setHealth({ ok: null, message: "" });
-        return;
-      }
-      const res = await fetch("/api/analytics/semantics/data-sources/test-connection", {
+      // Two paths — pre-save and post-save. Pre-save hits
+      // test_credentials with the raw form values (no Data Source
+      // persisted). Post-save re-pings the persisted row via
+      // test_connection so the DocType's last_connected_at gets
+      // updated. Same response shape either way.
+      const url = savedCode
+        ? "/api/analytics/semantics/data-sources/test-connection"
+        : "/api/analytics/semantics/data-sources/test-credentials";
+      const body = savedCode ? { code: savedCode } : buildPayload();
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: savedCode }),
+        body: JSON.stringify(body),
       });
-      const body = (await res.json().catch(() => null)) as {
+      const payload = (await res.json().catch(() => null)) as {
         ok?: boolean;
         message?: string;
         latency_ms?: number;
         server_version?: string;
         error?: string;
       } | null;
-      if (!res.ok) throw new Error(body?.error ?? `HTTP ${res.status}`);
+      if (!res.ok) throw new Error(payload?.error ?? `HTTP ${res.status}`);
       setHealth({
-        ok: !!body?.ok,
-        message: body?.message ?? "",
-        latency_ms: body?.latency_ms ?? null,
-        server_version: body?.server_version ?? null,
+        ok: !!payload?.ok,
+        message: payload?.message ?? "",
+        latency_ms: payload?.latency_ms ?? null,
+        server_version: payload?.server_version ?? null,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Test failed.");
@@ -219,7 +219,8 @@ export function ConnectExternalDbModal({
   const doSave = async () => {
     setSaving(true);
     setError(null);
-    setHealth({ ok: null, message: "Connecting…" });
+    // Don't wipe the green pill from the pre-save test — we want
+    // the user to see "connected" persist through the save spinner.
     try {
       const res = await fetch("/api/analytics/semantics/data-sources/create-external", {
         method: "POST",
@@ -238,9 +239,12 @@ export function ConnectExternalDbModal({
         latency_ms: body.health.latency_ms,
         server_version: body.health.server_version,
       });
-      // Auto-advance to the picker only when the connection worked;
-      // if health.ok is false the user needs to fix creds first
-      // (they can still Test again to re-check).
+      // Save was gated on a green Test so this almost always fires.
+      // If the backend's own health-check on save disagrees with
+      // the pre-save test (rare — creds rotated in the millisecond
+      // between them, or a fleeting network blip), we still stay
+      // on this step so the user can Test again from the persisted
+      // row and click Continue when it clears.
       if (body.health.ok) setStep("pick-table");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed.");
@@ -261,9 +265,23 @@ export function ConnectExternalDbModal({
 
         {step === "form" && (
           <FormStep
+            onAdvance={() => setStep("pick-table")}
             form={form}
-            onFormChange={(patch) => setForm({ ...form, ...patch })}
-            onTypeChange={setType}
+            onFormChange={(patch) => {
+              // Any field edit invalidates the last test result —
+              // a green pill from an earlier config shouldn't
+              // still gate Save after the user changed the port.
+              if (!savedCode && (health.ok === true || health.ok === false)) {
+                setHealth({ ok: null, message: "" });
+              }
+              setForm({ ...form, ...patch });
+            }}
+            onTypeChange={(t) => {
+              if (!savedCode && (health.ok === true || health.ok === false)) {
+                setHealth({ ok: null, message: "" });
+              }
+              setType(t);
+            }}
             canSubmit={canSubmit}
             saving={saving}
             testing={testing}
@@ -307,6 +325,7 @@ function FormStep({
   savedCode,
   onTest,
   onSave,
+  onAdvance,
   onCancel,
 }: {
   form: FormState;
@@ -320,6 +339,7 @@ function FormStep({
   savedCode: string | null;
   onTest: () => void;
   onSave: () => void;
+  onAdvance: () => void;
   onCancel: () => void;
 }) {
   return (
@@ -459,25 +479,51 @@ function FormStep({
         <Button variant="ghost" size="sm" onClick={onCancel} disabled={saving}>
           Cancel
         </Button>
-        {savedCode && (
-          <Button variant="outline" size="sm" onClick={onTest} disabled={testing || saving}>
-            {testing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
-            Test connection
-          </Button>
-        )}
-        {!savedCode ? (
-          <Button size="sm" onClick={onSave} disabled={!canSubmit || saving}>
-            {saving ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
-            Save &amp; continue
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onTest}
+          disabled={testing || saving || !canSubmit}
+          title={
+            !canSubmit
+              ? "Fill in code, title, host, database, username first."
+              : ""
+          }
+        >
+          {testing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+          Test connection
+        </Button>
+        {savedCode ? (
+          // Post-save: the Data Source already exists. Re-hitting
+          // Save would 409 on duplicate code, so surface a Continue
+          // button that skips forward to the picker instead. Gated
+          // on health.ok so the user can't advance with a broken
+          // connection.
+          <Button
+            size="sm"
+            onClick={onAdvance}
+            disabled={health.ok !== true}
+            title={
+              health.ok !== true
+                ? "Fix the connection first (Test connection)."
+                : ""
+            }
+          >
+            Continue <ChevronRight className="ml-1 h-3.5 w-3.5" />
           </Button>
         ) : (
           <Button
             size="sm"
             onClick={onSave}
-            disabled={!health.ok}
-            title={health.ok ? "" : "Fix the connection first."}
+            disabled={!canSubmit || saving || health.ok !== true}
+            title={
+              health.ok !== true
+                ? "Run Test connection first — Save is enabled once the pill goes green."
+                : ""
+            }
           >
-            Continue <ChevronRight className="ml-1 h-3.5 w-3.5" />
+            {saving ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
+            Save &amp; continue <ChevronRight className="ml-1 h-3.5 w-3.5" />
           </Button>
         )}
       </div>

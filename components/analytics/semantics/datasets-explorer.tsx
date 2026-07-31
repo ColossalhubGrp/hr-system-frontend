@@ -883,9 +883,10 @@ function QuickMetricModal({
               Ask (AI) can now answer questions using this metric. Try asking
               something like{" "}
               <em className="text-foreground">
-                &quot;what's the {result.aggregation.toLowerCase()} of {result.column} in{" "}
-                {result.dataset_code}?&quot;
+                &quot;{suggestedAskQuestion(result)}&quot;
               </em>
+              . You don't need to name the dataset unless another
+              metric measures the same concept.
             </p>
             <div className="flex justify-end">
               <Button size="sm" onClick={onCreated}>Done</Button>
@@ -985,6 +986,23 @@ function defaultTitle(agg: string, column: string): string {
     MAX: "Maximum",
   };
   return `${map[agg] || agg} ${humanCol}`;
+}
+
+function suggestedAskQuestion(result: CreatedMetric): string {
+  // Natural-sounding question that doesn't lean on the dataset code.
+  // The planner picks the metric from its catalog by concept — the
+  // dataset name is only needed to disambiguate when multiple metrics
+  // measure the same thing.
+  const humanCol = result.column.replace(/_/g, " ");
+  const agg = result.aggregation.toUpperCase();
+  if (agg === "COUNT") return `how many ${humanCol}?`;
+  const verb: Record<string, string> = {
+    SUM: "total",
+    AVG: "average",
+    MIN: "smallest",
+    MAX: "largest",
+  };
+  return `what's the ${verb[agg] || agg.toLowerCase()} ${humanCol}?`;
 }
 
 // ── Shared bits ────────────────────────────────────────────────────

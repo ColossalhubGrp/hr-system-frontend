@@ -136,6 +136,38 @@ export interface IngestCsvResponse {
   warnings: string[];
 }
 
+export interface DatasetColumn {
+  name: string;
+  sql_type: string;
+  nullable: boolean;
+  is_numeric: boolean;
+}
+
+export interface DatasetColumnsResponse {
+  dataset_code: string;
+  physical_table: string;
+  columns: DatasetColumn[];
+  metrics: {
+    name: string;
+    code: string;
+    title: string;
+    custom_sql: string;
+    format: string;
+    unit: string;
+  }[];
+  editable: boolean;
+}
+
+export interface CreatedMetric {
+  metric_code: string;
+  title: string;
+  sql: string;
+  aggregation: string;
+  column: string;
+  dataset_code: string;
+  physical_table: string;
+}
+
 export interface SemanticMetricDetail {
   code: string;
   title: string;

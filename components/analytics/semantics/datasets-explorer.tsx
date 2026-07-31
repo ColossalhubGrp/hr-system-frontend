@@ -4,18 +4,30 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Check,
+  ChevronDown,
+  ChevronRight,
   Database,
   FileSpreadsheet,
   Loader2,
   RefreshCw,
+  Sigma,
   Trash2,
   Upload,
   UploadCloud,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/cn";
 import type {
+  CreatedMetric,
+  DatasetColumn,
+  DatasetColumnsResponse,
   DatasetListResponse,
   DatasetRow,
   IngestCsvResponse,
@@ -552,6 +564,7 @@ function DatasetCard({
 }) {
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const canDelete = editable && d.data_source === "csv_uploads";
 
   const doDelete = async () => {
@@ -576,10 +589,19 @@ function DatasetCard({
   };
 
   return (
-    <div className="rounded-xl border bg-card p-3">
-      <div className="flex items-start justify-between gap-2">
+    <div className="rounded-xl border bg-card">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-start justify-between gap-2 rounded-t-xl p-3 text-left hover:bg-muted/20"
+      >
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
+            {expanded ? (
+              <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            )}
             {d.data_source === "csv_uploads" ? (
               <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
             ) : (
@@ -587,58 +609,382 @@ function DatasetCard({
             )}
             <p className="truncate text-sm font-semibold text-foreground">{d.title}</p>
           </div>
-          <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">
+          <p className="mt-0.5 truncate pl-5 font-mono text-[10px] text-muted-foreground">
             {d.code}
           </p>
         </div>
         {canDelete && !confirmDelete && (
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6 text-muted-foreground hover:text-rose-600"
-            onClick={() => setConfirmDelete(true)}
+          <span
+            role="button"
+            aria-label="Delete dataset"
             title="Delete dataset + drop staging table"
+            onClick={(e) => {
+              e.stopPropagation();
+              setConfirmDelete(true);
+            }}
+            className="grid h-6 w-6 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-rose-500/10 hover:text-rose-600"
           >
             <Trash2 className="h-3 w-3" />
-          </Button>
+          </span>
+        )}
+      </button>
+      <div className="px-3 pb-3">
+        <dl className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+          <dt>Data source</dt>
+          <dd className="font-mono text-foreground">{d.data_source}</dd>
+          {d.source_table && (<><dt>Table</dt><dd className="truncate font-mono text-foreground">{d.source_table}</dd></>)}
+          {d.row_count != null && (<><dt>Rows</dt><dd className="font-semibold text-foreground">{d.row_count.toLocaleString()}</dd></>)}
+          {d.last_profiled_at && (<><dt>Profiled</dt><dd className="text-foreground">{d.last_profiled_at.split(" ")[0]}</dd></>)}
+        </dl>
+        {d.description && (
+          <p className="mt-2 line-clamp-2 text-[11px] text-muted-foreground">
+            {d.description}
+          </p>
+        )}
+        {confirmDelete && (
+          <div className="mt-2 rounded-md border border-rose-500/40 bg-rose-500/5 p-2 text-[11px]">
+            <p className="mb-2 text-rose-800 dark:text-rose-200">
+              Delete this dataset AND drop its staging table? This can't be undone.
+            </p>
+            <div className="flex justify-end gap-1.5">
+              <Button size="sm" variant="ghost" onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }} disabled={deleting} className="h-6 px-2 text-[10px]">
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => { e.stopPropagation(); doDelete(); }}
+                disabled={deleting}
+                className="h-6 px-2 text-[10px] border-rose-500/40 text-rose-700 hover:bg-rose-500/10 dark:text-rose-300"
+              >
+                {deleting ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Trash2 className="mr-1 h-3 w-3" />}
+                Delete
+              </Button>
+            </div>
+          </div>
         )}
       </div>
-      <dl className="mt-2 grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
-        <dt>Data source</dt>
-        <dd className="font-mono text-foreground">{d.data_source}</dd>
-        {d.source_table && (<><dt>Table</dt><dd className="truncate font-mono text-foreground">{d.source_table}</dd></>)}
-        {d.row_count != null && (<><dt>Rows</dt><dd className="font-semibold text-foreground">{d.row_count.toLocaleString()}</dd></>)}
-        {d.last_profiled_at && (<><dt>Profiled</dt><dd className="text-foreground">{d.last_profiled_at.split(" ")[0]}</dd></>)}
-      </dl>
-      {d.description && (
-        <p className="mt-2 line-clamp-2 text-[11px] text-muted-foreground">
-          {d.description}
+      {expanded && <DatasetColumnsPanel datasetCode={d.code} editable={editable} />}
+    </div>
+  );
+}
+
+// ── Expandable columns panel + quick-metric flow ───────────────────
+
+function DatasetColumnsPanel({
+  datasetCode,
+  editable,
+}: {
+  datasetCode: string;
+  editable: boolean;
+}) {
+  const [data, setData] = useState<DatasetColumnsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [quickTarget, setQuickTarget] = useState<{
+    column: string;
+    isNumeric: boolean;
+  } | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(
+        `/api/analytics/semantics/datasets/columns?code=${encodeURIComponent(datasetCode)}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      setData((await res.json()) as DatasetColumnsResponse);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load columns.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [datasetCode]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 border-t px-3 py-2 text-[11px] text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" /> Loading columns…
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="border-t border-rose-500/30 bg-rose-500/5 px-3 py-2 text-[11px] text-rose-700 dark:text-rose-300">
+        {error}
+      </div>
+    );
+  }
+  if (!data) return null;
+
+  return (
+    <div className="border-t bg-muted/10 px-3 py-2">
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Columns
         </p>
-      )}
-      {confirmDelete && (
-        <div className="mt-2 rounded-md border border-rose-500/40 bg-rose-500/5 p-2 text-[11px]">
-          <p className="mb-2 text-rose-800 dark:text-rose-200">
-            Delete this dataset AND drop its staging table? This can't be undone.
+        <p className="text-[10px] text-muted-foreground">
+          {data.metrics.length} metric{data.metrics.length === 1 ? "" : "s"} exist on this dataset
+        </p>
+      </div>
+      <ul className="space-y-1">
+        {data.columns.map((col) => (
+          <li
+            key={col.name}
+            className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-muted/40"
+          >
+            <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground">
+              {col.name}
+            </span>
+            <span className="font-mono text-[10px] text-muted-foreground">
+              {col.sql_type}
+            </span>
+            {editable && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-2 text-[10px]"
+                onClick={() =>
+                  setQuickTarget({ column: col.name, isNumeric: col.is_numeric })
+                }
+                title="Create metric from this column"
+              >
+                <Sigma className="mr-1 h-3 w-3" /> Metric
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {data.metrics.length > 0 && (
+        <>
+          <p className="mt-3 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+            Existing metrics
           </p>
-          <div className="flex justify-end gap-1.5">
-            <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)} disabled={deleting} className="h-6 px-2 text-[10px]">
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={doDelete}
-              disabled={deleting}
-              className="h-6 px-2 text-[10px] border-rose-500/40 text-rose-700 hover:bg-rose-500/10 dark:text-rose-300"
-            >
-              {deleting ? <Loader2 className="mr-1 h-3 w-3 animate-spin" /> : <Trash2 className="mr-1 h-3 w-3" />}
-              Delete
-            </Button>
-          </div>
-        </div>
+          <ul className="mt-1 space-y-0.5">
+            {data.metrics.map((m) => (
+              <li
+                key={m.name}
+                className="flex items-center gap-2 text-[11px] text-foreground"
+              >
+                <Sigma className="h-3 w-3 text-primary" />
+                <span className="font-medium">{m.title}</span>
+                <span className="font-mono text-[10px] text-muted-foreground">
+                  {m.code}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+
+      {quickTarget && (
+        <QuickMetricModal
+          datasetCode={datasetCode}
+          column={quickTarget.column}
+          isNumeric={quickTarget.isNumeric}
+          onClose={() => setQuickTarget(null)}
+          onCreated={() => {
+            setQuickTarget(null);
+            load();
+          }}
+        />
       )}
     </div>
   );
+}
+
+function QuickMetricModal({
+  datasetCode,
+  column,
+  isNumeric,
+  onClose,
+  onCreated,
+}: {
+  datasetCode: string;
+  column: string;
+  isNumeric: boolean;
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  // COUNT is always offered (works on any column). SUM/AVG/MIN/MAX
+  // only for numeric.
+  const availableAggs = isNumeric ? ["COUNT", "SUM", "AVG", "MIN", "MAX"] : ["COUNT"];
+  const [agg, setAgg] = useState<string>(availableAggs[0]);
+  const [title, setTitle] = useState(defaultTitle(agg, column));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<CreatedMetric | null>(null);
+
+  // Re-suggest the title when the user changes the aggregation
+  // (only until they've typed their own — track a manual-touched flag).
+  const [manualTitle, setManualTitle] = useState(false);
+  const onAggChange = (newAgg: string) => {
+    setAgg(newAgg);
+    if (!manualTitle) setTitle(defaultTitle(newAgg, column));
+  };
+
+  const submit = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/analytics/semantics/datasets/create-metric", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dataset_code: datasetCode,
+          column,
+          aggregation: agg,
+          title: title.trim(),
+        }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      setResult((await res.json()) as CreatedMetric);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Create failed.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>
+            {result ? "Metric created" : "Create a metric"}
+          </DialogTitle>
+        </DialogHeader>
+
+        {result ? (
+          <div className="space-y-3 text-xs">
+            <div className="rounded-md border border-emerald-500/40 bg-emerald-500/[0.05] p-3">
+              <p className="font-semibold text-emerald-800 dark:text-emerald-200">
+                <Check className="mr-1 inline h-3.5 w-3.5" />
+                {result.title}
+              </p>
+              <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                {result.metric_code}
+              </p>
+            </div>
+            <p className="text-[11px] text-muted-foreground">
+              Ask (AI) can now answer questions using this metric. Try asking
+              something like{" "}
+              <em className="text-foreground">
+                &quot;what's the {result.aggregation.toLowerCase()} of {result.column} in{" "}
+                {result.dataset_code}?&quot;
+              </em>
+            </p>
+            <div className="flex justify-end">
+              <Button size="sm" onClick={onCreated}>Done</Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 text-xs">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Column
+              </p>
+              <p className="mt-0.5 font-mono text-foreground">
+                {datasetCode}.{column}
+              </p>
+              {!isNumeric && (
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Only COUNT is offered — this column isn't numeric.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Aggregation
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {availableAggs.map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => onAggChange(a)}
+                    className={cn(
+                      "rounded-md border px-2.5 py-1 text-[11px] font-medium transition-colors",
+                      agg === a
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-input bg-background text-muted-foreground hover:text-foreground",
+                    )}
+                    disabled={saving}
+                  >
+                    {a}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                Title
+              </p>
+              <input
+                value={title}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  setManualTitle(true);
+                }}
+                className={inputClass}
+                disabled={saving}
+              />
+            </div>
+
+            {error && (
+              <div className="rounded-md border border-rose-500/40 bg-rose-500/5 px-2.5 py-1.5 text-[11px] text-rose-700 dark:text-rose-300">
+                {error}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="sm" onClick={onClose} disabled={saving}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={submit} disabled={saving || !title.trim()}>
+                {saving ? (
+                  <>
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> Creating…
+                  </>
+                ) : (
+                  <>
+                    <Sigma className="mr-1.5 h-3.5 w-3.5" /> Create metric
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function defaultTitle(agg: string, column: string): string {
+  const humanCol = column.replace(/_/g, " ");
+  if (agg === "COUNT") return `Total rows (${humanCol})`;
+  const map: Record<string, string> = {
+    SUM: "Total",
+    AVG: "Average",
+    MIN: "Minimum",
+    MAX: "Maximum",
+  };
+  return `${map[agg] || agg} ${humanCol}`;
 }
 
 // ── Shared bits ────────────────────────────────────────────────────

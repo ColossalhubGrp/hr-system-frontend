@@ -35,6 +35,7 @@ import type {
 } from "./types";
 import { uploadFileChunked, type UploadedFile } from "./frappe-upload";
 import { ConnectExternalDbModal } from "./connect-external-db-modal";
+import { ImportDbtManifestModal } from "./import-dbt-manifest-modal";
 
 /**
  * The "Data" tab: catalog of every registered Dataset + a dropzone
@@ -71,6 +72,8 @@ export function DatasetsExplorer() {
 
   // Phase 2.6a: Connect-external-database modal
   const [showConnectDb, setShowConnectDb] = useState(false);
+  // Phase 2.8: Import-from-dbt-manifest modal
+  const [showImportDbt, setShowImportDbt] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -167,6 +170,7 @@ export function DatasetsExplorer() {
         loading={loading}
         editable={data?.editable ?? false}
         onConnectDb={() => setShowConnectDb(true)}
+        onImportDbt={() => setShowImportDbt(true)}
       />
 
       {error && (
@@ -192,6 +196,17 @@ export function DatasetsExplorer() {
           open={showConnectDb}
           onClose={() => setShowConnectDb(false)}
           onCreated={() => { load(); }}
+        />
+      )}
+
+      {/* Phase 2.8: dbt manifest import modal. Same reload pattern —
+          new Datasets + Metric Definitions land in the list and the
+          semantic catalog on close. */}
+      {data?.editable && (
+        <ImportDbtManifestModal
+          open={showImportDbt}
+          onClose={() => setShowImportDbt(false)}
+          onImported={() => { load(); }}
         />
       )}
 
@@ -229,6 +244,7 @@ function Header({
   loading,
   editable,
   onConnectDb,
+  onImportDbt,
 }: {
   totalDatasets: number;
   bySource: Record<string, number>;
@@ -236,6 +252,7 @@ function Header({
   loading: boolean;
   editable: boolean;
   onConnectDb: () => void;
+  onImportDbt: () => void;
 }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
@@ -268,6 +285,12 @@ function Header({
           <Button size="sm" variant="outline" onClick={onConnectDb}>
             <Database className="mr-1.5 h-3.5 w-3.5" />
             Connect database
+          </Button>
+        )}
+        {editable && (
+          <Button size="sm" variant="outline" onClick={onImportDbt}>
+            <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
+            Import from dbt
           </Button>
         )}
         <Button variant="ghost" size="sm" onClick={onReload} disabled={loading}>

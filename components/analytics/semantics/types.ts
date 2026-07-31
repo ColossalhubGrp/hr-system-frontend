@@ -302,3 +302,55 @@ export interface CreateDatasetFromTableResponse {
     is_primary: boolean;
   }>;
 }
+
+/* ── Phase 2.8: dbt manifest import ───────────────────────────────── */
+
+export interface DbtModelPreview {
+  unique_id: string;
+  name: string;
+  qualified_name: string;
+  description: string;
+  column_count: number;
+}
+
+export interface DbtMetricPreview {
+  unique_id: string;
+  name: string;
+  label: string;
+  description: string;
+  /** "simple" is MVP-supported; ratio/cumulative/derived/legacy aren't. */
+  type: "simple" | "ratio" | "cumulative" | "derived" | "legacy" | string;
+  /** True when the backend can generate SQL for this metric today. */
+  supported: boolean;
+  measure_name: string | null;
+  measure_agg: string | null;
+  measure_expr: string | null;
+  model_unique_id: string | null;
+  model_qualified_name: string | null;
+}
+
+export interface DbtPreviewResponse {
+  project_name: string;
+  dbt_version: string;
+  adapter_type: string;
+  generated_at: string;
+  counts: {
+    models: number;
+    metrics: number;
+    semantic_models: number;
+    supported_metrics: number;
+  };
+  models: DbtModelPreview[];
+  metrics: DbtMetricPreview[];
+  warnings: string[];
+  warnings_truncated: boolean;
+}
+
+export interface DbtImportResponse {
+  project_name: string;
+  data_source: string;
+  datasets_created: string[];
+  metrics_created: string[];
+  metrics_skipped: Array<{ unique_id: string; reason: string }>;
+  warnings: string[];
+}

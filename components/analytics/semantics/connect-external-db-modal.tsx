@@ -53,17 +53,20 @@ const DEFAULT_PORTS: Record<DataSourceType, number> = {
   postgres: 5432,
   mysql: 3306,
   sqlserver: 1433,
+  redshift: 5439,     // Redshift's own default; not 5432 like Postgres.
 };
 
 const DEFAULT_SCHEMAS: Record<DataSourceType, string> = {
   postgres: "public",
   sqlserver: "dbo",
   mysql: "",
+  redshift: "public",
 };
 
 const SUPPORTED: Array<{ value: DataSourceType; label: string; ready: boolean }> = [
   { value: "postgres",  label: "PostgreSQL",  ready: true },
   { value: "mysql",     label: "MySQL",       ready: true },    // Phase 2.6b
+  { value: "redshift",  label: "Redshift",    ready: true },    // Phase 2.7a
   { value: "sqlserver", label: "SQL Server",  ready: false },   // Phase 2.6c
 ];
 
@@ -343,7 +346,7 @@ function FormStep({
 }) {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {SUPPORTED.map((s) => (
           <button
             key={s.value}

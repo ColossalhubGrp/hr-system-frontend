@@ -85,7 +85,7 @@ const SUPPORTED: Array<{ value: DataSourceType; label: string; ready: boolean }>
   { value: "redshift",  label: "Redshift",    ready: true },    // Phase 2.7a
   { value: "bigquery",  label: "BigQuery",    ready: true },    // Phase 2.7b
   { value: "sqlserver", label: "SQL Server",  ready: false },   // Phase 2.6c
-  { value: "snowflake", label: "Snowflake",   ready: false },   // Phase 2.7c
+  { value: "snowflake", label: "Snowflake",   ready: true },    // Phase 2.7c
 ];
 
 interface FormState {
@@ -107,6 +107,11 @@ interface FormState {
   location: string;
   use_adc: boolean;
   credentials_json: string;
+  // Snowflake-specific
+  account: string;
+  warehouse: string;
+  role: string;
+  region: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -126,6 +131,10 @@ const EMPTY_FORM: FormState = {
   location: "",
   use_adc: false,
   credentials_json: "",
+  account: "",
+  warehouse: "",
+  role: "",
+  region: "",
 };
 
 function shapeOf(t: DataSourceType): "db" | "warehouse" {
@@ -196,14 +205,22 @@ export function ConnectExternalDbModal({
       form.code.trim().length > 0 &&
       form.title.trim().length > 0;
     if (!commonOk) return false;
-    if (shapeOf(form.source_type) === "warehouse") {
-      // Warehouse: project_id required + either creds JSON or ADC.
+    if (form.source_type === "bigquery") {
       return (
         form.project_id.trim().length > 0 &&
         (form.use_adc || form.credentials_json.trim().length > 0)
       );
     }
-    // DB shape.
+    if (form.source_type === "snowflake") {
+      // Snowflake: account + username + password. warehouse /
+      // database / schema / role are optional session pins.
+      return (
+        form.account.trim().length > 0 &&
+        form.username.trim().length > 0 &&
+        form.password.length > 0
+      );
+    }
+    // DB shape (Postgres / MySQL / Redshift / SQL Server).
     return (
       form.host.trim().length > 0 &&
       form.database.trim().length > 0 &&
@@ -218,7 +235,7 @@ export function ConnectExternalDbModal({
       title: form.title.trim(),
       description: form.description.trim() || undefined,
     };
-    if (shapeOf(form.source_type) === "warehouse") {
+    if (form.source_type === "bigquery") {
       return {
         ...base,
         project_id: form.project_id.trim(),
@@ -228,6 +245,19 @@ export function ConnectExternalDbModal({
         // Send an empty string as undefined so the backend can tell
         // "user is on ADC" from "user pasted whitespace by mistake".
         credentials_json: form.credentials_json.trim() || undefined,
+      };
+    }
+    if (form.source_type === "snowflake") {
+      return {
+        ...base,
+        account: form.account.trim(),
+        username: form.username.trim(),
+        password: form.password,
+        warehouse: form.warehouse.trim() || undefined,
+        database: form.database.trim() || undefined,
+        schema: form.schema.trim() || undefined,
+        role: form.role.trim() || undefined,
+        region: form.region.trim() || undefined,
       };
     }
     return {
@@ -454,12 +484,15 @@ function FormStep({
           />
         </Field>
 
-        {/* Shape-specific fields — DB (host/port/user/pass) vs
-            warehouse (project_id/dataset/credentials_json). */}
-        {shapeOf(form.source_type) === "db" ? (
-          <DbShapeFields form={form} onFormChange={onFormChange} disabled={saving || !!savedCode} savedCode={savedCode} />
+        {/* Shape-specific fields. DB (host/port/user/pass) is
+            shared across Postgres/MySQL/Redshift/SQL Server;
+            BigQuery and Snowflake each get their own field set. */}
+        {form.source_type === "bigquery" ? (
+          <BigQueryFields form={form} onFormChange={onFormChange} disabled={saving || !!savedCode} savedCode={savedCode} />
+        ) : form.source_type === "snowflake" ? (
+          <SnowflakeFields form={form} onFormChange={onFormChange} disabled={saving || !!savedCode} savedCode={savedCode} />
         ) : (
-          <WarehouseShapeFields form={form} onFormChange={onFormChange} disabled={saving || !!savedCode} savedCode={savedCode} />
+          <DbShapeFields form={form} onFormChange={onFormChange} disabled={saving || !!savedCode} savedCode={savedCode} />
         )}
 
         <Field label="Description" className="sm:col-span-2">
@@ -625,7 +658,7 @@ function DbShapeFields({
   );
 }
 
-function WarehouseShapeFields({
+function BigQueryFields({
   form,
   onFormChange,
   disabled,
@@ -701,6 +734,89 @@ function WarehouseShapeFields({
           />
         </Field>
       )}
+    </>
+  );
+}
+
+function SnowflakeFields({
+  form,
+  onFormChange,
+  disabled,
+  savedCode,
+}: {
+  form: FormState;
+  onFormChange: (patch: Partial<FormState>) => void;
+  disabled: boolean;
+  savedCode: string | null;
+}) {
+  return (
+    <>
+      <Field label="Account" required className="sm:col-span-2"
+             hint="Snowflake locator: e.g. xy12345.us-east-1.aws (no https://)">
+        <input
+          value={form.account}
+          onChange={(e) => onFormChange({ account: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="xy12345.us-east-1.aws"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Username" required>
+        <input
+          value={form.username}
+          onChange={(e) => onFormChange({ username: e.target.value })}
+          className={inputClass}
+          autoComplete="off"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Password" required={!savedCode}>
+        <input
+          type="password"
+          value={form.password}
+          onChange={(e) => onFormChange({ password: e.target.value })}
+          className={inputClass}
+          autoComplete="new-password"
+          disabled={disabled}
+          placeholder={savedCode ? "•••••• (stored)" : ""}
+        />
+      </Field>
+      <Field label="Warehouse" hint="Compute warehouse Snowflake runs queries on.">
+        <input
+          value={form.warehouse}
+          onChange={(e) => onFormChange({ warehouse: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="COMPUTE_WH"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Role" hint="Optional — session role.">
+        <input
+          value={form.role}
+          onChange={(e) => onFormChange({ role: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="SYSADMIN"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Database">
+        <input
+          value={form.database}
+          onChange={(e) => onFormChange({ database: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="ANALYTICS"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Schema">
+        <input
+          value={form.schema}
+          onChange={(e) => onFormChange({ schema: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="PUBLIC"
+          disabled={disabled}
+        />
+      </Field>
     </>
   );
 }

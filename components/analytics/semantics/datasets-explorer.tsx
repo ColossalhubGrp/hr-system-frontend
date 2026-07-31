@@ -30,9 +30,11 @@ import type {
   DatasetColumnsResponse,
   DatasetListResponse,
   DatasetRow,
+  DataSourceType,
   IngestCsvResponse,
 } from "./types";
 import { uploadFileChunked, type UploadedFile } from "./frappe-upload";
+import { ConnectExternalDbModal } from "./connect-external-db-modal";
 
 /**
  * The "Data" tab: catalog of every registered Dataset + a dropzone
@@ -66,6 +68,9 @@ export function DatasetsExplorer() {
     description: "",
   });
   const [ingestResult, setIngestResult] = useState<IngestCsvResponse | null>(null);
+
+  // Phase 2.6a: Connect-external-database modal
+  const [showConnectDb, setShowConnectDb] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -161,6 +166,7 @@ export function DatasetsExplorer() {
         onReload={load}
         loading={loading}
         editable={data?.editable ?? false}
+        onConnectDb={() => setShowConnectDb(true)}
       />
 
       {error && (
@@ -175,6 +181,17 @@ export function DatasetsExplorer() {
           uploadPct={uploadPct}
           onPicked={onFileChosen}
           inputRef={fileInputRef}
+        />
+      )}
+
+      {/* Phase 2.6a: connect-external-database modal. Rendered here
+          so it can trigger the same `load()` refresh the upload flow
+          uses when a new Dataset lands. */}
+      {data?.editable && (
+        <ConnectExternalDbModal
+          open={showConnectDb}
+          onClose={() => setShowConnectDb(false)}
+          onCreated={() => { load(); }}
         />
       )}
 
@@ -211,12 +228,14 @@ function Header({
   onReload,
   loading,
   editable,
+  onConnectDb,
 }: {
   totalDatasets: number;
   bySource: Record<string, number>;
   onReload: () => void;
   loading: boolean;
   editable: boolean;
+  onConnectDb: () => void;
 }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
@@ -245,6 +264,12 @@ function Header({
             <span className="font-semibold text-foreground">{n}</span>
           </span>
         ))}
+        {editable && (
+          <Button size="sm" variant="outline" onClick={onConnectDb}>
+            <Database className="mr-1.5 h-3.5 w-3.5" />
+            Connect database
+          </Button>
+        )}
         <Button variant="ghost" size="sm" onClick={onReload} disabled={loading}>
           {loading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -565,7 +590,14 @@ function DatasetCard({
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const canDelete = editable && d.data_source === "csv_uploads";
+  // Only CSV-upload datasets are safe to delete via this UI —
+  // dropping a Frappe DocType's table would break the app, and
+  // external-DB tables aren't ours to drop. Fallback to legacy
+  // data_source check for backwards compat with rows written
+  // before source_type was joined into the list response.
+  const canDelete =
+    editable &&
+    (d.source_type === "csv_upload" || d.data_source === "csv_uploads");
 
   const doDelete = async () => {
     setDeleting(true);
@@ -602,12 +634,13 @@ function DatasetCard({
             ) : (
               <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             )}
-            {d.data_source === "csv_uploads" ? (
-              <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
-            ) : (
-              <Database className="h-3.5 w-3.5 text-muted-foreground" />
-            )}
+            <SourceIcon sourceType={d.source_type} />
             <p className="truncate text-sm font-semibold text-foreground">{d.title}</p>
+            {d.source_type && d.source_type !== "csv_upload" && d.source_type !== "frappe_doctype" && (
+              <span className="ml-1 rounded-full border bg-muted/40 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {sourceLabel(d.source_type)}
+              </span>
+            )}
           </div>
           <p className="mt-0.5 truncate pl-5 font-mono text-[10px] text-muted-foreground">
             {d.code}
@@ -1049,3 +1082,31 @@ function KindPill({ kind }: { kind: string }) {
 
 const inputClass =
   "w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60";
+
+// ── Source-type visuals (Phase 2.6a) ──────────────────────────────
+
+function SourceIcon({ sourceType }: { sourceType: DataSourceType | null }) {
+  // CSV uploads keep their existing spreadsheet icon so nothing
+  // visible changes for the pre-2.6a common case. Everything else
+  // (Frappe DocType, Postgres, MySQL, warehouses) gets a generic
+  // database icon — dialect-specific icons can come later if
+  // Stewards find them useful.
+  if (sourceType === "csv_upload") {
+    return <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />;
+  }
+  return <Database className="h-3.5 w-3.5 text-muted-foreground" />;
+}
+
+function sourceLabel(sourceType: DataSourceType): string {
+  return {
+    postgres: "Postgres",
+    mysql: "MySQL",
+    sqlserver: "SQL Server",
+    bigquery: "BigQuery",
+    snowflake: "Snowflake",
+    redshift: "Redshift",
+    dbt_manifest: "dbt",
+    frappe_doctype: "Frappe",
+    csv_upload: "CSV",
+  }[sourceType] ?? sourceType;
+}

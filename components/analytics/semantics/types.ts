@@ -97,11 +97,37 @@ export interface RelationshipListResponse {
   editable: boolean;
 }
 
+/**
+ * Data Source.source_type values the backend registry supports.
+ * Kept as a string union rather than an enum so Frappe adding a
+ * new source_type (via patch) doesn't need a coordinated frontend
+ * release — unknown values still render, they just get the fallback
+ * icon.
+ */
+export type DataSourceType =
+  | "frappe_doctype"
+  | "csv_upload"
+  | "postgres"
+  | "mysql"
+  | "sqlserver"
+  | "bigquery"
+  | "snowflake"
+  | "redshift"
+  | "dbt_manifest"
+  | string;
+
 export interface DatasetRow {
   name: string;
   code: string;
   title: string;
   data_source: string;
+  /**
+   * Phase 2.6a: joined-in from Data Source so the card badge can
+   * distinguish CSV from Postgres from a future connector without
+   * a per-card round-trip. Null when the Data Source row is missing
+   * (should not happen — Dataset.data_source is a Link field).
+   */
+  source_type: DataSourceType | null;
   status: "Active" | "Deprecated" | "Failed" | string;
   source_table: string | null;
   source_doctype: string | null;
@@ -204,4 +230,75 @@ export interface SemanticMetricDetail {
   active_model: string | null;
   model_chain: string[];
   editable: boolean;
+}
+
+/* ── Phase 2.6a: external Data Sources ────────────────────────────── */
+
+/**
+ * Health-check response mirrored from `HealthReport` in
+ * connectors/base.py. `server_version` and `latency_ms` are optional
+ * because the connector Protocol allows either to be null (e.g. a
+ * connector that only reports alive/not without measuring latency).
+ */
+export interface HealthReport {
+  ok: boolean;
+  message: string;
+  latency_ms?: number | null;
+  server_version?: string | null;
+}
+
+export interface CreateExternalResponse {
+  code: string;
+  source_type: DataSourceType;
+  health: HealthReport;
+}
+
+export interface TestConnectionResponse extends HealthReport {
+  code: string;
+}
+
+export interface ExternalTableInfo {
+  name: string;
+  description: string;
+  row_count: number | null;
+}
+
+export interface ListTablesResponse {
+  code: string;
+  tables: ExternalTableInfo[];
+}
+
+/**
+ * Data Source row returned by list_external_sources — a subset of
+ * the DocType, safe to render in the "Connected databases" panel
+ * without exposing the credentials Password field.
+ */
+export interface ExternalSourceRow {
+  name: string;
+  code: string;
+  title: string;
+  source_type: DataSourceType;
+  status: "Active" | "Inactive" | "Error" | string;
+  description: string;
+  last_connected_at: string | null;
+  last_health_message: string | null;
+  modified: string | null;
+}
+
+export interface ExternalSourcesResponse {
+  sources: ExternalSourceRow[];
+  supported_types: DataSourceType[];
+  editable: boolean;
+}
+
+export interface CreateDatasetFromTableResponse {
+  dataset_code: string;
+  data_source: string;
+  table: string;
+  columns: Array<{
+    name: string;
+    data_type: string;
+    nullable: boolean;
+    is_primary: boolean;
+  }>;
 }

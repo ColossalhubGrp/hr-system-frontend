@@ -1,0 +1,37 @@
+import { NextResponse } from "next/server";
+import { frappeCall, FrappeRequestError } from "@/lib/frappe/client";
+import { readSession } from "@/lib/frappe/session";
+
+/**
+ * POST /api/analytics/semantics/pdf/preview
+ * Body: { file_url }
+ *
+ * Parse an uploaded PDF via pdfplumber and return per-page tables
+ * + sample rows. Non-destructive — nothing is persisted; the
+ * Steward reviews before committing via the import endpoint.
+ */
+export async function POST(req: Request) {
+  const { userId } = readSession();
+  if (!userId || userId === "Guest") {
+    return NextResponse.json({ error: "Not authenticated." }, { status: 401 });
+  }
+  const body = (await req.json().catch(() => null)) as { file_url?: string } | null;
+  if (!body?.file_url) {
+    return NextResponse.json({ error: "file_url is required." }, { status: 400 });
+  }
+  try {
+    const data = await frappeCall({
+      method: "colossal_bi.bi_analytics.api.pdf_import.preview_pdf",
+      verb: "POST",
+      args: { file_url: body.file_url },
+      as: "user",
+    });
+    return NextResponse.json(data);
+  } catch (err) {
+    if (err instanceof FrappeRequestError) {
+      return NextResponse.json({ error: err.message }, { status: err.status || 500 });
+    }
+    console.error("[semantics/pdf/preview] failed:", err);
+    return NextResponse.json({ error: "Server error." }, { status: 500 });
+  }
+}

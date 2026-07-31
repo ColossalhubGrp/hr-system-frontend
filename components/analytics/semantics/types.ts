@@ -354,3 +354,51 @@ export interface DbtImportResponse {
   metrics_skipped: Array<{ unique_id: string; reason: string }>;
   warnings: string[];
 }
+
+/* ── Phase 2.9: PDF table extraction ──────────────────────────────── */
+
+export interface PdfTablePreview {
+  page_index: number;
+  table_index: number;
+  row_count: number;
+  column_count: number;
+  sample_rows: string[][];
+  suggested_title: string;
+}
+
+export interface PdfPagePreview {
+  page_number: number;
+  tables: PdfTablePreview[];
+}
+
+export interface PdfPreviewResponse {
+  total_pages: number;
+  total_tables: number;
+  pages: PdfPagePreview[];
+  warnings: string[];
+}
+
+export interface PdfImportPick {
+  page_index: number;
+  table_index: number;
+  title: string;
+  code?: string;
+  header_row_index?: number;
+}
+
+export interface PdfImportResponse {
+  data_source: string;
+  created: Array<{
+    page_index: number;
+    table_index: number;
+    dataset_code: string;
+    physical_table: string;
+    row_count: number;
+    column_count: number;
+  }>;
+  errors: Array<{
+    page_index: number;
+    table_index: number;
+    error: string;
+  }>;
+}

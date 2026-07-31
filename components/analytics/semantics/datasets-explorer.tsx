@@ -8,6 +8,7 @@ import {
   ChevronRight,
   Database,
   FileSpreadsheet,
+  FileText,
   Loader2,
   RefreshCw,
   Sigma,
@@ -36,6 +37,7 @@ import type {
 import { uploadFileChunked, type UploadedFile } from "./frappe-upload";
 import { ConnectExternalDbModal } from "./connect-external-db-modal";
 import { ImportDbtManifestModal } from "./import-dbt-manifest-modal";
+import { ImportPdfModal } from "./import-pdf-modal";
 
 /**
  * The "Data" tab: catalog of every registered Dataset + a dropzone
@@ -74,6 +76,8 @@ export function DatasetsExplorer() {
   const [showConnectDb, setShowConnectDb] = useState(false);
   // Phase 2.8: Import-from-dbt-manifest modal
   const [showImportDbt, setShowImportDbt] = useState(false);
+  // Phase 2.9: Import-tables-from-PDF modal
+  const [showImportPdf, setShowImportPdf] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -171,6 +175,7 @@ export function DatasetsExplorer() {
         editable={data?.editable ?? false}
         onConnectDb={() => setShowConnectDb(true)}
         onImportDbt={() => setShowImportDbt(true)}
+        onImportPdf={() => setShowImportPdf(true)}
       />
 
       {error && (
@@ -210,6 +215,18 @@ export function DatasetsExplorer() {
         />
       )}
 
+      {/* Phase 2.9: PDF table extraction. Each imported table becomes
+          a CSV-shaped Dataset via the same csv_ingestion path — so
+          the Data-tab card list and per-column quick-metric buttons
+          work identically to a direct CSV upload. */}
+      {data?.editable && (
+        <ImportPdfModal
+          open={showImportPdf}
+          onClose={() => setShowImportPdf(false)}
+          onImported={() => { load(); }}
+        />
+      )}
+
       {staged && !ingestResult && (
         <ConfirmIngestCard
           uploadedName={staged.file_url.split("/").pop() || ""}
@@ -245,6 +262,7 @@ function Header({
   editable,
   onConnectDb,
   onImportDbt,
+  onImportPdf,
 }: {
   totalDatasets: number;
   bySource: Record<string, number>;
@@ -253,6 +271,7 @@ function Header({
   editable: boolean;
   onConnectDb: () => void;
   onImportDbt: () => void;
+  onImportPdf: () => void;
 }) {
   return (
     <header className="flex flex-wrap items-start justify-between gap-3">
@@ -291,6 +310,12 @@ function Header({
           <Button size="sm" variant="outline" onClick={onImportDbt}>
             <FileSpreadsheet className="mr-1.5 h-3.5 w-3.5" />
             Import from dbt
+          </Button>
+        )}
+        {editable && (
+          <Button size="sm" variant="outline" onClick={onImportPdf}>
+            <FileText className="mr-1.5 h-3.5 w-3.5" />
+            Import from PDF
           </Button>
         )}
         <Button variant="ghost" size="sm" onClick={onReload} disabled={loading}>

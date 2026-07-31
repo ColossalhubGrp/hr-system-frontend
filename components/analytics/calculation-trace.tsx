@@ -157,9 +157,34 @@ export function CalculationTrace({ provenance }: { provenance: Provenance }) {
             </Section>
           )}
 
-          <Section title="Compiled SQL that ran">
+          <Section
+            title={
+              provenance.executed_sql
+                ? "Compiled SQL (source, before dialect translation)"
+                : "Compiled SQL that ran"
+            }
+          >
             <SqlBlock>{provenance.sql}</SqlBlock>
+            {provenance.executed_sql ? (
+              <p className="mt-1 text-[10px] text-muted-foreground">
+                The metric&apos;s Data Source (
+                <code className="font-mono text-[10px]">
+                  {provenance.data_source_code}
+                </code>
+                ) speaks a different SQL dialect than the builder, so the
+                query above was transpiled before it ran. See below for the
+                actual SQL sent to the connector.
+              </p>
+            ) : null}
           </Section>
+
+          {provenance.executed_sql ? (
+            <Section
+              title={`SQL sent to ${provenance.connector_dialect ?? "connector"}`}
+            >
+              <SqlBlock>{provenance.executed_sql}</SqlBlock>
+            </Section>
+          ) : null}
 
           {Object.keys(provenance.params).length > 0 && (
             <Section title="Bound parameters">

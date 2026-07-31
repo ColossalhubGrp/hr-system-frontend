@@ -78,6 +78,18 @@ export interface SemanticResolution {
 
 export interface Provenance {
   sql: string;
+  /**
+   * Phase 2.6a: for external connectors (Postgres today, MySQL /
+   * SQL Server / BigQuery next), sqlglot transpiles the builder's
+   * MariaDB SQL into the connector's dialect before it runs.
+   * When translation actually changed something, `executed_sql`
+   * holds the post-translation SQL the connector received. Null
+   * for same-dialect queries (Frappe DocType + CSV upload) so the
+   * trace UI doesn't render an identical duplicate block.
+   */
+  executed_sql?: string | null;
+  connector_dialect?: string | null;
+  data_source_code?: string | null;
   params: Record<string, string>;
   metric: {
     code: string;

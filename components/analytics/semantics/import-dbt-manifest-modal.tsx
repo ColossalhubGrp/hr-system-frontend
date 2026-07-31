@@ -382,7 +382,12 @@ function ReviewStep({
   onCancel: () => void;
   onImport: () => void;
 }) {
-  const canImport = dataSourceCode.length > 0 && selected.size > 0;
+  const targetSource = dataSources.find((s) => s.code === dataSourceCode);
+  const adapterCompatible =
+    !targetSource ||
+    !preview.adapter_type ||
+    isAdapterCompatible(preview.adapter_type, targetSource.source_type);
+  const canImport = dataSourceCode.length > 0 && selected.size > 0 && adapterCompatible;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col space-y-3 overflow-y-auto pr-1">
@@ -423,10 +428,33 @@ function ReviewStep({
             {dataSources.map((s) => (
               <option key={s.code} value={s.code}>
                 {s.title} — {s.source_type} ({s.code})
+                {isAdapterCompatible(preview.adapter_type, s.source_type) ? "" : "  ⚠"}
               </option>
             ))}
           </select>
         )}
+        {(() => {
+          const target = dataSources.find((s) => s.code === dataSourceCode);
+          if (!target || !preview.adapter_type) return null;
+          if (isAdapterCompatible(preview.adapter_type, target.source_type)) return null;
+          // Hard mismatch — dbt says the models are on a different
+          // dialect than the target. Almost always a wrong pick.
+          return (
+            <p className="mt-1 rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-800 dark:text-amber-200">
+              <AlertTriangle className="mr-1 inline h-3 w-3" />
+              This dbt project targets{" "}
+              <code className="font-mono">{preview.adapter_type}</code>,
+              but the selected Data Source is{" "}
+              <code className="font-mono">{target.source_type}</code>.
+              The manifest&apos;s models reference tables in
+              <code className="ml-1 font-mono">
+                {preview.models[0]?.qualified_name || "database.schema.table"}
+              </code>
+              {" "}form — that path won&apos;t exist on a different backend.
+              Pick a matching Data Source before importing.
+            </p>
+          );
+        })()}
         <p className="mt-1 text-[10px] text-muted-foreground">
           Metrics will run through this connector at query time. dbt is
           metadata — it doesn&apos;t execute queries itself.
@@ -502,9 +530,11 @@ function ReviewStep({
           onClick={onImport}
           disabled={!canImport || importing}
           title={
-            !canImport
-              ? "Pick a Data Source and at least one supported metric."
-              : ""
+            !adapterCompatible
+              ? `dbt adapter ${preview.adapter_type} doesn't match this Data Source — pick a compatible one.`
+              : !canImport
+                ? "Pick a Data Source and at least one supported metric."
+                : ""
           }
         >
           {importing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
@@ -566,6 +596,34 @@ function DoneStep({
       </div>
     </div>
   );
+}
+
+// ── Adapter-compat ───────────────────────────────────────────────
+
+/**
+ * Map dbt adapter_type → the set of Data Source source_types that
+ * can actually execute that adapter's SQL. Kept generous: sqlglot
+ * transpiles most flavors reasonably well, so redshift↔postgres and
+ * mariadb↔mysql are treated as fungible. Truly divergent pairs
+ * (postgres → bigquery) trigger the warning.
+ */
+const ADAPTER_COMPAT: Record<string, string[]> = {
+  postgres:  ["postgres", "redshift"],
+  redshift:  ["redshift", "postgres"],
+  mysql:     ["mysql"],
+  mariadb:   ["mysql"],
+  bigquery:  ["bigquery"],
+  snowflake: ["snowflake"],
+  sqlserver: ["sqlserver"],
+  mssql:     ["sqlserver"],
+};
+
+function isAdapterCompatible(dbtAdapter: string, sourceType: string): boolean {
+  const key = (dbtAdapter || "").toLowerCase().trim();
+  if (!key) return true;          // unknown adapter — don't warn
+  const allowed = ADAPTER_COMPAT[key];
+  if (!allowed) return true;      // adapter we don't recognize — don't warn
+  return allowed.includes(sourceType);
 }
 
 // ── Bits ─────────────────────────────────────────────────────────

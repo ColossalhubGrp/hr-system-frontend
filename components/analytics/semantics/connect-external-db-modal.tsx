@@ -8,7 +8,6 @@ import {
   Database,
   Loader2,
   Table as TableIcon,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -64,7 +63,7 @@ const DEFAULT_SCHEMAS: Record<DataSourceType, string> = {
 
 const SUPPORTED: Array<{ value: DataSourceType; label: string; ready: boolean }> = [
   { value: "postgres",  label: "PostgreSQL",  ready: true },
-  { value: "mysql",     label: "MySQL",       ready: false },   // Phase 2.6b
+  { value: "mysql",     label: "MySQL",       ready: true },    // Phase 2.6b
   { value: "sqlserver", label: "SQL Server",  ready: false },   // Phase 2.6c
 ];
 

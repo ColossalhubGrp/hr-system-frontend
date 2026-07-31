@@ -49,31 +49,51 @@ import type {
  * encrypted Password field. The modal never fetches it back.
  */
 
-const DEFAULT_PORTS: Record<DataSourceType, number> = {
+const DEFAULT_PORTS: Record<string, number> = {
   postgres: 5432,
   mysql: 3306,
   sqlserver: 1433,
   redshift: 5439,     // Redshift's own default; not 5432 like Postgres.
 };
 
-const DEFAULT_SCHEMAS: Record<DataSourceType, string> = {
+const DEFAULT_SCHEMAS: Record<string, string> = {
   postgres: "public",
   sqlserver: "dbo",
   mysql: "",
   redshift: "public",
 };
 
+/**
+ * Which credential shape each source type uses. DB-shape sources
+ * take host/port/user/pass; warehouse-shape sources take a service-
+ * account JSON blob + project/dataset. Keeping this as a runtime
+ * lookup rather than TS-conditional types keeps the FormState flat
+ * (all fields present, per-shape render decides which to show).
+ */
+const SHAPE_BY_TYPE: Record<string, "db" | "warehouse"> = {
+  postgres:  "db",
+  mysql:     "db",
+  redshift:  "db",
+  sqlserver: "db",
+  bigquery:  "warehouse",
+  snowflake: "warehouse",   // Phase 2.7c prep
+};
+
 const SUPPORTED: Array<{ value: DataSourceType; label: string; ready: boolean }> = [
   { value: "postgres",  label: "PostgreSQL",  ready: true },
   { value: "mysql",     label: "MySQL",       ready: true },    // Phase 2.6b
   { value: "redshift",  label: "Redshift",    ready: true },    // Phase 2.7a
+  { value: "bigquery",  label: "BigQuery",    ready: true },    // Phase 2.7b
   { value: "sqlserver", label: "SQL Server",  ready: false },   // Phase 2.6c
+  { value: "snowflake", label: "Snowflake",   ready: false },   // Phase 2.7c
 ];
 
 interface FormState {
   source_type: DataSourceType;
   code: string;
   title: string;
+  description: string;
+  // DB shape
   host: string;
   port: string;
   database: string;
@@ -81,13 +101,19 @@ interface FormState {
   password: string;
   schema: string;
   sslmode: string;
-  description: string;
+  // Warehouse shape (BigQuery today; Snowflake next)
+  project_id: string;
+  dataset: string;
+  location: string;
+  use_adc: boolean;
+  credentials_json: string;
 }
 
 const EMPTY_FORM: FormState = {
   source_type: "postgres",
   code: "",
   title: "",
+  description: "",
   host: "",
   port: String(DEFAULT_PORTS.postgres),
   database: "",
@@ -95,8 +121,16 @@ const EMPTY_FORM: FormState = {
   password: "",
   schema: DEFAULT_SCHEMAS.postgres,
   sslmode: "",
-  description: "",
+  project_id: "",
+  dataset: "",
+  location: "",
+  use_adc: false,
+  credentials_json: "",
 };
+
+function shapeOf(t: DataSourceType): "db" | "warehouse" {
+  return SHAPE_BY_TYPE[t] ?? "db";
+}
 
 type Step = "form" | "pick-table";
 
@@ -143,7 +177,10 @@ export function ConnectExternalDbModal({
   }, [open]);
 
   // Adapt sensible defaults when the source type changes — but never
-  // stomp on a value the user has already customized.
+  // stomp on a value the user has already customized. For DB→DB
+  // shape swaps we only touch port/schema; for shape flips (DB↔
+  // warehouse) the irrelevant fields simply hide via the shape-aware
+  // render below, so we don't need to clear them.
   const setType = (t: DataSourceType) => {
     setForm((f) => ({
       ...f,
@@ -154,29 +191,56 @@ export function ConnectExternalDbModal({
   };
 
   const canSubmit = useMemo(() => {
-    return (
+    const commonOk =
       form.source_type.length > 0 &&
       form.code.trim().length > 0 &&
-      form.title.trim().length > 0 &&
+      form.title.trim().length > 0;
+    if (!commonOk) return false;
+    if (shapeOf(form.source_type) === "warehouse") {
+      // Warehouse: project_id required + either creds JSON or ADC.
+      return (
+        form.project_id.trim().length > 0 &&
+        (form.use_adc || form.credentials_json.trim().length > 0)
+      );
+    }
+    // DB shape.
+    return (
       form.host.trim().length > 0 &&
       form.database.trim().length > 0 &&
       form.username.trim().length > 0
     );
   }, [form]);
 
-  const buildPayload = () => ({
-    source_type: form.source_type,
-    code: form.code.trim(),
-    title: form.title.trim(),
-    host: form.host.trim(),
-    port: form.port.trim() ? Number(form.port.trim()) : undefined,
-    database: form.database.trim(),
-    username: form.username.trim(),
-    password: form.password,
-    schema: form.schema.trim() || undefined,
-    sslmode: form.sslmode.trim() || undefined,
-    description: form.description.trim() || undefined,
-  });
+  const buildPayload = () => {
+    const base = {
+      source_type: form.source_type,
+      code: form.code.trim(),
+      title: form.title.trim(),
+      description: form.description.trim() || undefined,
+    };
+    if (shapeOf(form.source_type) === "warehouse") {
+      return {
+        ...base,
+        project_id: form.project_id.trim(),
+        dataset: form.dataset.trim() || undefined,
+        location: form.location.trim() || undefined,
+        use_adc: form.use_adc,
+        // Send an empty string as undefined so the backend can tell
+        // "user is on ADC" from "user pasted whitespace by mistake".
+        credentials_json: form.credentials_json.trim() || undefined,
+      };
+    }
+    return {
+      ...base,
+      host: form.host.trim(),
+      port: form.port.trim() ? Number(form.port.trim()) : undefined,
+      database: form.database.trim(),
+      username: form.username.trim(),
+      password: form.password,
+      schema: form.schema.trim() || undefined,
+      sslmode: form.sslmode.trim() || undefined,
+    };
+  };
 
   const doTest = async () => {
     setTesting(true);
@@ -385,77 +449,19 @@ function FormStep({
             value={form.title}
             onChange={(e) => onFormChange({ title: e.target.value })}
             className={inputClass}
-            placeholder="Warehouse (Postgres)"
+            placeholder="Warehouse"
             disabled={saving || !!savedCode}
           />
         </Field>
-        <Field label="Host" required className="sm:col-span-2">
-          <input
-            value={form.host}
-            onChange={(e) => onFormChange({ host: e.target.value })}
-            className={inputClass}
-            placeholder="db.internal.example.com"
-            disabled={saving || !!savedCode}
-          />
-        </Field>
-        <Field label="Port">
-          <input
-            value={form.port}
-            onChange={(e) => onFormChange({ port: e.target.value })}
-            className={cn(inputClass, "font-mono text-[11px]")}
-            inputMode="numeric"
-            disabled={saving || !!savedCode}
-          />
-        </Field>
-        <Field label="Database" required>
-          <input
-            value={form.database}
-            onChange={(e) => onFormChange({ database: e.target.value })}
-            className={inputClass}
-            placeholder="analytics"
-            disabled={saving || !!savedCode}
-          />
-        </Field>
-        <Field label="Username" required>
-          <input
-            value={form.username}
-            onChange={(e) => onFormChange({ username: e.target.value })}
-            className={inputClass}
-            autoComplete="off"
-            disabled={saving || !!savedCode}
-          />
-        </Field>
-        <Field label="Password" required={!savedCode}>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) => onFormChange({ password: e.target.value })}
-            className={inputClass}
-            autoComplete="new-password"
-            disabled={saving || !!savedCode}
-            placeholder={savedCode ? "•••••• (stored)" : ""}
-          />
-        </Field>
-        <Field label="Schema" hint="Search-path for unqualified table names.">
-          <input
-            value={form.schema}
-            onChange={(e) => onFormChange({ schema: e.target.value })}
-            className={cn(inputClass, "font-mono text-[11px]")}
-            placeholder={DEFAULT_SCHEMAS[form.source_type] ?? ""}
-            disabled={saving || !!savedCode}
-          />
-        </Field>
-        {form.source_type === "postgres" && (
-          <Field label="SSL mode" hint="Optional. e.g. require, prefer, disable.">
-            <input
-              value={form.sslmode}
-              onChange={(e) => onFormChange({ sslmode: e.target.value })}
-              className={cn(inputClass, "font-mono text-[11px]")}
-              placeholder="prefer"
-              disabled={saving || !!savedCode}
-            />
-          </Field>
+
+        {/* Shape-specific fields — DB (host/port/user/pass) vs
+            warehouse (project_id/dataset/credentials_json). */}
+        {shapeOf(form.source_type) === "db" ? (
+          <DbShapeFields form={form} onFormChange={onFormChange} disabled={saving || !!savedCode} savedCode={savedCode} />
+        ) : (
+          <WarehouseShapeFields form={form} onFormChange={onFormChange} disabled={saving || !!savedCode} savedCode={savedCode} />
         )}
+
         <Field label="Description" className="sm:col-span-2">
           <textarea
             value={form.description}
@@ -530,6 +536,172 @@ function FormStep({
         )}
       </div>
     </div>
+  );
+}
+
+// ── Shape-specific field sets ─────────────────────────────────────
+
+function DbShapeFields({
+  form,
+  onFormChange,
+  disabled,
+  savedCode,
+}: {
+  form: FormState;
+  onFormChange: (patch: Partial<FormState>) => void;
+  disabled: boolean;
+  savedCode: string | null;
+}) {
+  return (
+    <>
+      <Field label="Host" required className="sm:col-span-2">
+        <input
+          value={form.host}
+          onChange={(e) => onFormChange({ host: e.target.value })}
+          className={inputClass}
+          placeholder="db.internal.example.com"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Port">
+        <input
+          value={form.port}
+          onChange={(e) => onFormChange({ port: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          inputMode="numeric"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Database" required>
+        <input
+          value={form.database}
+          onChange={(e) => onFormChange({ database: e.target.value })}
+          className={inputClass}
+          placeholder="analytics"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Username" required>
+        <input
+          value={form.username}
+          onChange={(e) => onFormChange({ username: e.target.value })}
+          className={inputClass}
+          autoComplete="off"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Password" required={!savedCode}>
+        <input
+          type="password"
+          value={form.password}
+          onChange={(e) => onFormChange({ password: e.target.value })}
+          className={inputClass}
+          autoComplete="new-password"
+          disabled={disabled}
+          placeholder={savedCode ? "•••••• (stored)" : ""}
+        />
+      </Field>
+      <Field label="Schema" hint="Search-path for unqualified table names.">
+        <input
+          value={form.schema}
+          onChange={(e) => onFormChange({ schema: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder={DEFAULT_SCHEMAS[form.source_type] ?? ""}
+          disabled={disabled}
+        />
+      </Field>
+      {(form.source_type === "postgres" || form.source_type === "redshift") && (
+        <Field label="SSL mode" hint="Optional. e.g. require, prefer, disable.">
+          <input
+            value={form.sslmode}
+            onChange={(e) => onFormChange({ sslmode: e.target.value })}
+            className={cn(inputClass, "font-mono text-[11px]")}
+            placeholder="prefer"
+            disabled={disabled}
+          />
+        </Field>
+      )}
+    </>
+  );
+}
+
+function WarehouseShapeFields({
+  form,
+  onFormChange,
+  disabled,
+  savedCode,
+}: {
+  form: FormState;
+  onFormChange: (patch: Partial<FormState>) => void;
+  disabled: boolean;
+  savedCode: string | null;
+}) {
+  return (
+    <>
+      <Field label="Project ID" required hint="GCP project holding the dataset.">
+        <input
+          value={form.project_id}
+          onChange={(e) => onFormChange({ project_id: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="my-analytics-project"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Dataset" hint="Default dataset for list-tables. Leave blank to defer.">
+        <input
+          value={form.dataset}
+          onChange={(e) => onFormChange({ dataset: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="warehouse"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Location" hint="Region: US, EU, us-central1, etc. Optional.">
+        <input
+          value={form.location}
+          onChange={(e) => onFormChange({ location: e.target.value })}
+          className={cn(inputClass, "font-mono text-[11px]")}
+          placeholder="US"
+          disabled={disabled}
+        />
+      </Field>
+      <Field label="Auth mode" className="sm:col-span-2">
+        <label className="mt-1 flex cursor-pointer items-center gap-2 text-xs text-foreground">
+          <input
+            type="checkbox"
+            checked={form.use_adc}
+            onChange={(e) => onFormChange({ use_adc: e.target.checked })}
+            disabled={disabled}
+            className="h-3.5 w-3.5"
+          />
+          Use Application Default Credentials (ADC) — the identity attached to this VM / bench env
+        </label>
+        <p className="mt-1 text-[10px] text-muted-foreground">
+          Uncheck to paste an explicit service-account JSON below. ADC is
+          convenient on GCE but silently ambient-auths against whatever
+          identity the machine has — prefer explicit creds for auditability.
+        </p>
+      </Field>
+      {!form.use_adc && (
+        <Field
+          label="Service account JSON"
+          required={!savedCode}
+          className="sm:col-span-2"
+          hint="Paste the full contents of the key JSON from GCP IAM."
+        >
+          <textarea
+            value={form.credentials_json}
+            onChange={(e) => onFormChange({ credentials_json: e.target.value })}
+            rows={6}
+            className={cn(inputClass, "font-mono text-[10px] leading-snug")}
+            spellCheck={false}
+            autoComplete="off"
+            disabled={disabled}
+            placeholder={savedCode ? '{"type": "service_account", ...}  (stored)' : '{"type": "service_account", "project_id": "...", ...}'}
+          />
+        </Field>
+      )}
+    </>
   );
 }
 

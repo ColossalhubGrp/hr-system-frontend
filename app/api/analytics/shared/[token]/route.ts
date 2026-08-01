@@ -30,8 +30,12 @@ export async function GET(
       method: "colossal_bi.bi_analytics.api.dashboard_shares.get_shared_tile",
       verb: "GET",
       args: { token },
-      as: "service",
-      revalidate: false,   // per-visitor access log; must not cache
+      // Send no auth header — Frappe treats the request as Guest,
+      // matching how a real anonymous browser would hit the method
+      // if it went direct. The backend's allow_guest=True lets it
+      // through; the token itself is the auth. Also disables cache
+      // so per-visitor access_count bumps are recorded honestly.
+      as: "guest",
     });
     return NextResponse.json(data);
   } catch (err) {

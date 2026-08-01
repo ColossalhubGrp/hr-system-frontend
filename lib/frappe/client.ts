@@ -19,8 +19,13 @@ type CallOpts = {
    *  - `"user"` — forwards the user's `sid` cookie so Frappe applies their
    *    row-level permissions. Required for personalised data (their own
    *    profile, their team, their approvals).
+   *  - `"guest"` — sends NO auth header. Frappe treats the request as
+   *    Guest, so this only reaches methods decorated with
+   *    `@frappe.whitelist(allow_guest=True)`. Right for public endpoints
+   *    like share-link resolution where the token IS the auth and there
+   *    is no "correct" user identity to send.
    */
-  as?: "service" | "user";
+  as?: "service" | "user" | "guest";
 };
 
 export class FrappeRequestError extends Error {
@@ -68,7 +73,8 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
   };
 
-  if ((opts.as ?? "service") === "user") {
+  const as = opts.as ?? "service";
+  if (as === "user") {
     const cookie = frappeCookieHeader();
     if (!cookie) {
       throw new FrappeRequestError(
@@ -77,6 +83,11 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
       );
     }
     headers.Cookie = cookie;
+  } else if (as === "guest") {
+    // Deliberately no Authorization header — Frappe will treat this
+    // as Guest and only allow it through if the target method has
+    // allow_guest=True. Right for public share-link resolution and
+    // anywhere else that a token-in-URL is the real auth.
   } else {
     headers.Authorization = `token ${env.FRAPPE_API_KEY}:${env.FRAPPE_API_SECRET}`;
   }
@@ -85,9 +96,11 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     method: verb,
     headers,
     body,
-    // User-scoped calls are inherently per-request; never cache.
+    // User- and guest-scoped calls are inherently per-request; never
+    // cache. (Guest reads bump per-visit audit counters — caching
+    // would break the access-count trail.)
     next:
-      (opts.as ?? "service") === "user"
+      as === "user" || as === "guest"
         ? { revalidate: 0 }
         : opts.revalidate === false
         ? { revalidate: 0 }

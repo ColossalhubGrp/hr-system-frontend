@@ -27,6 +27,14 @@ const PUBLIC_PATHS = [
   "/api/frappe",
   "/api/public",
   "/api/recordings",
+  // Phase 4b shared dashboard tiles — public token-authed reads.
+  // The Next page (/analytics/shared/<token>) renders outside the
+  // workspace shell; its API proxy (/api/analytics/shared/<token>)
+  // hits a Frappe method whitelisted with allow_guest=True.
+  // Middleware must let both through so anonymous browsers can
+  // resolve the token without bouncing to /login.
+  "/analytics/shared",
+  "/api/analytics/shared",
 ];
 
 export function middleware(req: NextRequest) {

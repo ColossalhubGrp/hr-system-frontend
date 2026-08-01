@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Link2, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { VizRenderer } from "@/components/analytics/viz-renderer";
@@ -12,6 +12,7 @@ import type {
   RemoveTileResponse,
 } from "./types";
 import { ReviewBadge } from "./review-badge";
+import { ShareTileModal } from "./share-tile-modal";
 
 /**
  * One saved BI answer, rendered from the snapshot the backend
@@ -46,6 +47,7 @@ export function DashboardTileCard({
   const [refreshing, setRefreshing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const primaryNarrative =
@@ -150,6 +152,25 @@ export function DashboardTileCard({
             <Button
               size="icon"
               variant="ghost"
+              className={cn(
+                "h-7 w-7",
+                tile.review_verdict === "approve"
+                  ? "hover:text-primary"
+                  : "text-muted-foreground/60",
+              )}
+              onClick={() => setShareOpen(true)}
+              disabled={refreshing || removing}
+              title={
+                tile.review_verdict === "approve"
+                  ? "Share this tile publicly"
+                  : "Only approved tiles can be shared (v2-arch reviewer gate)"
+              }
+            >
+              <Link2 className="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
               className="h-7 w-7"
               onClick={doRefresh}
               disabled={refreshing || removing}
@@ -223,6 +244,15 @@ export function DashboardTileCard({
             <AlertTriangle className="mr-1 inline h-3 w-3" />
             {error}
           </p>
+        )}
+        {editable && (
+          <ShareTileModal
+            open={shareOpen}
+            onClose={() => setShareOpen(false)}
+            dashboardCode={dashboardCode}
+            tilePosition={tile.position}
+            reviewVerdict={tile.review_verdict}
+          />
         )}
         {(tile.review_issues.length > 0 || showOriginal) && (
           <details className="rounded-md border border-muted">

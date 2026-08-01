@@ -91,3 +91,39 @@ export interface RemoveTileResponse {
   removed: boolean;
   remaining?: number;
 }
+
+/* ── Phase 4b: shares ─────────────────────────────────────────── */
+
+export interface DashboardTileShare {
+  token: string;
+  tile_position: number;
+  created_by: string;
+  created_at: string | null;
+  expires_at: string | null;
+  revoked_at: string | null;
+  access_count: number;
+  last_accessed_at: string | null;
+  public_url: string;
+  is_live: boolean;
+}
+
+export interface CreateShareResponse {
+  token: string;
+  public_url: string;
+  created_at: string | null;
+}
+
+export interface ListSharesResponse {
+  shares: DashboardTileShare[];
+}
+
+export interface SharedTilePayload {
+  token: string;
+  dashboard: {
+    code: string;
+    title: string;
+    owner_user: string;
+  };
+  tile: DashboardTile;
+  created_at: string | null;
+}

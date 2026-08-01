@@ -6,10 +6,12 @@ import type { Route } from "next";
 import {
   AlertTriangle,
   ArrowLeft,
+  Clock,
   LayoutDashboard,
   Loader2,
   RefreshCw,
 } from "lucide-react";
+import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import type { DashboardDetail } from "./types";
 import { DashboardTileCard } from "./dashboard-tile-card";
@@ -95,6 +97,15 @@ export function DashboardDetail({ code }: { code: string }) {
               )}
             </div>
             <div className="flex gap-2">
+              {dash.editable && (
+                <AutoRefreshToggle
+                  dashboardCode={dash.code}
+                  enabled={dash.auto_refresh_enabled}
+                  lastRunAt={dash.auto_refresh_last_run_at}
+                  lastSummary={dash.auto_refresh_last_summary}
+                  onChanged={load}
+                />
+              )}
               <Button variant="ghost" size="sm" onClick={load} disabled={loading}>
                 {loading ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -141,6 +152,76 @@ export function DashboardDetail({ code }: { code: string }) {
           )}
         </>
       ) : null}
+    </div>
+  );
+}
+
+function AutoRefreshToggle({
+  dashboardCode,
+  enabled,
+  lastRunAt,
+  lastSummary,
+  onChanged,
+}: {
+  dashboardCode: string;
+  enabled: boolean;
+  lastRunAt: string | null;
+  lastSummary: string;
+  onChanged: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const toggle = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/analytics/dashboards/set-auto-refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dashboard_code: dashboardCode, enabled: !enabled }),
+      });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? `HTTP ${res.status}`);
+      }
+      onChanged();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Toggle failed.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={busy}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-60",
+          enabled
+            ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-800 hover:bg-emerald-500/20 dark:text-emerald-300"
+            : "border-input bg-card text-muted-foreground hover:bg-muted/40",
+        )}
+        title={
+          enabled
+            ? "Auto-refresh is ON — nightly job re-runs stale tiles. Click to turn off."
+            : "Auto-refresh is OFF. Click to enable nightly re-runs of stale tiles."
+        }
+      >
+        {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Clock className="h-3 w-3" />}
+        Auto-refresh {enabled ? "on" : "off"}
+      </button>
+      {enabled && lastRunAt && (
+        <span className="text-[9px] text-muted-foreground" title={lastSummary}>
+          last ran {lastRunAt.split(" ")[0]}
+        </span>
+      )}
+      {error && (
+        <span className="text-[10px] text-rose-600">{error}</span>
+      )}
     </div>
   );
 }

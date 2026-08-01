@@ -64,6 +64,17 @@ export interface DashboardDetail {
   shared_with_roles: string[];
   /** True when the current user can add / refresh / remove tiles. */
   editable: boolean;
+  /**
+   * Phase 4c: nightly auto-refresh state.
+   * `auto_refresh_enabled` — owner opted in for the daily job to
+   * re-run stale tiles.
+   * `auto_refresh_last_run_at` / `auto_refresh_last_summary` — what
+   * the last scheduler pass did, shown in the header so the owner
+   * knows whether the job is actually firing.
+   */
+  auto_refresh_enabled: boolean;
+  auto_refresh_last_run_at: string | null;
+  auto_refresh_last_summary: string;
   tiles: DashboardTile[];
 }
 

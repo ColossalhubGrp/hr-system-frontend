@@ -129,6 +129,7 @@ export const NAV: NavItem[] = [
     children: [
       { label: "Overview", href: "/analytics", requires: "EXECUTIVE_VIEWER" },
       { label: "Ask (AI)", href: "/analytics/ask", requires: "EXECUTIVE_VIEWER" },
+      { label: "Dashboards", href: "/analytics/dashboards", requires: "EXECUTIVE_VIEWER" },
       { label: "Semantics", href: "/analytics/semantics", requires: "EXECUTIVE_VIEWER" },
     ],
   },

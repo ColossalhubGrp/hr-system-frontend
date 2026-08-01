@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { VizRenderer } from "./viz-renderer";
+import { SaveToDashboardModal } from "./dashboards/save-to-dashboard-modal";
 import { MultiMetricRenderer } from "./multi-metric-renderer";
 import { CalculationTrace } from "./calculation-trace";
 import { FollowupChips } from "./followup-chips";
@@ -255,6 +256,10 @@ function PendingTurn() {
 // ── Assistant turn ─────────────────────────────────────────────────
 
 function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant" }>; onAsk: (q: string) => void }) {
+  const [saveOpen, setSaveOpen] = useState(false);
+  // Save-to-dashboard applies to any answered turn — refused +
+  // clarification turns don't have anything to save.
+  const canSave = !turn.refused && !turn.clarification && !!turn.question;
   return (
     <div className="flex items-start gap-3">
       <span className="mt-0.5 grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
@@ -296,25 +301,46 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
                   <CalculationTrace key={i} provenance={s.data.provenance} />
                 ),
             )}
-            {turn.data?.metric && (
-              <MetricBadge
-                name={turn.data.metric.name}
-                code={turn.data.metric.code}
-                latency_ms={turn.total_latency_ms}
-              />
-            )}
-            {turn.multi && turn.multi.slices.length > 0 && (
-              <MultiMetricBadges
-                slices={turn.multi.slices}
-                latency_ms={turn.total_latency_ms}
-              />
-            )}
+            <div className="flex flex-wrap items-center gap-2">
+              {turn.data?.metric && (
+                <MetricBadge
+                  name={turn.data.metric.name}
+                  code={turn.data.metric.code}
+                  latency_ms={turn.total_latency_ms}
+                />
+              )}
+              {turn.multi && turn.multi.slices.length > 0 && (
+                <MultiMetricBadges
+                  slices={turn.multi.slices}
+                  latency_ms={turn.total_latency_ms}
+                />
+              )}
+              {canSave && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-6 px-2 text-[10px]"
+                  onClick={() => setSaveOpen(true)}
+                  title="Save this answer to a dashboard (runs the Adversarial Reviewer)"
+                >
+                  <Sparkles className="mr-1 h-3 w-3" />
+                  Save to dashboard
+                </Button>
+              )}
+            </div>
           </>
         )}
         {turn.followups.length > 0 && (
           <FollowupChips items={turn.followups} onPick={onAsk} />
         )}
       </div>
+      {canSave && (
+        <SaveToDashboardModal
+          open={saveOpen}
+          onClose={() => setSaveOpen(false)}
+          question={turn.question}
+        />
+      )}
     </div>
   );
 }

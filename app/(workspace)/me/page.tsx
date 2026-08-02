@@ -14,6 +14,7 @@ import { SummaryTile } from "@/components/common/summary-tile";
 import { InlineClock } from "@/components/me/inline-clock";
 import { readSession } from "@/lib/frappe/session";
 import { frappeCall } from "@/lib/frappe/client";
+import { getLastCheckinToday } from "@/lib/frappe/checkin";
 import { clockInOrOutAction } from "./clock/actions";
 
 export const metadata = { title: "My workspace · Colossal HR" };
@@ -151,15 +152,36 @@ export default async function MyWorkspacePage() {
     );
   }
 
-  const [att, pendingLeaves, openGoals] = await Promise.all([
+  const [att, lastCheckin, pendingLeaves, openGoals] = await Promise.all([
     todaysAttendance(emp.name),
+    getLastCheckinToday(emp.name),
     pendingLeaveCount(emp.name),
     openGoalCount(emp.name),
   ]);
 
   const profileHref = `/employee/${encodeURIComponent(emp.name)}` as Route;
+  // Employee Checkin is the immediate signal — Attendance is a
+  // separate DocType populated by nightly consolidation, so we can't
+  // rely on it to reflect a punch that happened seconds ago. Prefer
+  // checkin state; fall back to Attendance for the rare case where
+  // consolidation ran but no checkin row exists (e.g. manual entry).
   const initialClockState: "in" | "out" | "none" =
-    att?.inTime && !att?.outTime ? "in" : att?.outTime ? "out" : "none";
+    lastCheckin?.logType === "IN"
+      ? "in"
+      : lastCheckin?.logType === "OUT"
+        ? "out"
+        : att?.inTime && !att?.outTime
+          ? "in"
+          : att?.outTime
+            ? "out"
+            : "none";
+  const todaysStatusValue = att?.status
+    ? att.status
+    : lastCheckin?.logType === "IN"
+      ? "Clocked in"
+      : lastCheckin?.logType === "OUT"
+        ? "Clocked out"
+        : "Not marked";
 
   return (
     <div className="flex flex-col gap-5">
@@ -209,9 +231,13 @@ export default async function MyWorkspacePage() {
         />
         <SummaryTile
           label="Today's status"
-          value={att?.status ?? "Not marked"}
+          value={todaysStatusValue}
           icon={CalendarCheck}
-          tone={att?.status === "Present" ? "rise" : "ash"}
+          tone={
+            att?.status === "Present" || todaysStatusValue === "Clocked in"
+              ? "rise"
+              : "ash"
+          }
         />
       </div>
 

@@ -43,7 +43,8 @@ export function GeofenceToggle({
           ) : (
             <>
               <MapPin className="h-4 w-4 text-ink-700" />
-              Standard — restricted to the shift's allowed locations
+              Follows shift policy — allowed anywhere if the shift has no
+              location list
             </>
           )}
         </p>
@@ -102,7 +103,7 @@ export function GeofenceToggle({
           ) : (
             <>
               <MapPin className="h-3.5 w-3.5" />
-              Currently restricted
+              Follows shift policy
             </>
           )}
         </span>

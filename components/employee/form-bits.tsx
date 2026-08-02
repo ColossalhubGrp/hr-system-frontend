@@ -120,6 +120,8 @@ export function TextArea(
 const nativeSelectClass =
   "flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 appearance-none pr-8 bg-[length:1rem] bg-no-repeat bg-[position:right_0.75rem_center] bg-[url('data:image/svg+xml;utf8,<svg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%220%200%2020%2020%22%20fill=%22currentColor%22><path%20fill-rule=%22evenodd%22%20d=%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule=%22evenodd%22%20/></svg>')]";
 
+export type SelectOption = string | { value: string; label: string };
+
 export function SelectInput({
   options,
   placeholder,
@@ -127,7 +129,7 @@ export function SelectInput({
   className,
   ...rest
 }: React.SelectHTMLAttributes<HTMLSelectElement> & {
-  options: string[];
+  options: SelectOption[];
   placeholder?: string;
   invalid?: boolean;
 }) {
@@ -137,11 +139,15 @@ export function SelectInput({
       className={cn(nativeSelectClass, invalid && "border-destructive focus-visible:ring-destructive", className)}
     >
       <option value="">{placeholder ?? "—"}</option>
-      {options.map((o) => (
-        <option key={o} value={o}>
-          {o}
-        </option>
-      ))}
+      {options.map((o) => {
+        const value = typeof o === "string" ? o : o.value;
+        const label = typeof o === "string" ? o : o.label;
+        return (
+          <option key={value} value={value}>
+            {label}
+          </option>
+        );
+      })}
     </select>
   );
 }

@@ -248,6 +248,35 @@ export function EmployeeForm({
     }
   }, [state, mode]);
 
+  // Approver dropdowns operate on the employee directory. reports_to is a
+  // Link to Employee (value = employee ID); the *_approver fields are Link
+  // to User (value = user_id/email), so we filter out anyone without a
+  // linked User for those three. Always inject the currently-saved value
+  // as an option even if the directory excludes it (e.g. the approver
+  // went Inactive), so the field doesn't render blank on load.
+  const dir = options.employeeDirectory;
+  const reportsToBase = dir.map((e) => ({
+    value: e.id,
+    label: `${e.employee_name} (${e.id})`,
+  }));
+  const reportsToOptions = ensureOptionPresent(
+    reportsToBase,
+    initial?.reportsTo ?? "",
+  );
+  const approverBase = dir
+    .filter((e) => Boolean(e.user_id))
+    .map((e) => ({
+      value: e.user_id as string,
+      label: `${e.employee_name} — ${e.user_id}`,
+    }));
+  const approverOptions = ensureOptionPresent(
+    ensureOptionPresent(
+      ensureOptionPresent(approverBase, initial?.leaveApprover ?? ""),
+      initial?.expenseApprover ?? "",
+    ),
+    initial?.shiftRequestApprover ?? "",
+  );
+
   // Pre-fill from the existing doc — split employee_name back into parts only
   // if first/last aren't directly available (they always are for a saved doc).
   const v = {
@@ -855,36 +884,65 @@ export function EmployeeForm({
           <Field
             label="Reports to"
             htmlFor="reports_to"
-            hint="Manager's employee ID."
+            hint="Manager (employee record)."
           >
-            <TextInput
+            <SelectInput
               id="reports_to"
               name="reports_to"
               defaultValue={v.reports_to}
+              options={reportsToOptions}
+              placeholder="—"
             />
           </Field>
-          <Field label="Leave approver" htmlFor="leave_approver">
-            <TextInput
+          <Field
+            label="Leave approver"
+            htmlFor="leave_approver"
+            hint={
+              approverOptions.length === 0
+                ? "No employees with linked user accounts. Set User on an employee first."
+                : "Employee who approves this person's leave."
+            }
+          >
+            <SelectInput
               id="leave_approver"
               name="leave_approver"
-              type="email"
               defaultValue={v.leave_approver}
+              options={approverOptions}
+              placeholder="—"
             />
           </Field>
-          <Field label="Expense approver" htmlFor="expense_approver">
-            <TextInput
+          <Field
+            label="Expense approver"
+            htmlFor="expense_approver"
+            hint={
+              approverOptions.length === 0
+                ? "No employees with linked user accounts."
+                : "Employee who approves expense claims."
+            }
+          >
+            <SelectInput
               id="expense_approver"
               name="expense_approver"
-              type="email"
               defaultValue={v.expense_approver}
+              options={approverOptions}
+              placeholder="—"
             />
           </Field>
-          <Field label="Shift request approver" htmlFor="shift_request_approver">
-            <TextInput
+          <Field
+            label="Shift request approver"
+            htmlFor="shift_request_approver"
+            hint={
+              approverOptions.length === 0
+                ? "No employees with linked user accounts."
+                : "Employee who approves shift-change requests."
+            }
+          >
+            <SelectInput
               id="shift_request_approver"
               name="shift_request_approver"
-              type="email"
               defaultValue={v.shift_request_approver}
+              options={approverOptions}
+              placeholder="—"
             />
           </Field>
         </Grid>
@@ -1127,6 +1185,17 @@ function SubmitButton({
         : "Save changes"}
     </button>
   );
+}
+
+function ensureOptionPresent(
+  options: Array<{ value: string; label: string }>,
+  value: string,
+): Array<{ value: string; label: string }> {
+  if (!value) return options;
+  if (options.some((o) => o.value === value)) return options;
+  // Preserve the saved value verbatim so submitting the form doesn't drop
+  // it. Label falls back to the raw value since we have no other info.
+  return [{ value, label: value }, ...options];
 }
 
 function computeAgeYears(dob: string): number | null {

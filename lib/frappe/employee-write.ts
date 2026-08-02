@@ -43,6 +43,16 @@ export type EmployeeFormOptions = {
     string,
     { dues_amount_usd: number; dues_pct: number; employer_share_pct: number }
   >;
+  /** Every Active employee in the tenant, used by the approver /
+   *  reports-to pickers so HR selects a real record instead of typing
+   *  a raw ID. Kept lean (id + display name + user_id) to keep the
+   *  form-options payload small; grows to a typeahead once tenants
+   *  outgrow the 500-employee ceiling. */
+  employeeDirectory: Array<{
+    id: string;
+    employee_name: string;
+    user_id: string | null;
+  }>;
 };
 
 const EMPLOYMENT_FALLBACK = [
@@ -83,6 +93,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     shifts,
     payGradeRows,
     necIndustryRows,
+    employeeDirectory,
   ] = await Promise.all([
     listCompaniesWithMinAge(),
     listNames("Department"),
@@ -93,6 +104,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     listNames("Shift Type"),
     listPayGradesFull(),
     listNecIndustriesFull(),
+    listEmployeeDirectory(),
   ] as const);
   const companies = companyRows.map((r) => r.name);
   const companyMinHireAge: Record<string, number> = {};
@@ -135,7 +147,38 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     payGradeInfo,
     necIndustries,
     necIndustryInfo,
+    employeeDirectory,
   };
+}
+
+async function listEmployeeDirectory(): Promise<
+  EmployeeFormOptions["employeeDirectory"]
+> {
+  try {
+    type Row = {
+      name: string;
+      employee_name: string | null;
+      user_id: string | null;
+    };
+    const rows = await frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee",
+        fields: ["name", "employee_name", "user_id"],
+        filters: JSON.stringify([["status", "=", "Active"]]),
+        order_by: "employee_name asc",
+        limit_page_length: 500,
+      },
+      as: "user",
+    });
+    return (rows ?? []).map((r) => ({
+      id: r.name,
+      employee_name: r.employee_name ?? r.name,
+      user_id: r.user_id,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 type NecIndustryFullRow = {

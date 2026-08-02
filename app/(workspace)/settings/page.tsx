@@ -8,6 +8,7 @@ import {
   Target,
   Clock,
   Lock,
+  CalendarDays,
 } from "lucide-react";
 import { getMyAccess } from "@/lib/frappe/roles";
 
@@ -30,6 +31,13 @@ const COMPANY_CARDS: SettingCardSpec[] = [
     icon: <Building2 className="h-5 w-5" />,
     title: "Company profile",
     desc: "Legal name, address, currency, default holiday calendar — the values that the rest of HR + Payroll inherit.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/holiday-lists",
+    icon: <CalendarDays className="h-5 w-5" />,
+    title: "Holiday lists",
+    desc: "Create tenant calendars (name + date range + weekly off). Assign one as a Company or Employee default so leave, attendance and payroll pick it up.",
     show: (a) => a.isHrAdmin,
   },
 ];

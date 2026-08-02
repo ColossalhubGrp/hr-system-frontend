@@ -30,8 +30,12 @@ export function ProfileImagePicker({
   const [pending, start] = useTransition();
   const fileRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
+  // A stored image URL can 404 (file deleted from Frappe's public folder,
+  // domain migration, etc.). Track that separately so Avatar can drop back
+  // to the initials placeholder instead of leaving an empty box.
+  const [broken, setBroken] = useState(false);
 
-  const preview = resolveUrl(url);
+  const preview = broken ? null : resolveUrl(url);
 
   function pickFile() {
     setError(null);
@@ -48,7 +52,10 @@ export function ProfileImagePicker({
         setError(result.error);
         return;
       }
-      if (result.url) setUrl(result.url);
+      if (result.url) {
+        setUrl(result.url);
+        setBroken(false);
+      }
     });
   }
 
@@ -81,7 +88,12 @@ export function ProfileImagePicker({
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
       >
-        <Avatar src={preview} fallbackName={fallbackName} pending={pending} />
+        <Avatar
+          src={preview}
+          fallbackName={fallbackName}
+          pending={pending}
+          onError={() => setBroken(true)}
+        />
 
         <div className="flex flex-1 flex-col gap-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -152,10 +164,14 @@ function Avatar({
   src,
   fallbackName,
   pending,
+  onError,
 }: {
   src: string | null;
   fallbackName: string;
   pending: boolean;
+  /** Bubble the img load failure up so the parent can drop the URL and
+   *  re-render the initials fallback branch. */
+  onError?: () => void;
 }) {
   return (
     <div className="relative shrink-0">
@@ -168,10 +184,7 @@ function Avatar({
             src={src}
             alt=""
             className="h-full w-full object-cover"
-            onError={(e) => {
-              // Hide broken images so the initials fallback shows through.
-              (e.currentTarget as HTMLImageElement).style.display = "none";
-            }}
+            onError={onError}
           />
         ) : (
           <div className="grid h-full w-full place-items-center text-ink-700">

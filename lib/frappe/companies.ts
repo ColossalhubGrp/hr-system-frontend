@@ -183,7 +183,15 @@ export async function listCountries(): Promise<string[]> {
 }
 
 export async function listCurrencies(): Promise<string[]> {
-  return await listNames("Currency", 300);
+  const rows = await listNames("Currency", 300);
+  // Some tenants land with the Currency doctype unseeded (or with the
+  // permission stripped for HR admins). Fall back to a Zimbabwe-first
+  // short list so the required `default_currency` picker isn't a dead
+  // input. As soon as the tenant seeds Currency records, those take
+  // over automatically.
+  return rows.length > 0
+    ? rows
+    : ["USD", "ZWG", "ZAR", "EUR", "GBP"];
 }
 
 export async function listHolidayLists(): Promise<string[]> {

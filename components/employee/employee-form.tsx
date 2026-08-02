@@ -16,6 +16,7 @@ import {
 } from "@/lib/frappe/employee-meta";
 import type { FormState } from "@/app/(workspace)/employee/actions";
 import { cn } from "@/lib/cn";
+import { toast } from "@/components/ui/sonner";
 import { Field, SelectInput, TextArea, TextInput } from "./form-bits";
 import { ProfileImagePicker } from "./profile-image-picker";
 
@@ -221,18 +222,31 @@ export function EmployeeForm({
   // After a failed submit, jump to the first tab that contains an errored
   // field — without this the user sees a generic banner and has no idea which
   // tab to open. Tracking the state object reference is enough; useFormState
-  // hands us a fresh one on every server response.
+  // hands us a fresh one on every server response. Same effect drives the
+  // toast so a save success / failure is never silent.
   const lastSeenState = useRef(state);
   useEffect(() => {
     if (state === lastSeenState.current) return;
     lastSeenState.current = state;
-    if (!state.fieldErrors) return;
-    const errored = new Set(Object.keys(state.fieldErrors));
-    const target = TABS.find((t) =>
-      FIELDS_BY_TAB[t.id].some((f) => errored.has(f)),
-    );
-    if (target) setTab(target.id);
-  }, [state]);
+    if (state.fieldErrors) {
+      const errored = new Set(Object.keys(state.fieldErrors));
+      const target = TABS.find((t) =>
+        FIELDS_BY_TAB[t.id].some((f) => errored.has(f)),
+      );
+      if (target) setTab(target.id);
+    }
+    if (state.error) {
+      toast.error(state.error, {
+        description: state.fieldErrors
+          ? "Check the highlighted fields."
+          : undefined,
+      });
+    } else if (mode === "edit" && state !== EMPTY) {
+      // updateEmployeeAction returns {} on success; distinguish from the
+      // initial EMPTY reference so the toast doesn't fire on first render.
+      toast.success("Employee saved.");
+    }
+  }, [state, mode]);
 
   // Pre-fill from the existing doc — split employee_name back into parts only
   // if first/last aren't directly available (they always are for a saved doc).

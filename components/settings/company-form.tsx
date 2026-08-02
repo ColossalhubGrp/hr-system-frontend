@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { AlertCircle, CheckCircle2, Save } from "lucide-react";
+import { AlertCircle, Save } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { toast } from "@/components/ui/sonner";
 import {
   Field,
   FormSection,
@@ -41,6 +43,23 @@ export function CompanyForm({
   const justSaved =
     mode === "edit" && state && Object.keys(state).length === 0 && state !== EMPTY;
 
+  // Only fire toasts on transitions in the useFormState value — otherwise a
+  // re-render (e.g. a parent tab switch) would re-fire the last outcome.
+  const lastSeenState = useRef(state);
+  useEffect(() => {
+    if (state === lastSeenState.current) return;
+    lastSeenState.current = state;
+    if (state.error) {
+      toast.error(state.error, {
+        description: state.fieldErrors
+          ? "Check the highlighted fields."
+          : undefined,
+      });
+    } else if (justSaved) {
+      toast.success("Company saved.");
+    }
+  }, [state, justSaved]);
+
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       {state.error && (
@@ -50,12 +69,6 @@ export function CompanyForm({
         >
           <AlertCircle className="h-4 w-4" />
           {state.error}
-        </p>
-      )}
-      {justSaved && (
-        <p className="flex items-center gap-2 rounded-card border border-rise/30 bg-rise/[0.06] px-4 py-3 text-sm text-rise">
-          <CheckCircle2 className="h-4 w-4" />
-          Company saved.
         </p>
       )}
 

@@ -35,6 +35,10 @@ const createSchema = z.object({
     .union([isoDate, z.literal("")])
     .optional(),
   phone_no: z.string().trim().optional(),
+  minimum_hire_age_years: z
+    .union([z.coerce.number().int().min(0).max(120), z.literal("")])
+    .optional()
+    .transform((v) => (typeof v === "number" ? v : undefined)),
 });
 
 // Edit form differs only in that `abbr` isn't writable (see lib comment).
@@ -70,6 +74,7 @@ function toInput(
     tax_id: d.tax_id || undefined,
     date_of_establishment: d.date_of_establishment || undefined,
     phone_no: d.phone_no || undefined,
+    minimum_hire_age_years: d.minimum_hire_age_years,
   };
 }
 

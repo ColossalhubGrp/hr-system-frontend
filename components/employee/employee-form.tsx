@@ -67,6 +67,8 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "last_name",
     "gender",
     "date_of_birth",
+    "age_waiver_granted",
+    "age_waiver_reason",
     "designation",
     "department",
     "branch",
@@ -136,6 +138,33 @@ export function EmployeeForm({
   const [salaryCurrencyMode, setSalaryCurrencyMode] = useState<
     "USD_ONLY" | "ZIG_ONLY" | "MIXED"
   >(initial?.salaryCurrencyMode ?? "MIXED");
+  // Age-limit check needs both a live DOB and a live Company (so the
+  // per-tenant min applies immediately when the user swaps company).
+  // Controlled state — the raw defaultValue path can't drive the
+  // reactive age math.
+  const [dateOfBirth, setDateOfBirth] = useState<string>(
+    initial?.dateOfBirth ?? "",
+  );
+  const [company, setCompany] = useState<string>(initial?.company ?? "");
+  const [ageWaiverGranted, setAgeWaiverGranted] = useState<boolean>(
+    Boolean(initial?.ageWaiverGranted),
+  );
+  const [ageWaiverReason, setAgeWaiverReason] = useState<string>(
+    initial?.ageWaiverReason ?? "",
+  );
+  const minHireAge = company ? (options.companyMinHireAge[company] ?? 0) : 0;
+  const ageYears = computeAgeYears(dateOfBirth);
+  const ageBelowLimit =
+    minHireAge > 0 && ageYears !== null && ageYears < minHireAge;
+  // Waiver only applies to the below-limit case. When the DOB is edited
+  // back above the limit, drop any lingering waiver state so the
+  // record doesn't ship a stale override.
+  useEffect(() => {
+    if (!ageBelowLimit && (ageWaiverGranted || ageWaiverReason)) {
+      setAgeWaiverGranted(false);
+      setAgeWaiverReason("");
+    }
+  }, [ageBelowLimit, ageWaiverGranted, ageWaiverReason]);
   const industryDues = necIndustry ? options.necIndustryInfo[necIndustry] : undefined;
   const suggestedDuesUsd = (() => {
     if (!industryDues) return 0;
@@ -325,16 +354,66 @@ export function EmployeeForm({
             label="Date of birth"
             htmlFor="date_of_birth"
             required
-            error={fe.date_of_birth}
+            error={
+              fe.date_of_birth ||
+              (ageBelowLimit && !ageWaiverGranted
+                ? `Age below limit — ${ageYears} yrs; ${company || "this company"} requires ${minHireAge}. HR can grant a waiver below.`
+                : undefined)
+            }
+            hint={
+              !ageBelowLimit && ageYears !== null && minHireAge > 0
+                ? `Age ${ageYears} · minimum for ${company} is ${minHireAge}.`
+                : undefined
+            }
           >
             <TextInput
               id="date_of_birth"
               name="date_of_birth"
               type="date"
-              defaultValue={v.date_of_birth}
-              invalid={Boolean(fe.date_of_birth)}
+              value={dateOfBirth}
+              onChange={(e) => setDateOfBirth(e.target.value)}
+              invalid={Boolean(fe.date_of_birth) || ageBelowLimit}
             />
           </Field>
+          {ageBelowLimit && (
+            <Field
+              label="Override minimum hire age"
+              htmlFor="age_waiver_granted"
+              hint="HR-only exception. Requires a documented reason (registered apprenticeship, court order, etc.)."
+              wide
+            >
+              <SelectInput
+                id="age_waiver_granted"
+                name="age_waiver_granted_label"
+                value={ageWaiverGranted ? "Yes" : "No"}
+                onChange={(e) => setAgeWaiverGranted(e.target.value === "Yes")}
+                options={["No", "Yes"]}
+                placeholder="No"
+              />
+              <input
+                type="hidden"
+                name="age_waiver_granted"
+                value={ageWaiverGranted ? "1" : "0"}
+              />
+            </Field>
+          )}
+          {ageBelowLimit && ageWaiverGranted && (
+            <Field
+              label="Waiver reason"
+              htmlFor="age_waiver_reason"
+              required
+              error={fe.age_waiver_reason}
+              wide
+            >
+              <TextArea
+                id="age_waiver_reason"
+                name="age_waiver_reason"
+                value={ageWaiverReason}
+                onChange={(e) => setAgeWaiverReason(e.target.value)}
+                rows={3}
+              />
+            </Field>
+          )}
           <Field label="Status" htmlFor="status" required>
             <SelectInput
               id="status"
@@ -348,7 +427,8 @@ export function EmployeeForm({
             <SelectInput
               id="company"
               name="company"
-              defaultValue={v.company}
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
               options={options.companies}
               placeholder="Select company"
               invalid={Boolean(fe.company)}
@@ -884,7 +964,10 @@ export function EmployeeForm({
           >
             Cancel
           </Link>
-          <SubmitButton mode={mode} />
+          <SubmitButton
+            mode={mode}
+            disabled={ageBelowLimit && !ageWaiverGranted}
+          />
         </div>
       </div>
     </form>
@@ -1003,12 +1086,18 @@ function ReadOnly({
   );
 }
 
-function SubmitButton({ mode }: { mode: "create" | "edit" }) {
+function SubmitButton({
+  mode,
+  disabled,
+}: {
+  mode: "create" | "edit";
+  disabled?: boolean;
+}) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className={cn(
         "inline-flex h-10 items-center gap-2 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition focus-ring",
         "hover:bg-ink-700 disabled:opacity-60 disabled:cursor-not-allowed",
@@ -1024,6 +1113,22 @@ function SubmitButton({ mode }: { mode: "create" | "edit" }) {
         : "Save changes"}
     </button>
   );
+}
+
+function computeAgeYears(dob: string): number | null {
+  if (!dob) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dob);
+  if (!m) return null;
+  const [, y, mo, d] = m;
+  const birth = new Date(Number(y), Number(mo) - 1, Number(d));
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const beforeBirthday =
+    now.getMonth() < birth.getMonth() ||
+    (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+  if (beforeBirthday) age--;
+  return age;
 }
 
 function splitFirst(fullName: string) {

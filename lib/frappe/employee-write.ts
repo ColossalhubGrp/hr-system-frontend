@@ -8,6 +8,11 @@ import { frappeCall } from "./client";
  */
 export type EmployeeFormOptions = {
   companies: string[];
+  /** Per-company minimum hire age (years). Read from
+   *  `Company.minimum_hire_age_years`. Missing / 0 = policy not
+   *  configured; frontend skips the below-limit check. Default seeded
+   *  by the DocType is 16 for Zimbabwe general labour. */
+  companyMinHireAge: Record<string, number>;
   departments: string[];
   designations: string[];
   branches: string[];
@@ -69,7 +74,7 @@ const DEFAULT_GRADES = [
 
 export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
   const [
-    companies,
+    companyRows,
     departments,
     designations,
     branches,
@@ -79,7 +84,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     payGradeRows,
     necIndustryRows,
   ] = await Promise.all([
-    listNames("Company"),
+    listCompaniesWithMinAge(),
     listNames("Department"),
     listNames("Designation"),
     listNames("Branch"),
@@ -89,6 +94,11 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     listPayGradesFull(),
     listNecIndustriesFull(),
   ] as const);
+  const companies = companyRows.map((r) => r.name);
+  const companyMinHireAge: Record<string, number> = {};
+  for (const r of companyRows) {
+    companyMinHireAge[r.name] = Number(r.minimum_hire_age_years ?? 0) || 0;
+  }
   const necIndustries = necIndustryRows.map((r) => r.name);
   const necIndustryInfo: EmployeeFormOptions["necIndustryInfo"] = {};
   for (const r of necIndustryRows) {
@@ -113,6 +123,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
 
   return {
     companies,
+    companyMinHireAge,
     departments,
     designations,
     branches,
@@ -174,6 +185,43 @@ async function listPayGradesFull(): Promise<PayGradeRow[]> {
     return rows ?? [];
   } catch {
     return [];
+  }
+}
+
+type CompanyMinAgeRow = { name: string; minimum_hire_age_years: number | null };
+
+async function listCompaniesWithMinAge(): Promise<CompanyMinAgeRow[]> {
+  try {
+    const rows = await frappeCall<CompanyMinAgeRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Company",
+        fields: ["name", "minimum_hire_age_years"],
+        order_by: "name asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    return rows ?? [];
+  } catch {
+    // The `minimum_hire_age_years` field ships with the DocType — a
+    // fetch failure means the tenant simply hasn't run migrate yet.
+    // Fall back to bare name-only listing so the form still renders.
+    try {
+      const rows = await frappeCall<Array<{ name: string }>>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "Company",
+          fields: ["name"],
+          order_by: "name asc",
+          limit_page_length: 200,
+        },
+        as: "user",
+      });
+      return (rows ?? []).map((r) => ({ name: r.name, minimum_hire_age_years: null }));
+    } catch {
+      return [];
+    }
   }
 }
 
@@ -270,6 +318,14 @@ export type EmployeeFormInput = {
   holiday_list?: string;
   default_shift?: string;
   bio?: string;
+
+  // compliance
+  /** HR-only override for `Company.minimum_hire_age_years`. Backend
+   *  rejects the save when age < min AND this flag is 0. */
+  age_waiver_granted?: 0 | 1;
+  /** Required when `age_waiver_granted` is 1. Free text explaining
+   *  the exception (registered apprenticeship, court order, etc.). */
+  age_waiver_reason?: string;
 };
 
 /** Strip empty strings — Frappe interprets `""` as "set to blank" on save. */

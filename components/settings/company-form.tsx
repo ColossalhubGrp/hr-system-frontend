@@ -168,6 +168,30 @@ export function CompanyForm({
         </Field>
       </FormSection>
 
+      <FormSection title="Compliance">
+        <Field
+          label="Minimum hire age (years)"
+          htmlFor="minimum_hire_age_years"
+          error={fe.minimum_hire_age_years}
+          hint="Rejects new Employee saves with a Date of Birth below this age. HR can grant a documented waiver per-record on the Employee form. Zimbabwe Labour Act general minimum is 16; hazardous work is 18. Set to 0 to disable the policy."
+        >
+          <TextInput
+            id="minimum_hire_age_years"
+            name="minimum_hire_age_years"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            max={120}
+            defaultValue={
+              initial?.minimumHireAgeYears !== undefined
+                ? String(initial.minimumHireAgeYears)
+                : "16"
+            }
+            invalid={Boolean(fe.minimum_hire_age_years)}
+          />
+        </Field>
+      </FormSection>
+
       <SubmitRow cancelHref={cancelHref} mode={mode} />
     </form>
   );

@@ -99,6 +99,11 @@ export type EmployeeFull = {
   necIndustry: string | null;
   payGrade: string | null;
   payPoint: string | null;
+  /** HR-only override of the company's minimum hire age policy. When
+   *  true, the backend allowed the save despite age < min; a written
+   *  reason is required. */
+  ageWaiverGranted: boolean;
+  ageWaiverReason: string | null;
 };
 
 type ListArgs = {
@@ -283,6 +288,9 @@ type RawEmployeeDoc = RawEmployeeRow & {
   nec_industry: string | null;
   pay_grade: string | null;
   pay_point: string | null;
+  // compliance
+  age_waiver_granted: 0 | 1 | boolean | null;
+  age_waiver_reason: string | null;
 };
 
 function toRow(r: RawEmployeeRow): EmployeeListRow {
@@ -349,6 +357,8 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     necIndustry: d.nec_industry,
     payGrade: d.pay_grade,
     payPoint: d.pay_point,
+    ageWaiverGranted: Boolean(d.age_waiver_granted),
+    ageWaiverReason: d.age_waiver_reason,
   };
 }
 

@@ -91,6 +91,24 @@ const baseSchema = z.object({
   holiday_list: z.string().trim().optional(),
   default_shift: z.string().trim().optional(),
   bio: z.string().trim().optional(),
+
+  // compliance — age waiver. Same "0"/"1" wire shape as the ZIMRA
+  // flags above. Zod validates the reason is present when the flag is
+  // set so the frontend gets a targeted field error instead of a
+  // generic Frappe throw.
+  age_waiver_granted: z
+    .union([z.literal("0"), z.literal("1")])
+    .transform((v) => (v === "1" ? 1 : 0) as 0 | 1)
+    .optional(),
+  age_waiver_reason: z.string().trim().optional(),
+}).superRefine((data, ctx) => {
+  if (data.age_waiver_granted === 1 && !data.age_waiver_reason) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["age_waiver_reason"],
+      message: "Reason is required when overriding the minimum hire age.",
+    });
+  }
 });
 
 function parseForm(form: FormData): {

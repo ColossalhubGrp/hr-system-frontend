@@ -24,6 +24,10 @@ export type CompanyFull = CompanyRow & {
   taxId: string | null;
   dateOfEstablishment: string | null;
   phoneNo: string | null;
+  /** Rejects Employee saves whose Date of Birth puts the person below
+   *  this age, unless HR grants a waiver on the Employee record.
+   *  0 / null → policy disabled. */
+  minimumHireAgeYears: number;
 };
 
 export type CompanyInput = {
@@ -35,6 +39,7 @@ export type CompanyInput = {
   tax_id?: string;
   date_of_establishment?: string;
   phone_no?: string;
+  minimum_hire_age_years?: number;
 };
 
 // ---------------------------------------------------------------------------
@@ -109,6 +114,7 @@ export async function getCompany(id: string): Promise<CompanyFull | null> {
       tax_id: string | null;
       date_of_establishment: string | null;
       phone_no: string | null;
+      minimum_hire_age_years: number | null;
     };
     const doc = await frappeCall<Raw>({
       method: "frappe.client.get",
@@ -125,6 +131,7 @@ export async function getCompany(id: string): Promise<CompanyFull | null> {
       taxId: doc.tax_id,
       dateOfEstablishment: doc.date_of_establishment,
       phoneNo: doc.phone_no,
+      minimumHireAgeYears: Number(doc.minimum_hire_age_years ?? 0) || 0,
     };
   } catch {
     return null;

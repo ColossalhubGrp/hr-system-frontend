@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { resolveAvatarUrl } from "@/lib/frappe/session";
+import { publicEnv } from "@/lib/env";
 
 const SIZES = {
   sm: "h-8 w-8 text-xs",
@@ -15,6 +15,9 @@ const SIZES = {
  * nginx isn't mapping /files/ to the right site, tenant migration, etc.).
  * When the image load fails, drop the URL and render the initials so users
  * never see an empty circle.
+ *
+ * Client-side twin of lib/frappe/session#resolveAvatarUrl — kept inline so
+ * this file doesn't drag in the server-only session module (next/headers).
  */
 export function EmployeeAvatar({
   name,
@@ -56,4 +59,17 @@ function initials(name: string) {
     .slice(0, 2)
     .map((p) => p[0]!.toUpperCase())
     .join("");
+}
+
+function resolveAvatarUrl(raw: string | null): string | null {
+  if (!raw) return null;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("/")) {
+    try {
+      return new URL(raw, publicEnv.NEXT_PUBLIC_FRAPPE_URL).toString();
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }

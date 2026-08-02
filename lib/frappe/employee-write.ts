@@ -159,17 +159,22 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
 async function listEmployeeDirectory(): Promise<
   EmployeeFormOptions["employeeDirectory"]
 > {
+  // Enriched fetch — needs the four "prefill" fields to exist on Employee.
+  // designation and pay_grade are custom fields on some tenants; a missing
+  // column here makes Frappe reject the entire get_list, which is why the
+  // dropdown emptied out after f1f9393. Fall through to the minimal
+  // guaranteed fields so the picker keeps working even without prefill.
+  type EnrichedRow = {
+    name: string;
+    employee_name: string | null;
+    user_id: string | null;
+    department: string | null;
+    designation: string | null;
+    pay_grade: string | null;
+    company: string | null;
+  };
   try {
-    type Row = {
-      name: string;
-      employee_name: string | null;
-      user_id: string | null;
-      department: string | null;
-      designation: string | null;
-      pay_grade: string | null;
-      company: string | null;
-    };
-    const rows = await frappeCall<Row[]>({
+    const rows = await frappeCall<EnrichedRow[]>({
       method: "frappe.client.get_list",
       args: {
         doctype: "Employee",
@@ -198,7 +203,38 @@ async function listEmployeeDirectory(): Promise<
       company: r.company,
     }));
   } catch {
-    return [];
+    // Minimal fallback — only the fields the native Employee JSON is
+    // guaranteed to have. Prefill just won't happen for department /
+    // designation / grade on this tenant until the custom fields ship.
+    try {
+      type MinRow = {
+        name: string;
+        employee_name: string | null;
+        user_id: string | null;
+      };
+      const rows = await frappeCall<MinRow[]>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "Employee",
+          fields: ["name", "employee_name", "user_id"],
+          filters: JSON.stringify([["status", "=", "Active"]]),
+          order_by: "employee_name asc",
+          limit_page_length: 500,
+        },
+        as: "user",
+      });
+      return (rows ?? []).map((r) => ({
+        id: r.name,
+        employee_name: r.employee_name ?? r.name,
+        user_id: r.user_id,
+        department: null,
+        designation: null,
+        pay_grade: null,
+        company: null,
+      }));
+    } catch {
+      return [];
+    }
   }
 }
 

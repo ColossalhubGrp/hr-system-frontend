@@ -44,14 +44,19 @@ export type EmployeeFormOptions = {
     { dues_amount_usd: number; dues_pct: number; employer_share_pct: number }
   >;
   /** Every Active employee in the tenant, used by the approver /
-   *  reports-to pickers so HR selects a real record instead of typing
-   *  a raw ID. Kept lean (id + display name + user_id) to keep the
-   *  form-options payload small; grows to a typeahead once tenants
-   *  outgrow the 500-employee ceiling. */
+   *  reports-to / lifecycle pickers so HR selects a real record
+   *  instead of typing a raw ID. Includes each employee's current
+   *  department / designation / grade so lifecycle forms can
+   *  auto-fill those fields on selection. Grows to a typeahead once
+   *  tenants outgrow the 500-employee ceiling. */
   employeeDirectory: Array<{
     id: string;
     employee_name: string;
     user_id: string | null;
+    department: string | null;
+    designation: string | null;
+    pay_grade: string | null;
+    company: string | null;
   }>;
 };
 
@@ -159,12 +164,24 @@ async function listEmployeeDirectory(): Promise<
       name: string;
       employee_name: string | null;
       user_id: string | null;
+      department: string | null;
+      designation: string | null;
+      pay_grade: string | null;
+      company: string | null;
     };
     const rows = await frappeCall<Row[]>({
       method: "frappe.client.get_list",
       args: {
         doctype: "Employee",
-        fields: ["name", "employee_name", "user_id"],
+        fields: [
+          "name",
+          "employee_name",
+          "user_id",
+          "department",
+          "designation",
+          "pay_grade",
+          "company",
+        ],
         filters: JSON.stringify([["status", "=", "Active"]]),
         order_by: "employee_name asc",
         limit_page_length: 500,
@@ -175,6 +192,10 @@ async function listEmployeeDirectory(): Promise<
       id: r.name,
       employee_name: r.employee_name ?? r.name,
       user_id: r.user_id,
+      department: r.department,
+      designation: r.designation,
+      pay_grade: r.pay_grade,
+      company: r.company,
     }));
   } catch {
     return [];

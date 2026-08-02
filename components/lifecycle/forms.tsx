@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Send } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -21,7 +21,15 @@ const EMPTY: FormState = {};
 
 const GRIEVANCE_AGAINST_TYPES = ["Employee", "Department", "Company"];
 
-type DirectoryEntry = { id: string; employee_name: string; user_id: string | null };
+type DirectoryEntry = {
+  id: string;
+  employee_name: string;
+  user_id: string | null;
+  department: string | null;
+  designation: string | null;
+  pay_grade: string | null;
+  company: string | null;
+};
 
 type Opts = {
   companies: string[];
@@ -54,6 +62,42 @@ function employeeOptions(
     return [{ value: ensureValue, label: ensureValue }, ...opts];
   }
   return opts;
+}
+
+/** Employee-picked fields pattern for Onboarding + Separation. Selecting
+ *  an employee snaps department / designation / grade to that employee's
+ *  current values so HR doesn't re-key data already on the record; the
+ *  user can still override any of the three afterwards (typical case is
+ *  the same values, but a mid-year transfer or promotion in flight could
+ *  legitimately differ). Only overwrites when the picked employee has a
+ *  real value for the field — a null on the record leaves the current
+ *  selection alone so a manual choice isn't wiped by an incomplete
+ *  record. */
+function useEmployeeAutofill(opts: Opts) {
+  const [selected, setSelected] = useState<string>(opts.defaultEmployee ?? "");
+  const [department, setDepartment] = useState<string>("");
+  const [designation, setDesignation] = useState<string>("");
+  const [grade, setGrade] = useState<string>("");
+
+  useEffect(() => {
+    if (!selected) return;
+    const e = opts.employeeDirectory.find((x) => x.id === selected);
+    if (!e) return;
+    if (e.department) setDepartment(e.department);
+    if (e.designation) setDesignation(e.designation);
+    if (e.pay_grade) setGrade(e.pay_grade);
+  }, [selected, opts.employeeDirectory]);
+
+  return {
+    selected,
+    setSelected,
+    department,
+    setDepartment,
+    designation,
+    setDesignation,
+    grade,
+    setGrade,
+  };
 }
 
 /** Toast on error state transitions. Success paths in every lifecycle
@@ -181,6 +225,8 @@ export function OnboardingForm({
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   useErrorToast(state);
+  const { selected, setSelected, department, setDepartment, designation, setDesignation, grade, setGrade } =
+    useEmployeeAutofill(opts);
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
@@ -190,7 +236,8 @@ export function OnboardingForm({
             id="employee"
             name="employee"
             options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
-            defaultValue={opts.defaultEmployee}
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
             placeholder="Select employee"
             invalid={Boolean(fe.employee)}
           />
@@ -199,14 +246,36 @@ export function OnboardingForm({
           <TextInput id="boarding_begins_on" name="boarding_begins_on" type="date" invalid={Boolean(fe.boarding_begins_on)} />
         </Field>
         <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
-        <Field label="Department" htmlFor="department">
-          <SelectInput id="department" name="department" options={opts.departments} placeholder="—" />
+        <Field label="Department" htmlFor="department"
+               hint={selected ? "Pre-filled from the employee — override if this onboarding is for a different one." : undefined}>
+          <SelectInput
+            id="department"
+            name="department"
+            options={opts.departments}
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            placeholder="—"
+          />
         </Field>
         <Field label="Designation" htmlFor="designation">
-          <SelectInput id="designation" name="designation" options={opts.designations} placeholder="—" />
+          <SelectInput
+            id="designation"
+            name="designation"
+            options={opts.designations}
+            value={designation}
+            onChange={(e) => setDesignation(e.target.value)}
+            placeholder="—"
+          />
         </Field>
         <Field label="Grade" htmlFor="employee_grade">
-          <SelectInput id="employee_grade" name="employee_grade" options={opts.payGrades} placeholder="—" />
+          <SelectInput
+            id="employee_grade"
+            name="employee_grade"
+            options={opts.payGrades}
+            value={grade}
+            onChange={(e) => setGrade(e.target.value)}
+            placeholder="—"
+          />
         </Field>
       </FormSection>
       <Bar cancelHref={cancelHref} label="Create onboarding" />
@@ -228,6 +297,8 @@ export function SeparationForm({
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   useErrorToast(state);
+  const { selected, setSelected, department, setDepartment, designation, setDesignation } =
+    useEmployeeAutofill(opts);
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
@@ -238,7 +309,8 @@ export function SeparationForm({
             id="employee"
             name="employee"
             options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
-            defaultValue={opts.defaultEmployee}
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
             placeholder="Select employee"
             invalid={Boolean(fe.employee)}
           />
@@ -248,11 +320,26 @@ export function SeparationForm({
           <TextInput id="boarding_begins_on" name="boarding_begins_on" type="date" invalid={Boolean(fe.boarding_begins_on)} />
         </Field>
         <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
-        <Field label="Department" htmlFor="department">
-          <SelectInput id="department" name="department" options={opts.departments} placeholder="—" />
+        <Field label="Department" htmlFor="department"
+               hint={selected ? "Pre-filled from the employee — override if leaving from a different one." : undefined}>
+          <SelectInput
+            id="department"
+            name="department"
+            options={opts.departments}
+            value={department}
+            onChange={(e) => setDepartment(e.target.value)}
+            placeholder="—"
+          />
         </Field>
         <Field label="Designation" htmlFor="designation">
-          <SelectInput id="designation" name="designation" options={opts.designations} placeholder="—" />
+          <SelectInput
+            id="designation"
+            name="designation"
+            options={opts.designations}
+            value={designation}
+            onChange={(e) => setDesignation(e.target.value)}
+            placeholder="—"
+          />
         </Field>
         <Field label="Resignation letter date" htmlFor="resignation_letter_date">
           <TextInput id="resignation_letter_date" name="resignation_letter_date" type="date" />

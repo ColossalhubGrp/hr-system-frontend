@@ -75,6 +75,39 @@ export async function fetchEmployeeAttendance(
     rows = [];
   }
 
+  // Employee Checkin → Attendance is a nightly consolidation, so a punch made
+  // today (or any day the job hasn't run for) won't appear in the query above.
+  // Fetch checkins over the same window and treat any day with at least one
+  // checkin as Present when the Attendance row is missing — so the calendar
+  // reflects what the employee actually did without lying about days that
+  // truly had no activity.
+  type CheckinRow = { name: string; time: string };
+  let checkins: CheckinRow[] = [];
+  try {
+    checkins = await frappeCall<CheckinRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee Checkin",
+        fields: ["name", "time"],
+        filters: JSON.stringify([
+          ["employee", "=", employee],
+          ["time", ">=", `${from} 00:00:00`],
+          ["time", "<=", `${to} 23:59:59`],
+        ]),
+        order_by: "time asc",
+        limit_page_length: windowDays * 4 + 10,
+      },
+      as: "user",
+    });
+  } catch {
+    checkins = [];
+  }
+  const checkinDays = new Set<string>();
+  for (const c of checkins) {
+    // `time` comes back as "YYYY-MM-DD HH:mm:ss" — take the date portion.
+    checkinDays.add(c.time.slice(0, 10));
+  }
+
   const byDate = new Map<string, AttendanceStatus | null>();
   for (const r of rows) {
     byDate.set(r.attendance_date.slice(0, 10), r.status ?? null);
@@ -92,7 +125,8 @@ export async function fetchEmployeeAttendance(
     const d = new Date(fromDate);
     d.setDate(d.getDate() + i);
     const iso = isoDate(d);
-    const status = byDate.get(iso) ?? null;
+    let status = byDate.get(iso) ?? null;
+    if (status === null && checkinDays.has(iso)) status = "Present";
     days.push({ date: iso, status });
     if (status && STATUS_VALUES.includes(status)) counts[status]++;
   }

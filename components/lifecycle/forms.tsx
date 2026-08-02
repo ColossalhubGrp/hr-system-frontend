@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Send } from "lucide-react";
 import { cn } from "@/lib/cn";
@@ -12,12 +13,15 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { toast } from "@/components/ui/sonner";
 import type { FormState } from "@/app/(workspace)/employee/lifecycle/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
 const EMPTY: FormState = {};
 
 const GRIEVANCE_AGAINST_TYPES = ["Employee", "Department", "Company"];
+
+type DirectoryEntry = { id: string; employee_name: string; user_id: string | null };
 
 type Opts = {
   companies: string[];
@@ -27,10 +31,85 @@ type Opts = {
    *  patch 30, Employee Onboarding.employee_grade and Employee
    *  Promotion.new_grade both accept these values too. */
   payGrades: string[];
+  /** Active employees in the tenant — feeds the Employee / Raised-by
+   *  dropdowns so HR picks instead of memorising IDs. */
+  employeeDirectory: DirectoryEntry[];
   /** Optional pre-fill (e.g. when filing on behalf of a specific employee from
    *  their profile). */
   defaultEmployee?: string;
 };
+
+/** SelectInput-shaped options for the employee directory. Falls back to a
+ *  raw-ID entry when a saved / pre-filled value isn't in the directory
+ *  (e.g. Inactive employee) so the field doesn't render blank on load. */
+function employeeOptions(
+  dir: DirectoryEntry[],
+  ensureValue?: string,
+): Array<{ value: string; label: string }> {
+  const opts = dir.map((e) => ({
+    value: e.id,
+    label: `${e.employee_name} (${e.id})`,
+  }));
+  if (ensureValue && !opts.some((o) => o.value === ensureValue)) {
+    return [{ value: ensureValue, label: ensureValue }, ...opts];
+  }
+  return opts;
+}
+
+/** Toast on error state transitions. Success paths in every lifecycle
+ *  action redirect() to the detail page, so no success toast fires here
+ *  — the URL change is the feedback. */
+function useErrorToast(state: FormState) {
+  const last = useRef(state);
+  useEffect(() => {
+    if (state === last.current) return;
+    last.current = state;
+    if (state.error) {
+      toast.error(state.error, {
+        description: state.fieldErrors
+          ? "Check the highlighted fields."
+          : undefined,
+      });
+    }
+  }, [state]);
+}
+
+/** Company picker that auto-picks + hides itself when the tenant has
+ *  exactly one company. Keeps the field mounted as a hidden input so
+ *  the FormData still carries the value. */
+function CompanyField({
+  companies,
+  name,
+  label,
+  required,
+  error,
+  hint,
+  defaultValue,
+}: {
+  companies: string[];
+  name: string;
+  label: string;
+  required?: boolean;
+  error?: string;
+  hint?: string;
+  defaultValue?: string;
+}) {
+  if (companies.length === 1) {
+    return <input type="hidden" name={name} value={companies[0]} />;
+  }
+  return (
+    <Field label={label} htmlFor={name} required={required} error={error} hint={hint}>
+      <SelectInput
+        id={name}
+        name={name}
+        options={companies}
+        defaultValue={defaultValue}
+        placeholder={required ? "Select company" : "—"}
+        invalid={Boolean(error)}
+      />
+    </Field>
+  );
+}
 
 function ErrorBanner({ msg }: { msg?: string }) {
   if (!msg) return null;
@@ -101,20 +180,25 @@ export function OnboardingForm({
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+  useErrorToast(state);
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
       <FormSection title="Onboarding">
-        <Field label="Employee" htmlFor="employee" required error={fe.employee}
-               hint="Employee ID, e.g. HR-EMP-00292">
-          <TextInput id="employee" name="employee" defaultValue={opts.defaultEmployee} invalid={Boolean(fe.employee)} />
+        <Field label="Employee" htmlFor="employee" required error={fe.employee}>
+          <SelectInput
+            id="employee"
+            name="employee"
+            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            defaultValue={opts.defaultEmployee}
+            placeholder="Select employee"
+            invalid={Boolean(fe.employee)}
+          />
         </Field>
         <Field label="Boarding begins" htmlFor="boarding_begins_on" required error={fe.boarding_begins_on}>
           <TextInput id="boarding_begins_on" name="boarding_begins_on" type="date" invalid={Boolean(fe.boarding_begins_on)} />
         </Field>
-        <Field label="Company" htmlFor="company" required error={fe.company}>
-          <SelectInput id="company" name="company" options={opts.companies} placeholder="Select company" invalid={Boolean(fe.company)} />
-        </Field>
+        <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
         <Field label="Department" htmlFor="department">
           <SelectInput id="department" name="department" options={opts.departments} placeholder="—" />
         </Field>
@@ -143,21 +227,27 @@ export function SeparationForm({
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+  useErrorToast(state);
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
       <FormSection title="Separation">
         <Field label="Employee" htmlFor="employee" required error={fe.employee}
-               hint="Employee ID who is leaving">
-          <TextInput id="employee" name="employee" defaultValue={opts.defaultEmployee} invalid={Boolean(fe.employee)} />
+               hint="Who is leaving.">
+          <SelectInput
+            id="employee"
+            name="employee"
+            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            defaultValue={opts.defaultEmployee}
+            placeholder="Select employee"
+            invalid={Boolean(fe.employee)}
+          />
         </Field>
         <Field label="Boarding begins" htmlFor="boarding_begins_on" required error={fe.boarding_begins_on}
                hint="Last working day kicks off the exit checklist.">
           <TextInput id="boarding_begins_on" name="boarding_begins_on" type="date" invalid={Boolean(fe.boarding_begins_on)} />
         </Field>
-        <Field label="Company" htmlFor="company" required error={fe.company}>
-          <SelectInput id="company" name="company" options={opts.companies} placeholder="Select company" invalid={Boolean(fe.company)} />
-        </Field>
+        <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
         <Field label="Department" htmlFor="department">
           <SelectInput id="department" name="department" options={opts.departments} placeholder="—" />
         </Field>
@@ -189,23 +279,38 @@ export function TransferForm({
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+  useErrorToast(state);
+  const multiCompany = opts.companies.length > 1;
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
       <FormSection title="Transfer">
         <Field label="Employee" htmlFor="employee" required error={fe.employee}>
-          <TextInput id="employee" name="employee" defaultValue={opts.defaultEmployee} invalid={Boolean(fe.employee)} />
+          <SelectInput
+            id="employee"
+            name="employee"
+            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            defaultValue={opts.defaultEmployee}
+            placeholder="Select employee"
+            invalid={Boolean(fe.employee)}
+          />
         </Field>
         <Field label="Transfer date" htmlFor="transfer_date" required error={fe.transfer_date}>
           <TextInput id="transfer_date" name="transfer_date" type="date" invalid={Boolean(fe.transfer_date)} />
         </Field>
-        <Field label="Current company" htmlFor="company" required error={fe.company}>
-          <SelectInput id="company" name="company" options={opts.companies} placeholder="Select company" invalid={Boolean(fe.company)} />
-        </Field>
-        <Field label="New company" htmlFor="new_company"
-               hint="Leave blank if the transfer stays within the same company.">
-          <SelectInput id="new_company" name="new_company" options={opts.companies} placeholder="—" />
-        </Field>
+        <CompanyField
+          companies={opts.companies}
+          name="company"
+          label="Current company"
+          required
+          error={fe.company}
+        />
+        {multiCompany && (
+          <Field label="New company" htmlFor="new_company"
+                 hint="Leave blank if the transfer stays within the same company.">
+            <SelectInput id="new_company" name="new_company" options={opts.companies} placeholder="—" />
+          </Field>
+        )}
         <Field label="New department" htmlFor="new_department">
           <SelectInput id="new_department" name="new_department" options={opts.departments} placeholder="—" />
         </Field>
@@ -234,19 +339,25 @@ export function PromotionForm({
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+  useErrorToast(state);
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
       <FormSection title="Promotion">
         <Field label="Employee" htmlFor="employee" required error={fe.employee}>
-          <TextInput id="employee" name="employee" defaultValue={opts.defaultEmployee} invalid={Boolean(fe.employee)} />
+          <SelectInput
+            id="employee"
+            name="employee"
+            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            defaultValue={opts.defaultEmployee}
+            placeholder="Select employee"
+            invalid={Boolean(fe.employee)}
+          />
         </Field>
         <Field label="Promotion date" htmlFor="promotion_date" required error={fe.promotion_date}>
           <TextInput id="promotion_date" name="promotion_date" type="date" invalid={Boolean(fe.promotion_date)} />
         </Field>
-        <Field label="Company" htmlFor="company" required error={fe.company}>
-          <SelectInput id="company" name="company" options={opts.companies} placeholder="Select company" invalid={Boolean(fe.company)} />
-        </Field>
+        <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
         <Field label="New designation" htmlFor="new_designation">
           <SelectInput id="new_designation" name="new_designation" options={opts.designations} placeholder="—" />
         </Field>
@@ -275,6 +386,7 @@ export function GrievanceForm({
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+  useErrorToast(state);
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
@@ -284,8 +396,15 @@ export function GrievanceForm({
           <TextInput id="subject" name="subject" invalid={Boolean(fe.subject)} />
         </Field>
         <Field label="Raised by" htmlFor="raised_by" required error={fe.raised_by}
-               hint="Employee ID of who is raising it.">
-          <TextInput id="raised_by" name="raised_by" defaultValue={opts.defaultEmployee} invalid={Boolean(fe.raised_by)} />
+               hint="Who is raising it.">
+          <SelectInput
+            id="raised_by"
+            name="raised_by"
+            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            defaultValue={opts.defaultEmployee}
+            placeholder="Select employee"
+            invalid={Boolean(fe.raised_by)}
+          />
         </Field>
         <Field label="Date raised" htmlFor="grievance_raised_date">
           <TextInput id="grievance_raised_date" name="grievance_raised_date" type="date" />

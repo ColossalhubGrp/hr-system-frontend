@@ -10,6 +10,15 @@ import {
   MessageSquareWarning,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { fetchLifecycleSummary, type LifecycleKind } from "@/lib/frappe/lifecycle";
 
 export const metadata = { title: "Employee Lifecycle · Colossal HR" };
@@ -65,57 +74,67 @@ export default async function LifecycleHubPage() {
         subtitle="Onboarding through separation — every transition the workforce goes through."
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {ORDER.map((k) => {
-          const m = KIND_META[k];
-          const s = summary[k];
-          const Icon = m.icon;
-          return (
-            <Link
-              key={k}
-              href={`/employee/lifecycle/${k}` as Route}
-              className="group rounded-card focus-ring"
-            >
-              <article className="card flex h-full flex-col gap-4 p-5 transition group-hover:border-ink-100">
-                <header className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="grid h-10 w-10 place-items-center rounded-2xl bg-ink-50/60 text-ink-700">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <div>
-                      <p className="text-sm font-semibold text-ink-900">
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Kind</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead className="text-right">Total</TableHead>
+                <TableHead>Latest</TableHead>
+                <TableHead className="w-8" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ORDER.map((k) => {
+                const m = KIND_META[k];
+                const s = summary[k];
+                const Icon = m.icon;
+                const href = `/employee/lifecycle/${k}` as Route;
+                return (
+                  <TableRow key={k} className="group">
+                    <TableCell className="align-top font-medium">
+                      <Link
+                        href={href}
+                        className="flex items-center gap-2 text-foreground hover:underline"
+                      >
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+                          <Icon className="h-3.5 w-3.5" />
+                        </span>
                         {m.label}
-                      </p>
-                      <p className="text-xs text-ash-500">{m.blurb}</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-4 w-4 text-ash-400" />
-                </header>
-                <div className="flex items-baseline justify-between gap-4 border-t border-hairline pt-3">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-ash-500">
-                      Total
-                    </p>
-                    <p className="text-2xl font-semibold text-ink-900">
-                      {s.total.toLocaleString()}
-                    </p>
-                  </div>
-                  {s.latest && (
-                    <div className="min-w-0 text-right">
-                      <p className="text-xs uppercase tracking-wide text-ash-500">
-                        Latest
-                      </p>
-                      <p className="truncate text-sm font-medium text-ash-900">
-                        {s.latest.employeeName ?? s.latest.employee}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </article>
-            </Link>
-          );
-        })}
-      </div>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="align-top text-muted-foreground">
+                      <Link href={href} className="block">
+                        {m.blurb}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right align-top">
+                      <Link href={href} className="block font-semibold">
+                        {s.total.toLocaleString()}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="align-top text-muted-foreground">
+                      <Link href={href} className="block truncate">
+                        {s.latest?.employeeName ?? s.latest?.employee ?? "—"}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right align-top">
+                      <Link
+                        href={href}
+                        className="inline-flex text-muted-foreground group-hover:text-foreground"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

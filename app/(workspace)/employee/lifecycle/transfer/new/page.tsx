@@ -3,6 +3,14 @@ import type { Route } from "next";
 import { ChevronLeft, ChevronRight, GitBranch } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { TRANSFER_TYPES } from "@/lib/frappe/transfer-types";
 
 export const metadata = {
@@ -11,9 +19,8 @@ export const metadata = {
 
 /**
  * Step 1 of the typed transfer flow: HR picks WHICH Employee field is
- * changing. Each card links to /transfer/new/<slug> which renders the
- * tailored form. Static route beats the dynamic /[kind]/new for
- * `transfer`, so the other lifecycle kinds are unaffected.
+ * changing. Table row per type; clicking anywhere on a row leads to
+ * /transfer/new/<slug> where the tailored form lives.
  */
 export default function NewTransferTypePickerPage() {
   const types = Object.values(TRANSFER_TYPES);
@@ -35,38 +42,61 @@ export default function NewTransferTypePickerPage() {
         subtitle="Each type changes one Employee field. Pick the one that fits — the next step captures the target value."
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {types.map((t) => {
-          const Icon = t.icon;
-          const href = `/employee/lifecycle/transfer/new/${t.slug}` as Route;
-          return (
-            <Link
-              key={t.slug}
-              href={href}
-              className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            >
-              <Card className="h-full transition hover:border-primary/40 hover:shadow-md">
-                <CardContent className="flex h-full flex-col gap-3 p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/10 text-primary">
-                      <Icon className="h-4.5 w-4.5" />
-                    </span>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">
-                      {t.label}
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {t.description}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
-      </div>
+      <Card>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Changes</TableHead>
+                <TableHead className="w-8" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {types.map((t) => {
+                const Icon = t.icon;
+                const href = `/employee/lifecycle/transfer/new/${t.slug}` as Route;
+                return (
+                  <TableRow key={t.slug} className="group">
+                    <TableCell className="align-top font-medium">
+                      <Link
+                        href={href}
+                        className="flex items-center gap-2 text-foreground hover:underline"
+                      >
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+                          <Icon className="h-3.5 w-3.5" />
+                        </span>
+                        {t.label}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="align-top text-muted-foreground">
+                      <Link href={href} className="block">
+                        {t.description}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="align-top">
+                      <Link href={href} className="block">
+                        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">
+                          {t.employeeField}
+                        </code>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right align-top">
+                      <Link
+                        href={href}
+                        className="inline-flex text-muted-foreground group-hover:text-foreground"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 }

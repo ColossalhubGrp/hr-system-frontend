@@ -11,6 +11,9 @@ import {
   type LifecycleRecord,
 } from "@/lib/frappe/lifecycle-write";
 import { LIFECYCLE_META, type LifecycleKind } from "@/lib/frappe/lifecycle";
+import { listLifecycleActivities } from "@/lib/frappe/lifecycle-activities";
+import { getMyAccess } from "@/lib/frappe/roles";
+import { ActivitiesPanel } from "@/components/lifecycle/activities-panel";
 import {
   cancelPromotionAction,
   cancelTransferAction,
@@ -62,6 +65,20 @@ export default async function LifecycleDetailPage({
   const meta = LIFECYCLE_META[kind];
   const back = `/employee/lifecycle/${kind}` as Route;
 
+  // Activities checklist only applies to Onboarding + Separation — the two
+  // DocTypes whose child `activities` table backs the Employee Boarding
+  // Activity rows. Transfers / Promotions / Grievances have no checklist.
+  const activities =
+    kind === "onboarding" || kind === "separation"
+      ? await listLifecycleActivities(
+          id,
+          kind === "onboarding" ? "Employee Onboarding" : "Employee Separation",
+        )
+      : [];
+  const access =
+    kind === "onboarding" || kind === "separation" ? await getMyAccess() : null;
+  const canEditActivities = Boolean(access?.isHrAdmin || access?.isHrAny);
+
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -85,6 +102,15 @@ export default async function LifecycleDetailPage({
       />
 
       <WorkflowPanels kind={kind} record={record} />
+
+      {(kind === "onboarding" || kind === "separation") && (
+        <ActivitiesPanel
+          kind={kind}
+          parentId={id}
+          initial={activities}
+          editable={canEditActivities}
+        />
+      )}
 
       <section className="card p-6">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">

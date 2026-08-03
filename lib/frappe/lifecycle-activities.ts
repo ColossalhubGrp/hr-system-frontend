@@ -159,29 +159,18 @@ export async function listAssignmentUsers(): Promise<AssignmentUser[]> {
   }
 }
 
-/** Enabled Frappe roles for the "…or by role" dropdown. Filters out
- *  Frappe's built-in placeholders that no real person carries. */
+/** Enabled Frappe roles for the "…or by role" dropdown. The stock
+ *  Role DocType is read-locked to System Manager, so we go through
+ *  a whitelisted helper on human_resources that bypasses that
+ *  DocPerm safely (see human_resources/api/lifecycle_activities.py). */
 export async function listAssignmentRoles(): Promise<string[]> {
   try {
-    const rows = await frappeCall<Array<{ name: string }>>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Role",
-        fields: ["name"],
-        filters: JSON.stringify([["disabled", "=", 0]]),
-        order_by: "name asc",
-        limit_page_length: 200,
-      },
+    const rows = await frappeCall<string[]>({
+      method:
+        "human_resources.api.lifecycle_activities.assignable_roles",
       as: "user",
     });
-    const HIDDEN = new Set([
-      "Guest",
-      "All",
-      "Administrator",
-      "Desk User",
-      "Website Manager",
-    ]);
-    return (rows ?? []).map((r) => r.name).filter((n) => !HIDDEN.has(n));
+    return rows ?? [];
   } catch (err) {
     console.error("[listAssignmentRoles] fetch failed:", err);
     return [];

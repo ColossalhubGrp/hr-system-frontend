@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { Loader2, MapPinPlus, Plus } from "lucide-react";
+import { Loader2, MapPin, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -56,7 +56,7 @@ export function CreateBranchButton() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MapPinPlus className="h-4 w-4" />
+              <MapPin className="h-4 w-4" />
               New branch
             </DialogTitle>
             <DialogDescription>

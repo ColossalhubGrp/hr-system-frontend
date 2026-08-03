@@ -6,7 +6,9 @@ import {
   CheckCircle2,
   ClipboardList,
   Loader2,
+  Pencil,
   Plus,
+  Save,
   Star,
   Trash2,
   UserRound,
@@ -29,7 +31,9 @@ import {
   addActivityAction,
   removeActivityAction,
   toggleActivityCompletedAction,
+  updateActivityAction,
   type AddActivityState,
+  type UpdateActivityState,
 } from "@/app/(workspace)/employee/lifecycle/activity-actions";
 
 type Activity = {
@@ -71,6 +75,7 @@ export function ActivitiesPanel({
 }) {
   const [items, setItems] = useState<Activity[]>(initial);
   const [openAdd, setOpenAdd] = useState(false);
+  const [editing, setEditing] = useState<Activity | null>(null);
 
   // Keep in sync when the parent re-renders (e.g. after a hard reload)
   useEffect(() => setItems(initial), [initial]);
@@ -134,6 +139,7 @@ export function ActivitiesPanel({
                 onRemoved={() =>
                   setItems((prev) => prev.filter((row) => row.name !== a.name))
                 }
+                onEdit={() => setEditing(a)}
               />
             ))}
           </ul>
@@ -141,16 +147,34 @@ export function ActivitiesPanel({
       </CardContent>
 
       {editable && (
-        <AddActivityDialog
-          kind={kind}
-          parentId={parentId}
-          open={openAdd}
-          onOpenChange={setOpenAdd}
-          onCreated={(created) => {
-            setItems((prev) => [...prev, created]);
-            setOpenAdd(false);
-          }}
-        />
+        <>
+          <AddActivityDialog
+            kind={kind}
+            parentId={parentId}
+            open={openAdd}
+            onOpenChange={setOpenAdd}
+            onCreated={(created) => {
+              setItems((prev) => [...prev, created]);
+              setOpenAdd(false);
+            }}
+          />
+          <EditActivityDialog
+            kind={kind}
+            parentId={parentId}
+            editing={editing}
+            onOpenChange={(v) => {
+              if (!v) setEditing(null);
+            }}
+            onSaved={(updated) => {
+              setItems((prev) =>
+                prev.map((row) =>
+                  row.name === updated.name ? { ...row, ...updated } : row,
+                ),
+              );
+              setEditing(null);
+            }}
+          />
+        </>
       )}
     </Card>
   );
@@ -163,6 +187,7 @@ function ActivityRow({
   editable,
   onCompletedChange,
   onRemoved,
+  onEdit,
 }: {
   kind: "onboarding" | "separation";
   parentId: string;
@@ -172,6 +197,7 @@ function ActivityRow({
     updated: Pick<Activity, "name" | "completed" | "completedOn" | "completedBy">,
   ) => void;
   onRemoved: () => void;
+  onEdit: () => void;
 }) {
   const [toggling, startToggle] = useTransition();
   const [removing, startRemove] = useTransition();
@@ -293,21 +319,135 @@ function ActivityRow({
       </div>
 
       {editable && (
-        <Button
-          size="sm"
-          variant="ghost"
-          onClick={remove}
-          disabled={removing}
-          className="text-muted-foreground hover:text-destructive"
-        >
-          {removing ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Trash2 className="h-3.5 w-3.5" />
-          )}
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={onEdit}
+            className="text-muted-foreground hover:text-foreground"
+            title="Edit activity"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={remove}
+            disabled={removing}
+            className="text-muted-foreground hover:text-destructive"
+            title="Remove activity"
+          >
+            {removing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Trash2 className="h-3.5 w-3.5" />
+            )}
+          </Button>
+        </div>
       )}
     </li>
+  );
+}
+
+function ActivityFormBody({
+  fieldErrors,
+  initial,
+  showRequiredToggle,
+}: {
+  fieldErrors: Record<string, string> | undefined;
+  initial?: Activity | null;
+  showRequiredToggle: boolean;
+}) {
+  return (
+    <>
+      <Field
+        label="Activity name"
+        htmlFor="activity_name"
+        required
+        error={fieldErrors?.activity_name}
+        wide
+      >
+        <TextInput
+          id="activity_name"
+          name="activity_name"
+          placeholder="e.g. Send welcome pack"
+          invalid={Boolean(fieldErrors?.activity_name)}
+          defaultValue={initial?.activityName ?? ""}
+          autoFocus
+        />
+      </Field>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
+          label="Assign to user"
+          htmlFor="user"
+          hint="Email of the specific user. Leave blank + set a role to assign to anyone with that role."
+        >
+          <TextInput
+            id="user"
+            name="user"
+            type="email"
+            placeholder="jane@company.com"
+            defaultValue={initial?.user ?? ""}
+          />
+        </Field>
+        <Field label="…or by role" htmlFor="role" hint="e.g. HR User, IT Admin.">
+          <TextInput
+            id="role"
+            name="role"
+            placeholder="Role name"
+            defaultValue={initial?.role ?? ""}
+          />
+        </Field>
+      </div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field
+          label="Begin on (days)"
+          htmlFor="begin_on"
+          hint="Days from the run's start date. 0 = day one, -3 = three days before."
+        >
+          <TextInput
+            id="begin_on"
+            name="begin_on"
+            type="number"
+            inputMode="numeric"
+            defaultValue={initial?.beginOn ?? 0}
+          />
+        </Field>
+        <Field
+          label="Duration (days)"
+          htmlFor="duration"
+          hint="How long the assignee has."
+        >
+          <TextInput
+            id="duration"
+            name="duration"
+            type="number"
+            inputMode="numeric"
+            min={0}
+            defaultValue={initial?.duration ?? 1}
+          />
+        </Field>
+      </div>
+      {showRequiredToggle && (
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            name="required_for_employee_creation"
+            className="h-4 w-4 rounded border-input"
+            defaultChecked={Boolean(initial?.requiredForEmployeeCreation)}
+          />
+          Required before the Employee record can be finalised
+        </label>
+      )}
+      <Field label="Notes" htmlFor="description" wide>
+        <TextArea
+          id="description"
+          name="description"
+          rows={3}
+          defaultValue={initial?.description ?? ""}
+        />
+      </Field>
+    </>
   );
 }
 
@@ -353,80 +493,15 @@ function AddActivityDialog({
           </DialogDescription>
         </DialogHeader>
         <form action={dispatch} className="flex flex-col gap-4 pt-2">
-          <Field
-            label="Activity name"
-            htmlFor="activity_name"
-            required
-            error={state.fieldErrors?.activity_name}
-            wide
-          >
-            <TextInput
-              id="activity_name"
-              name="activity_name"
-              placeholder="e.g. Send welcome pack"
-              invalid={Boolean(state.fieldErrors?.activity_name)}
-              autoFocus
-            />
-          </Field>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field
-              label="Assign to user"
-              htmlFor="user"
-              hint="Email of the specific user. Leave blank + set a role to assign to anyone with that role."
-            >
-              <TextInput id="user" name="user" type="email" placeholder="jane@company.com" />
-            </Field>
-            <Field label="…or by role" htmlFor="role" hint="e.g. HR User, IT Admin.">
-              <TextInput id="role" name="role" placeholder="Role name" />
-            </Field>
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Field
-              label="Begin on (days)"
-              htmlFor="begin_on"
-              hint="Days from the run's start date. 0 = day one, -3 = three days before."
-            >
-              <TextInput
-                id="begin_on"
-                name="begin_on"
-                type="number"
-                inputMode="numeric"
-                defaultValue={0}
-              />
-            </Field>
-            <Field
-              label="Duration (days)"
-              htmlFor="duration"
-              hint="How long the assignee has."
-            >
-              <TextInput
-                id="duration"
-                name="duration"
-                type="number"
-                inputMode="numeric"
-                min={0}
-                defaultValue={1}
-              />
-            </Field>
-          </div>
-          {kind === "onboarding" && (
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                name="required_for_employee_creation"
-                className="h-4 w-4 rounded border-input"
-              />
-              Required before the Employee record can be finalised
-            </label>
-          )}
-          <Field label="Notes" htmlFor="description" wide>
-            <TextArea id="description" name="description" rows={3} />
-          </Field>
+          <ActivityFormBody
+            fieldErrors={state.fieldErrors}
+            showRequiredToggle={kind === "onboarding"}
+          />
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <SubmitButton />
+            <SubmitButton icon="add" idleLabel="Add activity" pendingLabel="Adding…" />
           </DialogFooter>
         </form>
       </DialogContent>
@@ -434,12 +509,117 @@ function AddActivityDialog({
   );
 }
 
-function SubmitButton() {
+const UPDATE_EMPTY: UpdateActivityState = {};
+
+function EditActivityDialog({
+  kind,
+  parentId,
+  editing,
+  onOpenChange,
+  onSaved,
+}: {
+  kind: "onboarding" | "separation";
+  parentId: string;
+  editing: Activity | null;
+  onOpenChange: (v: boolean) => void;
+  onSaved: (updated: Activity) => void;
+}) {
+  // Dialog is controlled by the parent: `editing` non-null = open. Re-key
+  // the inner form on the row's name so switching to a different row
+  // wipes the last row's default values instead of carrying them over.
+  const open = editing !== null;
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Pencil className="h-4 w-4" />
+            Edit activity
+          </DialogTitle>
+          <DialogDescription>
+            Update the fields; the tick / delete controls stay on the row itself.
+          </DialogDescription>
+        </DialogHeader>
+        {editing && (
+          <EditActivityInner
+            key={editing.name}
+            kind={kind}
+            parentId={parentId}
+            activity={editing}
+            onCancel={() => onOpenChange(false)}
+            onSaved={onSaved}
+          />
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function EditActivityInner({
+  kind,
+  parentId,
+  activity,
+  onCancel,
+  onSaved,
+}: {
+  kind: "onboarding" | "separation";
+  parentId: string;
+  activity: Activity;
+  onCancel: () => void;
+  onSaved: (updated: Activity) => void;
+}) {
+  const bound = updateActivityAction.bind(null, kind, parentId, activity.name);
+  const [state, dispatch] = useFormState(bound, UPDATE_EMPTY);
+  const lastSeen = useRef(state);
+
+  useEffect(() => {
+    if (state === lastSeen.current) return;
+    lastSeen.current = state;
+    if (state.error) {
+      toast.error(state.error);
+    } else if (state.updated) {
+      toast.success(`Updated "${state.updated.activityName}".`);
+      onSaved(state.updated);
+    }
+  }, [state, onSaved]);
+
+  return (
+    <form action={dispatch} className="flex flex-col gap-4 pt-2">
+      <ActivityFormBody
+        fieldErrors={state.fieldErrors}
+        initial={activity}
+        showRequiredToggle={kind === "onboarding"}
+      />
+      <DialogFooter>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <SubmitButton icon="save" idleLabel="Save changes" pendingLabel="Saving…" />
+      </DialogFooter>
+    </form>
+  );
+}
+
+function SubmitButton({
+  icon,
+  idleLabel,
+  pendingLabel,
+}: {
+  icon: "add" | "save";
+  idleLabel: string;
+  pendingLabel: string;
+}) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending}>
-      {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-      Add activity
+      {pending ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : icon === "add" ? (
+        <Plus className="h-4 w-4" />
+      ) : (
+        <Save className="h-4 w-4" />
+      )}
+      {pending ? pendingLabel : idleLabel}
     </Button>
   );
 }

@@ -90,6 +90,23 @@ export async function addLifecycleActivity(
   return normalize(row);
 }
 
+export type UpdateActivityInput = Partial<AddActivityInput>;
+
+export async function updateLifecycleActivity(
+  parent: string,
+  parenttype: "Employee Onboarding" | "Employee Separation",
+  rowName: string,
+  input: UpdateActivityInput,
+): Promise<LifecycleActivity> {
+  const row = await frappeCall<RawActivity>({
+    method: "human_resources.api.lifecycle_activities.update_activity",
+    verb: "POST",
+    args: { parent, parenttype, row_name: rowName, ...input },
+    as: "user",
+  });
+  return normalize(row);
+}
+
 export async function removeLifecycleActivity(
   parent: string,
   parenttype: "Employee Onboarding" | "Employee Separation",

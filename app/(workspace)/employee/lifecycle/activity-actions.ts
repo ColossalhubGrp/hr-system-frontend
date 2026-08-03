@@ -6,6 +6,7 @@ import {
   addLifecycleActivity,
   removeLifecycleActivity,
   setLifecycleActivityCompleted,
+  updateLifecycleActivity,
   type LifecycleActivity,
   type ToggleCompletedResult,
 } from "@/lib/frappe/lifecycle-activities";
@@ -81,6 +82,51 @@ export async function addActivityAction(
     return { created };
   } catch (err) {
     return toFormState(err) as AddActivityState;
+  }
+}
+
+// ---- Update ---------------------------------------------------------------
+
+export type UpdateActivityState = StdFormState & {
+  updated?: LifecycleActivity;
+};
+
+// Same schema as add — every field is edit-able post-create.
+export async function updateActivityAction(
+  kind: Kind,
+  parentId: string,
+  rowName: string,
+  _prev: UpdateActivityState,
+  form: FormData,
+): Promise<UpdateActivityState> {
+  const parsed = addSchema.safeParse(formToRecord(form));
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const k = String(issue.path[0] ?? "");
+      if (k && !fieldErrors[k]) fieldErrors[k] = issue.message;
+    }
+    return { error: "Check the highlighted fields.", fieldErrors };
+  }
+  try {
+    const updated = await updateLifecycleActivity(
+      parentId,
+      PARENTTYPE[kind],
+      rowName,
+      {
+        activity_name: parsed.data.activity_name,
+        user: parsed.data.user || undefined,
+        role: parsed.data.role || undefined,
+        begin_on: parsed.data.begin_on,
+        duration: parsed.data.duration,
+        required_for_employee_creation: parsed.data.required_for_employee_creation,
+        description: parsed.data.description || undefined,
+      },
+    );
+    revalidatePath(detailPath(kind, parentId));
+    return { updated };
+  } catch (err) {
+    return toFormState(err) as UpdateActivityState;
   }
 }
 

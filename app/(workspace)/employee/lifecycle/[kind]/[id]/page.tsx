@@ -204,13 +204,37 @@ function SubmittablePanels({
   const cancel = kind === "transfer" ? cancelTransferAction : cancelPromotionAction;
 
   if (record.docstatus === 0) {
+    // Frappe's before_submit throws when transfer_date / promotion_date > today
+    // ("cannot be submitted before Transfer Date"). Rather than let HR hit that
+    // wall, surface it as a static waiting-card so the affordance is honest.
+    const dateField = kind === "transfer" ? "transfer_date" : "promotion_date";
+    const effectiveDate = (record.raw[dateField] as string | null) ?? null;
+    const isFuture = effectiveDate ? effectiveDate > isoToday() : false;
+
+    const change = describeChange(kind, record);
+
+    if (isFuture && effectiveDate) {
+      return (
+        <div className="rounded-card border border-hairline bg-canvas/60 p-4">
+          <p className="text-sm font-medium text-foreground">
+            Waiting for {kind === "transfer" ? "transfer" : "promotion"} date
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {change ? `${change}. ` : ""}
+            This becomes submittable on <b>{effectiveDate}</b>. Until then it
+            stays as Draft so the change doesn&apos;t apply early.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <ActionPanel
         title={`Submit this ${kind}`}
         description={
-          kind === "transfer"
-            ? "Submitting applies the new company/department/designation on the transfer date."
-            : "Submitting applies the new designation/grade on the promotion date."
+          change
+            ? `${change}. Submitting applies it to the employee record now.`
+            : `Submitting applies the recorded change to the employee record on the ${kind} date.`
         }
         label="Submit"
         pendingLabel="Submitting…"
@@ -231,6 +255,42 @@ function SubmittablePanels({
     );
   }
   return null;
+}
+
+function isoToday(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Read the change-set row(s) off the raw doc and phrase them as
+ *  human-language ("Sets department to Sales - RI"). Returns null when
+ *  the doc has no rows (legacy transfers may be shaped differently). */
+function describeChange(
+  kind: "transfer" | "promotion",
+  record: LifecycleRecord,
+): string | null {
+  const rowsKey =
+    kind === "transfer" ? "employee_transfer_details" : "employee_promotion_details";
+  const rows = (record.raw[rowsKey] as Array<{ fieldname?: string; new?: string }> | undefined) ?? [];
+  if (rows.length === 0) return null;
+  const parts = rows
+    .filter((r) => r.fieldname && r.new)
+    .map((r) => `${humanize(r.fieldname!)} → ${r.new}`);
+  if (parts.length === 0) return null;
+  return `Sets ${parts.join(", ")}`;
+}
+
+function humanize(fieldname: string): string {
+  return fieldname
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+    .replace(/^Pay Grade$/, "pay grade")
+    .replace(/^Reports To$/, "reports to")
+    .replace(/^Default Shift$/, "default shift")
+    .replace(/^Employment Type$/, "employment type");
 }
 
 function GrievancePanel({ record }: { record: LifecycleRecord }) {

@@ -309,7 +309,10 @@ function fieldsFor(
         { label: "Company", value: rec.company },
         { label: "Department", value: rec.department },
         { label: "Designation", value: rec.designation },
-        { label: "Begins on", value: (r.boarding_begins_on as string) ?? null },
+        {
+          label: kind === "onboarding" ? "Onboarding begins" : "Offboarding begins",
+          value: (r.boarding_begins_on as string) ?? null,
+        },
         ...(kind === "separation"
           ? [
               {

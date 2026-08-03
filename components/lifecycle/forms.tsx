@@ -242,7 +242,7 @@ export function OnboardingForm({
             invalid={Boolean(fe.employee)}
           />
         </Field>
-        <Field label="Boarding begins" htmlFor="boarding_begins_on" required error={fe.boarding_begins_on}>
+        <Field label="Onboarding begins" htmlFor="boarding_begins_on" required error={fe.boarding_begins_on}>
           <TextInput id="boarding_begins_on" name="boarding_begins_on" type="date" invalid={Boolean(fe.boarding_begins_on)} />
         </Field>
         <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
@@ -315,7 +315,7 @@ export function SeparationForm({
             invalid={Boolean(fe.employee)}
           />
         </Field>
-        <Field label="Boarding begins" htmlFor="boarding_begins_on" required error={fe.boarding_begins_on}
+        <Field label="Offboarding begins" htmlFor="boarding_begins_on" required error={fe.boarding_begins_on}
                hint="Last working day kicks off the exit checklist.">
           <TextInput id="boarding_begins_on" name="boarding_begins_on" type="date" invalid={Boolean(fe.boarding_begins_on)} />
         </Field>

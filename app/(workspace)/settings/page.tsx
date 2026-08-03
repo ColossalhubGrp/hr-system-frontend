@@ -9,6 +9,7 @@ import {
   Clock,
   Lock,
   CalendarDays,
+  MapPin,
 } from "lucide-react";
 import { getMyAccess } from "@/lib/frappe/roles";
 
@@ -31,6 +32,13 @@ const COMPANY_CARDS: SettingCardSpec[] = [
     icon: <Building2 className="h-5 w-5" />,
     title: "Company profile",
     desc: "Legal name, address, currency, default holiday calendar — the values that the rest of HR + Payroll inherit.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/branches",
+    icon: <MapPin className="h-5 w-5" />,
+    title: "Branches",
+    desc: "Business locations employees can be assigned to (name + optional weekly labour budget). Assigned per Employee on the Overview tab.",
     show: (a) => a.isHrAdmin,
   },
   {

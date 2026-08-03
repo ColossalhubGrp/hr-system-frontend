@@ -222,6 +222,7 @@ export const NAV: NavItem[] = [
       // Company-wide settings (currency, address, performance default) —
       // HR admins set these.
       { label: "Company", href: "/settings/company", requires: "HR_ADMIN" },
+      { label: "Branches", href: "/settings/branches", requires: "HR_ADMIN" },
       { label: "Holiday lists", href: "/settings/holiday-lists", requires: "HR_ADMIN" },
       { label: "Performance default", href: "/settings/performance", requires: "HR_ADMIN" },
       { label: "Overtime rules", href: "/settings/overtime", requires: "HR_ADMIN" },

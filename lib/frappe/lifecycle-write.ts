@@ -293,18 +293,23 @@ export async function createGrievance(input: GrievanceInput): Promise<string> {
 
 // ----------------------------------------------------------- transitions
 
-/** For onboarding & separation — just flips the `boarding_status` Select. */
+/** For onboarding & separation — flips the Select column that tracks
+ *  which phase of the workflow we're in. Onboarding calls it
+ *  boarding_status; Separation calls it status. Keep both names in
+ *  one helper so the Server Action doesn't have to know the schema
+ *  quirk. */
 export async function setBoardingStatus(
   kind: "onboarding" | "separation",
   id: string,
   status: "Pending" | "In Process" | "Completed",
 ): Promise<void> {
+  const fieldName = kind === "onboarding" ? "boarding_status" : "status";
   await frappeCall({
     method: "frappe.client.set_value",
     args: {
       doctype: KIND_META[kind].doctype,
       name: id,
-      fieldname: { boarding_status: status },
+      fieldname: { [fieldName]: status },
     },
     verb: "POST",
     as: "user",

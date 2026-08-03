@@ -277,7 +277,10 @@ export async function createTypedTransfer(input: TypedTransferInput): Promise<st
       ? { create_new_employee_id: 1 }
       : {}),
     employee_transfer_details: [detailRow],
-    ...(input.reason ? { remarks: input.reason } : {}),
+    // Note: `reason` is a real Small Text field on the DocType (added
+    // alongside this); earlier writes used `remarks` which the DocType
+    // doesn't have — Frappe silently dropped every note HR typed.
+    ...(input.reason ? { reason: input.reason } : {}),
   });
 }
 

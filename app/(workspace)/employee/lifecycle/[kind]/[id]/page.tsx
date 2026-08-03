@@ -393,7 +393,12 @@ function fieldsFor(
         { label: "Transfer date", value: (r.transfer_date as string) ?? null },
         { label: "From company", value: rec.company },
         { label: "To company", value: (r.new_company as string) ?? null },
-        { label: "Reason", value: (r.remarks as string) ?? null, wide: true },
+        {
+          label: "Reason",
+          value:
+            (r.reason as string | null) ?? (r.remarks as string | null) ?? null,
+          wide: true,
+        },
         {
           label: "Status",
           value:

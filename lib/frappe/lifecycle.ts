@@ -90,9 +90,9 @@ const FIELDS_BY_KIND: Record<LifecycleKind, string[]> = {
     "name",
     "employee",
     "employee_name",
-    // Trimmed: Frappe v15 won't let us project `boarding_status` or
-    // `designation` in list view for this doctype.
     "separation_begins_on",
+    "status",
+    "designation",
     "docstatus",
   ],
   transfer: [
@@ -215,8 +215,7 @@ function pickDetails(
     case "onboarding":
       return (r.designation as string | null) ?? null;
     case "separation":
-      // Designation not projectable on Separation list view.
-      return null;
+      return (r.designation as string | null) ?? null;
     case "transfer":
       return (r.new_company as string | null) ?? null;
     case "promotion":

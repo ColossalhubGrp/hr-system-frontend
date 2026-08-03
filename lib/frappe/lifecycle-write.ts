@@ -75,8 +75,10 @@ function pickStatus(
 ): string {
   switch (kind) {
     case "onboarding":
-    case "separation":
       return (d.boarding_status as string) ?? "Pending";
+    case "separation":
+      // Employee Separation uses `status`, not `boarding_status`.
+      return (d.status as string) ?? "Pending";
     case "grievance":
       return (d.status as string) ?? "Open";
     case "transfer":
@@ -174,11 +176,12 @@ export async function createOnboarding(input: OnboardingInput): Promise<string> 
 
 export async function createSeparation(input: SeparationInput): Promise<string> {
   // Map our shared form field `boarding_begins_on` to the doctype's real
-  // `separation_begins_on` column.
+  // `separation_begins_on` column. Separation's phase column is `status`,
+  // not `boarding_status` — writing the wrong one silently no-ops.
   const { boarding_begins_on, ...rest } = input;
   return insert({
     doctype: "Employee Separation",
-    boarding_status: "Pending",
+    status: "Pending",
     separation_begins_on: boarding_begins_on,
     ...compact(rest),
   });

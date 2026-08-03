@@ -164,8 +164,12 @@ export async function listLifecycle(
         as: "user",
       }),
     ]);
-  } catch {
-    /* doctype may not exist on older Frappe HR builds */
+  } catch (err) {
+    // Vercel Function logs surface console.error — no more silent "doctype
+    // may not exist" swallow. When the list mysteriously returns 0 rows
+    // we can now read the exact reason (field permlevel, missing
+    // doctype, network error, etc.) instead of guessing.
+    console.error(`[listLifecycle:${kind}] fetch failed:`, err);
   }
 
   const rows = rowsRaw.map<LifecycleRow>((r) => ({

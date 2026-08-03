@@ -10,6 +10,7 @@ import {
   createPromotion,
   createSeparation,
   createTransfer,
+  createTypedTransfer,
   setBoardingStatus,
   setGrievanceStatus,
   submitLifecycle,
@@ -18,7 +19,13 @@ import {
   type PromotionInput,
   type SeparationInput,
   type TransferInput,
+  type TypedTransferInput,
 } from "@/lib/frappe/lifecycle-write";
+import {
+  TRANSFER_TYPES,
+  isTransferTypeSlug,
+  type TransferTypeSlug,
+} from "@/lib/frappe/transfer-types";
 import type { LifecycleKind } from "@/lib/frappe/lifecycle";
 import {
   formToRecord,
@@ -124,6 +131,84 @@ export async function createTransferAction(
   try {
     const input: TransferInput = parsed.data;
     const id = await createTransfer(input);
+    revalidatePath(listHref("transfer"));
+    redirect(detailHref("transfer", id));
+  } catch (err) {
+    return toFormState(err);
+  }
+}
+
+// Typed transfer — one field per record; the caller has already picked
+// which Employee field is changing via the /transfer/new/<type> URL.
+const typedTransferSchema = z.object({
+  type: z.string().trim().min(1),
+  employee: z.string().trim().min(1, "Pick an employee."),
+  transfer_date: isoDate,
+  new_value: z.string().trim().min(1, "Required."),
+  reason: z.string().trim().optional(),
+  create_new_employee_id: z
+    .union([z.literal("on"), z.literal("")])
+    .optional()
+    .transform((v) => (v === "on" ? 1 : 0) as 0 | 1),
+});
+
+export async function createTypedTransferAction(
+  slug: TransferTypeSlug,
+  currentSnapshot: {
+    company: string | null;
+    fieldValue: string | null;
+  },
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  if (!isTransferTypeSlug(slug)) {
+    return { error: "Unknown transfer type." };
+  }
+  const type = TRANSFER_TYPES[slug];
+  const parsed = typedTransferSchema.safeParse({
+    type: slug,
+    ...formToRecord(form),
+  });
+  if (!parsed.success) return fieldErrors(parsed);
+
+  const { employee, transfer_date, new_value, reason, create_new_employee_id } =
+    parsed.data;
+
+  // Block a no-op transfer: same current value + new value = nothing to file.
+  if (
+    currentSnapshot.fieldValue &&
+    currentSnapshot.fieldValue === new_value
+  ) {
+    return {
+      error: `That's already the current ${type.formLabel.toLowerCase()}. Pick a different value.`,
+      fieldErrors: { new_value: "Same as current." },
+    };
+  }
+  // Company can't be null on Transfer.company (Frappe reqd).
+  const company = currentSnapshot.company || "";
+  if (!company) {
+    return {
+      error:
+        "Employee has no Company set. Fix that on the Employee record first.",
+    };
+  }
+
+  const input: TypedTransferInput = {
+    employee,
+    transfer_date,
+    company,
+    fieldname: type.employeeField,
+    current_value: currentSnapshot.fieldValue,
+    new_value,
+    ...(reason ? { reason } : {}),
+    ...(type.isCompanyMove ? { new_company: new_value } : {}),
+    ...(type.isCompanyMove && create_new_employee_id
+      ? { create_new_employee_id: 1 as const }
+      : {}),
+  };
+
+  try {
+    const id = await createTypedTransfer(input);
     revalidatePath(listHref("transfer"));
     redirect(detailHref("transfer", id));
   } catch (err) {

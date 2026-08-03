@@ -8,7 +8,6 @@ import {
   OnboardingForm,
   PromotionForm,
   SeparationForm,
-  TransferForm,
 } from "@/components/lifecycle/forms";
 import { LIFECYCLE_META, type LifecycleKind } from "@/lib/frappe/lifecycle";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
@@ -17,7 +16,6 @@ import {
   createOnboardingAction,
   createPromotionAction,
   createSeparationAction,
-  createTransferAction,
 } from "../../actions";
 
 const KINDS: LifecycleKind[] = [
@@ -87,9 +85,9 @@ export default async function NewLifecyclePage({
       {kind === "separation" && (
         <SeparationForm action={createSeparationAction} opts={formOpts} cancelHref={cancelHref} />
       )}
-      {kind === "transfer" && (
-        <TransferForm action={createTransferAction} opts={formOpts} cancelHref={cancelHref} />
-      )}
+      {/* transfer is handled by /transfer/new (type picker) — this branch
+       *  should never fire since the static route wins, kept only as a
+       *  fail-safe redirect surface for anyone landing here directly. */}
       {kind === "promotion" && (
         <PromotionForm action={createPromotionAction} opts={formOpts} cancelHref={cancelHref} />
       )}

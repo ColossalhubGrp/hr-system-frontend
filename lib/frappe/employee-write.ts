@@ -57,6 +57,10 @@ export type EmployeeFormOptions = {
     designation: string | null;
     pay_grade: string | null;
     company: string | null;
+    branch: string | null;
+    reports_to: string | null;
+    employment_type: string | null;
+    default_shift: string | null;
   }>;
 };
 
@@ -172,6 +176,10 @@ async function listEmployeeDirectory(): Promise<
     designation: string | null;
     pay_grade: string | null;
     company: string | null;
+    branch: string | null;
+    reports_to: string | null;
+    employment_type: string | null;
+    default_shift: string | null;
   };
   try {
     const rows = await frappeCall<EnrichedRow[]>({
@@ -186,6 +194,10 @@ async function listEmployeeDirectory(): Promise<
           "designation",
           "pay_grade",
           "company",
+          "branch",
+          "reports_to",
+          "employment_type",
+          "default_shift",
         ],
         filters: JSON.stringify([["status", "=", "Active"]]),
         order_by: "employee_name asc",
@@ -201,6 +213,10 @@ async function listEmployeeDirectory(): Promise<
       designation: r.designation,
       pay_grade: r.pay_grade,
       company: r.company,
+      branch: r.branch,
+      reports_to: r.reports_to,
+      employment_type: r.employment_type,
+      default_shift: r.default_shift,
     }));
   } catch {
     // Minimal fallback — only the fields the native Employee JSON is
@@ -231,6 +247,10 @@ async function listEmployeeDirectory(): Promise<
         designation: null,
         pay_grade: null,
         company: null,
+        branch: null,
+        reports_to: null,
+        employment_type: null,
+        default_shift: null,
       }));
     } catch {
       return [];

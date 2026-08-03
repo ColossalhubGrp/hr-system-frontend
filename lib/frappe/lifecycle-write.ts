@@ -229,6 +229,55 @@ export async function createTransfer(input: TransferInput): Promise<string> {
   });
 }
 
+/**
+ * Typed transfer input — one row in `employee_transfer_details`. Used by
+ * the /transfer/new/<type> flow where HR has already chosen which single
+ * Employee field is changing.
+ */
+export type TypedTransferInput = {
+  employee: string;
+  transfer_date: string;
+  /** Current Company on the Employee (top-level Transfer.company). */
+  company: string;
+  /** Employee fieldname that will change — e.g. `department`, `pay_grade`. */
+  fieldname: string;
+  /** Current value on the Employee for that field, snapshotted for audit. */
+  current_value: string | null;
+  /** Target value. */
+  new_value: string;
+  reason?: string;
+  /** Populated only for the `company` transfer type. Written to
+   *  Transfer.new_company so Frappe's on_submit knows about the entity move. */
+  new_company?: string;
+  /** Populated only for the `company` type when HR wants a fresh
+   *  Employee ID for the target entity. */
+  create_new_employee_id?: 0 | 1;
+};
+
+export async function createTypedTransfer(input: TypedTransferInput): Promise<string> {
+  // Employee Profile History rows want {fieldname, current, new} — a plain
+  // dict is enough; Frappe fills doctype/idx on insert of the parent.
+  const detailRow: Record<string, unknown> = {
+    fieldname: input.fieldname,
+    new: input.new_value,
+  };
+  if (input.current_value !== null && input.current_value !== undefined) {
+    detailRow.current = input.current_value;
+  }
+  return insert({
+    doctype: "Employee Transfer",
+    employee: input.employee,
+    transfer_date: input.transfer_date,
+    company: input.company,
+    ...(input.new_company ? { new_company: input.new_company } : {}),
+    ...(input.create_new_employee_id
+      ? { create_new_employee_id: 1 }
+      : {}),
+    employee_transfer_details: [detailRow],
+    ...(input.reason ? { remarks: input.reason } : {}),
+  });
+}
+
 export async function createPromotion(input: PromotionInput): Promise<string> {
   const rows: Record<string, unknown>[] = [];
   if (input.new_designation) {

@@ -127,6 +127,67 @@ export type ToggleCompletedResult = {
   totalCount: number;
 };
 
+export type AssignmentUser = { email: string; fullName: string };
+
+/** Enabled non-website users the activity form can assign an activity to.
+ *  Falls back to empty (dropdown renders just current value + placeholder)
+ *  if the tenant scopes User reads out. */
+export async function listAssignmentUsers(): Promise<AssignmentUser[]> {
+  try {
+    const rows = await frappeCall<Array<{ name: string; full_name: string | null }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "User",
+        fields: ["name", "full_name"],
+        filters: JSON.stringify([
+          ["enabled", "=", 1],
+          ["user_type", "!=", "Website User"],
+          ["name", "!=", "Guest"],
+        ]),
+        order_by: "full_name asc",
+        limit_page_length: 500,
+      },
+      as: "user",
+    });
+    return (rows ?? []).map((r) => ({
+      email: r.name,
+      fullName: r.full_name ?? r.name,
+    }));
+  } catch (err) {
+    console.error("[listAssignmentUsers] fetch failed:", err);
+    return [];
+  }
+}
+
+/** Enabled Frappe roles for the "…or by role" dropdown. Filters out
+ *  Frappe's built-in placeholders that no real person carries. */
+export async function listAssignmentRoles(): Promise<string[]> {
+  try {
+    const rows = await frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Role",
+        fields: ["name"],
+        filters: JSON.stringify([["disabled", "=", 0]]),
+        order_by: "name asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    const HIDDEN = new Set([
+      "Guest",
+      "All",
+      "Administrator",
+      "Desk User",
+      "Website Manager",
+    ]);
+    return (rows ?? []).map((r) => r.name).filter((n) => !HIDDEN.has(n));
+  } catch (err) {
+    console.error("[listAssignmentRoles] fetch failed:", err);
+    return [];
+  }
+}
+
 export async function setLifecycleActivityCompleted(
   parent: string,
   parenttype: "Employee Onboarding" | "Employee Separation",

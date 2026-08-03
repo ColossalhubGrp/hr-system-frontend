@@ -24,7 +24,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, TextArea, TextInput } from "@/components/employee/form-bits";
+import {
+  Field,
+  SelectInput,
+  TextArea,
+  TextInput,
+} from "@/components/employee/form-bits";
 import { toast } from "@/components/ui/sonner";
 import { cn } from "@/lib/cn";
 import {
@@ -50,6 +55,8 @@ type Activity = {
   completedBy: string | null;
 };
 
+type AssignmentUser = { email: string; fullName: string };
+
 const EMPTY: AddActivityState = {};
 
 /**
@@ -65,6 +72,8 @@ export function ActivitiesPanel({
   parentId,
   initial,
   editable,
+  users,
+  roles,
 }: {
   kind: "onboarding" | "separation";
   parentId: string;
@@ -72,6 +81,10 @@ export function ActivitiesPanel({
   /** Read-only viewers get the list + checkboxes rendered as static,
    *  no add/remove/tick controls. */
   editable: boolean;
+  /** Enabled non-website users the assign-to-user dropdown lists. */
+  users: AssignmentUser[];
+  /** Enabled Frappe roles the …or-by-role dropdown lists. */
+  roles: string[];
 }) {
   const [items, setItems] = useState<Activity[]>(initial);
   const [openAdd, setOpenAdd] = useState(false);
@@ -153,6 +166,8 @@ export function ActivitiesPanel({
             parentId={parentId}
             open={openAdd}
             onOpenChange={setOpenAdd}
+            users={users}
+            roles={roles}
             onCreated={(created) => {
               setItems((prev) => [...prev, created]);
               setOpenAdd(false);
@@ -162,6 +177,8 @@ export function ActivitiesPanel({
             kind={kind}
             parentId={parentId}
             editing={editing}
+            users={users}
+            roles={roles}
             onOpenChange={(v) => {
               if (!v) setEditing(null);
             }}
@@ -353,11 +370,28 @@ function ActivityFormBody({
   fieldErrors,
   initial,
   showRequiredToggle,
+  users,
+  roles,
 }: {
   fieldErrors: Record<string, string> | undefined;
   initial?: Activity | null;
   showRequiredToggle: boolean;
+  users: AssignmentUser[];
+  roles: string[];
 }) {
+  // Preserve a legacy value (Inactive user, deleted role) as an option so the
+  // edit dialog doesn't silently swap it for the placeholder on load.
+  const userOptions = ensureOption(
+    users.map((u) => ({
+      value: u.email,
+      label: `${u.fullName} (${u.email})`,
+    })),
+    initial?.user ?? "",
+  );
+  const roleOptions = ensureOption(
+    roles.map((r) => ({ value: r, label: r })),
+    initial?.role ?? "",
+  );
   return (
     <>
       <Field
@@ -380,22 +414,35 @@ function ActivityFormBody({
         <Field
           label="Assign to user"
           htmlFor="user"
-          hint="Email of the specific user. Leave blank + set a role to assign to anyone with that role."
+          hint={
+            userOptions.length === 0
+              ? "No users available to assign to on this tenant."
+              : "Specific user. Leave blank + pick a role to assign to anyone with that role."
+          }
         >
-          <TextInput
+          <SelectInput
             id="user"
             name="user"
-            type="email"
-            placeholder="jane@company.com"
+            options={userOptions}
             defaultValue={initial?.user ?? ""}
+            placeholder="— pick a user —"
           />
         </Field>
-        <Field label="…or by role" htmlFor="role" hint="e.g. HR User, IT Admin.">
-          <TextInput
+        <Field
+          label="…or by role"
+          htmlFor="role"
+          hint={
+            roleOptions.length === 0
+              ? "No assignable roles on this tenant."
+              : "Anyone with this role can pick up the task."
+          }
+        >
+          <SelectInput
             id="role"
             name="role"
-            placeholder="Role name"
+            options={roleOptions}
             defaultValue={initial?.role ?? ""}
+            placeholder="— pick a role —"
           />
         </Field>
       </div>
@@ -451,17 +498,30 @@ function ActivityFormBody({
   );
 }
 
+function ensureOption(
+  options: Array<{ value: string; label: string }>,
+  value: string,
+): Array<{ value: string; label: string }> {
+  if (!value) return options;
+  if (options.some((o) => o.value === value)) return options;
+  return [{ value, label: value }, ...options];
+}
+
 function AddActivityDialog({
   kind,
   parentId,
   open,
   onOpenChange,
+  users,
+  roles,
   onCreated,
 }: {
   kind: "onboarding" | "separation";
   parentId: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
+  users: AssignmentUser[];
+  roles: string[];
   onCreated: (created: Activity) => void;
 }) {
   const bound = addActivityAction.bind(null, kind, parentId);
@@ -496,6 +556,8 @@ function AddActivityDialog({
           <ActivityFormBody
             fieldErrors={state.fieldErrors}
             showRequiredToggle={kind === "onboarding"}
+            users={users}
+            roles={roles}
           />
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
@@ -515,12 +577,16 @@ function EditActivityDialog({
   kind,
   parentId,
   editing,
+  users,
+  roles,
   onOpenChange,
   onSaved,
 }: {
   kind: "onboarding" | "separation";
   parentId: string;
   editing: Activity | null;
+  users: AssignmentUser[];
+  roles: string[];
   onOpenChange: (v: boolean) => void;
   onSaved: (updated: Activity) => void;
 }) {
@@ -546,6 +612,8 @@ function EditActivityDialog({
             kind={kind}
             parentId={parentId}
             activity={editing}
+            users={users}
+            roles={roles}
             onCancel={() => onOpenChange(false)}
             onSaved={onSaved}
           />
@@ -559,12 +627,16 @@ function EditActivityInner({
   kind,
   parentId,
   activity,
+  users,
+  roles,
   onCancel,
   onSaved,
 }: {
   kind: "onboarding" | "separation";
   parentId: string;
   activity: Activity;
+  users: AssignmentUser[];
+  roles: string[];
   onCancel: () => void;
   onSaved: (updated: Activity) => void;
 }) {
@@ -589,6 +661,8 @@ function EditActivityInner({
         fieldErrors={state.fieldErrors}
         initial={activity}
         showRequiredToggle={kind === "onboarding"}
+        users={users}
+        roles={roles}
       />
       <DialogFooter>
         <Button type="button" variant="ghost" onClick={onCancel}>

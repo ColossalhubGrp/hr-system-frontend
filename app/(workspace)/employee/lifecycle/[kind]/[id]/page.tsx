@@ -11,7 +11,11 @@ import {
   type LifecycleRecord,
 } from "@/lib/frappe/lifecycle-write";
 import { LIFECYCLE_META, type LifecycleKind } from "@/lib/frappe/lifecycle";
-import { listLifecycleActivities } from "@/lib/frappe/lifecycle-activities";
+import {
+  listAssignmentRoles,
+  listAssignmentUsers,
+  listLifecycleActivities,
+} from "@/lib/frappe/lifecycle-activities";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { ActivitiesPanel } from "@/components/lifecycle/activities-panel";
 import {
@@ -68,15 +72,19 @@ export default async function LifecycleDetailPage({
   // Activities checklist only applies to Onboarding + Separation — the two
   // DocTypes whose child `activities` table backs the Employee Boarding
   // Activity rows. Transfers / Promotions / Grievances have no checklist.
-  const activities =
-    kind === "onboarding" || kind === "separation"
-      ? await listLifecycleActivities(
-          id,
-          kind === "onboarding" ? "Employee Onboarding" : "Employee Separation",
-        )
-      : [];
-  const access =
-    kind === "onboarding" || kind === "separation" ? await getMyAccess() : null;
+  const isBoardingKind = kind === "onboarding" || kind === "separation";
+  const [activities, access, assignableUsers, assignableRoles] =
+    isBoardingKind
+      ? await Promise.all([
+          listLifecycleActivities(
+            id,
+            kind === "onboarding" ? "Employee Onboarding" : "Employee Separation",
+          ),
+          getMyAccess(),
+          listAssignmentUsers(),
+          listAssignmentRoles(),
+        ])
+      : [[], null, [], []];
   const canEditActivities = Boolean(access?.isHrAdmin || access?.isHrAny);
 
   return (
@@ -109,6 +117,8 @@ export default async function LifecycleDetailPage({
           parentId={id}
           initial={activities}
           editable={canEditActivities}
+          users={assignableUsers}
+          roles={assignableRoles}
         />
       )}
 

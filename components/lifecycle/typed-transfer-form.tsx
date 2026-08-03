@@ -16,7 +16,7 @@ import {
 } from "@/components/employee/form-bits";
 import { createTypedTransferAction } from "@/app/(workspace)/employee/lifecycle/actions";
 import type { FormState } from "@/app/(workspace)/employee/lifecycle/actions";
-import type { TransferType } from "@/lib/frappe/transfer-types";
+import type { TransferTypeSummary } from "@/lib/frappe/transfer-types";
 
 type DirectoryEntry = {
   id: string;
@@ -48,7 +48,7 @@ export function TypedTransferForm({
   newValueOptions,
   cancelHref,
 }: {
-  type: TransferType;
+  type: TransferTypeSummary;
   employeeDirectory: DirectoryEntry[];
   defaultEmployee?: string;
   newValueOptions: Array<{ value: string; label: string }>;

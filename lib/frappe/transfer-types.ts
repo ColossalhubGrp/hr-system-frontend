@@ -146,3 +146,22 @@ export const TRANSFER_TYPES: Record<TransferTypeSlug, TransferType> = {
 export function isTransferTypeSlug(v: unknown): v is TransferTypeSlug {
   return typeof v === "string" && v in TRANSFER_TYPES;
 }
+
+/** Client-safe subset of TransferType — omits the icon component so a
+ *  server component can pass it to a client component across the RSC
+ *  boundary. React can't serialize function refs (including
+ *  LucideIcon), so anything that crosses to "use client" gets this
+ *  shape instead of the full TransferType. */
+export type TransferTypeSummary = Omit<TransferType, "icon">;
+
+export function toTransferTypeSummary(t: TransferType): TransferTypeSummary {
+  return {
+    slug: t.slug,
+    label: t.label,
+    description: t.description,
+    employeeField: t.employeeField,
+    formLabel: t.formLabel,
+    optionsSource: t.optionsSource,
+    ...(t.isCompanyMove ? { isCompanyMove: t.isCompanyMove } : {}),
+  };
+}

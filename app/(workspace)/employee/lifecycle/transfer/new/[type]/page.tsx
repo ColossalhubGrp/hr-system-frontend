@@ -7,6 +7,7 @@ import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import {
   TRANSFER_TYPES,
   isTransferTypeSlug,
+  toTransferTypeSummary,
   type TransferOptionSource,
 } from "@/lib/frappe/transfer-types";
 import { TypedTransferForm } from "@/components/lifecycle/typed-transfer-form";
@@ -63,7 +64,7 @@ export default async function NewTypedTransferPage({
       />
 
       <TypedTransferForm
-        type={type}
+        type={toTransferTypeSummary(type)}
         employeeDirectory={opts.employeeDirectory}
         defaultEmployee={searchParams.employee}
         newValueOptions={newValueOptions}

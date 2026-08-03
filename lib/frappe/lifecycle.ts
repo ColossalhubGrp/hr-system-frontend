@@ -92,7 +92,9 @@ const FIELDS_BY_KIND: Record<LifecycleKind, string[]> = {
     "employee_name",
     "separation_begins_on",
     "status",
-    "designation",
+    // Separation's DocType has no `designation` field (Onboarding does).
+    // Projecting it 417s with "Field not permitted in query: designation"
+    // and empties the whole list.
     "docstatus",
   ],
   transfer: [
@@ -215,7 +217,8 @@ function pickDetails(
     case "onboarding":
       return (r.designation as string | null) ?? null;
     case "separation":
-      return (r.designation as string | null) ?? null;
+      // No designation column on Separation — leave the details cell blank.
+      return null;
     case "transfer":
       return (r.new_company as string | null) ?? null;
     case "promotion":

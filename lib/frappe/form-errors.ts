@@ -17,6 +17,21 @@ export type StdFormState = {
  * it's already user-facing.
  */
 export function toFormState(err: unknown): StdFormState {
+  // Next.js signals redirect() / notFound() by THROWING internal errors that
+  // the framework catches at the outer boundary — the digest starts with
+  // NEXT_REDIRECT or equals NEXT_NOT_FOUND. If a Server Action's try/catch
+  // swallows one of these, the redirect never fires and the user sees a
+  // generic "Something went wrong" toast instead of the destination page.
+  // Re-throw so the framework can process it.
+  if (typeof err === "object" && err !== null) {
+    const digest = (err as { digest?: unknown }).digest;
+    if (
+      typeof digest === "string" &&
+      (digest.startsWith("NEXT_REDIRECT") || digest === "NEXT_NOT_FOUND")
+    ) {
+      throw err;
+    }
+  }
   if (err instanceof FrappeRequestError) {
     const detail = err.detail as
       | { _server_messages?: string; message?: string }

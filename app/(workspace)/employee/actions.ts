@@ -135,6 +135,18 @@ function parseForm(form: FormData): {
 }
 
 function toFormState(err: unknown): FormState {
+  // Never swallow Next.js redirect/notFound throws — the framework relies on
+  // them to bubble up from a Server Action. Catching without re-throwing
+  // turns a successful create into a "Something went wrong" toast.
+  if (typeof err === "object" && err !== null) {
+    const digest = (err as { digest?: unknown }).digest;
+    if (
+      typeof digest === "string" &&
+      (digest.startsWith("NEXT_REDIRECT") || digest === "NEXT_NOT_FOUND")
+    ) {
+      throw err;
+    }
+  }
   if (err instanceof FrappeRequestError) {
     const detail = err.detail as { _server_messages?: string; message?: string } | undefined;
     // Frappe surfaces validation errors through `_server_messages` — a

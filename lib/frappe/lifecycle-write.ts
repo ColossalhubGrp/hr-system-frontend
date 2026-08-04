@@ -285,28 +285,29 @@ export async function createTypedTransfer(input: TypedTransferInput): Promise<st
 }
 
 export async function createPromotion(input: PromotionInput): Promise<string> {
+  // Child rows use the SAME Employee Profile History shape as Transfer —
+  // {fieldname, new} — so Frappe's on_submit walks them via
+  // update_employee_work_history and setattr's the target field on the
+  // Employee record. Earlier writes used {property: "Designation"} with
+  // the wrong doctype key and Frappe silently dropped every row.
   const rows: Record<string, unknown>[] = [];
   if (input.new_designation) {
-    rows.push({
-      doctype: "Employee Property History",
-      property: "Designation",
-      new: input.new_designation,
-    });
+    rows.push({ fieldname: "designation", new: input.new_designation });
   }
   if (input.new_grade) {
-    rows.push({
-      doctype: "Employee Property History",
-      property: "Grade",
-      new: input.new_grade,
-    });
+    rows.push({ fieldname: "pay_grade", new: input.new_grade });
   }
   return insert({
     doctype: "Employee Promotion",
     employee: input.employee,
     promotion_date: input.promotion_date,
     company: input.company,
-    promotion_details: rows,
-    ...(input.reason ? { remarks: input.reason } : {}),
+    // The child table on Employee Promotion is `employee_promotion_details`,
+    // not `promotion_details` — the wrong key silently loses the change-set.
+    employee_promotion_details: rows,
+    // `reason` is a real Small Text field on the DocType (added alongside
+    // this); the old write used `remarks` which the DocType doesn't have.
+    ...(input.reason ? { reason: input.reason } : {}),
   });
 }
 

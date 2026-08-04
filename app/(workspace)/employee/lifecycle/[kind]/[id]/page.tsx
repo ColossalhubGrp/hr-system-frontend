@@ -414,7 +414,12 @@ function fieldsFor(
         { label: "Employee", value: empLink },
         { label: "Promotion date", value: (r.promotion_date as string) ?? null },
         { label: "Company", value: rec.company },
-        { label: "Reason", value: (r.remarks as string) ?? null, wide: true },
+        {
+          label: "Reason",
+          value:
+            (r.reason as string | null) ?? (r.remarks as string | null) ?? null,
+          wide: true,
+        },
         {
           label: "Status",
           value:

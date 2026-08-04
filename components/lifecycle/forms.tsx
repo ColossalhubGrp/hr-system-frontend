@@ -474,6 +474,20 @@ export function GrievanceForm({
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   useErrorToast(state);
+  // Against + Target are coupled: pick Against = Employee → Target lists
+  // employees; pick Department → Target lists departments; Company →
+  // companies. Reset Target when Against changes so a stale value from
+  // the previous type doesn't ride along on submit.
+  type AgainstType = "Employee" | "Department" | "Company";
+  const [againstType, setAgainstType] = useState<AgainstType>("Employee");
+  const [target, setTarget] = useState<string>("");
+  const targetOptions =
+    againstType === "Employee"
+      ? employeeOptions(opts.employeeDirectory)
+      : againstType === "Department"
+        ? opts.departments.map((d) => ({ value: d, label: d }))
+        : opts.companies.map((c) => ({ value: c, label: c }));
+
   return (
     <form action={dispatch} className="flex flex-col gap-5">
       <ErrorBanner msg={state.error} />
@@ -497,11 +511,33 @@ export function GrievanceForm({
           <TextInput id="grievance_raised_date" name="grievance_raised_date" type="date" />
         </Field>
         <Field label="Against" htmlFor="grievance_against_type" required error={fe.grievance_against_type}>
-          <SelectInput id="grievance_against_type" name="grievance_against_type" options={GRIEVANCE_AGAINST_TYPES} defaultValue="Employee" invalid={Boolean(fe.grievance_against_type)} />
+          <SelectInput
+            id="grievance_against_type"
+            name="grievance_against_type"
+            options={GRIEVANCE_AGAINST_TYPES}
+            value={againstType}
+            onChange={(e) => {
+              setAgainstType(e.target.value as AgainstType);
+              setTarget("");
+            }}
+            invalid={Boolean(fe.grievance_against_type)}
+          />
         </Field>
         <Field label="Target" htmlFor="grievance_against" required error={fe.grievance_against}
-               hint="Employee ID, Department name, or Company name (matching the Against type).">
-          <TextInput id="grievance_against" name="grievance_against" invalid={Boolean(fe.grievance_against)} />
+               hint={
+                 targetOptions.length === 0
+                   ? `No ${againstType.toLowerCase()}s available on this tenant.`
+                   : `Pick the ${againstType.toLowerCase()} this grievance is against.`
+               }>
+          <SelectInput
+            id="grievance_against"
+            name="grievance_against"
+            options={targetOptions}
+            value={target}
+            onChange={(e) => setTarget(e.target.value)}
+            placeholder={`— pick a ${againstType.toLowerCase()} —`}
+            invalid={Boolean(fe.grievance_against)}
+          />
         </Field>
         <Field label="Grievance type" htmlFor="grievance_type"
                hint="Free text — we'll auto-create if it's new.">

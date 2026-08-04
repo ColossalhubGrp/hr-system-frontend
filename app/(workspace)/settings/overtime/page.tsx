@@ -1,6 +1,13 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { ChevronLeft, Clock, Plus, CheckCircle2, XCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Plus,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { requireGroup } from "@/lib/frappe/require-role";
 import { listOvertimeRules } from "@/lib/frappe/overtime";
 
@@ -62,41 +69,71 @@ export default async function OvertimeRulesPage() {
                 <th className="px-4 py-2.5 text-left font-medium">Method</th>
                 <th className="px-4 py-2.5 text-left font-medium">Validity</th>
                 <th className="px-4 py-2.5 text-left font-medium">Active</th>
+                <th className="w-8" />
               </tr>
             </thead>
             <tbody className="divide-y divide-hairline">
-              {rules.map((r) => (
-                <tr key={r.id} className="hover:bg-canvas/40">
-                  <td className="px-4 py-3 align-top">
-                    <Link
-                      href={`/settings/overtime/${encodeURIComponent(r.id)}` as Route}
-                      className="font-medium text-ink-800 hover:underline"
-                    >
-                      {r.ruleName}
-                    </Link>
-                    <div className="text-xs text-ash-500">{r.id}</div>
-                  </td>
-                  <td className="px-4 py-3 text-ash-700">
-                    {r.thresholdValue} {unitFor(r.thresholdType)}
-                    <div className="text-xs text-ash-500">{r.thresholdType}</div>
-                  </td>
-                  <td className="px-4 py-3 text-ash-700">{r.calculationMethod}</td>
-                  <td className="px-4 py-3 text-xs text-ash-700">
-                    {fmtDate(r.validFrom)} → {fmtDate(r.validTo) ?? "open"}
-                  </td>
-                  <td className="px-4 py-3">
-                    {r.isActive ? (
-                      <span className="inline-flex items-center gap-1 rounded-chip bg-rise/10 px-2 py-0.5 text-[11px] font-medium text-rise">
-                        <CheckCircle2 className="h-3 w-3" /> Active
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-chip bg-ash-200/40 px-2 py-0.5 text-[11px] font-medium text-ash-700">
-                        <XCircle className="h-3 w-3" /> Disabled
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {rules.map((r) => {
+                const href = `/settings/overtime/${encodeURIComponent(r.id)}` as Route;
+                return (
+                  <tr key={r.id} className="group transition hover:bg-canvas/40">
+                    <td className="px-4 py-3 align-top">
+                      <Link
+                        href={href}
+                        className="block font-medium text-ink-800 hover:underline"
+                      >
+                        {r.ruleName}
+                      </Link>
+                      <Link
+                        href={href}
+                        className="block text-xs text-ash-500"
+                      >
+                        {r.id}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 align-top text-ash-700">
+                      <Link href={href} className="block">
+                        {r.thresholdValue} {unitFor(r.thresholdType)}
+                      </Link>
+                      <Link href={href} className="block text-xs text-ash-500">
+                        {r.thresholdType}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 align-top text-ash-700">
+                      <Link href={href} className="block">
+                        {r.calculationMethod}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 align-top text-xs text-ash-700">
+                      <Link href={href} className="block">
+                        {fmtDate(r.validFrom)} → {fmtDate(r.validTo) ?? "open"}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 align-top">
+                      <Link href={href} className="block">
+                        {r.isActive ? (
+                          <span className="inline-flex items-center gap-1 rounded-chip bg-rise/10 px-2 py-0.5 text-[11px] font-medium text-rise">
+                            <CheckCircle2 className="h-3 w-3" /> Active
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-chip bg-ash-200/40 px-2 py-0.5 text-[11px] font-medium text-ash-700">
+                            <XCircle className="h-3 w-3" /> Disabled
+                          </span>
+                        )}
+                      </Link>
+                    </td>
+                    <td className="px-4 py-3 text-right align-top">
+                      <Link
+                        href={href}
+                        className="inline-flex text-ash-400 group-hover:text-ash-700"
+                        aria-label={`Open ${r.ruleName}`}
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

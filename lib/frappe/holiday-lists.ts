@@ -75,3 +75,55 @@ export async function createHolidayList(input: HolidayListInput): Promise<string
   });
   return saved.name;
 }
+
+/** Holiday List autoname is `field:holiday_list_name` — DocType.name is the
+ *  human label. Rename via frappe.client.rename_doc when the label
+ *  changes, then set_value on the other editable fields. */
+export async function updateHolidayList(input: {
+  originalName: string;
+  holiday_list_name: string;
+  from_date: string;
+  to_date: string;
+  weekly_off?: string;
+}): Promise<string> {
+  const finalName = input.holiday_list_name.trim();
+  let currentName = input.originalName;
+  if (finalName && finalName !== input.originalName) {
+    await frappeCall<unknown>({
+      method: "frappe.client.rename_doc",
+      verb: "POST",
+      args: {
+        doctype: "Holiday List",
+        old_name: input.originalName,
+        new_name: finalName,
+        merge: 0,
+      },
+      as: "user",
+    });
+    currentName = finalName;
+  }
+  await frappeCall<unknown>({
+    method: "frappe.client.set_value",
+    verb: "POST",
+    args: {
+      doctype: "Holiday List",
+      name: currentName,
+      fieldname: {
+        from_date: input.from_date,
+        to_date: input.to_date,
+        weekly_off: input.weekly_off ?? "",
+      },
+    },
+    as: "user",
+  });
+  return currentName;
+}
+
+export async function deleteHolidayList(name: string): Promise<void> {
+  await frappeCall<unknown>({
+    method: "frappe.client.delete",
+    verb: "POST",
+    args: { doctype: "Holiday List", name },
+    as: "user",
+  });
+}

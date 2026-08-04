@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Field, SelectInput, TextInput } from "@/components/employee/form-bits";
 import { toast } from "@/components/ui/sonner";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import {
   createHolidayListAction,
   deleteHolidayListAction,
@@ -181,24 +182,19 @@ function HolidayRow({
   onRemoved: () => void;
 }) {
   const [removing, startRemove] = useTransition();
-  const remove = () => {
-    if (!canManage) return;
-    if (
-      !confirm(
-        `Delete "${row.name}"? Companies or employees pointing at this list will need to be repointed manually.`,
-      )
-    )
-      return;
-    startRemove(async () => {
-      const res = await deleteHolidayListAction(row.name);
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
-      }
-      toast.success(`Deleted "${row.name}".`);
-      onRemoved();
+  const runRemove = () =>
+    new Promise<void>((resolve) => {
+      startRemove(async () => {
+        const res = await deleteHolidayListAction(row.name);
+        if (!res.ok) {
+          toast.error(res.error);
+        } else {
+          toast.success(`Deleted "${row.name}".`);
+          onRemoved();
+        }
+        resolve();
+      });
     });
-  };
 
   return (
     <TableRow>
@@ -227,20 +223,27 @@ function HolidayRow({
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={remove}
-              disabled={removing}
-              className="text-muted-foreground hover:text-destructive"
-              title="Delete holiday list"
+            <ConfirmDialog
+              title={`Delete "${row.name}"?`}
+              description="Companies or employees pointing at this list will need to be repointed manually."
+              confirmLabel="Delete"
+              destructive
+              onConfirm={runRemove}
             >
-              {removing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Trash2 className="h-3.5 w-3.5" />
-              )}
-            </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={removing}
+                className="text-muted-foreground hover:text-destructive"
+                title="Delete holiday list"
+              >
+                {removing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </ConfirmDialog>
           </div>
         </TableCell>
       )}

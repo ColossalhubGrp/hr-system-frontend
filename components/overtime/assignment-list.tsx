@@ -14,6 +14,7 @@ import type {
   OvertimeAssignmentRow,
 } from "@/lib/frappe/overtime";
 import type { FormState } from "@/app/(workspace)/settings/overtime/actions";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 
 type CreateAction = (
   prev: FormState,
@@ -76,14 +77,15 @@ function AssignmentRow({
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
-  function handleDelete() {
-    if (!confirm(`Delete this ${a.appliesTo} assignment?`)) return;
-    setErr(null);
-    start(async () => {
-      const res = await onDelete();
-      if (res.error) setErr(res.error);
+  const runDelete = () =>
+    new Promise<void>((resolve) => {
+      setErr(null);
+      start(async () => {
+        const res = await onDelete();
+        if (res.error) setErr(res.error);
+        resolve();
+      });
     });
-  }
 
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm">
@@ -109,19 +111,26 @@ function AssignmentRow({
             <AlertCircle className="inline h-3 w-3" /> {err}
           </span>
         )}
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={pending}
-          className="inline-flex items-center gap-1 rounded-chip border border-fall/40 px-2 py-1 text-xs font-medium text-fall transition hover:bg-fall/5 focus-ring disabled:opacity-60"
+        <ConfirmDialog
+          title={`Delete this ${a.appliesTo} assignment?`}
+          description={`${a.target ?? "Everyone"} · priority ${a.priority}`}
+          confirmLabel="Remove"
+          destructive
+          onConfirm={runDelete}
         >
-          {pending ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            <Trash2 className="h-3 w-3" />
-          )}
-          Remove
-        </button>
+          <button
+            type="button"
+            disabled={pending}
+            className="inline-flex items-center gap-1 rounded-chip border border-fall/40 px-2 py-1 text-xs font-medium text-fall transition hover:bg-fall/5 focus-ring disabled:opacity-60"
+          >
+            {pending ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Trash2 className="h-3 w-3" />
+            )}
+            Remove
+          </button>
+        </ConfirmDialog>
       </div>
     </li>
   );

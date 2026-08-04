@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { toast } from "@/components/ui/sonner";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 
 // Allow both the inline-error pattern (`{error?: string} | undefined`)
 // and plain void-returning actions (the Belina-style Setup actions).
@@ -65,39 +66,55 @@ export function ActionButton({
   );
 }
 
-/** "Delete" — confirmed inline before firing, toasts on completion. */
+/** "Delete" — opens a shadcn AlertDialog for confirmation, toasts on
+ *  completion. Replaced the previous native window.confirm() so the
+ *  affordance matches the rest of the workspace. */
 export function DeleteButton({
   id,
   label = "Delete",
   confirmText = "Delete this?",
+  confirmDescription,
   action,
   successMessage,
 }: {
   id: string;
   label?: string;
   confirmText?: string;
+  confirmDescription?: string;
   action: ActionFn;
   successMessage?: string;
 }) {
   const [pending, start] = useTransition();
   return (
-    <button
-      type="button"
-      onClick={() => {
-        if (confirm(confirmText)) {
-          start(() => runWithToast(action, id, successMessage ?? "Deleted."));
-        }
-      }}
-      disabled={pending}
-      className={cn(
-        "text-xs font-semibold text-destructive hover:underline disabled:opacity-60",
-      )}
+    <ConfirmDialog
+      title={confirmText}
+      description={
+        confirmDescription ?? "This can't be undone."
+      }
+      confirmLabel={label}
+      destructive
+      onConfirm={() =>
+        new Promise<void>((resolve) => {
+          start(async () => {
+            await runWithToast(action, id, successMessage ?? "Deleted.");
+            resolve();
+          });
+        })
+      }
     >
-      {pending ? (
-        <Loader2 className="inline-block h-3 w-3 animate-spin" />
-      ) : (
-        label
-      )}
-    </button>
+      <button
+        type="button"
+        disabled={pending}
+        className={cn(
+          "text-xs font-semibold text-destructive hover:underline disabled:opacity-60",
+        )}
+      >
+        {pending ? (
+          <Loader2 className="inline-block h-3 w-3 animate-spin" />
+        ) : (
+          label
+        )}
+      </button>
+    </ConfirmDialog>
   );
 }

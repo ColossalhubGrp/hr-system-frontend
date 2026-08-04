@@ -187,16 +187,6 @@ function JobsPageContent() {
     }
   }
 
-  const handleDelete = async (name: string) => {
-    if (!confirm("Are you sure you want to delete this job posting?")) return
-    try {
-      await apiClient.deleteJobPosting(name)
-      loadJobs(statusFilter !== "all" ? statusFilter : undefined)
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete job posting")
-    }
-  }
-
   const openEditDialog = async (job: JobPosting) => {
     setEditingJob({ ...job })
     setEditDialogOpen(true)

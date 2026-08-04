@@ -31,6 +31,7 @@ import {
   TextInput,
 } from "@/components/employee/form-bits";
 import { toast } from "@/components/ui/sonner";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { cn } from "@/lib/cn";
 import {
   addActivityAction,
@@ -245,18 +246,18 @@ function ActivityRow({
     });
   };
 
-  const remove = () => {
-    if (!editable) return;
-    if (!confirm(`Remove "${activity.activityName}"?`)) return;
-    startRemove(async () => {
-      const res = await removeActivityAction(kind, parentId, activity.name);
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
-      }
-      onRemoved();
+  const runRemove = () =>
+    new Promise<void>((resolve) => {
+      startRemove(async () => {
+        const res = await removeActivityAction(kind, parentId, activity.name);
+        if (!res.ok) {
+          toast.error(res.error);
+        } else {
+          onRemoved();
+        }
+        resolve();
+      });
     });
-  };
 
   return (
     <li className="flex items-start gap-3 py-3">
@@ -346,20 +347,27 @@ function ActivityRow({
           >
             <Pencil className="h-3.5 w-3.5" />
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={remove}
-            disabled={removing}
-            className="text-muted-foreground hover:text-destructive"
-            title="Remove activity"
+          <ConfirmDialog
+            title={`Remove "${activity.activityName}"?`}
+            description="The row is deleted from the checklist; if all activities were complete beforehand the run stays Completed."
+            confirmLabel="Remove"
+            destructive
+            onConfirm={runRemove}
           >
-            {removing ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Trash2 className="h-3.5 w-3.5" />
-            )}
-          </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={removing}
+              className="text-muted-foreground hover:text-destructive"
+              title="Remove activity"
+            >
+              {removing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Trash2 className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          </ConfirmDialog>
         </div>
       )}
     </li>

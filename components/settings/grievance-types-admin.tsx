@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Field, TextArea, TextInput } from "@/components/employee/form-bits";
 import { toast } from "@/components/ui/sonner";
+import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import {
   createGrievanceTypeAction,
   deleteGrievanceTypeAction,
@@ -152,24 +153,22 @@ function TypeRow({
 }) {
   const [removing, startRemove] = useTransition();
 
-  const remove = () => {
-    if (!canManage) return;
-    if (
-      !confirm(
-        `Delete "${row.name}"? Existing grievances that used this type won't be renamed.`,
-      )
-    )
+  const remove = async () => {
+    const res = await deleteGrievanceTypeAction(row.name);
+    if (!res.ok) {
+      toast.error(res.error);
       return;
-    startRemove(async () => {
-      const res = await deleteGrievanceTypeAction(row.name);
-      if (!res.ok) {
-        toast.error(res.error);
-        return;
-      }
-      toast.success(`Deleted "${row.name}".`);
-      onRemoved();
-    });
+    }
+    toast.success(`Deleted "${row.name}".`);
+    onRemoved();
   };
+  const runRemove = () =>
+    new Promise<void>((resolve) => {
+      startRemove(async () => {
+        await remove();
+        resolve();
+      });
+    });
 
   return (
     <TableRow>
@@ -189,20 +188,27 @@ function TypeRow({
             >
               <Pencil className="h-3.5 w-3.5" />
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={remove}
-              disabled={removing}
-              className="text-muted-foreground hover:text-destructive"
-              title="Delete type"
+            <ConfirmDialog
+              title={`Delete "${row.name}"?`}
+              description="Existing grievances that used this type won't be renamed."
+              confirmLabel="Delete"
+              destructive
+              onConfirm={runRemove}
             >
-              {removing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Trash2 className="h-3.5 w-3.5" />
-              )}
-            </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={removing}
+                className="text-muted-foreground hover:text-destructive"
+                title="Delete type"
+              >
+                {removing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Trash2 className="h-3.5 w-3.5" />
+                )}
+              </Button>
+            </ConfirmDialog>
           </div>
         </TableCell>
       )}

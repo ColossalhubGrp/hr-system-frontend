@@ -42,6 +42,10 @@ type Opts = {
   /** Active employees in the tenant — feeds the Employee / Raised-by
    *  dropdowns so HR picks instead of memorising IDs. */
   employeeDirectory: DirectoryEntry[];
+  /** Existing Grievance Type records for the Grievance form's type
+   *  picker — free-text used to be allowed but the backend rejects
+   *  unknown values with "Could not find Grievance Type: X". */
+  grievanceTypes: string[];
   /** Optional pre-fill (e.g. when filing on behalf of a specific employee from
    *  their profile). */
   defaultEmployee?: string;
@@ -539,9 +543,21 @@ export function GrievanceForm({
             invalid={Boolean(fe.grievance_against)}
           />
         </Field>
-        <Field label="Grievance type" htmlFor="grievance_type"
-               hint="Free text — we'll auto-create if it's new.">
-          <TextInput id="grievance_type" name="grievance_type" placeholder="e.g. Workplace Conduct" />
+        <Field
+          label="Grievance type"
+          htmlFor="grievance_type"
+          hint={
+            opts.grievanceTypes.length === 0
+              ? "No grievance types configured on this tenant. Seed some via Frappe Desk (Grievance Type list) first."
+              : "Pick a category — the backend rejects free-text values."
+          }
+        >
+          <SelectInput
+            id="grievance_type"
+            name="grievance_type"
+            options={opts.grievanceTypes}
+            placeholder="— pick a type —"
+          />
         </Field>
         <Field label="Cause" htmlFor="cause_of_grievance" wide>
           <TextArea id="cause_of_grievance" name="cause_of_grievance" rows={2} />

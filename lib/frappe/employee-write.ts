@@ -37,6 +37,11 @@ export type EmployeeFormOptions = {
    *  dropdown on the Employee edit form; picking one + an inside-NEC
    *  grade auto-fills basic salary from that industry's schedule. */
   necIndustries: string[];
+  /** Existing Grievance Type records the tenant has seeded. The
+   *  Grievance form used to accept free-text and rely on auto-create,
+   *  but the backend rejects unknown values with "Could not find
+   *  Grievance Type: X" — so surface them as a dropdown instead. */
+  grievanceTypes: string[];
   /** Per-industry dues rates for the auto-computed NEC dues field.
    *  Empty when the tenant hasn't published a rate yet. */
   necIndustryInfo: Record<
@@ -103,6 +108,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     payGradeRows,
     necIndustryRows,
     employeeDirectory,
+    grievanceTypes,
   ] = await Promise.all([
     listCompaniesWithMinAge(),
     listNames("Department"),
@@ -114,6 +120,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     listPayGradesFull(),
     listNecIndustriesFull(),
     listEmployeeDirectory(),
+    listNames("Grievance Type"),
   ] as const);
   const companies = companyRows.map((r) => r.name);
   const companyMinHireAge: Record<string, number> = {};
@@ -157,6 +164,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
     necIndustries,
     necIndustryInfo,
     employeeDirectory,
+    grievanceTypes,
   };
 }
 

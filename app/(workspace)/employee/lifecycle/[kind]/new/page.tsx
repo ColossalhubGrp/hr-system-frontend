@@ -60,6 +60,7 @@ export default async function NewLifecyclePage({
     designations: opts.designations,
     payGrades: opts.payGrades,
     employeeDirectory: opts.employeeDirectory,
+    grievanceTypes: opts.grievanceTypes,
     defaultEmployee: searchParams.employee,
   };
 

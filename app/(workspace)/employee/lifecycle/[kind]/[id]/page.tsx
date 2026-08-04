@@ -10,6 +10,7 @@ import {
   getLifecycleRecord,
   type LifecycleRecord,
 } from "@/lib/frappe/lifecycle-write";
+import { frappeCall } from "@/lib/frappe/client";
 import { LIFECYCLE_META, type LifecycleKind } from "@/lib/frappe/lifecycle";
 import {
   listAssignmentRoles,
@@ -86,6 +87,33 @@ export default async function LifecycleDetailPage({
         ])
       : [[], null, [], []];
   const canEditActivities = Boolean(access?.isHrAdmin || access?.isHrAny);
+
+  // Grievance's "Against" field stores just an employee ID / department
+  // name / company name. When it points at an Employee, resolve the
+  // display name so the detail page reads "Jane Doe (HR-EMP-00394)"
+  // instead of a bare ID. Non-Employee targets already display fine as-is.
+  if (
+    kind === "grievance" &&
+    record.raw.grievance_against_party === "Employee" &&
+    record.raw.grievance_against
+  ) {
+    try {
+      const res = await frappeCall<{ employee_name: string | null }>({
+        method: "frappe.client.get_value",
+        args: {
+          doctype: "Employee",
+          filters: JSON.stringify({ name: String(record.raw.grievance_against) }),
+          fieldname: JSON.stringify(["employee_name"]),
+        },
+        as: "user",
+      });
+      if (res?.employee_name) {
+        record.raw.grievance_against_display = `${res.employee_name} (${record.raw.grievance_against})`;
+      }
+    } catch (err) {
+      console.error("[grievance] against-employee name resolve failed:", err);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -430,13 +458,34 @@ function fieldsFor(
                 : "Draft",
         },
       ];
-    case "grievance":
+    case "grievance": {
+      // Grievance stores its raiser in `raised_by` (Employee link), not
+      // `employee`, so the shared empLink was always null. Build a proper
+      // link off the raw field.
+      const raisedByRaw = (r.raised_by as string | null) ?? null;
+      const raisedByLink = raisedByRaw ? (
+        <Link
+          href={`/employee/${encodeURIComponent(raisedByRaw)}` as Route}
+          className="font-medium text-ink-800 hover:underline"
+        >
+          {raisedByRaw}
+        </Link>
+      ) : null;
+      // The date field is called `date` on the DocType even though the
+      // form labels it "Date raised"; and Against Type lives in
+      // `grievance_against_party`. Read the right columns.
+      const dateRaised = (r.date as string | null) ?? null;
+      const againstType = (r.grievance_against_party as string | null) ?? null;
+      const againstDisplay =
+        (r.grievance_against_display as string | null) ??
+        (r.grievance_against as string | null) ??
+        null;
       return [
         { label: "Subject", value: (r.subject as string) ?? null, wide: true },
-        { label: "Raised by", value: empLink },
-        { label: "Date raised", value: (r.grievance_raised_date as string) ?? null },
-        { label: "Against type", value: (r.grievance_against_type as string) ?? null },
-        { label: "Against", value: (r.grievance_against as string) ?? null },
+        { label: "Raised by", value: raisedByLink },
+        { label: "Date raised", value: dateRaised },
+        { label: "Against type", value: againstType },
+        { label: "Against", value: againstDisplay },
         { label: "Type", value: (r.grievance_type as string) ?? null },
         {
           label: "Cause",
@@ -450,5 +499,6 @@ function fieldsFor(
         },
         { label: "Status", value: rec.status },
       ];
+    }
   }
 }

@@ -209,42 +209,72 @@ export async function createMyLeaveApplication(
 
 export type MyPayslipRow = {
   id: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-  netPay: number | null;
+  /** URL suffix for the per-slip view — /payroll/<run>/payslip/<empId> */
+  payrollRun: string;
+  /** Human label — e.g. "August 2026". Falls back to the run ID. */
+  periodLabel: string;
+  payDate: string | null;
+  netUsd: number;
+  netZig: number;
 };
 
+/**
+ * Payslip history for the signed-in employee. This tenant runs
+ * payroll via the custom Belina flow — Payroll Run Payslip, not
+ * stock ERPNext Salary Slip — so we hit that doctype and lift the
+ * period label + pay date from the parent Payroll Run.
+ */
 export async function listMyPayslips(): Promise<MyPayslipRow[]> {
   const empId = await myEmployeeId();
   if (!empId) return [];
   try {
-    type Raw = {
+    type SlipRaw = {
       name: string;
-      start_date: string;
-      end_date: string;
-      status: string;
-      net_pay: number | null;
+      payroll_run: string;
+      net_usd: number | null;
+      net_zig: number | null;
+      creation: string;
     };
-    const rows = await frappeCall<Raw[]>({
+    const slips = await frappeCall<SlipRaw[]>({
       method: "frappe.client.get_list",
       args: {
-        doctype: "Salary Slip",
-        fields: ["name", "start_date", "end_date", "status", "net_pay"],
+        doctype: "Payroll Run Payslip",
+        fields: ["name", "payroll_run", "net_usd", "net_zig", "creation"],
         filters: JSON.stringify([["employee", "=", empId]]),
-        order_by: "end_date desc",
+        order_by: "creation desc",
         limit_page_length: 24,
       },
       as: "user",
     });
-    return rows.map((r) => ({
-      id: r.name,
-      startDate: r.start_date,
-      endDate: r.end_date,
-      status: r.status,
-      netPay: r.net_pay !== null ? Number(r.net_pay) : null,
-    }));
-  } catch {
+    if (slips.length === 0) return [];
+
+    const runNames = Array.from(new Set(slips.map((s) => s.payroll_run)));
+    type RunRaw = { name: string; period_label: string; pay_date: string | null };
+    const runs = await frappeCall<RunRaw[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Payroll Run",
+        fields: ["name", "period_label", "pay_date"],
+        filters: JSON.stringify([["name", "in", runNames]]),
+        limit_page_length: runNames.length,
+      },
+      as: "user",
+    }).catch(() => [] as RunRaw[]);
+    const runByName = new Map(runs.map((r) => [r.name, r]));
+
+    return slips.map((s) => {
+      const r = runByName.get(s.payroll_run);
+      return {
+        id: s.name,
+        payrollRun: s.payroll_run,
+        periodLabel: r?.period_label ?? s.payroll_run,
+        payDate: r?.pay_date ?? null,
+        netUsd: Number(s.net_usd ?? 0),
+        netZig: Number(s.net_zig ?? 0),
+      };
+    });
+  } catch (err) {
+    console.error("[listMyPayslips] fetch failed:", err);
     return [];
   }
 }

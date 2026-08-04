@@ -4,19 +4,17 @@ import { ChevronLeft, ReceiptText } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/list-shell";
-import { StatusPill } from "@/components/common/status-pill";
+import { readSession } from "@/lib/frappe/session";
+import { frappeCall } from "@/lib/frappe/client";
 import { listMyPayslips } from "@/lib/frappe/my-self-service";
 
 export const metadata = { title: "My payslips · Colossal HR" };
 
-const TONES: Record<string, string> = {
-  Submitted: "bg-rise/10 text-rise ring-rise/20",
-  Draft: "bg-amber-100 text-amber-800 ring-amber-200",
-  Cancelled: "bg-ash-100 text-ash-700 ring-ash-200",
-};
-
 export default async function MyPayslipsPage() {
-  const rows = await listMyPayslips();
+  const [rows, empId] = await Promise.all([
+    listMyPayslips(),
+    resolveMyEmployeeId(),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -46,15 +44,45 @@ export default async function MyPayslipsPage() {
             rowKey={(r) => r.id}
             empty="—"
             columns={[
-              { header: "Slip", cell: (r) => <span className="font-medium text-ash-900">{r.id}</span> },
-              { header: "Period start", cell: (r) => fmtDate(r.startDate), className: "text-ash-700" },
-              { header: "Period end", cell: (r) => fmtDate(r.endDate), className: "text-ash-700" },
-              { header: "Status", cell: (r) => <StatusPill status={r.status} tones={TONES} /> },
               {
-                header: "Net pay",
+                header: "Period",
+                cell: (r) => (
+                  <span className="font-medium text-ash-900">
+                    {r.periodLabel}
+                  </span>
+                ),
+              },
+              {
+                header: "Pay date",
+                className: "text-ash-700",
+                cell: (r) => (r.payDate ? fmtDate(r.payDate) : "—"),
+              },
+              {
+                header: "Net (USD)",
                 className: "text-ash-800 font-medium",
+                cell: (r) => (r.netUsd > 0 ? `US$${r.netUsd.toLocaleString()}` : "—"),
+              },
+              {
+                header: "Net (ZiG)",
+                className: "text-ash-800 font-medium",
+                cell: (r) => (r.netZig > 0 ? `ZiG ${r.netZig.toLocaleString()}` : "—"),
+              },
+              {
+                header: "",
+                className: "text-right",
                 cell: (r) =>
-                  r.netPay !== null ? r.netPay.toLocaleString() : "—",
+                  empId ? (
+                    <Link
+                      href={
+                        `/payroll/${encodeURIComponent(r.payrollRun)}/payslip/${encodeURIComponent(empId)}` as Route
+                      }
+                      className="text-xs font-medium text-primary hover:underline"
+                    >
+                      Open →
+                    </Link>
+                  ) : (
+                    "—"
+                  ),
               },
             ]}
           />
@@ -62,6 +90,30 @@ export default async function MyPayslipsPage() {
       </section>
     </div>
   );
+}
+
+/** The per-slip detail page lives under /payroll/<run>/payslip/<empId>,
+ *  so we need the employee id to build the row link. Mirrors what
+ *  listMyPayslips uses internally. */
+async function resolveMyEmployeeId(): Promise<string | null> {
+  const session = readSession();
+  if (!session.userId) return null;
+  try {
+    type Row = { name: string };
+    const rows = await frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee",
+        fields: ["name"],
+        filters: JSON.stringify([["user_id", "=", session.userId]]),
+        limit_page_length: 1,
+      },
+      as: "user",
+    });
+    return rows[0]?.name ?? null;
+  } catch {
+    return null;
+  }
 }
 
 function fmtDate(iso: string): string {

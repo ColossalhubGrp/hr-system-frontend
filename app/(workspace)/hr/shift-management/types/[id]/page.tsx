@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DeleteConfirm } from "@/components/common/delete-confirm";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { getShiftType, listShiftTypeLinks } from "@/lib/frappe/shifts";
+import { shiftColorHex } from "@/lib/shift-colors";
 import { deleteShiftTypeAction } from "../../actions";
 import {
   classifyRange,
@@ -99,13 +100,20 @@ export default async function ShiftTypeDetailPage({
             { label: "End time", value: trimTime(shift.endTime) },
             {
               label: "Color",
-              value: shift.color ? (
-                <span
-                  aria-label={`Color ${shift.color}`}
-                  className="inline-block h-5 w-5 rounded-md border border-hairline align-middle"
-                  style={{ backgroundColor: shift.color }}
-                />
-              ) : null,
+              value: (() => {
+                const hex = shiftColorHex(shift.color);
+                if (!hex) return null;
+                return (
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="inline-block h-5 w-5 rounded-md border border-hairline"
+                      style={{ backgroundColor: hex }}
+                    />
+                    <span>{shift.color}</span>
+                  </span>
+                );
+              })(),
             },
             { label: "Holiday list", value: shift.holidayList },
             {

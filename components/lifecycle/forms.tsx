@@ -548,7 +548,7 @@ export function GrievanceForm({
           htmlFor="grievance_type"
           hint={
             opts.grievanceTypes.length === 0
-              ? "No grievance types configured on this tenant. Seed some via Frappe Desk (Grievance Type list) first."
+              ? undefined
               : "Pick a category — the backend rejects free-text values."
           }
         >

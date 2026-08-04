@@ -10,6 +10,7 @@ import {
   Lock,
   CalendarDays,
   MapPin,
+  MessageSquareWarning,
 } from "lucide-react";
 import { getMyAccess } from "@/lib/frappe/roles";
 
@@ -51,6 +52,13 @@ const COMPANY_CARDS: SettingCardSpec[] = [
 ];
 
 const HR_CARDS: SettingCardSpec[] = [
+  {
+    href: "/settings/grievance-types",
+    icon: <MessageSquareWarning className="h-5 w-5" />,
+    title: "Grievance types",
+    desc: "Categories HR can classify a filed grievance under. Feeds the type dropdown on the grievance form.",
+    show: (a) => a.isHrAdmin || a.isHrAny,
+  },
   {
     href: "/settings/performance",
     icon: <Target className="h-5 w-5" />,

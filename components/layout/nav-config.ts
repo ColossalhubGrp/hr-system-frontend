@@ -185,17 +185,16 @@ export const NAV: NavItem[] = [
     requires: "DATA_STEWARD",
   },
 
-  // Admin workspace — site Administrator only (PLATFORM_OPERATOR =
-  // System Manager). Reference data + future bench-wide plumbing. HR
-  // roles don't see this in the sidebar; they use /settings/* for
-  // tenant-scoped configuration.
+  // Admin workspace — reference-data manager + (future) audit / IT tools.
+  // Gated on HR_ADMIN (same as the /admin layout). Individual pages
+  // hide platform-level masters from anyone below PLATFORM_OPERATOR.
   {
     label: "Admin",
     href: "/admin/references",
     icon: ShieldCheck,
-    requires: "PLATFORM_OPERATOR",
+    requires: "HR_ADMIN",
     children: [
-      { label: "Reference data", href: "/admin/references", requires: "PLATFORM_OPERATOR" },
+      { label: "Reference data", href: "/admin/references", requires: "HR_ADMIN" },
     ],
   },
 

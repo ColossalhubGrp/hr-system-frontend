@@ -1,17 +1,16 @@
 import { requireGroup } from "@/lib/frappe/require-role";
 
 /**
- * Admin workspace — site Administrator (System Manager) only. Hosts
- * bench-wide plumbing like the reference-data manager. HR roles get
- * their own manageable settings under /settings/*; this surface is
- * for the platform operator (Frappe's Administrator user or anyone
- * carrying System Manager).
+ * Admin workspace — IT-admin + HR-admin. Hosts the reference-data
+ * manager + future audit / IT tools. Individual pages can layer on
+ * tighter gating (e.g. the references page hides platform-level
+ * masters like AI Model Provider from anyone below PLATFORM_OPERATOR).
  */
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireGroup("PLATFORM_OPERATOR", "/admin");
+  await requireGroup("HR_ADMIN", "/admin");
   return <>{children}</>;
 }

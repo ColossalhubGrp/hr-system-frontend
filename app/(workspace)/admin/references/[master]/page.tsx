@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { describeMaster, listValues, myCompany } from "@/lib/references/server";
+import { getMyAccess } from "@/lib/frappe/roles";
 import {
   deactivateValueAction,
   upsertValueAction,
@@ -26,6 +27,9 @@ export const metadata = {
 
 type SP = { include_inactive?: string; search?: string };
 
+// Kept in sync with the same-named set in ../page.tsx.
+const PLATFORM_ONLY_MASTERS = new Set(["AI Model Provider"]);
+
 export default async function ReferenceMasterPage({
   params,
   searchParams,
@@ -34,11 +38,17 @@ export default async function ReferenceMasterPage({
   searchParams: SP;
 }) {
   const master = decodeURIComponent(params.master);
-  const [meta, company] = await Promise.all([
+  const [meta, company, access] = await Promise.all([
     describeMaster(master),
     myCompany(),
+    getMyAccess(),
   ]);
   if (!meta) notFound();
+  // Belt-and-braces: HR admins who type the URL directly still get a
+  // 404 for platform-only masters; the list page filters them out too.
+  if (PLATFORM_ONLY_MASTERS.has(master) && !access.isPlatformOperator) {
+    notFound();
+  }
 
   const isCompanyScoped = meta.fields.some((f) => f.fieldname === "company");
   const includeInactive = searchParams.include_inactive === "1";

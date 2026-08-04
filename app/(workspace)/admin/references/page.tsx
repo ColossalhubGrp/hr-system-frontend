@@ -13,14 +13,25 @@ import {
 import { PageHeader } from "@/components/common/page-header";
 import { listMasters, listAvailableModules } from "@/lib/references/server";
 import { NewMasterDialog } from "@/components/references/new-master-dialog";
+import { getMyAccess } from "@/lib/frappe/roles";
+
+// Masters that only site-level Administrators should see — platform
+// plumbing, not day-to-day HR reference data. Hidden from HR admins.
+const PLATFORM_ONLY_MASTERS = new Set(["AI Model Provider"]);
 
 export const metadata = { title: "Reference data · Admin · Colossal HR" };
 
 export default async function ReferenceMastersPage() {
-  const [masters, modules] = await Promise.all([
+  const [allMasters, modules, access] = await Promise.all([
     listMasters(),
     listAvailableModules(),
+    getMyAccess(),
   ]);
+  // HR admins don't need to see (or edit) platform-level masters like
+  // AI Model Provider — filter unless the caller is a platform operator.
+  const masters = access.isPlatformOperator
+    ? allMasters
+    : allMasters.filter((m) => !PLATFORM_ONLY_MASTERS.has(m.name));
   const grouped = groupByModule(masters);
   const totalRows = masters.reduce((s, m) => s + m.rowCount, 0);
 

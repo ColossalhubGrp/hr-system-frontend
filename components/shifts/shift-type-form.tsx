@@ -69,16 +69,28 @@ export function ShiftTypeForm({
           htmlFor="name"
           required
           error={fe.name}
-          hint={mode === "create" ? "e.g. Day Shift" : undefined}
+          hint={mode === "create" ? "e.g. Day Shift" : "Name can't be changed after creation."}
         >
-          <TextInput
-            id="name"
-            name="name"
-            defaultValue={initial?.name}
-            invalid={Boolean(fe.name)}
-            readOnly={mode === "edit"}
-            disabled={mode === "edit"}
-          />
+          {mode === "edit" ? (
+            <>
+              <TextInput
+                id="name-display"
+                defaultValue={initial?.name}
+                readOnly
+                disabled
+              />
+              {/* Disabled fields don't submit — carry the name in a hidden
+                  input so the action still sees it. */}
+              <input type="hidden" name="name" value={initial?.name ?? ""} />
+            </>
+          ) : (
+            <TextInput
+              id="name"
+              name="name"
+              defaultValue={initial?.name}
+              invalid={Boolean(fe.name)}
+            />
+          )}
         </Field>
         <Field label="Color" htmlFor="color">
           <ColorPickerField name="color" defaultValue={initial?.color} />

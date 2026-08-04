@@ -33,13 +33,22 @@ function fmtPeriodForFilename(label: string, payDate: string): string {
 
 export default async function PayslipPage({
   params,
+  searchParams,
 }: {
   params: { id: string; empId: string };
+  searchParams: { from?: string };
 }) {
   const runId = decodeURIComponent(params.id);
   const empId = decodeURIComponent(params.empId);
   const data = await getPayslipDetail(runId, empId);
   if (!data) notFound();
+  // Employees landing here from /me/payslips should go BACK to their own
+  // payslip list, not the payroll admin's pay-run view (which they may
+  // not even have permission to see). Payroll admins clicking through
+  // from /payroll/<run> keep the pay-run destination.
+  const fromMe = searchParams?.from === "me";
+  const backHref = fromMe ? "/me/payslips" : `/payroll/${encodeURIComponent(runId)}`;
+  const backLabel = fromMe ? "← Back to my payslips" : "← Back to pay run";
 
   const { run, company, employee, slip, earnings, deductions } = data;
   const pensionZig = employee.basic_zig * employee.pension_pct;
@@ -59,10 +68,10 @@ export default async function PayslipPage({
     <div className="mx-auto max-w-3xl flex flex-col gap-4">
       <div className="flex items-center justify-between print:hidden">
         <Link
-          href={`/payroll/${encodeURIComponent(runId)}` as Route}
+          href={backHref as Route}
           className="text-sm font-semibold text-primary hover:underline"
         >
-          ← Back to pay run
+          {backLabel}
         </Link>
         <DownloadPayslipButton targetId="payslip-card" filename={filename} />
       </div>

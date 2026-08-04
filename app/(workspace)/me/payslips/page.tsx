@@ -74,7 +74,7 @@ export default async function MyPayslipsPage() {
                   empId ? (
                     <Link
                       href={
-                        `/payroll/${encodeURIComponent(r.payrollRun)}/payslip/${encodeURIComponent(empId)}` as Route
+                        `/payroll/${encodeURIComponent(r.payrollRun)}/payslip/${encodeURIComponent(empId)}?from=me` as Route
                       }
                       className="text-xs font-medium text-primary hover:underline"
                     >

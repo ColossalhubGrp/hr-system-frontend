@@ -240,65 +240,100 @@ export default async function MyWorkspacePage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <ActionCard
-          href={`/me/leave/new`}
-          title="Apply for leave"
-          description="Pick dates, attach a note, and route it to your approver."
-          icon={CalendarDays}
-        />
-        <ActionCard
-          href={profileHref}
-          title="My profile"
-          description="View your designation, contact info, and shift policy."
-          icon={UserRound}
-        />
-        <ActionCard
-          href={`/me/payslips`}
-          title="My payslips"
-          description="Recent salary slips, with downloads when available."
-          icon={ReceiptText}
-        />
-        <ActionCard
-          href={`/me/goals`}
-          title="My goals"
-          description="Track open goals + key results for the active cycle."
-          icon={ListChecks}
-        />
-        <ActionCard
-          href={profileHref + "?tab=attendance"}
-          title="My attendance"
-          description="Last 28 days of check-ins, status, and policy."
-          icon={CalendarCheck}
-        />
-      </div>
+      <ActionsTable
+        rows={[
+          {
+            href: `/me/leave/new`,
+            title: "Apply for leave",
+            description: "Pick dates, attach a note, and route it to your approver.",
+            icon: CalendarDays,
+          },
+          {
+            href: profileHref,
+            title: "My profile",
+            description: "View your designation, contact info, and shift policy.",
+            icon: UserRound,
+          },
+          {
+            href: `/me/payslips`,
+            title: "My payslips",
+            description: "Recent salary slips, with downloads when available.",
+            icon: ReceiptText,
+          },
+          {
+            href: `/me/goals`,
+            title: "My goals",
+            description: "Track open goals + key results for the active cycle.",
+            icon: ListChecks,
+          },
+          {
+            href: (profileHref + "?tab=attendance") as Route,
+            title: "My attendance",
+            description: "Last 28 days of check-ins, status, and policy.",
+            icon: CalendarCheck,
+          },
+        ]}
+      />
     </div>
   );
 }
 
-function ActionCard({
-  href,
-  title,
-  description,
-  icon: Icon,
-}: {
+type ActionRow = {
   href: Route | string;
   title: string;
   description: string;
   icon: React.ComponentType<{ className?: string }>;
-}) {
+};
+
+function ActionsTable({ rows }: { rows: ActionRow[] }) {
   return (
-    <Link
-      href={href as Route}
-      className="card flex items-start gap-3 p-5 transition hover:border-ink-200 hover:shadow-card focus-ring"
-    >
-      <Icon className="mt-0.5 h-5 w-5 text-ink-700" />
-      <div className="flex-1">
-        <p className="text-sm font-semibold text-ink-900">{title}</p>
-        <p className="mt-1 text-xs text-ash-600">{description}</p>
-      </div>
-      <ChevronRight className="h-4 w-4 text-ash-400" />
-    </Link>
+    <section className="card overflow-hidden p-0">
+      <table className="w-full text-sm">
+        <thead className="border-b border-hairline text-[10px] uppercase tracking-wide text-ash-500">
+          <tr>
+            <th className="px-4 py-2 text-left font-semibold">Shortcut</th>
+            <th className="px-4 py-2 text-left font-semibold">Description</th>
+            <th className="px-4 py-2 text-right font-semibold" />
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => {
+            const Icon = r.icon;
+            return (
+              <tr
+                key={r.title}
+                className="group border-b border-hairline last:border-b-0 transition hover:bg-canvas/50"
+              >
+                <td className="px-4 py-3 align-top font-medium">
+                  <Link
+                    href={r.href as Route}
+                    className="flex items-center gap-2 text-ink-900 hover:underline"
+                  >
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    {r.title}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 align-top text-xs text-ash-600">
+                  <Link href={r.href as Route} className="block">
+                    {r.description}
+                  </Link>
+                </td>
+                <td className="px-4 py-3 text-right align-top">
+                  <Link
+                    href={r.href as Route}
+                    className="inline-flex text-ash-400 group-hover:text-ash-700"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
   );
 }
 

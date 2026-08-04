@@ -185,7 +185,14 @@ async function Types() {
         {
           header: "Name",
           cell: (t) => (
-            <span className="font-medium text-ash-900">{t.name}</span>
+            <Link
+              href={
+                `/hr/shift-management/types/${encodeURIComponent(t.name)}` as Route
+              }
+              className="font-medium text-ash-900 hover:text-ink-900 hover:underline underline-offset-2 focus-ring rounded-sm"
+            >
+              {t.name}
+            </Link>
           ),
         },
         {

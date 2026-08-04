@@ -80,11 +80,7 @@ export function ShiftTypeForm({
             disabled={mode === "edit"}
           />
         </Field>
-        <Field
-          label="Color"
-          htmlFor="color-hex"
-          hint="Pick a preset or open the swatch. Optional."
-        >
+        <Field label="Color" htmlFor="color">
           <ColorPickerField name="color" defaultValue={initial?.color} />
         </Field>
         <Field

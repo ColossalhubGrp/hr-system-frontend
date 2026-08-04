@@ -1,11 +1,11 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Clock, MapPin, Pencil } from "lucide-react";
+import { CalendarClock, ChevronLeft, Clock, MapPin, Pencil, Users } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { DeleteConfirm } from "@/components/common/delete-confirm";
 import { FieldGrid } from "@/components/employee/field-grid";
-import { getShiftType } from "@/lib/frappe/shifts";
+import { getShiftType, listShiftTypeLinks } from "@/lib/frappe/shifts";
 import { deleteShiftTypeAction } from "../../actions";
 import {
   classifyRange,
@@ -44,9 +44,17 @@ export default async function ShiftTypeDetailPage({
     sunday: shift.sundayDayMultiplier,
     holiday: shift.holidayDayMultiplier,
   };
-  const holidays = await fetchHolidayDates(shift.holidayList);
+  const [holidays, links] = await Promise.all([
+    fetchHolidayDates(shift.holidayList),
+    listShiftTypeLinks(id).catch(() => ({
+      defaultShiftEmployees: [],
+      assignments: [],
+    })),
+  ]);
   const today = isoToday();
   const schedule = classifyRange(today, 14, holidays, policy);
+  const hasLinks =
+    links.defaultShiftEmployees.length > 0 || links.assignments.length > 0;
 
   const editHref = `/hr/shift-management/types/${encodeURIComponent(id)}/edit` as Route;
   const onDelete = deleteShiftTypeAction.bind(null, id);
@@ -89,7 +97,16 @@ export default async function ShiftTypeDetailPage({
           fields={[
             { label: "Start time", value: trimTime(shift.startTime) },
             { label: "End time", value: trimTime(shift.endTime) },
-            { label: "Color", value: shift.color },
+            {
+              label: "Color",
+              value: shift.color ? (
+                <span
+                  aria-label={`Color ${shift.color}`}
+                  className="inline-block h-5 w-5 rounded-md border border-hairline align-middle"
+                  style={{ backgroundColor: shift.color }}
+                />
+              ) : null,
+            },
             { label: "Holiday list", value: shift.holidayList },
             {
               label: "Auto attendance",
@@ -207,6 +224,122 @@ export default async function ShiftTypeDetailPage({
             </li>
           ))}
         </ol>
+      </section>
+
+      <section className="card p-6">
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-ash-500">
+          What&rsquo;s linked to this shift
+        </h2>
+        <p className="mb-5 text-xs text-ash-500">
+          Frappe blocks deletion while anything below still references{" "}
+          <span className="font-medium text-ash-700">{shift.id}</span>. Clear
+          the links first — remove the default shift on the employee, or
+          cancel / delete the assignment — then retry Delete.
+        </p>
+
+        {!hasLinks ? (
+          <p className="text-sm text-ash-500">
+            Nothing links here. This shift type can be deleted safely.
+          </p>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <div>
+              <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ash-600">
+                <Users className="h-3.5 w-3.5" />
+                Employees with this as their default shift
+                <span className="rounded-chip bg-ash-100 px-1.5 py-0.5 text-[10px] font-medium text-ash-700">
+                  {links.defaultShiftEmployees.length}
+                </span>
+              </h3>
+              {links.defaultShiftEmployees.length === 0 ? (
+                <p className="text-xs text-ash-500">
+                  None. No employee falls back to this shift.
+                </p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-hairline overflow-hidden rounded-card border border-hairline">
+                  {links.defaultShiftEmployees.map((e) => (
+                    <li
+                      key={e.employee}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
+                      <div className="flex min-w-0 flex-col">
+                        <Link
+                          href={
+                            `/employee/${encodeURIComponent(e.employee)}` as Route
+                          }
+                          className="font-medium text-ink-900 hover:underline underline-offset-2"
+                        >
+                          {e.employeeName ?? e.employee}
+                        </Link>
+                        <span className="text-[11px] text-ash-500">
+                          {e.employee}
+                          {e.department ? ` · ${e.department}` : ""}
+                          {e.status ? ` · ${e.status}` : ""}
+                        </span>
+                      </div>
+                      <Link
+                        href={
+                          `/employee/${encodeURIComponent(e.employee)}/edit` as Route
+                        }
+                        className="rounded-chip border border-hairline bg-surface px-2.5 py-1 text-[11px] font-medium text-ash-700 transition hover:bg-canvas focus-ring"
+                      >
+                        Change default shift
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div>
+              <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-ash-600">
+                <CalendarClock className="h-3.5 w-3.5" />
+                Shift assignments referencing this type
+                <span className="rounded-chip bg-ash-100 px-1.5 py-0.5 text-[10px] font-medium text-ash-700">
+                  {links.assignments.length}
+                </span>
+              </h3>
+              {links.assignments.length === 0 ? (
+                <p className="text-xs text-ash-500">
+                  None. No assignment references this shift type.
+                </p>
+              ) : (
+                <ul className="flex flex-col divide-y divide-hairline overflow-hidden rounded-card border border-hairline">
+                  {links.assignments.map((a) => (
+                    <li
+                      key={a.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
+                      <div className="flex min-w-0 flex-col">
+                        <Link
+                          href={
+                            `/hr/shift-management/assignments/${encodeURIComponent(a.id)}` as Route
+                          }
+                          className="font-medium text-ink-900 hover:underline underline-offset-2"
+                        >
+                          {a.employeeName ?? a.employee}
+                        </Link>
+                        <span className="text-[11px] text-ash-500">
+                          {a.employee} · {a.startDate}
+                          {a.endDate ? ` → ${a.endDate}` : " → open-ended"} ·{" "}
+                          {a.status}
+                        </span>
+                      </div>
+                      <Link
+                        href={
+                          `/hr/shift-management/assignments/${encodeURIComponent(a.id)}` as Route
+                        }
+                        className="rounded-chip border border-hairline bg-surface px-2.5 py-1 text-[11px] font-medium text-ash-700 transition hover:bg-canvas focus-ring"
+                      >
+                        Open
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
       </section>
 
       <DeleteConfirm

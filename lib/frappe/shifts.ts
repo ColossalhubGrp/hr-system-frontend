@@ -288,6 +288,109 @@ function ensureHms(t: string): string {
   return t;
 }
 
+/**
+ * Everything that stops a Shift Type from being deleted, grouped so the
+ * detail page can render "here's who's using this, click through to
+ * unassign or move them" instead of the opaque Frappe error we get today
+ * ("linked with Employee HR-EMP-…").
+ *
+ * Frappe's link-integrity check fires on two paths:
+ *   1. `Employee.default_shift` — the employee's fallback shift.
+ *   2. `Shift Assignment.shift_type` — an active or scheduled assignment.
+ */
+export type ShiftTypeLinkedEmployee = {
+  employee: string;
+  employeeName: string | null;
+  status: string | null;
+  department: string | null;
+};
+
+export type ShiftTypeLinkedAssignment = {
+  id: string;
+  employee: string;
+  employeeName: string | null;
+  startDate: string;
+  endDate: string | null;
+  status: string;
+  docstatus: 0 | 1 | 2;
+};
+
+export type ShiftTypeLinks = {
+  defaultShiftEmployees: ShiftTypeLinkedEmployee[];
+  assignments: ShiftTypeLinkedAssignment[];
+};
+
+export async function listShiftTypeLinks(
+  shiftTypeId: string,
+): Promise<ShiftTypeLinks> {
+  type RawEmp = {
+    name: string;
+    employee_name: string | null;
+    status: string | null;
+    department: string | null;
+  };
+  type RawAssign = {
+    name: string;
+    employee: string;
+    employee_name: string | null;
+    start_date: string;
+    end_date: string | null;
+    status: string;
+    docstatus: 0 | 1 | 2;
+  };
+
+  const [empRaw, assignRaw] = await Promise.all([
+    frappeCall<RawEmp[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee",
+        fields: ["name", "employee_name", "status", "department"],
+        filters: JSON.stringify([["default_shift", "=", shiftTypeId]]),
+        order_by: "employee_name asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    }).catch(() => [] as RawEmp[]),
+    frappeCall<RawAssign[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Shift Assignment",
+        fields: [
+          "name",
+          "employee",
+          "employee_name",
+          "start_date",
+          "end_date",
+          "status",
+          "docstatus",
+        ],
+        filters: JSON.stringify([["shift_type", "=", shiftTypeId]]),
+        order_by: "start_date desc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    }).catch(() => [] as RawAssign[]),
+  ]);
+
+  return {
+    defaultShiftEmployees: empRaw.map((e) => ({
+      employee: e.name,
+      employeeName: e.employee_name,
+      status: e.status,
+      department: e.department,
+    })),
+    assignments: assignRaw.map((a) => ({
+      id: a.name,
+      employee: a.employee,
+      employeeName: a.employee_name,
+      startDate: a.start_date,
+      endDate: a.end_date,
+      status: a.status,
+      docstatus: a.docstatus,
+    })),
+  };
+}
+
 // --- Shift Assignment ----------------------------------------------------
 
 export type ShiftAssignmentFull = ShiftAssignment & {

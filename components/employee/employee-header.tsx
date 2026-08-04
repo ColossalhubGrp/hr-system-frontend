@@ -16,10 +16,17 @@ export function EmployeeHeader({
   emp,
   canIssueLetters = false,
   canEdit = false,
+  backHref = "/employee",
+  backLabel = "Back to directory",
 }: {
   emp: EmployeeFull;
   canIssueLetters?: boolean;
   canEdit?: boolean;
+  /** Overrideable when the viewer arrived from somewhere other than
+   *  /employee (e.g. the employee looking at their own profile from
+   *  /me → back should go to /me, not the directory they can't see). */
+  backHref?: string;
+  backLabel?: string;
 }) {
   const editHref = `/employee/${encodeURIComponent(emp.id)}/edit` as Route;
   const lettersHref = `/employee/${encodeURIComponent(emp.id)}/letters` as Route;
@@ -28,11 +35,11 @@ export function EmployeeHeader({
     <section className="card flex flex-col gap-5 p-6">
       <div className="flex items-center justify-between gap-3">
         <Link
-          href={"/employee" as Route}
+          href={backHref as Route}
           className="inline-flex w-fit items-center gap-1 rounded-chip px-2 py-1 text-xs font-medium text-ash-500 transition hover:bg-canvas focus-ring"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Back to directory
+          {backLabel}
         </Link>
         <div className="flex items-center gap-2">
           {canIssueLetters && (

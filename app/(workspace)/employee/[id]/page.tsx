@@ -91,6 +91,13 @@ export default async function EmployeeDetailPage({
         emp={emp}
         canIssueLetters={access.isHrAny}
         canEdit={access.isHrAny}
+        // Non-HR viewers only reach this page for their OWN profile
+        // (via the /me shortcut) — send them back to /me rather than
+        // /employee (which they'd get bounced from anyway).
+        backHref={isOwn && !access.isHrAny ? "/me" : "/employee"}
+        backLabel={
+          isOwn && !access.isHrAny ? "Back to my workspace" : "Back to directory"
+        }
       />
       <EmployeeTabs basePath={basePath} active={activeTab} />
       <TabPanel

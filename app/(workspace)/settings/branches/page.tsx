@@ -2,37 +2,32 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, MapPin } from "lucide-react";
 import { requireGroup } from "@/lib/frappe/require-role";
+import { getMyAccess } from "@/lib/frappe/roles";
 import { listBranches } from "@/lib/frappe/branches";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { CreateBranchButton } from "@/components/settings/create-branch-button";
+import { Card, CardContent } from "@/components/ui/card";
+import { BranchesAdmin } from "@/components/settings/branches-admin";
 
 export const metadata = {
   title: "Branches · Settings · Colossal HR",
 };
 
 /**
- * HR-admin admin for tenant Branches. Lists existing branches + lets
- * an admin create a new one from a modal. Employees can then pick
- * the branch on their edit form (Overview tab).
+ * HR-admin surface for tenant Branches — full CRUD via the shared
+ * BranchesAdmin client component. HR_ANY can view; HR_ADMIN /
+ * IT_ADMIN see the New / Edit / Delete controls.
  */
 export default async function BranchesPage() {
-  await requireGroup("HR_ADMIN", "/settings/branches");
-  const branches = await listBranches();
+  await requireGroup("HR_ANY", "/settings/branches");
+  const [branches, access] = await Promise.all([
+    listBranches(),
+    getMyAccess(),
+  ]);
+  const canManage = Boolean(access.isHrAdmin || access.isItAdmin);
+  const initial = branches.map((b) => ({
+    name: b.name,
+    weeklyLaborBudget: b.weeklyLaborBudget,
+  }));
 
   return (
     <div className="flex flex-col gap-5">
@@ -48,65 +43,24 @@ export default async function BranchesPage() {
         </Link>
       </Button>
 
-      <header className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5" />
-            Settings · Branches
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Branches on this tenant
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {branches.length} branch{branches.length === 1 ? "" : "es"}.
-            Employees pick a Branch on their profile — assign one per Employee
-            when the business runs from more than a single site.
-          </p>
+      <header className="flex flex-col gap-1">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <MapPin className="h-3.5 w-3.5" />
+          Settings · Branches
         </div>
-        <CreateBranchButton />
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Branches on this tenant
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {branches.length} branch{branches.length === 1 ? "" : "es"}. Employees
+          pick a Branch on their profile — assign one per Employee when the
+          business runs from more than a single site.
+        </p>
       </header>
 
       <Card>
-        <CardHeader className="sr-only">
-          <CardTitle>Branch rows</CardTitle>
-          <CardDescription>
-            Every branch this tenant can assign to an employee.
-          </CardDescription>
-        </CardHeader>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Branch</TableHead>
-                <TableHead className="text-right">Weekly labor budget</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {branches.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={2}
-                    className="py-8 text-center text-sm text-muted-foreground"
-                  >
-                    No branches yet. Click <b>New branch</b> above.
-                  </TableCell>
-                </TableRow>
-              ) : (
-                branches.map((b) => (
-                  <TableRow key={b.id}>
-                    <TableCell className="align-top font-medium">
-                      {b.name}
-                    </TableCell>
-                    <TableCell className="text-right align-top text-muted-foreground">
-                      {b.weeklyLaborBudget > 0
-                        ? b.weeklyLaborBudget.toLocaleString()
-                        : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+          <BranchesAdmin initial={initial} canManage={canManage} />
         </CardContent>
       </Card>
     </div>

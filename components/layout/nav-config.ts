@@ -76,9 +76,8 @@ export const NAV: NavItem[] = [
 
   {
     label: "Recruitment",
-    // Land on the HR-side jobs panel — the most-used recruitment surface —
-    // rather than the dashboard, which loads heavier widgets.
-    href: "/recruitment/hr/jobs",
+    // Land on the HR Dashboard — the overview HR opens first each day.
+    href: "/recruitment/hr/dashboard",
     icon: Briefcase,
     requires: "RECRUITER",
     children: [

@@ -114,16 +114,25 @@ export default async function AlumniHome() {
                 className="flex items-center justify-between py-3 text-sm"
               >
                 <div>
-                  <div className="font-medium text-ink-800">{s.id}</div>
+                  <div className="font-medium text-ink-800">{s.periodLabel}</div>
                   <div className="text-xs text-ash-500">
-                    {fmtDate(s.startDate)} — {fmtDate(s.endDate)}
+                    {s.payDate ? fmtDate(s.payDate) : s.payrollRun}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-ash-500">{s.status}</div>
-                  {s.netPay !== null && (
+                  {s.netUsd > 0 && (
                     <div className="font-semibold text-ink-800">
-                      {s.netPay.toLocaleString(undefined, {
+                      US$
+                      {s.netUsd.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
+                    </div>
+                  )}
+                  {s.netZig > 0 && (
+                    <div className="text-xs text-ash-600">
+                      ZiG{" "}
+                      {s.netZig.toLocaleString(undefined, {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}

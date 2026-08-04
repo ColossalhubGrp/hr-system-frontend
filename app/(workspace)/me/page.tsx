@@ -192,42 +192,40 @@ export default async function MyWorkspacePage() {
         subtitle={[emp.designation, emp.department].filter(Boolean).join(" · ")}
       />
 
-      <section className="card p-6">
-        <div className="flex flex-col gap-1">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-ash-500">
-            Today
-          </h2>
-          <p className="text-xs text-ash-500">
-            {initialClockState === "in"
-              ? "You're currently clocked in."
-              : initialClockState === "out"
-                ? "You clocked out earlier today."
-                : "You haven't clocked in yet today."}
-          </p>
-        </div>
-
-        <div className="mt-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-5">
+        <section className="card flex flex-col gap-3 p-4 lg:col-span-2">
+          <div className="flex flex-col gap-0.5">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-ash-500">
+              Today
+            </h2>
+            <p className="text-[11px] text-ash-500">
+              {initialClockState === "in"
+                ? "You're currently clocked in."
+                : initialClockState === "out"
+                  ? "You clocked out earlier today."
+                  : "You haven't clocked in yet today."}
+            </p>
+          </div>
           <InlineClock
             action={clockInOrOutAction}
             geofenceExempt={Boolean(emp.geofence_exempt)}
             defaultShift={emp.default_shift}
             initialState={initialClockState}
           />
-        </div>
-      </section>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        </section>
         <SummaryTile
           label="Open leave requests"
           value={pendingLeaves.toString()}
           icon={CalendarDays}
           tone={pendingLeaves > 0 ? "amber" : "ink"}
+          compact
         />
         <SummaryTile
           label="Open goals"
           value={openGoals.toString()}
           icon={Target}
           tone="ink"
+          compact
         />
         <SummaryTile
           label="Today's status"
@@ -238,6 +236,7 @@ export default async function MyWorkspacePage() {
               ? "rise"
               : "ash"
           }
+          compact
         />
       </div>
 

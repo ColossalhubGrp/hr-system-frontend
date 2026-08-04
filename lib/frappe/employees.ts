@@ -145,15 +145,16 @@ export async function listEmployees(opts: {
     : undefined;
 
   // Frappe v15 only lets us pass fields it marks `in_list_view` here. Fields
-  // like designation / company_email / cell_number trip "Field not permitted
-  // in query" — we surface those on the detail page (frappe.client.get) and
-  // keep the directory to the safe subset.
+  // like company_email / cell_number trip "Field not permitted in query"
+  // and are still surfaced on the detail page (frappe.client.get). Anything
+  // in this list must be in_list_view on the DocType.
   const args: ListArgs = {
     doctype: "Employee",
     fields: [
       "name",
       "employee_name",
       "department",
+      "designation",
       "status",
       "image",
       "date_of_joining",
@@ -237,6 +238,7 @@ type RawEmployeeRow = {
   name: string;
   employee_name: string | null;
   department: string | null;
+  designation: string | null;
   status: string | null;
   image: string | null;
   date_of_joining: string | null;
@@ -297,7 +299,7 @@ function toRow(r: RawEmployeeRow): EmployeeListRow {
   return {
     id: r.name,
     name: r.employee_name ?? r.name,
-    designation: null,
+    designation: r.designation,
     department: r.department,
     status: (r.status ?? "Active") as EmployeeStatus,
     imageUrl: r.image,

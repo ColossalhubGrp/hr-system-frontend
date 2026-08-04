@@ -1,8 +1,15 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Database, ArrowRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Database, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { PageHeader } from "@/components/common/page-header";
 import { listMasters, listAvailableModules } from "@/lib/references/server";
 import { NewMasterDialog } from "@/components/references/new-master-dialog";
@@ -48,32 +55,52 @@ export default async function ReferenceMastersPage() {
             <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {module}
             </h2>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((m) => (
-                <Link
-                  key={m.name}
-                  href={`/admin/references/${encodeURIComponent(m.name)}` as Route}
-                  className="group rounded-xl border bg-card p-4 transition hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-medium text-foreground truncate">
-                        {m.name}
-                      </p>
-                      {m.description && (
-                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                          {m.description}
-                        </p>
-                      )}
-                    </div>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-foreground" />
-                  </div>
-                  <div className="mt-3 flex items-center gap-2">
-                    <Badge variant="secondary">{m.rowCount} rows</Badge>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <Card>
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Master</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead className="text-right">Rows</TableHead>
+                      <TableHead className="w-8" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {items.map((m) => {
+                      const href = `/admin/references/${encodeURIComponent(m.name)}` as Route;
+                      return (
+                        <TableRow key={m.name} className="group">
+                          <TableCell className="align-top font-medium">
+                            <Link href={href} className="text-foreground hover:underline">
+                              {m.name}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="align-top text-muted-foreground">
+                            <Link href={href} className="block">
+                              {m.description || "—"}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-right align-top text-muted-foreground">
+                            <Link href={href} className="block">
+                              {m.rowCount.toLocaleString()}
+                            </Link>
+                          </TableCell>
+                          <TableCell className="text-right align-top">
+                            <Link
+                              href={href}
+                              className="inline-flex text-muted-foreground group-hover:text-foreground"
+                            >
+                              <ChevronRight className="h-4 w-4" />
+                            </Link>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
           </section>
         ))
       )}

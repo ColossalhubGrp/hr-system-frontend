@@ -21,7 +21,17 @@ import { publicEnv } from "@/lib/env";
  * placeholder rather than a broken iframe.
  */
 export function NaoChatFrame() {
-  const embedUrl = publicEnv.NEXT_PUBLIC_NAO_EMBED_URL;
+  const embedOrigin = publicEnv.NEXT_PUBLIC_NAO_EMBED_URL;
+  // Always route the initial iframe load through the SSO bootstrap so
+  // the sidecar auto-provisions (or re-signs-in) the current Frappe
+  // user before nao's own SPA gets to check the session. Otherwise
+  // nao's client-side auth check runs first, sees no session (cookies
+  // not yet set for iframe context), and renders its own login form —
+  // the /login nginx interceptor doesn't fire because SPA routing is
+  // in-page, not a real navigation.
+  const embedUrl = embedOrigin
+    ? new URL("/_sso/bootstrap?target=/", embedOrigin).toString()
+    : undefined;
   const [status, setStatus] = useState<"loading" | "loaded" | "blocked">(
     embedUrl ? "loading" : "blocked",
   );

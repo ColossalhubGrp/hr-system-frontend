@@ -78,6 +78,11 @@ export async function loginAction(
       path: "/",
       // Frappe gives short-lived session cookies; mirror that.
       maxAge: 60 * 60 * 24 * 7,
+      // When COOKIE_DOMAIN is set, the cookie is shared across all
+      // subdomains under it — this is what lets sibling services
+      // (nao-<tenant>.colossalhub.com, docs.colossalhub.com, ...)
+      // pick up the session without a separate login.
+      ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     });
   }
 
@@ -122,15 +127,22 @@ export async function resendActivationAction(
 }
 
 export async function logoutAction(): Promise<void> {
+  const env = serverEnv();
   const jar = cookies();
+  const managed = ["sid", "user_id", "system_user", "full_name", "user_image"];
   for (const c of jar.getAll()) {
-    if (
-      c.name === "sid" ||
-      c.name === "user_id" ||
-      c.name === "system_user" ||
-      c.name === "full_name" ||
-      c.name === "user_image"
-    ) {
+    if (!managed.includes(c.name)) continue;
+    // The delete cookie MUST specify the same `domain` (and `path`) as
+    // the cookie it's overwriting — otherwise the browser treats the
+    // deletion as a NEW host-only cookie and the domain-scoped one keeps
+    // pinging back on every request.
+    if (env.COOKIE_DOMAIN) {
+      jar.set(c.name, "", {
+        path: "/",
+        domain: env.COOKIE_DOMAIN,
+        maxAge: 0,
+      });
+    } else {
       jar.delete(c.name);
     }
   }

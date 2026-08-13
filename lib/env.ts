@@ -4,6 +4,12 @@ const serverEnvSchema = z.object({
   FRAPPE_URL: z.string().url(),
   FRAPPE_API_KEY: z.string().min(1, "Generate one via the User profile > API Access."),
   FRAPPE_API_SECRET: z.string().min(1),
+  // When set, session cookies re-issued by the Next.js login flow carry
+  // this Domain attribute so they're shared across all subdomains under
+  // it — enables SSO into sibling services like nao-<tenant>.<domain>.
+  // Example: ".colossalhub.com" (leading dot is optional per RFC 6265).
+  // Unset → cookies stay host-only (default Next.js behavior).
+  COOKIE_DOMAIN: z.string().optional(),
 });
 
 const publicEnvSchema = z.object({
@@ -21,6 +27,7 @@ export function serverEnv() {
     FRAPPE_URL: process.env.FRAPPE_URL,
     FRAPPE_API_KEY: process.env.FRAPPE_API_KEY,
     FRAPPE_API_SECRET: process.env.FRAPPE_API_SECRET,
+    COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
   });
   if (!parsed.success) {
     const issues = parsed.error.issues

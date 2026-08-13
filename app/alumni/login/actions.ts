@@ -11,15 +11,20 @@ type State = { error?: string };
  * sign-in page (not the main /login). Used by the alumni portal header.
  */
 export async function alumniLogoutAction(): Promise<void> {
+  const env = serverEnv();
   const jar = cookies();
+  const managed = ["sid", "user_id", "system_user", "full_name", "user_image"];
   for (const c of jar.getAll()) {
-    if (
-      c.name === "sid" ||
-      c.name === "user_id" ||
-      c.name === "system_user" ||
-      c.name === "full_name" ||
-      c.name === "user_image"
-    ) {
+    if (!managed.includes(c.name)) continue;
+    // Match the domain the cookie was set with — see loginAction's
+    // logoutAction in app/login/actions.ts for the deletion mechanics.
+    if (env.COOKIE_DOMAIN) {
+      jar.set(c.name, "", {
+        path: "/",
+        domain: env.COOKIE_DOMAIN,
+        maxAge: 0,
+      });
+    } else {
       jar.delete(c.name);
     }
   }
@@ -170,6 +175,9 @@ export async function alumniLoginAction(
       sameSite: "lax",
       path: "/",
       maxAge: 60 * 60 * 24 * 7,
+      // Cross-subdomain SSO — see loginAction in app/login/actions.ts
+      // for the full rationale.
+      ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     });
   }
 

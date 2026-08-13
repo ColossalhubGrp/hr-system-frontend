@@ -17,6 +17,12 @@ const publicEnvSchema = z.object({
   // Needed on the client to resolve Frappe-returned `/files/...` paths to
   // absolute URLs (e.g. the profile-image preview after upload).
   NEXT_PUBLIC_FRAPPE_URL: z.string().url().default("http://localhost:8000"),
+  // Nao chat runtime embedded at /analytics/ask via iframe. Unset →
+  // the page shows a "not configured" placeholder instead of an iframe.
+  // Value must be the full origin (https://nao-...colossalhub.com/) so
+  // the browser sends cookies scoped to .colossalhub.com along on the
+  // iframe request without a redirect hop.
+  NEXT_PUBLIC_NAO_EMBED_URL: z.string().url().optional(),
 });
 
 let cachedServer: z.infer<typeof serverEnvSchema> | null = null;
@@ -44,4 +50,5 @@ export function serverEnv() {
 export const publicEnv = publicEnvSchema.parse({
   NEXT_PUBLIC_BRAND_NAME: process.env.NEXT_PUBLIC_BRAND_NAME,
   NEXT_PUBLIC_FRAPPE_URL: process.env.NEXT_PUBLIC_FRAPPE_URL,
+  NEXT_PUBLIC_NAO_EMBED_URL: process.env.NEXT_PUBLIC_NAO_EMBED_URL,
 });

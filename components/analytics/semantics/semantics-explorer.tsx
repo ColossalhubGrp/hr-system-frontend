@@ -23,6 +23,7 @@ import { RelationshipsExplorer } from "./relationships-explorer";
 import { BusinessContextEditor } from "./business-context-editor";
 import { DatasetsExplorer } from "./datasets-explorer";
 import { CompiledYamlPanel } from "./compiled-yaml-panel";
+import { NewMetricModal } from "./new-metric-modal";
 
 /**
  * The main /analytics/semantics client component. Renders a left rail
@@ -114,6 +115,11 @@ export function SemanticsExplorer() {
         editable={data.editable}
         onReload={load}
         loading={loading}
+        domains={data.domains.map((d) => ({ code: d.code, title: d.title }))}
+        onMetricCreated={(code) => {
+          setSelected(code);
+          void load();
+        }}
       />
       <TabBar tab={tab} onChange={setTab} />
       {tab === "metrics" ? (
@@ -204,6 +210,8 @@ function Header({
   editable,
   onReload,
   loading,
+  domains,
+  onMetricCreated,
 }: {
   activeModel: string | null;
   modelChain: string[];
@@ -212,6 +220,8 @@ function Header({
   editable: boolean;
   onReload: () => void;
   loading: boolean;
+  domains: { code: string; title: string }[];
+  onMetricCreated: (code: string) => void;
 }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3 px-6 py-4">
@@ -245,6 +255,11 @@ function Header({
           </span>{" "}
           overridden
         </span>
+        <NewMetricModal
+          domains={domains}
+          editable={editable}
+          onCreated={onMetricCreated}
+        />
         <CompiledYamlPanel />
         <Button variant="ghost" size="sm" onClick={onReload} disabled={loading}>
           {loading ? (

@@ -64,7 +64,7 @@ const FORMATS = [
   { value: "decimal", label: "Decimal (5.25, 42.1)" },
   { value: "currency", label: "Currency ($5,000.00)" },
   { value: "percentage", label: "Percentage (25%)" },
-  { value: "duration", label: "Duration (2h 15m)" },
+  { value: "duration_days", label: "Duration in days (14, 30)" },
 ] as const;
 
 export function NewMetricModal({

@@ -390,12 +390,12 @@ function EmptySelection({ editable }: { editable: boolean }) {
       <p className="max-w-md text-xs text-muted-foreground">
         {editable ? (
           <>
-            You have edit rights. Once you open a metric, Phase 1.4c will let
-            you author a Candidate override and route it through Under Review →
-            Published.
+            You have edit rights. Open a metric on the left to see its
+            definition and propose a change — changes save as a draft
+            first and become live once reviewed.
           </>
         ) : (
-          <>Your role can view the semantic layer but not modify it.</>
+          <>You can view metric definitions but not change them.</>
         )}
       </p>
     </div>

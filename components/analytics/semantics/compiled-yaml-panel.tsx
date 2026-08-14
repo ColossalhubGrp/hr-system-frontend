@@ -5,7 +5,6 @@ import {
   AlertCircle,
   Check,
   Copy,
-  ExternalLink,
   FileCode,
   Loader2,
   RefreshCw,
@@ -22,22 +21,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 
 /**
- * Read-only view of the compiled ``semantic.yaml`` that nao actually
- * reads at chat time, exposed under /analytics/semantics → Metrics &
- * Overrides so operators can:
- *   * verify what the LLM sees (auditability)
- *   * force a rebuild when a manual DocType edit didn't trigger the
- *     auto-recompile hook
- *   * confirm the on-disk file matches the DocType state
+ * Read-only view of the definitions catalog the analytics AI actually
+ * uses when answering questions. Exposed under /analytics/semantics so
+ * a data steward can:
+ *   * Audit what the AI sees (does it match the definitions I edited?)
+ *   * Force a refresh when they suspect something is stale
  *
- * The panel is a slide-out sheet — the YAML can be dense (16-24KB
- * of text), and a modal cramped it against the metric table below.
- * Sheet on the right gives it room without leaving the semantics
- * page.
+ * Deliberately user-facing terminology throughout — no dev-side words
+ * (compile, YAML, DocType, semantic file, etc.) leak into UI copy.
+ * The technical text inside the file itself is what it is — that's
+ * the audit target — but the wrapper chrome speaks business.
  *
- * Regenerate button POSTs to the same endpoint which routes to
- * ``semantic_compiler.compile_and_write`` — Analytics Steward gated
- * on the Frappe side.
+ * Filesystem path is intentionally hidden: users don't need to know
+ * where the file lives, and exposing it was a "dev info leak" the
+ * product owner flagged.
  */
 
 type ApiPayload = {
@@ -77,7 +74,7 @@ export function CompiledYamlPanel() {
       }
       setData(body as ApiPayload);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load compiled YAML.");
+      setError(err instanceof Error ? err.message : "Couldn't load the AI reference.");
     } finally {
       setLoading(false);
     }
@@ -105,12 +102,9 @@ export function CompiledYamlPanel() {
         );
       }
       setRegenResult(body as RegeneratePayload);
-      // Reload so the panel shows the freshly-written bytes.
       await load();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Regenerate failed.",
-      );
+      setError(err instanceof Error ? err.message : "Couldn't refresh the AI reference.");
     } finally {
       setRegenerating(false);
     }
@@ -123,8 +117,7 @@ export function CompiledYamlPanel() {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard blocked — degrade silently, user can select-all in
-      // the pre.
+      // Clipboard blocked — degrade silently, the user can select the text.
     }
   };
 
@@ -135,46 +128,41 @@ export function CompiledYamlPanel() {
       <SheetTrigger asChild>
         <Button variant="outline" size="sm" className="gap-1.5">
           <FileCode className="h-3.5 w-3.5" />
-          Compiled YAML
+          AI reference
         </Button>
       </SheetTrigger>
       <SheetContent className="flex w-full flex-col gap-0 p-0 sm:max-w-2xl md:max-w-3xl">
-
         <SheetHeader className="border-b bg-muted/30 px-6 py-4">
           <SheetTitle className="flex items-center gap-2">
             <FileCode className="h-4 w-4" />
-            Compiled semantic.yaml
+            What the AI sees
           </SheetTitle>
           <SheetDescription>
-            The exact bytes nao's chat runtime reads. Compiled from the
-            Metric, Dimension, Formula Version and Business Context
-            DocTypes above. Read-only — edits go through the metric
-            forms and are recompiled automatically on save.
+            The exact definitions the analytics AI uses when answering
+            questions in Ask (AI). Read-only — to change a definition,
+            edit its metric on the Metrics &amp; Overrides tab. Changes
+            appear here automatically after you save.
           </SheetDescription>
         </SheetHeader>
 
         <div className="flex items-center justify-between gap-2 border-b bg-muted/10 px-6 py-3">
           <div className="min-w-0 flex-1">
-            {data?.path ? (
-              <p className="truncate text-xs text-muted-foreground">
-                <span className="font-medium">On disk:</span>{" "}
-                <code className="text-[11px]">{data.path}</code>
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                No ``nao_semantic_yaml_path`` set in site config.
-              </p>
-            )}
             {meta && (
-              <p className="mt-0.5 text-[11px] text-muted-foreground">
-                Model <code>{meta.model_code}</code>
+              <p className="text-xs text-muted-foreground">
                 {meta.metric_count !== undefined && (
                   <>
-                    {" "}· {meta.metric_count} metrics · {meta.dimension_count} dimensions
+                    <span className="font-medium text-foreground">
+                      {meta.metric_count}
+                    </span>{" "}
+                    metrics ·{" "}
+                    <span className="font-medium text-foreground">
+                      {meta.dimension_count}
+                    </span>{" "}
+                    dimensions
                   </>
                 )}
                 {meta.compiled_at && (
-                  <> · compiled {formatTimestamp(meta.compiled_at)}</>
+                  <> · last updated {formatTimestamp(meta.compiled_at)}</>
                 )}
               </p>
             )}
@@ -220,12 +208,12 @@ export function CompiledYamlPanel() {
               {regenerating ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  Regenerating…
+                  Refreshing…
                 </>
               ) : (
                 <>
                   <RefreshCw className="h-3.5 w-3.5" />
-                  Regenerate now
+                  Force refresh
                 </>
               )}
             </Button>
@@ -234,8 +222,7 @@ export function CompiledYamlPanel() {
 
         {regenResult && (
           <div className="border-b border-emerald-500/20 bg-emerald-500/5 px-6 py-2 text-xs text-emerald-700 dark:text-emerald-300">
-            ✓ Wrote {regenResult.bytes.toLocaleString()} bytes to{" "}
-            <code>{regenResult.output_path}</code>
+            ✓ AI reference refreshed. The chat now uses the latest definitions.
           </div>
         )}
 
@@ -250,7 +237,7 @@ export function CompiledYamlPanel() {
           {loading && !data ? (
             <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Loading compiled YAML…
+              Loading…
             </div>
           ) : data?.yaml ? (
             <pre className="h-full overflow-auto whitespace-pre-wrap break-all bg-slate-950 p-6 font-mono text-[11px] leading-relaxed text-slate-200">
@@ -258,16 +245,16 @@ export function CompiledYamlPanel() {
             </pre>
           ) : (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              No YAML to display.
+              Nothing to show yet.
             </div>
           )}
         </div>
 
         <div className="border-t bg-muted/20 px-6 py-3 text-[11px] text-muted-foreground">
-          <ExternalLink className="mr-1 inline h-3 w-3" />
-          Auto-recompiled on every metric / dimension / formula-version /
-          data-source save. Manual regenerate is only needed if the
-          hook is disabled or an out-of-band DocType edit skipped it.
+          The AI reference refreshes automatically whenever you save a
+          metric, dimension, formula, or data source. Use{" "}
+          <span className="font-medium">Force refresh</span> only if you
+          need to confirm the AI has the very latest state right now.
         </div>
       </SheetContent>
     </Sheet>
@@ -282,10 +269,10 @@ type MetaBlock = {
 };
 
 /**
- * Extract the top-level ``_meta:`` block from the compiled YAML without
- * pulling in a real YAML parser. The block is deterministically
- * emitted first by the compiler (colossal_bi 1bdb8c9 uses
- * ``sort_keys=False``), so a simple line-oriented scan is enough.
+ * Extract the top-level ``_meta:`` block from the definitions file
+ * without pulling in a real YAML parser. The block is deterministically
+ * emitted first (backend uses ``sort_keys=False``), so a simple
+ * line-oriented scan is enough.
  */
 function parseMeta(yaml: string | undefined | null): MetaBlock | null {
   if (!yaml) return null;
@@ -295,7 +282,6 @@ function parseMeta(yaml: string | undefined | null): MetaBlock | null {
   const out: MetaBlock = {};
   for (let i = start + 1; i < lines.length; i++) {
     const line = lines[i];
-    // A non-indented line ends the _meta block.
     if (line.length > 0 && !line.startsWith(" ")) break;
     const m = /^\s{2}(\w+):\s*(.*)$/.exec(line);
     if (!m) continue;
@@ -315,7 +301,7 @@ function formatTimestamp(iso: string): string {
   const now = Date.now();
   const delta = Math.max(0, now - d.getTime());
   if (delta < 60_000) return "just now";
-  if (delta < 3_600_000) return `${Math.floor(delta / 60_000)}m ago`;
-  if (delta < 86_400_000) return `${Math.floor(delta / 3_600_000)}h ago`;
+  if (delta < 3_600_000) return `${Math.floor(delta / 60_000)} min ago`;
+  if (delta < 86_400_000) return `${Math.floor(delta / 3_600_000)} hr ago`;
   return d.toLocaleString();
 }

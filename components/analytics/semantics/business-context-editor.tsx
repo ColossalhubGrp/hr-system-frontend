@@ -200,7 +200,7 @@ export function BusinessContextEditor() {
 
         <Row
           label="Base currency"
-          hint="Currency code for figures without an explicit unit. Must be a valid Frappe Currency."
+          hint="Currency code for figures without an explicit unit. Must be a valid currency code (e.g. USD, ZWG, EUR)."
           fallback={data.resolved.base_currency}
           control={
             <input

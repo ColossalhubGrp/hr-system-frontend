@@ -203,6 +203,8 @@ export interface SemanticMetricDetail {
   format: string;
   precision: number;
   higher_is_better: boolean;
+  origin: "seeded" | "custom";
+  author: string | null;
   dimensions: {
     code: string;
     required: boolean;

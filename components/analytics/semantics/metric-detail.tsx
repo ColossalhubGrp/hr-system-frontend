@@ -189,7 +189,13 @@ function DefinitionCompare({ detail }: { detail: SemanticMetricDetail }) {
       <div className="grid gap-3 md:grid-cols-2">
         <DefinitionPanel
           title="Canonical"
-          badge="ships with the app"
+          badge={
+            detail.origin === "custom"
+              ? detail.author
+                ? `custom · created by ${detail.author}`
+                : "custom"
+              : "ships with the app"
+          }
           body={c}
           format={detail.format}
           unit={detail.unit}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertCircle, Loader2, Plus } from "lucide-react";
 import {
   Dialog,
@@ -108,6 +108,54 @@ export function NewMetricModal({
   const [newDomainDescription, setNewDomainDescription] = useState("");
   const [savingDomain, setSavingDomain] = useState(false);
   const [domainList, setDomainList] = useState<Domain[]>(domains);
+
+  // Source-table + column dropdown data — lazy-loaded so the modal
+  // opens instantly and only fetches when the user actually needs
+  // the pickers.
+  type SourceTable = { value: string; label: string; module: string };
+  type SourceColumn = { fieldname: string; label: string; fieldtype: string };
+  const [sourceTables, setSourceTables] = useState<SourceTable[] | null>(null);
+  const [sourceColumns, setSourceColumns] = useState<SourceColumn[] | null>(null);
+  const [tablesLoading, setTablesLoading] = useState(false);
+  const [columnsLoading, setColumnsLoading] = useState(false);
+
+  // Fetch tables once when the modal opens for the first time.
+  useEffect(() => {
+    if (!open || sourceTables !== null || tablesLoading) return;
+    setTablesLoading(true);
+    void fetch("/api/analytics/semantics/source-tables", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((body: { tables?: SourceTable[]; error?: string }) => {
+        if (body.error) throw new Error(body.error);
+        setSourceTables(body.tables ?? []);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Couldn't load source tables.");
+      })
+      .finally(() => setTablesLoading(false));
+  }, [open, sourceTables, tablesLoading]);
+
+  // Re-fetch columns whenever the source table changes.
+  useEffect(() => {
+    if (!sourceTable) {
+      setSourceColumns(null);
+      return;
+    }
+    setColumnsLoading(true);
+    void fetch(
+      `/api/analytics/semantics/source-columns?table=${encodeURIComponent(sourceTable)}`,
+      { cache: "no-store" },
+    )
+      .then((r) => r.json())
+      .then((body: { columns?: SourceColumn[]; error?: string }) => {
+        if (body.error) throw new Error(body.error);
+        setSourceColumns(body.columns ?? []);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Couldn't load columns.");
+      })
+      .finally(() => setColumnsLoading(false));
+  }, [sourceTable]);
 
   const reset = () => {
     setTitle("");
@@ -234,7 +282,22 @@ export function NewMetricModal({
           New metric
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+      <DialogContent
+        className="max-h-[90vh] max-w-2xl overflow-y-auto"
+        // Radix Select / Popover content portals to <body>, which the
+        // Dialog treats as "outside click" and dismisses. Whitelist
+        // clicks that land inside any Radix popper so the modal
+        // survives while a dropdown is open.
+        onInteractOutside={(e) => {
+          const el = e.target as HTMLElement | null;
+          if (
+            el?.closest?.("[data-radix-popper-content-wrapper]") ||
+            el?.closest?.("[role='listbox']")
+          ) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>New metric</DialogTitle>
           <DialogDescription>
@@ -375,11 +438,44 @@ export function NewMetricModal({
             {kind === "simple" ? (
               <div className="space-y-3 pt-2">
                 <Field
+                  label="Source table"
+                  required
+                  hint="Which data table to count from. Curated to HR / payroll data — use Custom SQL if you need something more exotic."
+                >
+                  <Select
+                    value={sourceTable}
+                    onValueChange={(v) => {
+                      setSourceTable(v);
+                      // Reset column so the user picks a fresh one for the new table
+                      setAggregationField("name");
+                    }}
+                    disabled={tablesLoading || !sourceTables}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          tablesLoading
+                            ? "Loading tables…"
+                            : "Pick a source table"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {(sourceTables ?? []).map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+
+                <Field
                   label="What to measure"
                   required
-                  hint="Pick an aggregation, then say which column it applies to (COUNT usually uses 'name')."
+                  hint="Pick an aggregation, then a column. COUNT uses 'Row ID (name)' by default; SUM / AVG / MIN / MAX need a numeric column."
                 >
-                  <div className="grid grid-cols-[1fr_1fr] gap-2">
+                  <div className="grid grid-cols-[1fr_1.5fr] gap-2">
                     <Select value={aggregation} onValueChange={setAggregation}>
                       <SelectTrigger>
                         <SelectValue />
@@ -392,24 +488,34 @@ export function NewMetricModal({
                         ))}
                       </SelectContent>
                     </Select>
-                    <Input
+                    <Select
                       value={aggregationField}
-                      onChange={(e) => setAggregationField(e.target.value)}
-                      placeholder="Column name (e.g. gross_usd)"
-                    />
+                      onValueChange={setAggregationField}
+                      disabled={!sourceTable || columnsLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            !sourceTable
+                              ? "Pick a source table first"
+                              : columnsLoading
+                                ? "Loading columns…"
+                                : "Pick a column"
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {(sourceColumns ?? []).map((c) => (
+                          <SelectItem key={c.fieldname} value={c.fieldname}>
+                            {c.label}
+                            <span className="ml-2 text-[10px] text-muted-foreground">
+                              {c.fieldtype}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                </Field>
-
-                <Field
-                  label="Source table"
-                  required
-                  hint="Which data table to count from. Common tables: Employee, Salary Slip, Leave Application, Payroll Run Payslip."
-                >
-                  <Input
-                    value={sourceTable}
-                    onChange={(e) => setSourceTable(e.target.value)}
-                    placeholder="e.g. Employee"
-                  />
                 </Field>
 
                 <Field

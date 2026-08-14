@@ -22,6 +22,7 @@ import { MetricDetail } from "./metric-detail";
 import { RelationshipsExplorer } from "./relationships-explorer";
 import { BusinessContextEditor } from "./business-context-editor";
 import { DatasetsExplorer } from "./datasets-explorer";
+import { CompiledYamlPanel } from "./compiled-yaml-panel";
 
 /**
  * The main /analytics/semantics client component. Renders a left rail
@@ -244,6 +245,7 @@ function Header({
           </span>{" "}
           overridden
         </span>
+        <CompiledYamlPanel />
         <Button variant="ghost" size="sm" onClick={onReload} disabled={loading}>
           {loading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" />

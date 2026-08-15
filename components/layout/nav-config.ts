@@ -118,15 +118,13 @@ export const NAV: NavItem[] = [
 
   // Business Intelligence is its own top-level entry so Executive Viewers
   // (who don't have HR_ANY) can reach it without tripping the /hr layout
-  // guard. Route path stays /analytics for stable bookmarks; only the
-  // display label changed.
+  // guard. Landing surface is the AI chat — Overview was removed.
   {
     label: "Business Intelligence",
-    href: "/analytics",
+    href: "/analytics/ask",
     icon: BarChart3,
     requires: "EXECUTIVE_VIEWER",
     children: [
-      { label: "Overview", href: "/analytics", requires: "EXECUTIVE_VIEWER" },
       { label: "Ask (AI)", href: "/analytics/ask", requires: "EXECUTIVE_VIEWER" },
       { label: "Dashboards", href: "/analytics/dashboards", requires: "EXECUTIVE_VIEWER" },
       { label: "Semantics", href: "/analytics/semantics", requires: "EXECUTIVE_VIEWER" },

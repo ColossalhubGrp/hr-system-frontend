@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { AlertCircle, ArrowLeft, ArrowRight, Save, Wallet } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Save } from "lucide-react";
 import type { EmployeeFull } from "@/lib/frappe/employees";
 import type {
   EmployeeFormInput,
@@ -44,9 +44,7 @@ type TabId =
   | "contact"
   | "attendance"
   | "approvers"
-  | "salary"
-  | "profile"
-  | "exit";
+  | "profile";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -54,9 +52,7 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "contact", label: "Contact Details" },
   { id: "attendance", label: "Attendance" },
   { id: "approvers", label: "Approvers" },
-  { id: "salary", label: "Payroll" },
   { id: "profile", label: "Profile" },
-  { id: "exit", label: "Exit" },
 ];
 
 /** Which form field name belongs to which tab — used so a server-side
@@ -94,9 +90,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "expense_approver",
     "shift_request_approver",
   ],
-  salary: [],
   profile: ["image", "bio"],
-  exit: [],
 };
 
 export function EmployeeForm({
@@ -951,14 +945,6 @@ export function EmployeeForm({
         </Hint>
       </TabPane>
 
-      <TabPane active={tab} id="salary">
-        <ReadOnly icon={<Wallet className="h-4 w-4" />} title="Compensation lives in Payroll">
-          Salary structures, slips and payroll runs are managed by the Payroll
-          app. Open it from the sidebar to assign a salary structure to this
-          employee.
-        </ReadOnly>
-      </TabPane>
-
       <TabPane active={tab} id="profile">
         <Field
           label="Profile image"
@@ -977,27 +963,6 @@ export function EmployeeForm({
         <Field label="Bio" htmlFor="bio" wide>
           <TextArea id="bio" name="bio" defaultValue={v.bio} rows={5} />
         </Field>
-      </TabPane>
-
-      <TabPane active={tab} id="exit">
-        {mode === "edit" && v.relieving_date ? (
-          <Grid>
-            <Field label="Relieving date" htmlFor="relieving_date">
-              <TextInput
-                id="relieving_date"
-                name="relieving_date"
-                type="date"
-                defaultValue={v.relieving_date}
-                disabled
-              />
-            </Field>
-          </Grid>
-        ) : (
-          <ReadOnly title="Exit is driven by the Lifecycle module">
-            When this employee leaves, file an Employee Separation under
-            Lifecycle — that flow sets the relieving date and status here.
-          </ReadOnly>
-        )}
       </TabPane>
 
       <div className="sticky bottom-0 -mx-1 flex flex-wrap items-center justify-between gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
@@ -1131,30 +1096,6 @@ function Hint({ children }: { children: React.ReactNode }) {
     <p className="rounded-card border border-dashed border-hairline bg-canvas/40 px-4 py-3 text-xs text-ash-600">
       {children}
     </p>
-  );
-}
-
-function ReadOnly({
-  icon,
-  title,
-  children,
-}: {
-  icon?: React.ReactNode;
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-start gap-3 rounded-card border border-dashed border-hairline bg-canvas/40 px-4 py-5">
-      {icon && (
-        <span className="mt-0.5 grid h-7 w-7 place-items-center rounded-full bg-ink-50 text-ink-700">
-          {icon}
-        </span>
-      )}
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-ash-900">{title}</p>
-        <p className="text-xs text-ash-600">{children}</p>
-      </div>
-    </div>
   );
 }
 

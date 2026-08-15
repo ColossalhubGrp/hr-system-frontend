@@ -8,9 +8,7 @@ export type EmployeeTabId =
   | "contact"
   | "attendance"
   | "approvers"
-  | "salary"
-  | "profile"
-  | "exit";
+  | "profile";
 
 export const EMPLOYEE_TABS: { id: EmployeeTabId; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -18,9 +16,7 @@ export const EMPLOYEE_TABS: { id: EmployeeTabId; label: string }[] = [
   { id: "contact", label: "Contact Details" },
   { id: "attendance", label: "Attendance" },
   { id: "approvers", label: "Approvers" },
-  { id: "salary", label: "Payroll" },
   { id: "profile", label: "Profile" },
-  { id: "exit", label: "Exit" },
 ];
 
 export function EmployeeTabs({

@@ -36,7 +36,7 @@ import {
 export type FormState = StdFormState;
 export type DecisionState = { error?: string };
 
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD.");
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please pick a valid date.");
 
 function fieldErrors(parsed: z.SafeParseError<unknown>): FormState {
   const out: Record<string, string> = {};

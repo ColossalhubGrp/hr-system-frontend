@@ -424,7 +424,6 @@ export type EmployeeFormInput = {
   /** Which ZIMRA table(s) the engine applies for this employee. */
   salary_currency_mode?: "USD_ONLY" | "ZIG_ONLY" | "MIXED";
   date_of_joining: string;
-  employee_number?: string;
 
   // contact
   cell_number?: string;

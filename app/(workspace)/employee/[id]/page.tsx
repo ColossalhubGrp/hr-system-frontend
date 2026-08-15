@@ -151,7 +151,6 @@ function renderTab(
         <FieldGrid
           fields={[
             { label: "Date of joining", value: fmtDate(emp.dateOfJoining) },
-            { label: "Employee number", value: emp.employeeNumber },
             { label: "Employment type", value: emp.employmentType },
             { label: "Pay grade", value: emp.payGrade },
             { label: "Default shift", value: emp.defaultShift },

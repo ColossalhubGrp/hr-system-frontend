@@ -26,7 +26,7 @@ const baseSchema = z.object({
   middle_name: z.string().trim().optional(),
   last_name: z.string().trim().min(1, "Last name is required."),
   gender: z.string().trim().min(1, "Select a gender."),
-  date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD."),
+  date_of_birth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please pick a valid date."),
   image: z.string().trim().optional(),
 
   company: z.string().trim().min(1, "Pick a company."),
@@ -59,8 +59,7 @@ const baseSchema = z.object({
     .optional(),
   tax_method: z.enum(["FDS", "NON_FDS"]).optional(),
   salary_currency_mode: z.enum(["USD_ONLY", "ZIG_ONLY", "MIXED"]).optional(),
-  date_of_joining: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD."),
-  employee_number: z.string().trim().optional(),
+  date_of_joining: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Please pick a valid date."),
 
   cell_number: z.string().trim().optional(),
   company_email: z
@@ -180,23 +179,13 @@ export async function createEmployeeAction(
   const parsed = parseForm(form);
   if (!parsed.ok) return parsed.state;
 
-  // A profile image is mandatory on create — the picker is upload-only, so an
-  // empty value here means the user hit Save before completing the upload.
-  if (!parsed.data.image) {
-    return {
-      error: "Upload a profile image before creating the employee.",
-      fieldErrors: { image: "Profile image is required." },
-    };
-  }
-
-  let newId: string;
   try {
-    newId = await createEmployee(parsed.data);
+    await createEmployee(parsed.data);
   } catch (err) {
     return toFormState(err);
   }
   revalidatePath("/employee");
-  redirect(`/employee/${encodeURIComponent(newId)}`);
+  redirect("/employee");
 }
 
 export async function updateEmployeeAction(

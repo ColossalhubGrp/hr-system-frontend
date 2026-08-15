@@ -72,7 +72,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "company",
     "status",
   ],
-  joining: ["date_of_joining", "employee_number", "employment_type", "pay_grade", "nec_industry", "basic_usd", "basic_zig", "nec_dues_override", "nec_dues_usd", "is_elderly", "is_disabled", "tax_method", "salary_currency_mode"],
+  joining: ["date_of_joining", "employment_type", "pay_grade", "nec_industry", "basic_usd", "basic_zig", "nec_dues_override", "nec_dues_usd", "is_elderly", "is_disabled", "tax_method", "salary_currency_mode"],
   contact: [
     "cell_number",
     "user_id",
@@ -288,7 +288,6 @@ export function EmployeeForm({
     employment_type: initial?.employmentType ?? "",
     pay_grade: initial?.payGrade ?? "",
     date_of_joining: initial?.dateOfJoining ?? "",
-    employee_number: initial?.employeeNumber ?? "",
     cell_number: initial?.mobile ?? "",
     company_email: initial?.email ?? "",
     personal_email: initial?.personalEmail ?? "",
@@ -515,17 +514,6 @@ export function EmployeeForm({
               type="date"
               defaultValue={v.date_of_joining}
               invalid={Boolean(fe.date_of_joining)}
-            />
-          </Field>
-          <Field
-            label="Employee number"
-            htmlFor="employee_number"
-            hint="Optional HRIS reference."
-          >
-            <TextInput
-              id="employee_number"
-              name="employee_number"
-              defaultValue={v.employee_number}
             />
           </Field>
           <Field label="Employment type" htmlFor="employment_type">
@@ -949,7 +937,6 @@ export function EmployeeForm({
         <Field
           label="Profile image"
           htmlFor="image"
-          required={mode === "create"}
           error={fe.image}
           wide
         >

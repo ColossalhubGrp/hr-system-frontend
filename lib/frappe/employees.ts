@@ -67,7 +67,6 @@ export type EmployeeFull = {
   bio: string | null;
   employmentType: string | null;
   grade: string | null;
-  employeeNumber: string | null;
   /** When true, attendance check-ins for this employee bypass geofence
    *  validation. Set by HR/Shift Manager only. */
   geofenceExempt: boolean;
@@ -269,7 +268,6 @@ type RawEmployeeDoc = RawEmployeeRow & {
   bio: string | null;
   employment_type: string | null;
   grade: string | null;
-  employee_number: string | null;
   geofence_exempt: 0 | 1 | boolean | null;
   // Phase 5 ZW Custom Fields
   national_id: string | null;
@@ -336,7 +334,6 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     bio: d.bio,
     employmentType: d.employment_type,
     grade: d.grade,
-    employeeNumber: d.employee_number,
     geofenceExempt: Boolean(d.geofence_exempt),
     nationalId: d.national_id,
     taxNumber: d.tax_number,

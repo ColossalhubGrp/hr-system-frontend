@@ -9,6 +9,10 @@ import {
   type ExpenseClaimCreateInput,
 } from "@/lib/frappe/expense-claims";
 import { FrappeRequestError } from "@/lib/frappe/client";
+import {
+  approverErrorMessage,
+  resolveApproverUserId,
+} from "@/lib/frappe/employee-approvers";
 
 export type FormState = {
   error?: string;
@@ -22,11 +26,10 @@ const createSchema = z.object({
   posting_date: isoDate,
   company: z.string().trim().min(1, "Company is required."),
   remark: z.string().trim().optional(),
-  approver: z
-    .string()
-    .trim()
-    .optional()
-    .refine((v) => !v || /.+@.+\..+/.test(v), "Approver must be a user email."),
+  // Picker posts an employee id (or a raw email for verbatim options
+  // like Administrator). The action resolves it to a user_id (email)
+  // before submitting to Frappe.
+  approver: z.string().trim().optional(),
   // Single line for now — we'll grow this to a child-row UI later.
   expense_date: isoDate,
   expense_type: z.string().trim().min(1, "Expense type is required."),
@@ -92,12 +95,26 @@ export async function createExpenseClaimAction(
     return { error: "Check the highlighted fields.", fieldErrors };
   }
 
+  // Resolve the picked approver (employee id) → user_id (email) before
+  // handing the payload to Frappe.
+  let approver: string | undefined = undefined;
+  if (parsed.data.approver) {
+    const resolved = await resolveApproverUserId(parsed.data.approver);
+    if (resolved && !resolved.ok) {
+      return {
+        error: approverErrorMessage(resolved.reason),
+        fieldErrors: { approver: approverErrorMessage(resolved.reason) },
+      };
+    }
+    approver = resolved?.ok ? resolved.userId : undefined;
+  }
+
   const input: ExpenseClaimCreateInput = {
     employee: parsed.data.employee,
     posting_date: parsed.data.posting_date,
     company: parsed.data.company,
     remark: parsed.data.remark,
-    approver: parsed.data.approver,
+    approver,
     expenses: [
       {
         expense_date: parsed.data.expense_date,

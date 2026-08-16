@@ -466,14 +466,56 @@ function compact<T extends Record<string, unknown>>(o: T): Partial<T> {
   return out;
 }
 
+/** Approver fields on Employee are stored as Link-to-User (email).
+ *  The form's approver pickers post employee ids so users pick a
+ *  person by name; before we ship to Frappe we translate each id
+ *  back to that employee's user_id. Values already containing "@"
+ *  (verbatim options like Administrator, an ex-employee kept for
+ *  archival) pass through unchanged. Employees without a linked
+ *  user account resolve to empty — same as "not set".
+ */
+async function resolveApproverFields(
+  input: EmployeeFormInput,
+): Promise<EmployeeFormInput> {
+  const keys = ["leave_approver", "expense_approver", "shift_request_approver"] as const;
+  const patched: Record<string, unknown> = { ...input };
+  for (const key of keys) {
+    const val = (input[key] ?? "").trim();
+    if (!val) continue;
+    if (val.includes("@")) continue;
+    try {
+      const row = await frappeCall<{ user_id: string | null } | Array<never> | null>({
+        method: "frappe.client.get_value",
+        args: {
+          doctype: "Employee",
+          filters: { name: val },
+          fieldname: "user_id",
+        },
+        as: "user",
+      });
+      const userId =
+        row && typeof row === "object" && !Array.isArray(row)
+          ? (row.user_id ?? "").trim()
+          : "";
+      // No linked user → strip the value so we don't send an
+      // employee id to a Link-to-User field (Frappe would reject).
+      patched[key] = userId || "";
+    } catch {
+      patched[key] = "";
+    }
+  }
+  return patched as EmployeeFormInput;
+}
+
 /**
  * Creates a new Employee doc as the currently logged-in user. Frappe assigns
  * the doc id via the naming series and returns the saved document.
  */
 export async function createEmployee(input: EmployeeFormInput): Promise<string> {
+  const resolved = await resolveApproverFields(input);
   const doc = {
     doctype: "Employee",
-    ...compact(input),
+    ...compact(resolved),
   };
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
@@ -515,7 +557,8 @@ export async function updateEmployee(
   id: string,
   input: EmployeeFormInput,
 ): Promise<void> {
-  const payload = compact(input);
+  const resolved = await resolveApproverFields(input);
+  const payload = compact(resolved);
   await frappeCall<{ name: string }>({
     method: "frappe.client.set_value",
     args: {

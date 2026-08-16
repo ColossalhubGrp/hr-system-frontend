@@ -21,6 +21,10 @@ import {
   type ShiftTypeInput,
 } from "@/lib/frappe/shifts";
 import {
+  approverErrorMessage,
+  resolveApproverUserId,
+} from "@/lib/frappe/employee-approvers";
+import {
   createShiftLocation,
   deleteShiftLocation,
   updateShiftLocation,
@@ -305,14 +309,10 @@ const shiftRequestSchema = z
     shift_type: z.string().trim().min(1, "Shift type is required."),
     from_date: isoDate,
     to_date: z.string().trim().optional(),
-    approver: z
-      .string()
-      .trim()
-      .optional()
-      .refine(
-        (v) => !v || /.+@.+\..+/.test(v),
-        "Approver must be a user email.",
-      ),
+    // Picker posts either an employee id (HR-EMP-…) or a raw email
+    // (verbatim option for Administrator / ex-employee). The action
+    // resolves it to a user_id (email) before submitting.
+    approver: z.string().trim().optional(),
   })
   .refine((d) => !d.to_date || d.to_date >= d.from_date, {
     message: "End date must be on or after start date.",
@@ -328,12 +328,25 @@ export async function createShiftRequestAction(
 
   // Frappe treats Shift Request.approver as required and rejects the
   // insert with "Value missing for Shift Request: Approver" when it's
-  // blank. The form advertises the field as optional (defaults to the
-  // employee's shift_request_approver), so when the user leaves it
-  // blank we fall back to that value here. If the employee also has
-  // no default set, surface a targeted field error the user can act
-  // on instead of the generic Frappe throw.
-  let approver = parsed.data.approver?.trim() || "";
+  // blank. Two-step resolution:
+  //   1. If the user picked an approver, resolve their id → user_id
+  //      (email). Surface a targeted error if that employee has no
+  //      linked user account.
+  //   2. Otherwise fall back to the picked employee's default
+  //      shift_request_approver — already stored as a user_id.
+  //   3. If everything is empty, ask the user to pick one manually.
+  let approver = "";
+  const rawApprover = parsed.data.approver?.trim() || "";
+  if (rawApprover) {
+    const resolved = await resolveApproverUserId(rawApprover);
+    if (resolved && !resolved.ok) {
+      return {
+        error: approverErrorMessage(resolved.reason),
+        fieldErrors: { approver: approverErrorMessage(resolved.reason) },
+      };
+    }
+    approver = resolved?.ok ? resolved.userId : "";
+  }
   if (!approver) {
     approver = (await getEmployeeShiftRequestApprover(parsed.data.employee)) ?? "";
   }

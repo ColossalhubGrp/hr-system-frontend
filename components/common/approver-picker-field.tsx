@@ -6,18 +6,24 @@ import type { EmployeeDirectoryEntry } from "./employee-picker-field";
 /**
  * Picker for approver / reviewer fields.
  *
- * Backend expectation is a Frappe user_id (email) — that's who the
- * notification is sent to. The user model here is that everyone who
- * can approve IS also an Employee (HR, managers, execs — all have
- * employee records), so we surface the picker as an employee list
- * and post the picked employee's user_id under the hood.
+ * The user model is: approvers ARE employees — HR, managers, execs
+ * all have employee records. So this picker shows every employee.
+ * The stored value is the employee's id; the server-side action
+ * resolves the id to the linked user_id (email) before sending to
+ * Frappe, because Frappe's Approver fields are Link-to-User under
+ * the hood and notifications go to the user's email.
  *
- * Employees without a linked user account are filtered out (they
- * can't receive notifications so they can't be approvers). If the
- * form was pre-filled with an email that doesn't match any employee
- * (e.g. Administrator, an ex-employee, a system integration user)
- * we prepend that raw email so the field still renders it instead
- * of dropping to blank on load.
+ * If the picked employee has no linked user account, the server
+ * returns a targeted "needs a login account first" error so the
+ * user gets a clear action to take instead of a raw Frappe throw.
+ *
+ * The initial value may arrive as either an employee id (fresh
+ * form) or an email/user_id (existing record loaded from Frappe).
+ * We reverse-look-up the email against directory.user_id so the
+ * field renders with the right employee pre-selected in either
+ * case. Values that match neither (Administrator, ex-employee,
+ * system integration accounts) are prepended verbatim so the
+ * field still shows them instead of dropping to blank.
  */
 export function ApproverPickerField({
   name,
@@ -35,22 +41,28 @@ export function ApproverPickerField({
   error?: string;
   hint?: string;
   directory: EmployeeDirectoryEntry[];
-  /** user_id (email) that should be pre-selected. */
+  /** Employee id OR user_id (email). Component reverse-maps if it's
+   *  an email so the correct employee is pre-selected. */
   defaultValue?: string;
   placeholder?: string;
 }) {
-  const options = directory
-    .filter((e): e is EmployeeDirectoryEntry & { user_id: string } =>
-      Boolean(e.user_id),
-    )
-    .map((e) => ({
-      value: e.user_id,
-      label: `${e.employee_name} (${e.user_id})`,
-    }));
-  const withDefault =
-    defaultValue && !options.some((o) => o.value === defaultValue)
-      ? [{ value: defaultValue, label: defaultValue }, ...options]
-      : options;
+  const options = directory.map((e) => ({
+    value: e.id,
+    label: `${e.employee_name} (${e.id})`,
+  }));
+
+  let resolvedDefault = defaultValue;
+  if (defaultValue && !options.some((o) => o.value === defaultValue)) {
+    const byUserId = directory.find((e) => e.user_id === defaultValue);
+    if (byUserId) {
+      resolvedDefault = byUserId.id;
+    } else {
+      // Unknown value (Administrator / ex-employee / integration user) —
+      // keep it so the form still shows what was previously stored.
+      options.unshift({ value: defaultValue, label: defaultValue });
+    }
+  }
+
   return (
     <Field
       label={label}
@@ -62,8 +74,8 @@ export function ApproverPickerField({
       <SelectInput
         id={name}
         name={name}
-        options={withDefault}
-        defaultValue={defaultValue}
+        options={options}
+        defaultValue={resolvedDefault}
         placeholder={placeholder}
         invalid={Boolean(error)}
       />

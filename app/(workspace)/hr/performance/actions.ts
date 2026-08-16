@@ -33,6 +33,10 @@ import {
   type EvaluationFramework,
 } from "@/lib/frappe/appraisal-framework";
 import { getMyAccess } from "@/lib/frappe/roles";
+import {
+  approverErrorMessage,
+  resolveApproverUserId,
+} from "@/lib/frappe/employee-approvers";
 
 export type FormState = StdFormState;
 export type DecisionState = { error?: string };
@@ -46,6 +50,22 @@ function fieldErrors(parsed: z.SafeParseError<unknown>): FormState {
     if (k && !out[k]) out[k] = issue.message;
   }
   return { error: "Check the highlighted fields.", fieldErrors: out };
+}
+
+/** Resolve the picker's posted reviewer value (employee id, or raw
+ *  email for verbatim options) to a Frappe user_id. Returns either
+ *  the resolved email or a FormState surfacing the targeted field
+ *  error so the caller can early-return. */
+async function resolveReviewer(
+  raw: string | undefined,
+): Promise<{ ok: true; userId: string | undefined } | { ok: false; state: FormState }> {
+  if (!raw) return { ok: true, userId: undefined };
+  const resolved = await resolveApproverUserId(raw);
+  if (resolved && !resolved.ok) {
+    const msg = approverErrorMessage(resolved.reason, "reviewer");
+    return { ok: false, state: { error: msg, fieldErrors: { reviewer: msg } } };
+  }
+  return { ok: true, userId: resolved?.ok ? resolved.userId : undefined };
 }
 
 // --- Goal ----------------------------------------------------------------
@@ -137,6 +157,8 @@ export async function createAppraisalAction(
 ): Promise<FormState> {
   const parsed = appraisalSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+  const reviewer = await resolveReviewer(parsed.data.reviewer);
+  if (!reviewer.ok) return reviewer.state;
   try {
     const input: AppraisalInput = {
       employee: parsed.data.employee,
@@ -144,7 +166,7 @@ export async function createAppraisalAction(
       appraisal_template: parsed.data.appraisal_template,
       start_date: parsed.data.start_date,
       end_date: parsed.data.end_date,
-      reviewer: parsed.data.reviewer,
+      reviewer: reviewer.userId,
     };
     const id = await createAppraisal(input);
     revalidatePath("/hr/performance");
@@ -198,10 +220,20 @@ export async function createFeedbackAction(
 ): Promise<FormState> {
   const parsed = feedbackSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+  const reviewer = await resolveReviewer(parsed.data.reviewer);
+  if (!reviewer.ok) return reviewer.state;
+  if (!reviewer.userId) {
+    // Feedback requires a reviewer; the schema guarantees non-empty
+    // input, but the picker might have posted an employee id with no
+    // linked user account that slipped past resolveReviewer's
+    // "no_user" branch (shouldn't happen — defense in depth).
+    const msg = "Reviewer is required.";
+    return { error: msg, fieldErrors: { reviewer: msg } };
+  }
   try {
     const input: FeedbackInput = {
       employee: parsed.data.employee,
-      reviewer: parsed.data.reviewer,
+      reviewer: reviewer.userId,
       feedback: parsed.data.feedback,
       appraisal_cycle: parsed.data.appraisal_cycle,
       feedback_date: parsed.data.feedback_date,
@@ -252,12 +284,14 @@ export async function createPipAction(
 ): Promise<FormState> {
   const parsed = pipSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+  const reviewer = await resolveReviewer(parsed.data.reviewer);
+  if (!reviewer.ok) return reviewer.state;
   try {
     const input: PipInput = {
       employee: parsed.data.employee,
       from_date: parsed.data.from_date,
       to_date: parsed.data.to_date,
-      reviewer: parsed.data.reviewer,
+      reviewer: reviewer.userId,
       appraisal_cycle: parsed.data.appraisal_cycle,
       reason_for_pip: parsed.data.reason_for_pip,
       improvement_plan: parsed.data.improvement_plan,

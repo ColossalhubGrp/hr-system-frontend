@@ -242,33 +242,41 @@ export function EmployeeForm({
     }
   }, [state, mode]);
 
-  // Approver dropdowns operate on the employee directory. reports_to is a
-  // Link to Employee (value = employee ID); the *_approver fields are Link
-  // to User (value = user_id/email), so we filter out anyone without a
-  // linked User for those three. Always inject the currently-saved value
-  // as an option even if the directory excludes it (e.g. the approver
-  // went Inactive), so the field doesn't render blank on load.
+  // reports_to is a Link to Employee (value = employee ID). The three
+  // *_approver fields are stored as Link to User (email) on the backend
+  // but shown here as employees — the picker posts the employee id and
+  // the server (lib/frappe/employee-write.ts) resolves it to user_id
+  // before submitting to Frappe. Existing docs may have an email in
+  // those fields; we reverse-look-up so the correct employee is
+  // pre-selected, or prepend the raw email as a verbatim option for
+  // values that don't match any employee (Administrator etc).
   const dir = options.employeeDirectory;
-  const reportsToBase = dir.map((e) => ({
+  const employeeOptionsBase = dir.map((e) => ({
     value: e.id,
     label: `${e.employee_name} (${e.id})`,
   }));
   const reportsToOptions = ensureOptionPresent(
-    reportsToBase,
+    employeeOptionsBase,
     initial?.reportsTo ?? "",
   );
-  const approverBase = dir
-    .filter((e) => Boolean(e.user_id))
-    .map((e) => ({
-      value: e.user_id as string,
-      label: `${e.employee_name} — ${e.user_id}`,
-    }));
+  const resolveInitialApprover = (val: string | null | undefined): string => {
+    const s = (val ?? "").trim();
+    if (!s) return "";
+    // Already an employee id — leave as-is.
+    if (employeeOptionsBase.some((o) => o.value === s)) return s;
+    // Looks like an email — map to the employee that owns that user_id.
+    const match = dir.find((e) => e.user_id === s);
+    return match ? match.id : s;
+  };
+  const initialLeaveApprover = resolveInitialApprover(initial?.leaveApprover);
+  const initialExpenseApprover = resolveInitialApprover(initial?.expenseApprover);
+  const initialShiftApprover = resolveInitialApprover(initial?.shiftRequestApprover);
   const approverOptions = ensureOptionPresent(
     ensureOptionPresent(
-      ensureOptionPresent(approverBase, initial?.leaveApprover ?? ""),
-      initial?.expenseApprover ?? "",
+      ensureOptionPresent(employeeOptionsBase, initialLeaveApprover),
+      initialExpenseApprover,
     ),
-    initial?.shiftRequestApprover ?? "",
+    initialShiftApprover,
   );
 
   // Pre-fill from the existing doc — split employee_name back into parts only
@@ -297,9 +305,12 @@ export function EmployeeForm({
     person_to_be_contacted: initial?.emergencyContactName ?? "",
     emergency_phone_number: initial?.emergencyContactNumber ?? "",
     reports_to: initial?.reportsTo ?? "",
-    leave_approver: initial?.leaveApprover ?? "",
-    expense_approver: initial?.expenseApprover ?? "",
-    shift_request_approver: initial?.shiftRequestApprover ?? "",
+    // Approver fields render as employee pickers; use the reverse-
+    // mapped id so the correct row is pre-selected even when Frappe
+    // stored a user_id (email).
+    leave_approver: initialLeaveApprover,
+    expense_approver: initialExpenseApprover,
+    shift_request_approver: initialShiftApprover,
     holiday_list: initial?.holidayList ?? "",
     default_shift: initial?.defaultShift ?? "",
     bio: initial?.bio ?? "",
@@ -879,11 +890,7 @@ export function EmployeeForm({
           <Field
             label="Leave approver"
             htmlFor="leave_approver"
-            hint={
-              approverOptions.length === 0
-                ? "No employees with linked user accounts. Set User on an employee first."
-                : "Employee who approves this person's leave."
-            }
+            hint="Employee who approves this person's leave."
           >
             <SelectInput
               id="leave_approver"
@@ -896,11 +903,7 @@ export function EmployeeForm({
           <Field
             label="Expense approver"
             htmlFor="expense_approver"
-            hint={
-              approverOptions.length === 0
-                ? "No employees with linked user accounts."
-                : "Employee who approves expense claims."
-            }
+            hint="Employee who approves expense claims."
           >
             <SelectInput
               id="expense_approver"
@@ -913,11 +916,7 @@ export function EmployeeForm({
           <Field
             label="Shift request approver"
             htmlFor="shift_request_approver"
-            hint={
-              approverOptions.length === 0
-                ? "No employees with linked user accounts."
-                : "Employee who approves shift-change requests."
-            }
+            hint="Employee who approves shift-change requests."
           >
             <SelectInput
               id="shift_request_approver"

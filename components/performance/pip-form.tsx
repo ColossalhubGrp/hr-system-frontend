@@ -16,6 +16,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { ApproverPickerField } from "@/components/common/approver-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 // Client mirror — kept in sync with lib/frappe/performance.ts.
@@ -57,9 +58,12 @@ export function PipForm({
           error={fe.employee}
           directory={employeeDirectory}
         />
-        <Field label="Reviewer" htmlFor="reviewer" hint="Reviewer email.">
-          <TextInput id="reviewer" name="reviewer" type="email" />
-        </Field>
+        <ApproverPickerField
+          name="reviewer"
+          label="Reviewer"
+          directory={employeeDirectory}
+          placeholder="Select reviewer"
+        />
         <Field label="From" htmlFor="from_date" required error={fe.from_date}>
           <TextInput
             id="from_date"

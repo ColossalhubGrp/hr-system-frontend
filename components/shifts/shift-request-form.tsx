@@ -15,6 +15,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { ApproverPickerField } from "@/components/common/approver-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -86,19 +87,12 @@ export function ShiftRequestForm({
             invalid={Boolean(fe.to_date)}
           />
         </Field>
-        <Field
-          label="Approver"
-          htmlFor="approver"
+        <ApproverPickerField
+          name="approver"
           error={fe.approver}
-          hint="Optional — defaults to the employee's shift-request approver."
-        >
-          <TextInput
-            id="approver"
-            name="approver"
-            type="email"
-            invalid={Boolean(fe.approver)}
-          />
-        </Field>
+          directory={employeeDirectory}
+          hint="Leave blank to use the employee's default shift-request approver."
+        />
       </FormSection>
 
       <div className="-mx-1 mt-6 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">

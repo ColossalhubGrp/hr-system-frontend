@@ -15,6 +15,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { ApproverPickerField } from "@/components/common/approver-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/expense-claims/actions";
 import { cn } from "@/lib/cn";
 
@@ -76,14 +77,11 @@ export function ExpenseClaimForm({
             invalid={Boolean(fe.posting_date)}
           />
         </Field>
-        <Field label="Approver" htmlFor="approver" error={fe.approver}>
-          <TextInput
-            id="approver"
-            name="approver"
-            type="email"
-            invalid={Boolean(fe.approver)}
-          />
-        </Field>
+        <ApproverPickerField
+          name="approver"
+          error={fe.approver}
+          directory={employeeDirectory}
+        />
         <Field label="Remarks" htmlFor="remark" wide>
           <TextArea id="remark" name="remark" rows={2} />
         </Field>

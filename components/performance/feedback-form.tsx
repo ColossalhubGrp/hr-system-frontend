@@ -16,6 +16,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { ApproverPickerField } from "@/components/common/approver-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -54,20 +55,14 @@ export function FeedbackForm({
           error={fe.employee}
           directory={employeeDirectory}
         />
-        <Field
+        <ApproverPickerField
+          name="reviewer"
           label="Reviewer"
-          htmlFor="reviewer"
           required
           error={fe.reviewer}
-          hint="Reviewer email."
-        >
-          <TextInput
-            id="reviewer"
-            name="reviewer"
-            type="email"
-            invalid={Boolean(fe.reviewer)}
-          />
-        </Field>
+          directory={employeeDirectory}
+          placeholder="Select reviewer"
+        />
         <Field label="Appraisal cycle" htmlFor="appraisal_cycle">
           <SelectInput
             id="appraisal_cycle"

@@ -12,6 +12,7 @@ import {
   deleteShiftAssignment,
   deleteShiftRequest,
   deleteShiftType,
+  getEmployeeShiftRequestApprover,
   setShiftTypeAllowedLocations,
   submitShiftAssignment,
   updateShiftType,
@@ -324,13 +325,32 @@ export async function createShiftRequestAction(
 ): Promise<FormState> {
   const parsed = shiftRequestSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+
+  // Frappe treats Shift Request.approver as required and rejects the
+  // insert with "Value missing for Shift Request: Approver" when it's
+  // blank. The form advertises the field as optional (defaults to the
+  // employee's shift_request_approver), so when the user leaves it
+  // blank we fall back to that value here. If the employee also has
+  // no default set, surface a targeted field error the user can act
+  // on instead of the generic Frappe throw.
+  let approver = parsed.data.approver?.trim() || "";
+  if (!approver) {
+    approver = (await getEmployeeShiftRequestApprover(parsed.data.employee)) ?? "";
+  }
+  if (!approver) {
+    return {
+      error: "This employee has no default shift-request approver on their record. Please pick one manually.",
+      fieldErrors: { approver: "Approver is required — no default is set on this employee." },
+    };
+  }
+
   try {
     const input: ShiftRequestInput = {
       employee: parsed.data.employee,
       shift_type: parsed.data.shift_type,
       from_date: parsed.data.from_date,
       to_date: parsed.data.to_date || undefined,
-      approver: parsed.data.approver || undefined,
+      approver,
     };
     const id = await createShiftRequest(input);
     revalidatePath("/hr/shift-management");

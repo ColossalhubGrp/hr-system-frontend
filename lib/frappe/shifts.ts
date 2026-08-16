@@ -807,6 +807,30 @@ export type ShiftRequestInput = {
   approver?: string;
 };
 
+/** Look up an Employee's default shift-request approver (a user email).
+ *  Returns null when the employee has none set. Used to resolve the
+ *  approver on a Shift Request when the filer left it blank — Frappe
+ *  requires it and rejects the insert with "Value missing for Shift
+ *  Request: Approver" otherwise. */
+export async function getEmployeeShiftRequestApprover(
+  employee: string,
+): Promise<string | null> {
+  try {
+    const row = await frappeCall<{ shift_request_approver: string | null }>({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "Employee",
+        filters: { name: employee },
+        fieldname: "shift_request_approver",
+      },
+      as: "user",
+    });
+    return (row?.shift_request_approver ?? null) || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function createShiftRequest(
   input: ShiftRequestInput,
 ): Promise<string> {

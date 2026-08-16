@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronLeft, Plane } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
 import { LeaveForm } from "@/components/leaves/leave-form";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createLeaveAction } from "../actions";
 
 export const metadata = { title: "New leave application · Colossal HR" };
@@ -30,7 +31,10 @@ export default async function NewLeavePage({
 }: {
   searchParams: { employee?: string };
 }) {
-  const leaveTypes = await listLeaveTypes();
+  const [leaveTypes, employeeDirectory] = await Promise.all([
+    listLeaveTypes(),
+    listEmployeeDirectory(),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-col gap-2">
@@ -56,6 +60,7 @@ export default async function NewLeavePage({
       <LeaveForm
         action={createLeaveAction}
         leaveTypes={leaveTypes}
+        employeeDirectory={employeeDirectory}
         defaultEmployee={searchParams.employee}
       />
     </div>

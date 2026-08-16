@@ -13,6 +13,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/attendance/actions";
 
 // Mirror of the server-side ATTENDANCE_REQUEST_REASONS list — inlined so this
@@ -30,11 +34,13 @@ const EMPTY: FormState = {};
 export function AttendanceRequestForm({
   action,
   companies,
+  employeeDirectory,
   cancelHref,
   defaultEmployee,
 }: {
   action: Action;
   companies: string[];
+  employeeDirectory: EmployeeDirectoryEntry[];
   cancelHref: string;
   defaultEmployee?: string;
 }) {
@@ -55,19 +61,13 @@ export function AttendanceRequestForm({
       )}
 
       <FormSection title="Request">
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            defaultValue={defaultEmployee}
-            invalid={Boolean(fe.employee)}
-          />
-        </Field>
+          directory={employeeDirectory}
+          defaultValue={defaultEmployee}
+        />
         <Field label="Reason" htmlFor="reason" required error={fe.reason}>
           <SelectInput
             id="reason"

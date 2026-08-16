@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronLeft, Clock } from "lucide-react";
 import { ShiftAssignmentForm } from "@/components/shifts/shift-assignment-form";
 import { listCompanies, listShiftTypes } from "@/lib/frappe/lookups";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createShiftAssignmentAction } from "../../actions";
 
 export const metadata = { title: "Assign shift · Colossal HR" };
@@ -12,9 +13,10 @@ export default async function NewShiftAssignmentPage({
 }: {
   searchParams: { employee?: string };
 }) {
-  const [shiftTypes, companies] = await Promise.all([
+  const [shiftTypes, companies, employeeDirectory] = await Promise.all([
     listShiftTypes(),
     listCompanies(),
+    listEmployeeDirectory(),
   ]);
 
   return (
@@ -40,6 +42,7 @@ export default async function NewShiftAssignmentPage({
         action={createShiftAssignmentAction}
         shiftTypes={shiftTypes}
         companies={companies}
+        employeeDirectory={employeeDirectory}
         defaultEmployee={searchParams.employee}
         cancelHref="/hr/shift-management?tab=assignments"
       />

@@ -13,6 +13,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type {
   FormState as LeaveFormState,
 } from "@/app/(workspace)/hr/leaves/actions";
@@ -22,6 +26,7 @@ type Action = (prev: LeaveFormState, form: FormData) => Promise<LeaveFormState>;
 type Props = {
   action: Action;
   leaveTypes: string[];
+  employeeDirectory: EmployeeDirectoryEntry[];
   defaultEmployee?: string;
   defaultApprover?: string;
 };
@@ -31,6 +36,7 @@ const EMPTY: LeaveFormState = {};
 export function LeaveForm({
   action,
   leaveTypes,
+  employeeDirectory,
   defaultEmployee,
   defaultApprover,
 }: Props) {
@@ -51,20 +57,13 @@ export function LeaveForm({
       )}
 
       <FormSection title="Request">
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-          hint="Employee ID, e.g. HR-EMP-00292"
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            defaultValue={defaultEmployee}
-            invalid={Boolean(fe.employee)}
-          />
-        </Field>
+          directory={employeeDirectory}
+          defaultValue={defaultEmployee}
+        />
         <Field
           label="Leave type"
           htmlFor="leave_type"

@@ -2,15 +2,17 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, LogIn } from "lucide-react";
 import { CheckinForm } from "@/components/attendance/checkin-form";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createCheckinAction } from "../../actions";
 
 export const metadata = { title: "Log punch · Colossal HR" };
 
-export default function NewCheckinPage({
+export default async function NewCheckinPage({
   searchParams,
 }: {
   searchParams: { employee?: string };
 }) {
+  const employeeDirectory = await listEmployeeDirectory();
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -35,6 +37,7 @@ export default function NewCheckinPage({
 
       <CheckinForm
         action={createCheckinAction}
+        employeeDirectory={employeeDirectory}
         defaultEmployee={searchParams.employee}
         cancelHref="/hr/attendance?tab=checkins"
       />

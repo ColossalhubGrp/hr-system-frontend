@@ -12,6 +12,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 // Client mirror — kept in sync with lib/frappe/performance.ts. Inlined so
@@ -41,12 +45,14 @@ export function GoalForm({
   cancelHref,
   initial,
   framework,
+  employeeDirectory,
 }: {
   mode: "create" | "edit";
   action: Action;
   cancelHref: string;
   /** Drives terminology + whether the BSC Perspective select is shown. */
   framework?: "OKR" | "Balanced Scorecard" | "KRA & Goals" | null;
+  employeeDirectory: EmployeeDirectoryEntry[];
   initial?: {
     goalName?: string;
     description?: string | null;
@@ -129,17 +135,13 @@ export function GoalForm({
             />
           </Field>
         )}
-        <Field
+        <EmployeePickerField
+          name="employee"
           label="Owner (employee)"
-          htmlFor="employee"
-          hint="Employee ID — leave blank for a team / company goal."
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            defaultValue={initial?.employee ?? undefined}
-          />
-        </Field>
+          hint="Leave blank for a team / company goal."
+          directory={employeeDirectory}
+          defaultValue={initial?.employee ?? undefined}
+        />
         {/* Goals are now created standalone. The appraisal cycle picks them up
             later via the "Select goals" step on cycle creation. For goals
             created under the old flow we still surface the cycle name as a

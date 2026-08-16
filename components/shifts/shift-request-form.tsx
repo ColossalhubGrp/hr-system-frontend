@@ -11,6 +11,10 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -19,11 +23,13 @@ const EMPTY: FormState = {};
 export function ShiftRequestForm({
   action,
   shiftTypes,
+  employeeDirectory,
   cancelHref,
   defaultEmployee,
 }: {
   action: Action;
   shiftTypes: string[];
+  employeeDirectory: EmployeeDirectoryEntry[];
   cancelHref: string;
   defaultEmployee?: string;
 }) {
@@ -43,20 +49,13 @@ export function ShiftRequestForm({
       )}
 
       <FormSection title="Request">
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-          hint="Employee ID, e.g. HR-EMP-00292"
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            defaultValue={defaultEmployee}
-            invalid={Boolean(fe.employee)}
-          />
-        </Field>
+          directory={employeeDirectory}
+          defaultValue={defaultEmployee}
+        />
         <Field
           label="Shift type"
           htmlFor="shift_type"

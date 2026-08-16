@@ -2,42 +2,19 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, UserCog } from "lucide-react";
 import { ScheduleAssignmentForm } from "@/components/shifts/schedule-assignment-form";
-import { frappeCall } from "@/lib/frappe/client";
 import { listCompanies } from "@/lib/frappe/lookups";
 import { listShiftSchedules } from "@/lib/frappe/shift-schedules";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createShiftScheduleAssignmentAction } from "../../actions";
 
 export const metadata = {
   title: "New schedule assignment · Colossal HR",
 };
 
-async function listActiveEmployees(): Promise<
-  Array<{ id: string; name: string }>
-> {
-  try {
-    const rows = await frappeCall<
-      Array<{ name: string; employee_name: string | null }>
-    >({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Employee",
-        fields: ["name", "employee_name"],
-        filters: JSON.stringify([["status", "=", "Active"]]),
-        order_by: "employee_name asc",
-        limit_page_length: 500,
-      },
-      as: "user",
-    });
-    return rows.map((r) => ({ id: r.name, name: r.employee_name ?? r.name }));
-  } catch {
-    return [];
-  }
-}
-
 export default async function NewScheduleAssignmentPage() {
-  const [schedulesResult, employees, companies] = await Promise.all([
+  const [schedulesResult, employeeDirectory, companies] = await Promise.all([
     listShiftSchedules({ enabled: "Yes", pageSize: 100 }),
-    listActiveEmployees(),
+    listEmployeeDirectory(),
     listCompanies(),
   ]);
   const schedules = schedulesResult.rows.map((s) => s.id);
@@ -66,7 +43,7 @@ export default async function NewScheduleAssignmentPage() {
         mode="create"
         action={createShiftScheduleAssignmentAction}
         schedules={schedules}
-        employees={employees}
+        employeeDirectory={employeeDirectory}
         companies={companies}
         cancelHref="/hr/shift-management?tab=schedule-assignments"
       />

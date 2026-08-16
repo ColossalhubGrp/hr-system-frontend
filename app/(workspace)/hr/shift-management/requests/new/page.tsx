@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronLeft, Clock } from "lucide-react";
 import { ShiftRequestForm } from "@/components/shifts/shift-request-form";
 import { listShiftTypes } from "@/lib/frappe/lookups";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createShiftRequestAction } from "../../actions";
 
 export const metadata = { title: "New shift request · Colossal HR" };
@@ -12,7 +13,10 @@ export default async function NewShiftRequestPage({
 }: {
   searchParams: { employee?: string };
 }) {
-  const shiftTypes = await listShiftTypes();
+  const [shiftTypes, employeeDirectory] = await Promise.all([
+    listShiftTypes(),
+    listEmployeeDirectory(),
+  ]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -36,6 +40,7 @@ export default async function NewShiftRequestPage({
       <ShiftRequestForm
         action={createShiftRequestAction}
         shiftTypes={shiftTypes}
+        employeeDirectory={employeeDirectory}
         defaultEmployee={searchParams.employee}
         cancelHref="/hr/shift-management?tab=requests"
       />

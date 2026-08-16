@@ -168,7 +168,7 @@ export async function fetchEmployeeFormOptions(): Promise<EmployeeFormOptions> {
   };
 }
 
-async function listEmployeeDirectory(): Promise<
+export async function listEmployeeDirectory(): Promise<
   EmployeeFormOptions["employeeDirectory"]
 > {
   // Enriched fetch — needs the four "prefill" fields to exist on Employee.

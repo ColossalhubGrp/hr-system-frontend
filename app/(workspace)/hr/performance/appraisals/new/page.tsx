@@ -6,14 +6,16 @@ import {
   listAppraisalCyclesNames,
   listAppraisalTemplates,
 } from "@/lib/frappe/lookups";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createAppraisalAction } from "../../actions";
 
 export const metadata = { title: "New appraisal · Colossal HR" };
 
 export default async function NewAppraisalPage() {
-  const [cycles, templates] = await Promise.all([
+  const [cycles, templates, employeeDirectory] = await Promise.all([
     listAppraisalCyclesNames(),
     listAppraisalTemplates(),
+    listEmployeeDirectory(),
   ]);
   return (
     <div className="flex flex-col gap-5">
@@ -37,6 +39,7 @@ export default async function NewAppraisalPage() {
         action={createAppraisalAction}
         cycles={cycles}
         templates={templates}
+        employeeDirectory={employeeDirectory}
         cancelHref="/hr/performance"
       />
     </div>

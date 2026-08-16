@@ -3,38 +3,15 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { ChevronLeft, UserCog } from "lucide-react";
 import { ScheduleAssignmentForm } from "@/components/shifts/schedule-assignment-form";
-import { frappeCall } from "@/lib/frappe/client";
 import { listCompanies } from "@/lib/frappe/lookups";
 import {
   getShiftScheduleAssignment,
   listShiftSchedules,
 } from "@/lib/frappe/shift-schedules";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { updateShiftScheduleAssignmentAction } from "../../../actions";
 
 export const metadata = { title: "Edit schedule assignment · Colossal HR" };
-
-async function listActiveEmployees(): Promise<
-  Array<{ id: string; name: string }>
-> {
-  try {
-    const rows = await frappeCall<
-      Array<{ name: string; employee_name: string | null }>
-    >({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Employee",
-        fields: ["name", "employee_name"],
-        filters: JSON.stringify([["status", "=", "Active"]]),
-        order_by: "employee_name asc",
-        limit_page_length: 500,
-      },
-      as: "user",
-    });
-    return rows.map((r) => ({ id: r.name, name: r.employee_name ?? r.name }));
-  } catch {
-    return [];
-  }
-}
 
 export default async function EditScheduleAssignmentPage({
   params,
@@ -42,10 +19,10 @@ export default async function EditScheduleAssignmentPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const [sa, schedulesResult, employees, companies] = await Promise.all([
+  const [sa, schedulesResult, employeeDirectory, companies] = await Promise.all([
     getShiftScheduleAssignment(id),
     listShiftSchedules({ enabled: "Yes", pageSize: 100 }),
-    listActiveEmployees(),
+    listEmployeeDirectory(),
     listCompanies(),
   ]);
   if (!sa) notFound();
@@ -79,7 +56,7 @@ export default async function EditScheduleAssignmentPage({
         mode="edit"
         action={action}
         schedules={schedules}
-        employees={employees}
+        employeeDirectory={employeeDirectory}
         companies={companies}
         cancelHref={backHref}
         initial={{

@@ -3,12 +3,16 @@ import type { Route } from "next";
 import { ChevronLeft, AlertTriangle } from "lucide-react";
 import { PipForm } from "@/components/performance/pip-form";
 import { listAppraisalCyclesNames } from "@/lib/frappe/lookups";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createPipAction } from "../../actions";
 
 export const metadata = { title: "New PIP · Colossal HR" };
 
 export default async function NewPipPage() {
-  const cycles = await listAppraisalCyclesNames();
+  const [cycles, employeeDirectory] = await Promise.all([
+    listAppraisalCyclesNames(),
+    listEmployeeDirectory(),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -30,6 +34,7 @@ export default async function NewPipPage() {
       <PipForm
         action={createPipAction}
         cycles={cycles}
+        employeeDirectory={employeeDirectory}
         cancelHref="/hr/performance?tab=pip"
       />
     </div>

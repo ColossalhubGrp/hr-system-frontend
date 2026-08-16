@@ -40,6 +40,7 @@ export default async function NewExpenseClaimPage() {
         action={createExpenseClaimAction}
         companies={options.companies}
         expenseTypes={expenseTypes}
+        employeeDirectory={options.employeeDirectory}
       />
     </div>
   );

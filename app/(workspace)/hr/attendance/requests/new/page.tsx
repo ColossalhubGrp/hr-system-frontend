@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronLeft, ClipboardList } from "lucide-react";
 import { AttendanceRequestForm } from "@/components/attendance/request-form";
 import { listCompanies } from "@/lib/frappe/lookups";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createAttendanceRequestAction } from "../../actions";
 
 export const metadata = { title: "New attendance request · Colossal HR" };
@@ -12,7 +13,10 @@ export default async function NewAttendanceRequestPage({
 }: {
   searchParams: { employee?: string };
 }) {
-  const companies = await listCompanies();
+  const [companies, employeeDirectory] = await Promise.all([
+    listCompanies(),
+    listEmployeeDirectory(),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -35,6 +39,7 @@ export default async function NewAttendanceRequestPage({
       <AttendanceRequestForm
         action={createAttendanceRequestAction}
         companies={companies}
+        employeeDirectory={employeeDirectory}
         defaultEmployee={searchParams.employee}
         cancelHref="/hr/attendance?tab=requests"
       />

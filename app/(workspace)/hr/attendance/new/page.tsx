@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronLeft, CalendarCheck } from "lucide-react";
 import { AttendanceForm } from "@/components/attendance/attendance-form";
 import { listCompanies, listShiftTypes } from "@/lib/frappe/lookups";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createAttendanceAction } from "../actions";
 
 export const metadata = { title: "Mark attendance · Colossal HR" };
@@ -12,9 +13,10 @@ export default async function MarkAttendancePage({
 }: {
   searchParams: { employee?: string };
 }) {
-  const [shiftTypes, companies] = await Promise.all([
+  const [shiftTypes, companies, employeeDirectory] = await Promise.all([
     listShiftTypes(),
     listCompanies(),
+    listEmployeeDirectory(),
   ]);
 
   return (
@@ -40,6 +42,7 @@ export default async function MarkAttendancePage({
         action={createAttendanceAction}
         shiftTypes={shiftTypes}
         companies={companies}
+        employeeDirectory={employeeDirectory}
         defaultEmployee={searchParams.employee}
         cancelHref="/hr/attendance"
       />

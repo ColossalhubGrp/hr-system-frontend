@@ -12,6 +12,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -21,7 +25,7 @@ export function ScheduleAssignmentForm({
   mode,
   action,
   schedules,
-  employees,
+  employeeDirectory,
   companies,
   cancelHref,
   initial,
@@ -29,7 +33,7 @@ export function ScheduleAssignmentForm({
   mode: "create" | "edit";
   action: Action;
   schedules: string[];
-  employees: Array<{ id: string; name: string }>;
+  employeeDirectory: EmployeeDirectoryEntry[];
   companies: string[];
   cancelHref: string;
   initial?: {
@@ -73,29 +77,13 @@ export function ScheduleAssignmentForm({
             invalid={Boolean(fe.shift_schedule)}
           />
         </Field>
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-        >
-          <select
-            id="employee"
-            name="employee"
-            defaultValue={initial?.employee ?? ""}
-            className={cn(
-              "h-10 w-full rounded-chip border bg-surface pl-3 pr-8 text-sm text-ash-800 focus-ring",
-              fe.employee ? "border-fall/40" : "border-hairline",
-            )}
-          >
-            <option value="">Select employee</option>
-            {employees.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.name} · {e.id}
-              </option>
-            ))}
-          </select>
-        </Field>
+          directory={employeeDirectory}
+          defaultValue={initial?.employee ?? ""}
+        />
         <Field
           label="Start date"
           htmlFor="start_date"

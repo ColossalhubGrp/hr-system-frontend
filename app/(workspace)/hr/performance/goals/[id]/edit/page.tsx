@@ -8,6 +8,7 @@ import {
   getCycleFramework,
   type EvaluationFramework,
 } from "@/lib/frappe/appraisal-framework";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { updateGoalAction } from "../../../actions";
 
 export const metadata = { title: "Edit goal · Colossal HR" };
@@ -18,7 +19,10 @@ export default async function EditGoalPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const g = await getGoal(id);
+  const [g, employeeDirectory] = await Promise.all([
+    getGoal(id),
+    listEmployeeDirectory(),
+  ]);
   if (!g) notFound();
   // Framework still drives terminology (Objective / Goal / Scorecard entry).
   // For goals attached to a legacy cycle we infer from the cycle's framework;
@@ -53,6 +57,7 @@ export default async function EditGoalPage({
         mode="edit"
         action={action}
         framework={framework}
+        employeeDirectory={employeeDirectory}
         cancelHref={backHref}
         initial={{
           goalName: g.goalName,

@@ -11,6 +11,10 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/attendance/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -18,10 +22,12 @@ const EMPTY: FormState = {};
 
 export function CheckinForm({
   action,
+  employeeDirectory,
   cancelHref,
   defaultEmployee,
 }: {
   action: Action;
+  employeeDirectory: EmployeeDirectoryEntry[];
   cancelHref: string;
   defaultEmployee?: string;
 }) {
@@ -41,19 +47,13 @@ export function CheckinForm({
       )}
 
       <FormSection title="Punch">
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            defaultValue={defaultEmployee}
-            invalid={Boolean(fe.employee)}
-          />
-        </Field>
+          directory={employeeDirectory}
+          defaultValue={defaultEmployee}
+        />
         <Field label="Log type" htmlFor="log_type" required error={fe.log_type}>
           <SelectInput
             id="log_type"

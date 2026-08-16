@@ -12,6 +12,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 // Client mirror — kept in sync with lib/frappe/performance.ts.
@@ -23,10 +27,12 @@ const EMPTY: FormState = {};
 export function PipForm({
   action,
   cycles,
+  employeeDirectory,
   cancelHref,
 }: {
   action: Action;
   cycles: string[];
+  employeeDirectory: EmployeeDirectoryEntry[];
   cancelHref: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -45,18 +51,12 @@ export function PipForm({
       )}
 
       <FormSection title="Improvement plan">
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            invalid={Boolean(fe.employee)}
-          />
-        </Field>
+          directory={employeeDirectory}
+        />
         <Field label="Reviewer" htmlFor="reviewer" hint="Reviewer email.">
           <TextInput id="reviewer" name="reviewer" type="email" />
         </Field>

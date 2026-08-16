@@ -12,6 +12,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -20,10 +24,12 @@ const EMPTY: FormState = {};
 export function FeedbackForm({
   action,
   cycles,
+  employeeDirectory,
   cancelHref,
 }: {
   action: Action;
   cycles: string[];
+  employeeDirectory: EmployeeDirectoryEntry[];
   cancelHref: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -42,18 +48,12 @@ export function FeedbackForm({
       )}
 
       <FormSection title="Feedback">
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            invalid={Boolean(fe.employee)}
-          />
-        </Field>
+          directory={employeeDirectory}
+        />
         <Field
           label="Reviewer"
           htmlFor="reviewer"

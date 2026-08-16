@@ -11,6 +11,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/expense-claims/actions";
 import { cn } from "@/lib/cn";
 
@@ -21,10 +25,12 @@ export function ExpenseClaimForm({
   action,
   companies,
   expenseTypes,
+  employeeDirectory,
 }: {
   action: Action;
   companies: string[];
   expenseTypes: string[];
+  employeeDirectory: EmployeeDirectoryEntry[];
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
@@ -42,19 +48,12 @@ export function ExpenseClaimForm({
       )}
 
       <FormSection title="Claim">
-        <Field
-          label="Employee"
-          htmlFor="employee"
+        <EmployeePickerField
+          name="employee"
           required
           error={fe.employee}
-          hint="Employee ID, e.g. HR-EMP-00292"
-        >
-          <TextInput
-            id="employee"
-            name="employee"
-            invalid={Boolean(fe.employee)}
-          />
-        </Field>
+          directory={employeeDirectory}
+        />
         <Field label="Company" htmlFor="company" required error={fe.company}>
           <SelectInput
             id="company"

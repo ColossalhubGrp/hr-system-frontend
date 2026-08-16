@@ -3,12 +3,16 @@ import type { Route } from "next";
 import { ChevronLeft, MessageSquare } from "lucide-react";
 import { FeedbackForm } from "@/components/performance/feedback-form";
 import { listAppraisalCyclesNames } from "@/lib/frappe/lookups";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createFeedbackAction } from "../../actions";
 
 export const metadata = { title: "New feedback · Colossal HR" };
 
 export default async function NewFeedbackPage() {
-  const cycles = await listAppraisalCyclesNames();
+  const [cycles, employeeDirectory] = await Promise.all([
+    listAppraisalCyclesNames(),
+    listEmployeeDirectory(),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -30,6 +34,7 @@ export default async function NewFeedbackPage() {
       <FeedbackForm
         action={createFeedbackAction}
         cycles={cycles}
+        employeeDirectory={employeeDirectory}
         cancelHref="/hr/performance?tab=feedback"
       />
     </div>

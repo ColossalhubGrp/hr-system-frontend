@@ -71,7 +71,11 @@ export default async function WorkspaceLayout({
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar user={user} notifications={0} />
-        <main className="flex-1 overflow-y-auto px-6 pb-8 pt-4">
+        {/* pb-32 (not pb-8) so every form's sticky action bar
+            (`sticky bottom-0`, ~60-70px tall) can float over
+            empty padding at scroll-end instead of clipping the
+            last content section. */}
+        <main className="flex-1 overflow-y-auto px-6 pb-32 pt-4">
           {children}
         </main>
       </div>

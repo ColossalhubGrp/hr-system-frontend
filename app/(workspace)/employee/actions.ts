@@ -203,8 +203,5 @@ export async function updateEmployeeAction(
   }
   revalidatePath("/employee");
   revalidatePath(`/employee/${encodeURIComponent(id)}`);
-  // Stay on the edit page so the toast in components/employee/employee-form.tsx
-  // fires and the user can keep making further edits. Match the Company form's
-  // save-in-place pattern.
-  return {};
+  redirect(`/employee/${encodeURIComponent(id)}`);
 }

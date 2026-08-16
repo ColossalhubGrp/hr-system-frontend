@@ -224,9 +224,8 @@ export async function createFeedbackAction(
   if (!reviewer.ok) return reviewer.state;
   if (!reviewer.userId) {
     // Feedback requires a reviewer; the schema guarantees non-empty
-    // input, but the picker might have posted an employee id with no
-    // linked user account that slipped past resolveReviewer's
-    // "no_user" branch (shouldn't happen — defense in depth).
+    // input, but resolveReviewer can still yield undefined if the
+    // picked employee has no email (auto-provision failed). Guard.
     const msg = "Reviewer is required.";
     return { error: msg, fieldErrors: { reviewer: msg } };
   }

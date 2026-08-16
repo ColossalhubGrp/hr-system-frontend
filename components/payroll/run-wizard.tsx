@@ -717,7 +717,7 @@ function NavBar({
 }) {
   const onPreview = stepIdx === STEPS.length - 1;
   return (
-    <div className="sticky bottom-0 -mx-1 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card/95 p-3 shadow backdrop-blur">
+    <div className="-mx-1 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-card/95 p-3 shadow backdrop-blur">
       <Button variant="ghost" onClick={onBack} disabled={!canBack || pending}>
         <ArrowLeft className="h-4 w-4" />
         Back

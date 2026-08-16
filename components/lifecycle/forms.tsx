@@ -226,7 +226,7 @@ function Bar({
   label: string;
 }) {
   return (
-    <div className="sticky bottom-0 -mx-1 mt-6 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
+    <div className="-mx-1 mt-6 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
       <CancelLink href={cancelHref} />
       <SubmitBtn label={label} />
     </div>

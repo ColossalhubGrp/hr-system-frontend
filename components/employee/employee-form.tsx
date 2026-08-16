@@ -952,7 +952,7 @@ export function EmployeeForm({
         </Field>
       </TabPane>
 
-      <div className="sticky bottom-0 -mx-1 mt-6 flex flex-wrap items-center justify-between gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
+      <div className="-mx-1 mt-6 flex flex-wrap items-center justify-between gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
         <div className="flex items-center gap-2">
           <button
             type="button"

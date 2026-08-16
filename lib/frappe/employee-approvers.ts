@@ -35,7 +35,7 @@ import { frappeCall } from "./client";
  */
 export type ApproverResolution =
   | { ok: true; userId: string }
-  | { ok: false; reason: "no_email" | "not_found" };
+  | { ok: false; reason: "no_email" | "not_found" | "provision_failed"; detail?: string };
 
 type EmployeeContactRow = {
   user_id: string | null;
@@ -112,16 +112,26 @@ async function createUserAccount(
     args: {
       doc: {
         doctype: "User",
+        // User is auto-named after `email` in Frappe. Setting `name`
+        // explicitly avoids any locale-specific autoname wrinkles.
+        name: email,
         email,
         first_name: firstName,
         last_name: lastName,
         // Admin can invite them later; auto-emailing on every approver
-        // pick would spam mailboxes and reveal the mechanism.
+        // pick would spam mailboxes (and would fail on non-deliverable
+        // demo domains, sinking the whole insert).
         send_welcome_email: 0,
         enabled: 1,
         // System User so they can log in and act on approvals.
         // Website User wouldn't have desk access.
         user_type: "System User",
+        // Frappe requires at least one role on a System User; without
+        // this the insert succeeds but subsequent Link-to-User lookups
+        // can still refuse the row depending on tenant-wide validation.
+        // "Employee" is the safe minimum — the Employee role bundle
+        // comes with the tenant seed on this app.
+        roles: [{ doctype: "Has Role", role: "Employee" }],
       },
     },
     verb: "POST",
@@ -165,35 +175,48 @@ export async function resolveApproverUserId(
   if (!email) return { ok: false, reason: "no_email" };
 
   // Provision the account. If a User already exists at that address
-  // (someone set it up out-of-band), skip the insert and just link it
-  // back to the Employee.
+  // (someone set it up out-of-band), skip the insert and just link
+  // it back to the Employee. Errors on the create bubble up as a
+  // targeted "provision_failed" so the caller surfaces something
+  // actionable instead of the picker's success turning into
+  // Frappe's cryptic "Could not find Approver: <email>" later.
   const alreadyExists = await findUserByEmail(email);
   if (!alreadyExists) {
     try {
       await createUserAccount(email, emp);
-    } catch {
-      // Fall through — the link step below will still fail loudly if
-      // Frappe never got the User created.
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : String(err ?? "unknown error");
+      return { ok: false, reason: "provision_failed", detail: msg };
     }
   }
+  // Best-effort link — the value we return is the User's email,
+  // which Frappe will accept whether or not it's linked back to
+  // this Employee record. Failure here is worth logging but not
+  // worth failing the whole request over.
   try {
     await linkUserToEmployee(val, email);
   } catch {
-    // If linking fails, the calling action will still see ok:true and
-    // send `email` to Frappe. Frappe's Link-to-User validation will
-    // accept it as long as the User exists (which we just ensured).
+    /* non-fatal */
   }
   return { ok: true, userId: email };
 }
 
 /** Friendly message paired with an ApproverResolution failure. Use in
- *  the calling action's fieldErrors for the approver / reviewer field. */
+ *  the calling action's fieldErrors for the approver / reviewer field.
+ *  Callers can pass the resolution's `detail` field so the underlying
+ *  Frappe error (missing role, duplicate email, etc.) reaches the
+ *  user instead of a generic "something went wrong". */
 export function approverErrorMessage(
-  reason: "no_email" | "not_found",
+  reason: "no_email" | "not_found" | "provision_failed",
   label = "approver",
+  detail?: string,
 ): string {
   if (reason === "no_email") {
     return `The picked ${label} has no email on their employee record, so we can't set up a login for them. Add a company or personal email under Contact Details first.`;
+  }
+  if (reason === "provision_failed") {
+    return `Couldn't create a login account for the picked ${label}${detail ? ` — ${detail}` : "."}`;
   }
   return `Couldn't find that ${label}. Refresh and pick again.`;
 }

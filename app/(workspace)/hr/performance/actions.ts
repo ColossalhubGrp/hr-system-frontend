@@ -62,7 +62,7 @@ async function resolveReviewer(
   if (!raw) return { ok: true, userId: undefined };
   const resolved = await resolveApproverUserId(raw);
   if (resolved && !resolved.ok) {
-    const msg = approverErrorMessage(resolved.reason, "reviewer");
+    const msg = approverErrorMessage(resolved.reason, "reviewer", resolved.detail);
     return { ok: false, state: { error: msg, fieldErrors: { reviewer: msg } } };
   }
   return { ok: true, userId: resolved?.ok ? resolved.userId : undefined };

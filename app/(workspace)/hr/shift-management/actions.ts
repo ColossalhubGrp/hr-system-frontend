@@ -340,10 +340,12 @@ export async function createShiftRequestAction(
   if (rawApprover) {
     const resolved = await resolveApproverUserId(rawApprover);
     if (resolved && !resolved.ok) {
-      return {
-        error: approverErrorMessage(resolved.reason),
-        fieldErrors: { approver: approverErrorMessage(resolved.reason) },
-      };
+      const msg = approverErrorMessage(
+        resolved.reason,
+        "approver",
+        resolved.detail,
+      );
+      return { error: msg, fieldErrors: { approver: msg } };
     }
     approver = resolved?.ok ? resolved.userId : "";
   }

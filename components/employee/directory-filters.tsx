@@ -9,10 +9,10 @@ type Props = {
   statuses: string[];
 };
 
-// Small enough to feel instant, large enough to skip most in-flight
-// keystrokes so we don't fire a Frappe query per keystroke. Matches
-// Frappe's own awesomebar debounce.
-const SEARCH_DEBOUNCE_MS = 250;
+// Small enough to feel instant, large enough that mid-word typing
+// still collapses into a single query. Below ~100ms it stops being
+// a debounce and hammers the backend once per keystroke.
+const SEARCH_DEBOUNCE_MS = 120;
 
 /**
  * Drives the directory's URL state. We push to the same path with updated

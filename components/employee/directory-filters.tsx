@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Search } from "lucide-react";
 
 type Props = {
@@ -9,16 +9,30 @@ type Props = {
   statuses: string[];
 };
 
+// Small enough to feel instant, large enough to skip most in-flight
+// keystrokes so we don't fire a Frappe query per keystroke. Matches
+// Frappe's own awesomebar debounce.
+const SEARCH_DEBOUNCE_MS = 250;
+
 /**
  * Drives the directory's URL state. We push to the same path with updated
- * search params; the Server Component re-renders with fresh data. Submitting
- * the search field or changing a dropdown is a "navigation", which keeps
- * back/forward usable.
+ * search params; the Server Component re-renders with fresh data. Dropdown
+ * changes navigate immediately; the search box filters as the user types,
+ * debounced so we don't fire a query per keystroke.
  */
 export function DirectoryFilters({ departments, statuses }: Props) {
   const router = useRouter();
   const params = useSearchParams();
   const [pending, start] = useTransition();
+
+  // Local controlled state so typing feels instant; the URL follows on a
+  // debounce. Seeded from the URL on mount and re-synced when the URL
+  // changes underneath us (back/forward, external nav).
+  const urlQ = params.get("q") ?? "";
+  const [q, setQ] = useState(urlQ);
+  useEffect(() => {
+    setQ(urlQ);
+  }, [urlQ]);
 
   function patch(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
@@ -30,16 +44,31 @@ export function DirectoryFilters({ departments, statuses }: Props) {
     start(() => router.push(`?${next.toString()}`));
   }
 
+  // Debounced q → URL. Cleared on every keystroke so only the LAST
+  // pause commits. Also cleared when q is already in sync with the
+  // URL (e.g. right after we pushed it ourselves) so we don't
+  // schedule redundant navigations.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (q.trim() === urlQ) return;
+    timer.current = setTimeout(() => patch("q", q.trim()), SEARCH_DEBOUNCE_MS);
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+    // patch depends on `params`, which changes on every render triggered
+    // by the URL push we just fired — including it here would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, urlQ]);
+
   return (
     <form
       role="search"
       onSubmit={(e) => {
+        // Flush any pending debounce so hitting Enter feels immediate
+        // instead of waiting the remaining ms.
         e.preventDefault();
-        const q = (
-          (e.currentTarget.elements.namedItem("q") as HTMLInputElement | null)
-            ?.value ?? ""
-        ).trim();
-        patch("q", q);
+        if (timer.current) clearTimeout(timer.current);
+        patch("q", q.trim());
       }}
       className="flex flex-col gap-3 sm:flex-row sm:items-center"
     >
@@ -48,7 +77,8 @@ export function DirectoryFilters({ departments, statuses }: Props) {
         <input
           name="q"
           type="search"
-          defaultValue={params.get("q") ?? ""}
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
           placeholder="Search by name, ID, or email"
           className="h-10 w-full rounded-chip border border-hairline bg-surface pl-9 pr-4 text-sm placeholder:text-ash-500 focus-ring"
         />

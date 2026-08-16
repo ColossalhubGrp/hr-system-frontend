@@ -4,7 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { AlertCircle, ArrowLeft, ArrowRight, Save } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, Info, Save } from "lucide-react";
 import type { EmployeeFull } from "@/lib/frappe/employees";
 import type {
   EmployeeFormInput,
@@ -1080,8 +1080,9 @@ function Grid({ children }: { children: React.ReactNode }) {
 
 function Hint({ children }: { children: React.ReactNode }) {
   return (
-    <p className="rounded-card border border-dashed border-hairline bg-canvas/40 px-4 py-3 text-xs text-ash-600">
-      {children}
+    <p className="mt-3 flex items-start gap-2 rounded-card border border-amber-300 bg-amber-100/60 px-4 py-3 text-xs font-medium text-amber-900">
+      <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" aria-hidden />
+      <span>{children}</span>
     </p>
   );
 }

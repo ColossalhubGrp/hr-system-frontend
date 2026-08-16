@@ -86,7 +86,7 @@ export function SubscriptionForm({
         </div>
       </section>
 
-      <div className="sticky bottom-0 -mx-1 flex items-center justify-end gap-2 rounded-lg border bg-card/95 p-3 shadow backdrop-blur">
+      <div className="sticky bottom-0 -mx-1 mt-6 flex items-center justify-end gap-2 rounded-lg border bg-card/95 p-3 shadow backdrop-blur">
         <Submit />
       </div>
     </form>

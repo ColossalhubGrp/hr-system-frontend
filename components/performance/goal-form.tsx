@@ -229,7 +229,7 @@ function SubmitRow({
   mode: "create" | "edit";
 }) {
   return (
-    <div className="sticky bottom-0 -mx-1 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
+    <div className="sticky bottom-0 -mx-1 mt-6 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
       <Link
         href={cancelHref as Route}
         className="h-10 inline-flex items-center justify-center rounded-chip px-4 text-sm font-medium text-ash-700 transition hover:bg-canvas focus-ring"

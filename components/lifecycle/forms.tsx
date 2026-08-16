@@ -104,20 +104,38 @@ function useEmployeeAutofill(opts: Opts) {
   };
 }
 
-/** Toast on error state transitions. Success paths in every lifecycle
- *  action redirect() to the detail page, so no success toast fires here
- *  — the URL change is the feedback. */
+/** Toast on error state transitions AND scroll the first invalid
+ *  field into view. Success paths in every lifecycle action redirect()
+ *  to the detail page, so no success toast fires here — the URL change
+ *  is the feedback. The scroll is critical for long forms where the
+ *  failing field is below the fold (e.g. Description on the Grievance
+ *  form) and the user would otherwise see the banner but no highlight.
+ */
 function useErrorToast(state: FormState) {
   const last = useRef(state);
   useEffect(() => {
     if (state === last.current) return;
     last.current = state;
-    if (state.error) {
-      toast.error(state.error, {
-        description: state.fieldErrors
-          ? "Check the highlighted fields."
-          : undefined,
-      });
+    if (!state.error) return;
+    toast.error(state.error, {
+      description: state.fieldErrors
+        ? "Check the highlighted fields."
+        : undefined,
+    });
+    // Zod iterates issues in schema order, so the first key is the
+    // first-declared invalid field — natural top-down focus target.
+    // Field.htmlFor matches the input's id, so getElementById is enough.
+    const firstKey = state.fieldErrors
+      ? Object.keys(state.fieldErrors)[0]
+      : undefined;
+    if (!firstKey) return;
+    const el = document.getElementById(firstKey);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    // Focus after the scroll so the caret lands in the right field —
+    // some inputs (SelectInput) don't focus visibly on scroll.
+    if ("focus" in el && typeof (el as HTMLElement).focus === "function") {
+      (el as HTMLElement).focus({ preventScroll: true });
     }
   }, [state]);
 }
@@ -511,8 +529,17 @@ export function GrievanceForm({
             invalid={Boolean(fe.raised_by)}
           />
         </Field>
-        <Field label="Date raised" htmlFor="grievance_raised_date">
-          <TextInput id="grievance_raised_date" name="grievance_raised_date" type="date" />
+        <Field
+          label="Date raised"
+          htmlFor="grievance_raised_date"
+          error={fe.grievance_raised_date}
+        >
+          <TextInput
+            id="grievance_raised_date"
+            name="grievance_raised_date"
+            type="date"
+            invalid={Boolean(fe.grievance_raised_date)}
+          />
         </Field>
         <Field label="Against" htmlFor="grievance_against_type" required error={fe.grievance_against_type}>
           <SelectInput
@@ -546,6 +573,8 @@ export function GrievanceForm({
         <Field
           label="Grievance type"
           htmlFor="grievance_type"
+          required
+          error={fe.grievance_type}
           hint={
             opts.grievanceTypes.length === 0
               ? undefined
@@ -557,13 +586,35 @@ export function GrievanceForm({
             name="grievance_type"
             options={opts.grievanceTypes}
             placeholder="— pick a type —"
+            invalid={Boolean(fe.grievance_type)}
           />
         </Field>
-        <Field label="Cause" htmlFor="cause_of_grievance" wide>
-          <TextArea id="cause_of_grievance" name="cause_of_grievance" rows={2} />
+        <Field
+          label="Cause"
+          htmlFor="cause_of_grievance"
+          error={fe.cause_of_grievance}
+          wide
+        >
+          <TextArea
+            id="cause_of_grievance"
+            name="cause_of_grievance"
+            rows={2}
+            invalid={Boolean(fe.cause_of_grievance)}
+          />
         </Field>
-        <Field label="Description" htmlFor="description" wide>
-          <TextArea id="description" name="description" rows={4} />
+        <Field
+          label="Description"
+          htmlFor="description"
+          required
+          error={fe.description}
+          wide
+        >
+          <TextArea
+            id="description"
+            name="description"
+            rows={4}
+            invalid={Boolean(fe.description)}
+          />
         </Field>
       </FormSection>
       <Bar cancelHref={cancelHref} label="File grievance" />

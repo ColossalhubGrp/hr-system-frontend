@@ -85,7 +85,7 @@ async function findUserByEmail(email: string): Promise<boolean> {
         filters: { name: email },
         fieldname: "name",
       },
-      as: "service",
+      as: "user",
     });
     return Boolean(
       row && typeof row === "object" && !Array.isArray(row) && "name" in row,
@@ -107,52 +107,86 @@ async function createUserAccount(
     (emp.last_name ?? "").trim() ||
     (emp.employee_name ?? "").trim().split(/\s+/).slice(1).join(" ") ||
     "-";
-  await frappeCall({
-    method: "frappe.client.insert",
-    args: {
-      doc: {
-        doctype: "User",
-        // User is auto-named after `email` in Frappe. Setting `name`
-        // explicitly avoids any locale-specific autoname wrinkles.
-        name: email,
-        email,
-        first_name: firstName,
-        last_name: lastName,
-        // Admin can invite them later; auto-emailing on every approver
-        // pick would spam mailboxes (and would fail on non-deliverable
-        // demo domains, sinking the whole insert).
-        send_welcome_email: 0,
-        enabled: 1,
-        // System User so they can log in and act on approvals.
-        // Website User wouldn't have desk access.
-        user_type: "System User",
-        // Frappe requires at least one role on a System User; without
-        // this the insert succeeds but subsequent Link-to-User lookups
-        // can still refuse the row depending on tenant-wide validation.
-        // "Employee" is the safe minimum — the Employee role bundle
-        // comes with the tenant seed on this app.
-        roles: [{ doctype: "Has Role", role: "Employee" }],
-      },
-    },
-    verb: "POST",
-    as: "service",
-  });
+  const doc = {
+    doctype: "User",
+    // User is auto-named after `email` in Frappe. Setting `name`
+    // explicitly avoids any locale-specific autoname wrinkles.
+    name: email,
+    email,
+    first_name: firstName,
+    last_name: lastName,
+    // Admin can invite them later; auto-emailing on every approver
+    // pick would spam mailboxes (and would fail on non-deliverable
+    // demo domains, sinking the whole insert).
+    send_welcome_email: 0,
+    enabled: 1,
+    // System User so they can log in and act on approvals.
+    // Website User wouldn't have desk access.
+    user_type: "System User",
+    // Frappe requires at least one role on a System User.
+    // "Employee" is the safe minimum — ships with every tenant.
+    roles: [{ doctype: "Has Role", role: "Employee" }],
+  };
+  // Try the logged-in user first — HR Manager / HR Director typically
+  // has User.create permission for onboarding new hires. Fall back to
+  // the service token (API key user) if not, so a tenant that gave
+  // its API user System Manager can still provision. Only surface an
+  // error when BOTH paths refuse the insert.
+  try {
+    await frappeCall({
+      method: "frappe.client.insert",
+      args: { doc },
+      verb: "POST",
+      as: "user",
+    });
+    return;
+  } catch (userErr) {
+    try {
+      await frappeCall({
+        method: "frappe.client.insert",
+        args: { doc },
+        verb: "POST",
+        as: "service",
+      });
+    } catch {
+      // Re-throw the user-scoped error since it usually carries the
+      // more actionable message ("no permission" vs "invalid token").
+      throw userErr;
+    }
+  }
 }
 
 async function linkUserToEmployee(
   employeeId: string,
   email: string,
 ): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.set_value",
-    args: {
-      doctype: "Employee",
-      name: employeeId,
-      fieldname: { user_id: email },
-    },
-    verb: "POST",
-    as: "service",
-  });
+  // Same dual-path idea as createUserAccount — HR user first, service
+  // token fallback. Writing user_id on Employee needs write access to
+  // the row, which HR bundles have out of the box.
+  try {
+    await frappeCall({
+      method: "frappe.client.set_value",
+      args: {
+        doctype: "Employee",
+        name: employeeId,
+        fieldname: { user_id: email },
+      },
+      verb: "POST",
+      as: "user",
+    });
+    return;
+  } catch {
+    await frappeCall({
+      method: "frappe.client.set_value",
+      args: {
+        doctype: "Employee",
+        name: employeeId,
+        fieldname: { user_id: email },
+      },
+      verb: "POST",
+      as: "service",
+    });
+  }
 }
 
 export async function resolveApproverUserId(
@@ -216,6 +250,12 @@ export function approverErrorMessage(
     return `The picked ${label} has no email on their employee record, so we can't set up a login for them. Add a company or personal email under Contact Details first.`;
   }
   if (reason === "provision_failed") {
+    // 401 UNAUTHORIZED = neither the logged-in user nor the API service
+    // user has permission to create User docs. Give the admin a
+    // concrete action instead of exposing the internal HTTP code.
+    if (detail && /401\s*UNAUTHORIZED/i.test(detail)) {
+      return `Couldn't create a login for this ${label} automatically — your account doesn't have permission to add new logins. Open their Employee record and set a "Linked user account" under Contact Details, or ask an admin.`;
+    }
     return `Couldn't create a login account for the picked ${label}${detail ? ` — ${detail}` : "."}`;
   }
   return `Couldn't find that ${label}. Refresh and pick again.`;

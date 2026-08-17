@@ -162,3 +162,39 @@ export async function deleteLeaveTypeAction(
   revalidatePath("/settings/leave-types");
   return { ok: true };
 }
+
+/** Trigger the backend seed for the default Leave Type set. Called
+ *  from the empty-state button on the Settings → Leave Types page.
+ *  The backend method is idempotent — already-existing types are
+ *  skipped, tenant-set values never overwritten. */
+export async function seedDefaultLeaveTypesAction(): Promise<
+  | {
+      ok: true;
+      summary: {
+        created: string[];
+        skipped: string[];
+        errors: Array<{ name: string; error: string }>;
+      };
+    }
+  | { ok: false; error: string }
+> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { ok: false, error: blocked };
+  try {
+    const { frappeCall } = await import("@/lib/frappe/client");
+    const summary = await frappeCall<{
+      created: string[];
+      skipped: string[];
+      errors: Array<{ name: string; error: string }>;
+    }>({
+      method: "recruitment_app.api.me.seed_default_leave_types",
+      verb: "POST",
+      as: "user",
+    });
+    revalidatePath("/settings/leave-types");
+    return { ok: true, summary };
+  } catch (err) {
+    const state = toFormState(err);
+    return { ok: false, error: state.error ?? "Seed failed." };
+  }
+}

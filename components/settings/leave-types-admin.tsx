@@ -34,9 +34,12 @@ import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import {
   createLeaveTypeAction,
   deleteLeaveTypeAction,
+  seedDefaultLeaveTypesAction,
   updateLeaveTypeAction,
   type FormState,
 } from "@/app/(workspace)/settings/leave-types/actions";
+import { Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
 import type { LeaveTypeRow } from "@/lib/frappe/leave-types";
 
 const EMPTY: FormState = {};
@@ -51,8 +54,40 @@ export function LeaveTypesAdmin({
   const [rows, setRows] = useState<LeaveTypeRow[]>(initial);
   const [openCreate, setOpenCreate] = useState(false);
   const [editing, setEditing] = useState<LeaveTypeRow | null>(null);
+  const [seeding, startSeed] = useTransition();
+  const router = useRouter();
 
   useEffect(() => setRows(initial), [initial]);
+
+  const seedDefaults = () => {
+    startSeed(async () => {
+      const res = await seedDefaultLeaveTypesAction();
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      const { created, skipped, errors } = res.summary;
+      if (errors.length) {
+        toast.warning(
+          `Added ${created.length}, skipped ${skipped.length}, ${errors.length} failed.`,
+          {
+            description: errors
+              .map((e) => `${e.name}: ${e.error}`)
+              .join(" · "),
+          },
+        );
+      } else if (created.length === 0) {
+        toast.info("All defaults already exist — nothing to add.");
+      } else {
+        toast.success(
+          `Seeded ${created.length} leave type${created.length === 1 ? "" : "s"}.`,
+          { description: created.join(", ") },
+        );
+      }
+      // Refresh the server-fetched initial so the table repopulates.
+      router.refresh();
+    });
+  };
 
   return (
     <>
@@ -85,15 +120,32 @@ export function LeaveTypesAdmin({
             <TableRow>
               <TableCell
                 colSpan={canManage ? 5 : 4}
-                className="py-8 text-center text-sm text-muted-foreground"
+                className="py-10 text-center text-sm text-muted-foreground"
               >
-                No leave types yet.
-                {canManage && (
-                  <>
-                    {" "}
-                    Click <b>New leave type</b> above.
-                  </>
-                )}
+                <div className="flex flex-col items-center gap-3">
+                  <p>No leave types yet.</p>
+                  {canManage && (
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={seedDefaults}
+                        disabled={seeding}
+                        className="gap-1.5"
+                      >
+                        {seeding ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5" />
+                        )}
+                        {seeding ? "Seeding…" : "Seed defaults"}
+                      </Button>
+                      <span className="text-xs text-muted-foreground">
+                        or add one manually with <b>New leave type</b> above.
+                      </span>
+                    </div>
+                  )}
+                </div>
               </TableCell>
             </TableRow>
           ) : (

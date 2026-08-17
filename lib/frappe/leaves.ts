@@ -322,12 +322,18 @@ export type LeaveCreateInput = {
 export async function createLeaveApplication(
   input: LeaveCreateInput,
 ): Promise<string> {
+  // Frappe's Leave Application schema treats posting_date as
+  // required. Desk auto-fills it with today; the REST insert path
+  // doesn't, so we set it explicitly to today's YYYY-MM-DD to
+  // avoid "Value missing for Leave Application: Posting Date".
+  const today = new Date().toISOString().slice(0, 10);
   const doc: Record<string, unknown> = {
     doctype: "Leave Application",
     employee: input.employee,
     leave_type: input.leave_type,
     from_date: input.from_date,
     to_date: input.to_date,
+    posting_date: today,
     status: "Open",
   };
   if (input.half_day) {

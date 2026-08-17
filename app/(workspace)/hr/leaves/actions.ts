@@ -9,6 +9,10 @@ import {
   type LeaveCreateInput,
 } from "@/lib/frappe/leaves";
 import { FrappeRequestError } from "@/lib/frappe/client";
+import {
+  approverErrorMessage,
+  resolveApproverUserId,
+} from "@/lib/frappe/employee-approvers";
 
 export type FormState = {
   error?: string;
@@ -26,11 +30,10 @@ const createSchema = z
     half_day: z.union([z.literal("on"), z.literal("")]).optional(),
     half_day_date: z.string().trim().optional(),
     description: z.string().trim().optional(),
-    leave_approver: z
-      .string()
-      .trim()
-      .optional()
-      .refine((v) => !v || /.+@.+\..+/.test(v), "Approver must be a user email."),
+    // Picker posts an employee id (or a raw email for verbatim
+    // options like Administrator). Server resolves it to a user_id
+    // and pins the approver on the employee's leave_approver field.
+    leave_approver: z.string().trim().optional(),
   })
   .refine((d) => d.from_date <= d.to_date, {
     message: "End date must be on or after start date.",
@@ -91,6 +94,25 @@ export async function createLeaveAction(
     return { error: "Check the highlighted fields.", fieldErrors };
   }
 
+  // Resolve the picked approver + pin so Frappe HR's
+  // validate_approver check accepts them.
+  let leaveApprover: string | undefined = undefined;
+  if (parsed.data.leave_approver) {
+    const resolved = await resolveApproverUserId(parsed.data.leave_approver, {
+      employee: parsed.data.employee,
+      field: "leave_approver",
+    });
+    if (resolved && !resolved.ok) {
+      const msg = approverErrorMessage(
+        resolved.reason,
+        "leave approver",
+        resolved.detail,
+      );
+      return { error: msg, fieldErrors: { leave_approver: msg } };
+    }
+    leaveApprover = resolved?.ok ? resolved.userId : undefined;
+  }
+
   let newId: string;
   try {
     newId = await createLeaveApplication({
@@ -101,7 +123,7 @@ export async function createLeaveAction(
       half_day: parsed.data.half_day === "on",
       half_day_date: parsed.data.half_day_date || undefined,
       description: parsed.data.description || undefined,
-      leave_approver: parsed.data.leave_approver || undefined,
+      leave_approver: leaveApprover,
     });
   } catch (err) {
     return toFormState(err);

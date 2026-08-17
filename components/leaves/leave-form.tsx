@@ -17,6 +17,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { ApproverPickerField } from "@/components/common/approver-picker-field";
 import type {
   FormState as LeaveFormState,
 } from "@/app/(workspace)/hr/leaves/actions";
@@ -131,20 +132,14 @@ export function LeaveForm({
             </div>
           )}
         </div>
-        <Field
+        <ApproverPickerField
+          name="leave_approver"
           label="Approver"
-          htmlFor="leave_approver"
           error={fe.leave_approver}
-          hint="Optional — defaults to the employee's assigned leave approver."
-        >
-          <TextInput
-            id="leave_approver"
-            name="leave_approver"
-            type="email"
-            defaultValue={defaultApprover}
-            invalid={Boolean(fe.leave_approver)}
-          />
-        </Field>
+          directory={employeeDirectory}
+          defaultValue={defaultApprover}
+          hint="Leave blank to use the employee's default leave approver."
+        />
         <Field label="Reason" htmlFor="description" wide>
           <TextArea id="description" name="description" rows={3} />
         </Field>

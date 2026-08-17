@@ -76,20 +76,64 @@ function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, "").trim();
 }
 
+/** Options to pin the resolved approver on the request-filing
+ *  employee's designated-approver field. When supplied, resolution
+ *  goes through the backend's `ensure_approver` method which does
+ *  BOTH the user-provisioning step AND the pinning step in one
+ *  transaction. Required to satisfy Frappe HR's own
+ *  `validate_approver()` check ("Only Approvers can Approve this
+ *  Request") on Leave / Shift / Expense inserts. */
+export type PinContext = {
+  /** The Employee id the request is being FILED on. */
+  employee: string;
+  /** Which designated-approver field to pin to. */
+  field: "leave_approver" | "expense_approver" | "shift_request_approver";
+};
+
 export async function resolveApproverUserId(
   input: string | null | undefined,
+  pin?: PinContext,
 ): Promise<ApproverResolution | null> {
   const val = (input ?? "").trim();
   if (!val) return null;
-  // Already an email — passed through as-is (verbatim option in picker).
-  if (val.includes("@")) return { ok: true, userId: val };
+  // Already an email — pass through, but still pin so Frappe HR's
+  // validate_approver check accepts it.
+  if (val.includes("@")) {
+    if (pin) {
+      // We don't have the approver's Employee id here (the picker
+      // rendered them as a verbatim option), so fall back to
+      // set_value directly. Safe because HR filers who reach this
+      // path can already read the Employee row.
+      await frappeCall({
+        method: "frappe.client.set_value",
+        args: {
+          doctype: "Employee",
+          name: pin.employee,
+          fieldname: { [pin.field]: val },
+        },
+        verb: "POST",
+        as: "user",
+      }).catch(() => {
+        /* non-fatal — Frappe will reject at submit if pin failed */
+      });
+    }
+    return { ok: true, userId: val };
+  }
 
-  // Employee id — hand it to the backend which will lazily create a
-  // User account if needed and link it back to the Employee record.
+  // Employee id — hand it to the backend which will lazily create
+  // a User account if needed, backlink Employee.user_id, and
+  // (when `pin` is supplied) also pin the picked user onto the
+  // request-filing employee's designated-approver field.
+  const method = pin
+    ? "recruitment_app.api.me.ensure_approver"
+    : "recruitment_app.api.me.ensure_user_for_employee";
+  const args = pin
+    ? { employee: pin.employee, approver_employee: val, field: pin.field }
+    : { employee: val };
   try {
     const res = await frappeCall<{ user_id: string }>({
-      method: "recruitment_app.api.me.ensure_user_for_employee",
-      args: { employee: val },
+      method,
+      args,
       verb: "POST",
       as: "user",
     });

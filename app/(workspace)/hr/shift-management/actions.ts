@@ -338,7 +338,14 @@ export async function createShiftRequestAction(
   let approver = "";
   const rawApprover = parsed.data.approver?.trim() || "";
   if (rawApprover) {
-    const resolved = await resolveApproverUserId(rawApprover);
+    // Pass pin context so the backend also sets Employee.
+    // shift_request_approver on the filing employee — Frappe HR's
+    // validate_approver refuses any approver that isn't the
+    // designated one.
+    const resolved = await resolveApproverUserId(rawApprover, {
+      employee: parsed.data.employee,
+      field: "shift_request_approver",
+    });
     if (resolved && !resolved.ok) {
       const msg = approverErrorMessage(
         resolved.reason,

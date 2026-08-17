@@ -99,7 +99,12 @@ export async function createExpenseClaimAction(
   // handing the payload to Frappe.
   let approver: string | undefined = undefined;
   if (parsed.data.approver) {
-    const resolved = await resolveApproverUserId(parsed.data.approver);
+    // Pin so Frappe HR's validate_approver accepts the picked user
+    // even when they aren't the employee's pre-designated one.
+    const resolved = await resolveApproverUserId(parsed.data.approver, {
+      employee: parsed.data.employee,
+      field: "expense_approver",
+    });
     if (resolved && !resolved.ok) {
       const msg = approverErrorMessage(
         resolved.reason,

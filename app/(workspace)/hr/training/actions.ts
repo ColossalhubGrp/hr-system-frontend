@@ -34,7 +34,13 @@ const dateTimeLocal = z
 const eventSchema = z
   .object({
     event_name: z.string().trim().min(1, "Give the event a name."),
-    type: z.enum(["Internal", "External", "Selected", "Not Attended"]),
+    // Type accepts any non-empty string — different tenants customise
+    // Training Event.type to a Select (default: Internal/External/…)
+    // or a Link to their own Training Event Type doctype (this tenant:
+    // Conference/Exam/Workshop/…). The form already surfaces only
+    // values the tenant will accept via training_form_meta; the
+    // validator here just enforces "one was picked".
+    type: z.string().trim().min(1, "Pick a type."),
     training_program: z.string().trim().optional(),
     start_time: dateTimeLocal,
     end_time: z

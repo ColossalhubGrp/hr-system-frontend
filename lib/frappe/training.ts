@@ -36,9 +36,6 @@ export async function listTrainingEvents(opts: {
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(100, Math.max(10, opts.pageSize ?? 25));
 
-  const filters: Array<[string, string, string]> = [];
-  if (opts.status) filters.push(["event_status", "=", opts.status]);
-
   type Row = {
     name: string;
     event_name: string;
@@ -51,74 +48,129 @@ export async function listTrainingEvents(opts: {
     docstatus: 0 | 1 | 2;
   };
 
-  const [rowsRaw, totalRaw, byStatus] = await Promise.all([
-    frappeCall<Row[]>({
-      method: "frappe.client.get_list",
+  // Prefer the admin whitelisted method — bypasses the DocPerm
+  // gate that silently returns [] for HR bundle roles on Training
+  // Event / Program (Frappe HR doesn't ship a DocPerm entry for
+  // custom HR Director / HR User). Fall back to raw client reads
+  // when the backend method isn't deployed yet.
+  try {
+    type AdminResp = {
+      rows: Row[];
+      total: number;
+      counts: {
+        scheduled: number;
+        inProgress: number;
+        completed: number;
+        cancelled: number;
+      };
+    };
+    const resp = await frappeCall<AdminResp>({
+      method: "recruitment_app.api.me.list_training_events_admin",
       args: {
-        doctype: "Training Event",
-        fields: [
-          "name",
-          "event_name",
-          "type",
-          "event_status",
-          "start_time",
-          "end_time",
-          "location",
-          "supplier",
-          "docstatus",
-        ],
-        filters: JSON.stringify(filters),
-        order_by: "start_time desc",
+        status: opts.status,
         limit_start: (page - 1) * pageSize,
         limit_page_length: pageSize,
       },
       as: "user",
-    }).catch(() => [] as Row[]),
-    frappeCall<number>({
-      method: "frappe.client.get_count",
-      args: { doctype: "Training Event", filters: JSON.stringify(filters) },
-      as: "user",
-    }).catch(() => 0),
-    Promise.all(
-      STATUSES.map((s) =>
-        frappeCall<number>({
-          method: "frappe.client.get_count",
-          args: {
-            doctype: "Training Event",
-            filters: JSON.stringify([["event_status", "=", s]]),
-          },
-          as: "user",
-        })
-          .catch(() => 0)
-          .then((c) => [s, Number(c ?? 0)] as const),
+    });
+    return {
+      rows: (resp.rows ?? []).map((r) => ({
+        id: r.name,
+        eventName: r.event_name,
+        type: r.type,
+        status: r.event_status,
+        startTime: r.start_time,
+        endTime: r.end_time,
+        location: r.location,
+        supplier: r.supplier,
+        docstatus: r.docstatus,
+      })),
+      total: Number(resp.total ?? 0),
+      page,
+      pageSize,
+      counts: resp.counts ?? {
+        scheduled: 0,
+        inProgress: 0,
+        completed: 0,
+        cancelled: 0,
+      },
+    };
+  } catch {
+    // Fallback: original client.get_list path.
+    const filters: Array<[string, string, string]> = [];
+    if (opts.status) filters.push(["event_status", "=", opts.status]);
+
+    const [rowsRaw, totalRaw, byStatus] = await Promise.all([
+      frappeCall<Row[]>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "Training Event",
+          fields: [
+            "name",
+            "event_name",
+            "type",
+            "event_status",
+            "start_time",
+            "end_time",
+            "location",
+            "supplier",
+            "docstatus",
+          ],
+          filters: JSON.stringify(filters),
+          order_by: "start_time desc",
+          limit_start: (page - 1) * pageSize,
+          limit_page_length: pageSize,
+        },
+        as: "user",
+      }).catch(() => [] as Row[]),
+      frappeCall<number>({
+        method: "frappe.client.get_count",
+        args: {
+          doctype: "Training Event",
+          filters: JSON.stringify(filters),
+        },
+        as: "user",
+      }).catch(() => 0),
+      Promise.all(
+        STATUSES.map((s) =>
+          frappeCall<number>({
+            method: "frappe.client.get_count",
+            args: {
+              doctype: "Training Event",
+              filters: JSON.stringify([["event_status", "=", s]]),
+            },
+            as: "user",
+          })
+            .catch(() => 0)
+            .then((c) => [s, Number(c ?? 0)] as const),
+        ),
       ),
-    ),
-  ]);
+    ]);
 
-  const counts = Object.fromEntries(byStatus);
-
-  return {
-    rows: rowsRaw.map((r) => ({
-      id: r.name,
-      eventName: r.event_name,
-      type: r.type,
-      status: r.event_status,
-      startTime: r.start_time,
-      endTime: r.end_time,
-      location: r.location,
-      supplier: r.supplier,
-      docstatus: r.docstatus,
-    })),
-    total: Number(totalRaw ?? 0),
-    page,
-    pageSize,
-    counts: {
-      scheduled: counts.Scheduled ?? 0,
-      inProgress: counts["In Progress"] ?? 0,
-      completed: counts.Completed ?? 0,
-      cancelled: counts.Cancelled ?? 0,
-    },
-  };
+    const counts = Object.fromEntries(byStatus);
+    return {
+      rows: rowsRaw.map((r) => ({
+        id: r.name,
+        eventName: r.event_name,
+        type: r.type,
+        status: r.event_status,
+        startTime: r.start_time,
+        endTime: r.end_time,
+        location: r.location,
+        supplier: r.supplier,
+        docstatus: r.docstatus,
+      })),
+      total: Number(totalRaw ?? 0),
+      page,
+      pageSize,
+      counts: {
+        scheduled: counts.Scheduled ?? 0,
+        inProgress: counts["In Progress"] ?? 0,
+        completed: counts.Completed ?? 0,
+        cancelled: counts.Cancelled ?? 0,
+      },
+    };
+  }
 }
 
 export type TrainingEvent = TrainingRow & {
@@ -199,6 +251,22 @@ export type TrainingProgramRow = {
   description: string | null;
 };
 
+async function fetchProgramRowsAdmin(): Promise<
+  Array<{
+    name: string;
+    training_program_name: string | null;
+    training_program: string | null;
+    supplier: string | null;
+    is_public: 0 | 1 | boolean | null;
+    description: string | null;
+  }>
+> {
+  return frappeCall({
+    method: "recruitment_app.api.me.list_training_programs_admin",
+    as: "user",
+  });
+}
+
 export async function listTrainingPrograms(opts: {
   page?: number;
   pageSize?: number;
@@ -213,14 +281,22 @@ export async function listTrainingPrograms(opts: {
 
   type Row = {
     name: string;
-    training_program_name: string;
+    training_program_name: string | null;
+    training_program: string | null;
     supplier: string | null;
     is_public: 0 | 1 | boolean | null;
     description: string | null;
   };
 
-  const [rowsRaw, totalRaw] = await Promise.all([
-    frappeCall<Row[]>({
+  // Prefer the admin whitelisted method — bypasses the DocPerm
+  // gate that silently returns [] for HR bundle roles on Training
+  // Program. Fall back to raw client reads when the backend
+  // method isn't deployed yet.
+  let all: Row[] = [];
+  try {
+    all = await fetchProgramRowsAdmin();
+  } catch {
+    all = await frappeCall<Row[]>({
       method: "frappe.client.get_list",
       args: {
         doctype: "Training Program",
@@ -232,28 +308,30 @@ export async function listTrainingPrograms(opts: {
           "description",
         ],
         order_by: "modified desc",
-        limit_start: (page - 1) * pageSize,
-        limit_page_length: pageSize,
+        limit_page_length: 500,
       },
       as: "user",
-    }).catch(() => [] as Row[]),
-    frappeCall<number>({
-      method: "frappe.client.get_count",
-      args: { doctype: "Training Program" },
-      as: "user",
-    }).catch(() => 0),
-  ]);
+    }).catch(() => [] as Row[]);
+  }
+
+  const total = all.length;
+  const start = (page - 1) * pageSize;
+  const rowsRaw = all.slice(start, start + pageSize);
 
   return {
     rows: rowsRaw.map((r) => ({
       id: r.name,
       name: r.name,
-      trainingProgramName: r.training_program_name,
+      // Fall back through the field variants — different tenants
+      // populate different keys (training_program is the autoname
+      // source here; training_program_name may be null).
+      trainingProgramName:
+        (r.training_program_name ?? r.training_program ?? r.name) as string,
       supplier: r.supplier,
       isPublic: Boolean(r.is_public),
       description: r.description,
     })),
-    total: Number(totalRaw ?? 0),
+    total,
     page,
     pageSize,
   };
@@ -263,8 +341,14 @@ export async function listTrainingPrograms(opts: {
 
 export type TrainingEventInput = {
   eventName: string;
-  /** Internal / External / Selected / Not Attended (Frappe HR set). */
-  type: "Internal" | "External" | "Selected" | "Not Attended";
+  /** Accepted values vary per tenant — vanilla Frappe HR ships
+   *  Internal / External / Selected / Not Attended as a Select
+   *  field; some tenants customise `type` to a Link to their own
+   *  Training Event Type doctype (Conference / Workshop / etc).
+   *  The form surfaces the tenant's actual accepted list via
+   *  training_form_meta upstream, so any string that came out
+   *  of there is valid. */
+  type: string;
   /** Optional link to a parent Training Program. */
   trainingProgram?: string;
   /** ISO datetime "YYYY-MM-DD HH:MM:SS" — Frappe rejects Z / +tz. */
@@ -579,23 +663,37 @@ export async function getTrainingFormOptions(): Promise<TrainingFormOptions> {
 }
 
 /** Pulled once for the event form's Training Program picker. Uses
- *  a lightweight list (name + label only). */
+ *  the admin-scope read so custom HR bundle roles see the rows —
+ *  falls back to the raw client.get_list during the deploy window. */
 export async function listTrainingProgramOptions(): Promise<
   Array<{ id: string; label: string }>
 > {
-  type Row = { name: string; training_program_name: string };
-  const rows = await frappeCall<Row[]>({
-    method: "frappe.client.get_list",
-    args: {
-      doctype: "Training Program",
-      fields: ["name", "training_program_name"],
-      order_by: "training_program_name asc",
-      limit_page_length: 200,
-    },
-    as: "user",
-  }).catch(() => [] as Row[]);
-  return rows.map((r) => ({
-    id: r.name,
-    label: r.training_program_name || r.name,
-  }));
+  try {
+    const rows = await fetchProgramRowsAdmin();
+    return rows.map((r) => ({
+      id: r.name,
+      label: (r.training_program_name ??
+        r.training_program ??
+        r.name) as string,
+    }));
+  } catch {
+    type Row = {
+      name: string;
+      training_program_name: string | null;
+    };
+    const rows = await frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Training Program",
+        fields: ["name", "training_program_name"],
+        order_by: "name asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    }).catch(() => [] as Row[]);
+    return rows.map((r) => ({
+      id: r.name,
+      label: r.training_program_name || r.name,
+    }));
+  }
 }

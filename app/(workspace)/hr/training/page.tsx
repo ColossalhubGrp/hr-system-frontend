@@ -17,6 +17,8 @@ import { StatusPill } from "@/components/common/status-pill";
 import { SubTabs } from "@/components/common/sub-tabs";
 import { DataTable } from "@/components/common/data-table";
 import { DirectoryPagination } from "@/components/employee/directory-pagination";
+import { ProgramRowActions } from "@/components/training/program-row-actions";
+import { getMyAccess } from "@/lib/frappe/roles";
 import {
   listTrainingEvents,
   listTrainingPrograms,
@@ -184,7 +186,11 @@ async function Events({
 }
 
 async function Programs({ page }: { page: number }) {
-  const result = await listTrainingPrograms({ page, pageSize: 25 });
+  const [result, access] = await Promise.all([
+    listTrainingPrograms({ page, pageSize: 25 }),
+    getMyAccess(),
+  ]);
+  const canManage = Boolean(access.isHrAdmin || access.isItAdmin);
 
   return (
     <>
@@ -244,6 +250,20 @@ async function Programs({ page }: { page: number }) {
               />
             ),
           },
+          ...(canManage
+            ? [
+                {
+                  header: "",
+                  className: "w-24 text-right",
+                  cell: (r: typeof result.rows[number]) => (
+                    <ProgramRowActions
+                      id={r.id}
+                      label={r.trainingProgramName}
+                    />
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
 

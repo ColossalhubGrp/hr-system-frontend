@@ -251,6 +251,50 @@ export type TrainingProgramRow = {
   description: string | null;
 };
 
+export type TrainingProgramDetail = {
+  id: string;
+  trainingProgramName: string;
+  company: string | null;
+  supplier: string | null;
+  description: string | null;
+  isPublic: boolean;
+};
+
+export async function getTrainingProgram(
+  id: string,
+): Promise<TrainingProgramDetail | null> {
+  type Raw = {
+    name: string;
+    training_program_name: string | null;
+    training_program: string | null;
+    company: string | null;
+    supplier: string | null;
+    description: string | null;
+    is_public: 0 | 1 | boolean | null;
+  };
+  try {
+    const doc = await frappeCall<Raw>({
+      method: "frappe.client.get",
+      args: { doctype: "Training Program", name: id },
+      as: "user",
+    });
+    return {
+      id: doc.name,
+      trainingProgramName:
+        (doc.training_program_name ??
+          doc.training_program ??
+          doc.name) as string,
+      company: doc.company,
+      supplier: doc.supplier,
+      description: doc.description,
+      isPublic: Boolean(doc.is_public),
+    };
+  } catch (err) {
+    if (err instanceof FrappeRequestError && err.status === 404) return null;
+    throw err;
+  }
+}
+
 async function fetchProgramRowsAdmin(): Promise<
   Array<{
     name: string;
@@ -402,6 +446,68 @@ export type TrainingProgramInput = {
   supplier?: string;
   isPublic?: boolean;
 };
+
+export async function updateTrainingProgram(
+  programId: string,
+  input: TrainingProgramInput,
+): Promise<void> {
+  // Full-doc save via frappe.client.get + mutate + save. Attempts
+  // to rename (via rename_doc) if the training_program value
+  // changed — Training Program is autonamed off that field, so a
+  // relabel is effectively a rename.
+  const doc = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    args: { doctype: "Training Program", name: programId },
+    as: "user",
+  });
+  const desiredName = input.trainingProgramName.trim();
+  let currentId = programId;
+  if (desiredName && desiredName !== programId) {
+    await frappeCall<unknown>({
+      method: "frappe.client.rename_doc",
+      verb: "POST",
+      args: {
+        doctype: "Training Program",
+        old_name: programId,
+        new_name: desiredName,
+        merge: 0,
+      },
+      as: "user",
+    });
+    currentId = desiredName;
+    // Re-fetch under the new id so the save below targets the
+    // renamed doc.
+    Object.assign(
+      doc,
+      await frappeCall<Record<string, unknown>>({
+        method: "frappe.client.get",
+        args: { doctype: "Training Program", name: currentId },
+        as: "user",
+      }),
+    );
+  }
+  doc.training_program = desiredName;
+  doc.training_program_name = desiredName;
+  doc.company = input.company;
+  doc.description = input.description;
+  doc.is_public = input.isPublic ? 1 : 0;
+  doc.supplier = input.supplier ?? null;
+  await frappeCall<unknown>({
+    method: "frappe.client.save",
+    verb: "POST",
+    args: { doc },
+    as: "user",
+  });
+}
+
+export async function deleteTrainingProgram(programId: string): Promise<void> {
+  await frappeCall<unknown>({
+    method: "frappe.client.delete",
+    verb: "POST",
+    args: { doctype: "Training Program", name: programId },
+    as: "user",
+  });
+}
 
 export async function createTrainingProgram(
   input: TrainingProgramInput,
@@ -575,6 +681,11 @@ export type TrainingFormOptions = {
    *  doesn't cover. Surface a warning so admins know to add
    *  them via Frappe HR before using this create surface. */
   programMissingRequired: Array<{ fieldname: string; label: string }>;
+  /** Set of every field the tenant's Training Program schema has.
+   *  Used to hide/show optional controls the tenant may not
+   *  actually have (e.g. `is_public` for the Visibility toggle
+   *  isn't universally present). */
+  programFieldnames: Set<string>;
 };
 
 const FALLBACK_TYPES = ["Internal", "External", "Selected", "Not Attended"];
@@ -600,6 +711,11 @@ export async function getTrainingFormOptions(): Promise<TrainingFormOptions> {
     program: {
       required_fields: Array<{ fieldname: string; label: string }>;
       autoname?: string;
+      all_fields?: Array<{
+        fieldname: string;
+        fieldtype: string;
+        label: string;
+      }>;
     };
     supplier: { enabled: boolean };
   };
@@ -653,12 +769,17 @@ export async function getTrainingFormOptions(): Promise<TrainingFormOptions> {
     // Filter out `name` — we set it explicitly on insert already.
     .filter((r) => r.fieldname !== "name");
 
+  const programFieldnames = new Set(
+    (meta?.program?.all_fields ?? []).map((f) => f.fieldname),
+  );
+
   return {
     suppliers: supplierRows.map((r) => r.name),
     eventTypeOptions,
     eventTypeFieldtype,
     eventTypeLinkDoctype,
     programMissingRequired,
+    programFieldnames,
   };
 }
 

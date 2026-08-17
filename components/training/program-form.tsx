@@ -18,18 +18,34 @@ type Action = (prev: FormState, form: FormData) => Promise<FormState>;
 const EMPTY: FormState = {};
 
 export function TrainingProgramForm({
+  mode = "create",
   action,
   companies,
   suppliers,
+  hasVisibilityField = true,
   cancelHref,
+  initial,
 }: {
+  mode?: "create" | "edit";
   action: Action;
   /** Tenant companies. Frappe HR treats Training Program.company
    *  as required on this schema — the picker defaults to the
    *  single company when the tenant only has one. */
   companies: string[];
   suppliers: string[];
+  /** Whether the tenant's Training Program schema has `is_public`.
+   *  Some Frappe HR variants ship without it; hiding the control
+   *  in that case avoids the confusing "ticked but saved Internal"
+   *  outcome the user hit. */
+  hasVisibilityField?: boolean;
   cancelHref: string;
+  initial?: {
+    trainingProgramName?: string | null;
+    company?: string | null;
+    supplier?: string | null;
+    description?: string | null;
+    isPublic?: boolean | null;
+  };
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
@@ -58,6 +74,7 @@ export function TrainingProgramForm({
             id="training_program_name"
             name="training_program_name"
             placeholder="e.g. Leadership Fundamentals"
+            defaultValue={initial?.trainingProgramName ?? undefined}
             invalid={Boolean(fe.training_program_name)}
           />
         </Field>
@@ -71,7 +88,9 @@ export function TrainingProgramForm({
             id="company"
             name="company"
             options={companies}
-            defaultValue={companies.length === 1 ? companies[0] : undefined}
+            defaultValue={
+              initial?.company ?? (companies.length === 1 ? companies[0] : undefined)
+            }
             placeholder="Select company"
             invalid={Boolean(fe.company)}
           />
@@ -86,25 +105,29 @@ export function TrainingProgramForm({
               id="supplier"
               name="supplier"
               options={suppliers}
+              defaultValue={initial?.supplier ?? undefined}
               placeholder="— none —"
             />
           </Field>
         )}
-        <Field
-          label="Visibility"
-          htmlFor="is_public"
-          hint="Public programs can be browsed by every employee; internal ones are HR-facing only."
-        >
-          <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background p-2.5 text-sm has-[:checked]:border-primary/40 has-[:checked]:bg-primary/[0.04]">
-            <input
-              type="checkbox"
-              name="is_public"
-              id="is_public"
-              className="h-4 w-4 accent-primary"
-            />
-            <span>Make public</span>
-          </label>
-        </Field>
+        {hasVisibilityField && (
+          <Field
+            label="Visibility"
+            htmlFor="is_public"
+            hint="Public programs can be browsed by every employee; internal ones are HR-facing only."
+          >
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-input bg-background p-2.5 text-sm has-[:checked]:border-primary/40 has-[:checked]:bg-primary/[0.04]">
+              <input
+                type="checkbox"
+                name="is_public"
+                id="is_public"
+                defaultChecked={initial?.isPublic ?? false}
+                className="h-4 w-4 accent-primary"
+              />
+              <span>Make public</span>
+            </label>
+          </Field>
+        )}
         <Field
           label="Description"
           htmlFor="description"
@@ -117,6 +140,7 @@ export function TrainingProgramForm({
             name="description"
             rows={3}
             placeholder="What the program covers."
+            defaultValue={initial?.description ?? undefined}
             invalid={Boolean(fe.description)}
           />
         </Field>
@@ -129,13 +153,13 @@ export function TrainingProgramForm({
         >
           Cancel
         </Link>
-        <Submit />
+        <Submit mode={mode} />
       </div>
     </form>
   );
 }
 
-function Submit() {
+function Submit({ mode }: { mode: "create" | "edit" }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -147,7 +171,13 @@ function Submit() {
       )}
     >
       <Save className="h-4 w-4" />
-      {pending ? "Saving…" : "Save program"}
+      {pending
+        ? mode === "edit"
+          ? "Saving…"
+          : "Saving…"
+        : mode === "edit"
+          ? "Save changes"
+          : "Save program"}
     </button>
   );
 }

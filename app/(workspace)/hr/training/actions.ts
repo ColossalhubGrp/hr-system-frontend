@@ -7,9 +7,11 @@ import {
   addTrainingEventAttendees,
   createTrainingEvent,
   createTrainingProgram,
+  deleteTrainingProgram,
   removeTrainingEventAttendee,
   setTrainingEventStatus,
   updateTrainingEvent,
+  updateTrainingProgram,
 } from "@/lib/frappe/training";
 import {
   formToRecord,
@@ -138,6 +140,45 @@ export async function createTrainingProgramAction(
   }
   revalidatePath("/hr/training?tab=programs");
   redirect(`/hr/training?tab=programs`);
+}
+
+export async function updateTrainingProgramAction(
+  programId: string,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { error: blocked };
+  const parsed = programSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  try {
+    await updateTrainingProgram(programId, {
+      trainingProgramName: parsed.data.training_program_name,
+      description: parsed.data.description,
+      company: parsed.data.company,
+      supplier: parsed.data.supplier || undefined,
+      isPublic: parsed.data.is_public,
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath("/hr/training?tab=programs");
+  redirect("/hr/training?tab=programs");
+}
+
+export async function deleteTrainingProgramAction(
+  programId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { ok: false, error: blocked };
+  try {
+    await deleteTrainingProgram(programId);
+  } catch (err) {
+    const state = toFormState(err);
+    return { ok: false, error: state.error ?? "Failed to delete program." };
+  }
+  revalidatePath("/hr/training?tab=programs");
+  return { ok: true };
 }
 
 export async function updateTrainingEventAction(

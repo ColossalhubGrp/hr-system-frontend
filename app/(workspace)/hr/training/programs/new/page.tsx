@@ -36,6 +36,7 @@ export default async function NewTrainingProgramPage() {
         action={createTrainingProgramAction}
         companies={companies}
         suppliers={options.suppliers}
+        hasVisibilityField={options.programFieldnames.has("is_public")}
         cancelHref="/hr/training?tab=programs"
       />
     </div>

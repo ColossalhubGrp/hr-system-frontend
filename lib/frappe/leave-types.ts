@@ -1,5 +1,48 @@
 import "server-only";
-import { frappeCall } from "./client";
+import { frappeCall, FrappeRequestError } from "./client";
+
+/** Extract Frappe's own error text from a FrappeRequestError's
+ *  response body. Frappe surfaces validation errors through
+ *  `_server_messages` (double-JSON-encoded) or `exception` (raw
+ *  string with the Python class name + message). Falls back to
+ *  err.message when neither is present. */
+function extractFrappeError(err: unknown): string {
+  if (!(err instanceof FrappeRequestError)) {
+    return err instanceof Error ? err.message : String(err);
+  }
+  const detail = err.detail as
+    | {
+        _server_messages?: string;
+        message?: string;
+        exception?: string;
+      }
+    | string
+    | undefined;
+  if (typeof detail === "string") return `${err.message}\n${detail.slice(0, 800)}`;
+  if (detail?._server_messages) {
+    try {
+      const arr = JSON.parse(detail._server_messages) as string[];
+      const parts = arr
+        .map((s) => {
+          try {
+            return (JSON.parse(s) as { message?: string }).message ?? s;
+          } catch {
+            return s;
+          }
+        })
+        .join(" · ")
+        .replace(/<[^>]+>/g, "")
+        .slice(0, 800);
+      if (parts) return `${err.message}\n${parts}`;
+    } catch {
+      /* fall through */
+    }
+  }
+  const extras: string[] = [];
+  if (detail?.exception) extras.push(detail.exception.slice(0, 800));
+  if (detail?.message) extras.push(detail.message.slice(0, 400));
+  return extras.length ? `${err.message}\n${extras.join("\n")}` : err.message;
+}
 
 /**
  * Client-facing shape for the Leave Type registry surfaced under
@@ -118,7 +161,7 @@ export async function readLeaveTypes(): Promise<LeaveTypesReadResult> {
       return { rows: rows.map(toRow), path: "admin_method" };
     }
   } catch (err) {
-    primaryError = err instanceof Error ? err.message : String(err);
+    primaryError = extractFrappeError(err);
   }
 
   let fallbackError: string | undefined;
@@ -132,7 +175,7 @@ export async function readLeaveTypes(): Promise<LeaveTypesReadResult> {
       };
     }
   } catch (err) {
-    fallbackError = err instanceof Error ? err.message : String(err);
+    fallbackError = extractFrappeError(err);
   }
 
   return {

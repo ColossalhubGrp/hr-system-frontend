@@ -55,7 +55,11 @@ const programSchema = z.object({
     .string()
     .trim()
     .min(1, "Give the program a name."),
-  description: z.string().trim().optional(),
+  company: z.string().trim().min(1, "Pick a company."),
+  description: z
+    .string()
+    .trim()
+    .min(1, "A description is required for this program."),
   supplier: z.string().trim().optional(),
   is_public: z
     .union([z.literal("on"), z.literal("off"), z.literal(""), z.undefined()])
@@ -118,7 +122,8 @@ export async function createTrainingProgramAction(
   try {
     newId = await createTrainingProgram({
       trainingProgramName: parsed.data.training_program_name,
-      description: parsed.data.description || undefined,
+      description: parsed.data.description,
+      company: parsed.data.company,
       supplier: parsed.data.supplier || undefined,
       isPublic: parsed.data.is_public,
     });

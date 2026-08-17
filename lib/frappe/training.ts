@@ -307,7 +307,14 @@ export async function createTrainingEvent(
 
 export type TrainingProgramInput = {
   trainingProgramName: string;
-  description?: string;
+  /** Frappe HR requires Training Program.description on this tenant
+   *  (it's marked reqd in the DocType). Empty inserts throw
+   *  "Description is required" so the form gates it upfront. */
+  description: string;
+  /** Frappe HR requires Training Program.company. Match to one of
+   *  the tenant's Company records (typically a single one for
+   *  single-tenant installs). */
+  company: string;
   supplier?: string;
   isPublic?: boolean;
 };
@@ -315,23 +322,21 @@ export type TrainingProgramInput = {
 export async function createTrainingProgram(
   input: TrainingProgramInput,
 ): Promise<string> {
-  // Frappe HR ships Training Program with autoname
-  // `field:training_program_name`, so setting that field should
-  // populate `name` automatically. Some tenants customise the
-  // schema — the label of the mandatory field is "Training
-  // Program", not "Training Program Name", which produced the
-  // confusing "Training Program is required" throw when we sent
-  // only training_program_name. Sending both keys covers both
-  // vanilla and customised schemas; Frappe silently ignores keys
-  // it doesn't recognise.
+  // Frappe HR's Training Program schema on this tenant autonames
+  // off `training_program` (not `training_program_name`) and
+  // requires `training_program` + `company` + `description`.
+  // Sending both field variants + `name` explicitly makes the
+  // insert work on vanilla AND customised installs — Frappe
+  // silently ignores unrecognised keys.
   const doc: Record<string, unknown> = {
     doctype: "Training Program",
     name: input.trainingProgramName,
-    training_program_name: input.trainingProgramName,
     training_program: input.trainingProgramName,
+    training_program_name: input.trainingProgramName,
+    company: input.company,
+    description: input.description,
     is_public: input.isPublic ? 1 : 0,
   };
-  if (input.description) doc.description = input.description;
   if (input.supplier) doc.supplier = input.supplier;
 
   const saved = await frappeCall<{ name: string }>({

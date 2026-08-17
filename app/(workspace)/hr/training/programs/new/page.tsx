@@ -3,12 +3,16 @@ import type { Route } from "next";
 import { BookOpen, ChevronLeft } from "lucide-react";
 import { TrainingProgramForm } from "@/components/training/program-form";
 import { getTrainingFormOptions } from "@/lib/frappe/training";
+import { listCompanies } from "@/lib/frappe/lookups";
 import { createTrainingProgramAction } from "../../actions";
 
 export const metadata = { title: "New training program · Colossal HR" };
 
 export default async function NewTrainingProgramPage() {
-  const options = await getTrainingFormOptions();
+  const [options, companies] = await Promise.all([
+    getTrainingFormOptions(),
+    listCompanies(),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -30,6 +34,7 @@ export default async function NewTrainingProgramPage() {
 
       <TrainingProgramForm
         action={createTrainingProgramAction}
+        companies={companies}
         suppliers={options.suppliers}
         cancelHref="/hr/training?tab=programs"
       />

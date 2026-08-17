@@ -19,13 +19,15 @@ const EMPTY: FormState = {};
 
 export function TrainingProgramForm({
   action,
+  companies,
   suppliers,
   cancelHref,
 }: {
   action: Action;
-  /** Existing ERPNext Supplier records. Empty on tenants that
-   *  haven't configured any — the field is hidden entirely
-   *  (Frappe rejects free text with "Could not find Supplier: X"). */
+  /** Tenant companies. Frappe HR treats Training Program.company
+   *  as required on this schema — the picker defaults to the
+   *  single company when the tenant only has one. */
+  companies: string[];
   suppliers: string[];
   cancelHref: string;
 }) {
@@ -59,6 +61,21 @@ export function TrainingProgramForm({
             invalid={Boolean(fe.training_program_name)}
           />
         </Field>
+        <Field
+          label="Company"
+          htmlFor="company"
+          required
+          error={fe.company}
+        >
+          <SelectInput
+            id="company"
+            name="company"
+            options={companies}
+            defaultValue={companies.length === 1 ? companies[0] : undefined}
+            placeholder="Select company"
+            invalid={Boolean(fe.company)}
+          />
+        </Field>
         {suppliers.length > 0 && (
           <Field
             label="Supplier"
@@ -88,12 +105,19 @@ export function TrainingProgramForm({
             <span>Make public</span>
           </label>
         </Field>
-        <Field label="Description" htmlFor="description" wide>
+        <Field
+          label="Description"
+          htmlFor="description"
+          required
+          error={fe.description}
+          wide
+        >
           <TextArea
             id="description"
             name="description"
             rows={3}
             placeholder="What the program covers."
+            invalid={Boolean(fe.description)}
           />
         </Field>
       </FormSection>

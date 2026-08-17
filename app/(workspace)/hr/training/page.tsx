@@ -8,6 +8,7 @@ import {
   CircleSlash,
   BookOpen,
   Globe,
+  Plus,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
@@ -52,6 +53,25 @@ export default async function TrainingPage({
         crumb="HR · Training"
         title="Training"
         subtitle="Events that get held; programs that group them."
+        actions={
+          tab === "events" ? (
+            <Link
+              href={"/hr/training/new" as Route}
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+            >
+              <Plus className="h-4 w-4" />
+              New event
+            </Link>
+          ) : (
+            <Link
+              href={"/hr/training/programs/new" as Route}
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+            >
+              <Plus className="h-4 w-4" />
+              New program
+            </Link>
+          )
+        }
       />
 
       <SubTabs

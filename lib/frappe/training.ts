@@ -255,3 +255,98 @@ export async function listTrainingPrograms(opts: {
     pageSize,
   };
 }
+
+// ── writes ────────────────────────────────────────────────────────────
+
+export type TrainingEventInput = {
+  eventName: string;
+  /** Internal / External / Selected / Not Attended (Frappe HR set). */
+  type: "Internal" | "External" | "Selected" | "Not Attended";
+  /** Optional link to a parent Training Program. */
+  trainingProgram?: string;
+  /** ISO datetime "YYYY-MM-DD HH:MM:SS" — Frappe rejects Z / +tz. */
+  startTime: string;
+  /** Optional end. Frappe HR's Training Event does allow a null end
+   *  (open-ended sessions) but we default to the same day. */
+  endTime?: string;
+  location?: string;
+  supplier?: string;
+  introduction?: string;
+  /** Fresh events land as "Scheduled"; admins can move them through
+   *  In Progress / Completed / Cancelled from the detail page. */
+  status?: "Scheduled" | "In Progress" | "Completed" | "Cancelled";
+};
+
+export async function createTrainingEvent(
+  input: TrainingEventInput,
+): Promise<string> {
+  const doc: Record<string, unknown> = {
+    doctype: "Training Event",
+    event_name: input.eventName,
+    type: input.type,
+    start_time: input.startTime,
+    event_status: input.status ?? "Scheduled",
+  };
+  if (input.trainingProgram) doc.training_program = input.trainingProgram;
+  if (input.endTime) doc.end_time = input.endTime;
+  if (input.location) doc.location = input.location;
+  if (input.supplier) doc.supplier = input.supplier;
+  if (input.introduction) doc.introduction = input.introduction;
+
+  const saved = await frappeCall<{ name: string }>({
+    method: "frappe.client.insert",
+    verb: "POST",
+    args: { doc },
+    as: "user",
+  });
+  return saved.name;
+}
+
+export type TrainingProgramInput = {
+  trainingProgramName: string;
+  description?: string;
+  supplier?: string;
+  isPublic?: boolean;
+};
+
+export async function createTrainingProgram(
+  input: TrainingProgramInput,
+): Promise<string> {
+  const doc: Record<string, unknown> = {
+    doctype: "Training Program",
+    training_program_name: input.trainingProgramName,
+    is_public: input.isPublic ? 1 : 0,
+  };
+  if (input.description) doc.description = input.description;
+  if (input.supplier) doc.supplier = input.supplier;
+
+  const saved = await frappeCall<{ name: string }>({
+    method: "frappe.client.insert",
+    verb: "POST",
+    args: { doc },
+    as: "user",
+  });
+  return saved.name;
+}
+
+/** Pulled once for the event form's Training Program picker. Uses
+ *  a lightweight list (name + label only). */
+export async function listTrainingProgramOptions(): Promise<
+  Array<{ id: string; label: string }>
+> {
+  type Row = { name: string; training_program_name: string };
+  const rows = await frappeCall<Row[]>({
+    method: "frappe.client.get_list",
+    args: {
+      doctype: "Training Program",
+      fields: ["name", "training_program_name"],
+      order_by: "training_program_name asc",
+      limit_page_length: 200,
+    },
+    as: "user",
+  }).catch(() => [] as Row[]);
+  return rows.map((r) => ({
+    id: r.name,
+    label: r.training_program_name || r.name,
+  }));
+}

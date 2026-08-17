@@ -1,0 +1,126 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
+import {
+  createTrainingEvent,
+  createTrainingProgram,
+} from "@/lib/frappe/training";
+import {
+  formToRecord,
+  toFormState,
+  type StdFormState,
+} from "@/lib/frappe/form-errors";
+import { getMyAccess } from "@/lib/frappe/roles";
+
+export type FormState = StdFormState;
+
+// datetime-local yields "YYYY-MM-DDTHH:MM" — Frappe wants
+// "YYYY-MM-DD HH:MM:SS". This transform converts + adds :00 seconds.
+const dateTimeLocal = z
+  .string()
+  .trim()
+  .regex(
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/,
+    "Pick a date and time.",
+  )
+  .transform((v) => v.replace("T", " ") + (v.length === 16 ? ":00" : ""));
+
+const eventSchema = z
+  .object({
+    event_name: z.string().trim().min(1, "Give the event a name."),
+    type: z.enum(["Internal", "External", "Selected", "Not Attended"]),
+    training_program: z.string().trim().optional(),
+    start_time: dateTimeLocal,
+    end_time: z
+      .union([dateTimeLocal, z.literal("")])
+      .optional()
+      .transform((v) => (v ? v : undefined)),
+    location: z.string().trim().optional(),
+    supplier: z.string().trim().optional(),
+    introduction: z.string().trim().optional(),
+  })
+  .refine((d) => !d.end_time || d.end_time >= d.start_time, {
+    message: "End must be on or after start.",
+    path: ["end_time"],
+  });
+
+const programSchema = z.object({
+  training_program_name: z
+    .string()
+    .trim()
+    .min(1, "Give the program a name."),
+  description: z.string().trim().optional(),
+  supplier: z.string().trim().optional(),
+  is_public: z
+    .union([z.literal("on"), z.literal("off"), z.literal(""), z.undefined()])
+    .transform((v) => v === "on"),
+});
+
+function fieldErrors(parsed: z.SafeParseError<unknown>): FormState {
+  const out: Record<string, string> = {};
+  for (const issue of parsed.error.issues) {
+    const k = String(issue.path[0] ?? "");
+    if (k && !out[k]) out[k] = issue.message;
+  }
+  return { error: "Check the highlighted fields.", fieldErrors: out };
+}
+
+async function requireHrAdmin(): Promise<string | null> {
+  const access = await getMyAccess();
+  if (!access.isHrAdmin && !access.isItAdmin) {
+    return "Only HR admins can add training records.";
+  }
+  return null;
+}
+
+export async function createTrainingEventAction(
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { error: blocked };
+  const parsed = eventSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  let newId: string;
+  try {
+    newId = await createTrainingEvent({
+      eventName: parsed.data.event_name,
+      type: parsed.data.type,
+      trainingProgram: parsed.data.training_program || undefined,
+      startTime: parsed.data.start_time,
+      endTime: parsed.data.end_time,
+      location: parsed.data.location || undefined,
+      supplier: parsed.data.supplier || undefined,
+      introduction: parsed.data.introduction || undefined,
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath("/hr/training");
+  redirect(`/hr/training/${encodeURIComponent(newId)}`);
+}
+
+export async function createTrainingProgramAction(
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { error: blocked };
+  const parsed = programSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  let newId: string;
+  try {
+    newId = await createTrainingProgram({
+      trainingProgramName: parsed.data.training_program_name,
+      description: parsed.data.description || undefined,
+      supplier: parsed.data.supplier || undefined,
+      isPublic: parsed.data.is_public,
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath("/hr/training?tab=programs");
+  redirect(`/hr/training?tab=programs`);
+}

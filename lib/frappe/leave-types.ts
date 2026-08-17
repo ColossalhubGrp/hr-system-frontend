@@ -65,50 +65,89 @@ function toRow(r: Raw): LeaveTypeRow {
   };
 }
 
-export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
-  // Leave Type is tenant-wide reference data (every filer sees the
-  // same list). Frappe HR's Leave Type doctype doesn't ship DocPerm
-  // entries for the app's custom HR roles (HR Director / HR User),
-  // and a raw get_list under those roles silently returns [] rather
-  // than erroring — that produced misleading empty-state UI over
-  // rows that actually existed. Backend method uses
-  // ignore_permissions with an HR-bundle role gate so the list is
-  // consistent for every HR user without touching each tenant's
-  // DocPerm config.
-  //
-  // Falls back to the raw client.get_list (service token) if the
-  // whitelisted method isn't deployed yet — matters during the
-  // window between shipping this change and the VPS pull; without
-  // the fallback the empty-state UI stays with no clear signal
-  // that the backend needs updating.
+export type LeaveTypesReadResult = {
+  rows: LeaveTypeRow[];
+  /** Which path returned the rows — surfaces on the empty-state UI
+   *  so we can tell "the backend method isn't deployed" from
+   *  "the DB is genuinely empty" from "auth failed". */
+  path: "admin_method" | "service_fallback" | "none";
+  /** Populated when both paths failed / returned empty. */
+  primaryError?: string;
+  fallbackError?: string;
+};
+
+async function readAdmin(): Promise<Raw[]> {
+  const rows = await frappeCall<Raw[]>({
+    method: "recruitment_app.api.me.list_leave_types_admin",
+    as: "user",
+  });
+  return rows ?? [];
+}
+
+async function readServiceFallback(): Promise<Raw[]> {
+  const rows = await frappeCall<Raw[]>({
+    method: "frappe.client.get_list",
+    args: {
+      doctype: "Leave Type",
+      fields: [
+        "name",
+        "max_leaves_allowed",
+        "is_earned_leave",
+        "is_carry_forward",
+        "is_lwp",
+        "include_holiday",
+        "applicable_after",
+        "description",
+      ],
+      order_by: "name asc",
+      limit_page_length: 500,
+    },
+    as: "service",
+  });
+  return rows ?? [];
+}
+
+/** Deep read with diagnostic breadcrumbs. Page renders a debug hint
+ *  in the empty state when `path === "none"` so we can distinguish
+ *  "backend not deployed" / "auth failed" / "DB actually empty". */
+export async function readLeaveTypes(): Promise<LeaveTypesReadResult> {
+  let primaryError: string | undefined;
   try {
-    const rows = await frappeCall<Raw[]>({
-      method: "recruitment_app.api.me.list_leave_types_admin",
-      as: "user",
-    });
-    return (rows ?? []).map(toRow);
-  } catch {
-    const rows = await frappeCall<Raw[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Leave Type",
-        fields: [
-          "name",
-          "max_leaves_allowed",
-          "is_earned_leave",
-          "is_carry_forward",
-          "is_lwp",
-          "include_holiday",
-          "applicable_after",
-          "description",
-        ],
-        order_by: "name asc",
-        limit_page_length: 500,
-      },
-      as: "service",
-    }).catch(() => [] as Raw[]);
-    return rows.map(toRow);
+    const rows = await readAdmin();
+    if (rows.length > 0) {
+      return { rows: rows.map(toRow), path: "admin_method" };
+    }
+  } catch (err) {
+    primaryError = err instanceof Error ? err.message : String(err);
   }
+
+  let fallbackError: string | undefined;
+  try {
+    const rows = await readServiceFallback();
+    if (rows.length > 0) {
+      return {
+        rows: rows.map(toRow),
+        path: "service_fallback",
+        primaryError,
+      };
+    }
+  } catch (err) {
+    fallbackError = err instanceof Error ? err.message : String(err);
+  }
+
+  return {
+    rows: [],
+    path: "none",
+    primaryError,
+    fallbackError,
+  };
+}
+
+/** Preserved thin-wrapper for callers that just want the rows.
+ *  The Settings page uses readLeaveTypes() directly for the meta. */
+export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
+  const { rows } = await readLeaveTypes();
+  return rows;
 }
 
 export async function createLeaveType(input: LeaveTypeInput): Promise<string> {

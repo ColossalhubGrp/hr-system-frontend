@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { CalendarDays, ChevronLeft } from "lucide-react";
 import { requireGroup } from "@/lib/frappe/require-role";
 import { getMyAccess } from "@/lib/frappe/roles";
-import { listLeaveTypes } from "@/lib/frappe/leave-types";
+import { readLeaveTypes } from "@/lib/frappe/leave-types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LeaveTypesAdmin } from "@/components/settings/leave-types-admin";
@@ -25,11 +25,24 @@ export const metadata = {
  */
 export default async function LeaveTypesPage() {
   await requireGroup("HR_ANY", "/settings/leave-types");
-  const [types, access] = await Promise.all([
-    listLeaveTypes(),
+  const [read, access] = await Promise.all([
+    readLeaveTypes(),
     getMyAccess(),
   ]);
+  const types = read.rows;
   const canManage = Boolean(access.isHrAdmin || access.isItAdmin);
+  // When the list is empty we surface which read path was tried +
+  // any error string so support can distinguish "backend not
+  // deployed" / "auth failed" / "genuinely empty" without another
+  // round-trip through diagnostics.
+  const readMeta =
+    types.length === 0
+      ? {
+          path: read.path,
+          primaryError: read.primaryError ?? null,
+          fallbackError: read.fallbackError ?? null,
+        }
+      : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -60,7 +73,11 @@ export default async function LeaveTypesPage() {
 
       <Card>
         <CardContent className="p-0">
-          <LeaveTypesAdmin initial={types} canManage={canManage} />
+          <LeaveTypesAdmin
+            initial={types}
+            canManage={canManage}
+            readMeta={readMeta}
+          />
         </CardContent>
       </Card>
     </div>

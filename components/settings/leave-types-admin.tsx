@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import {
+  AlertTriangle,
   CalendarDays,
-  Check,
   Loader2,
   Pencil,
   Plus,
@@ -47,9 +47,18 @@ const EMPTY: FormState = {};
 export function LeaveTypesAdmin({
   initial,
   canManage,
+  readMeta,
 }: {
   initial: LeaveTypeRow[];
   canManage: boolean;
+  /** Only populated when initial.length === 0 — carries diagnostic
+   *  info about which read path was tried so we can distinguish
+   *  a genuinely-empty tenant from a broken read. */
+  readMeta?: {
+    path: "admin_method" | "service_fallback" | "none";
+    primaryError: string | null;
+    fallbackError: string | null;
+  } | null;
 }) {
   const [rows, setRows] = useState<LeaveTypeRow[]>(initial);
   const [openCreate, setOpenCreate] = useState(false);
@@ -124,6 +133,34 @@ export function LeaveTypesAdmin({
               >
                 <div className="flex flex-col items-center gap-3">
                   <p>No leave types yet.</p>
+                  {readMeta && readMeta.path === "none" && (
+                    <div className="mx-auto max-w-md rounded-md border border-amber-300 bg-amber-100/60 px-3 py-2 text-left text-xs text-amber-900">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <div className="flex flex-col gap-1">
+                          <b>Backend didn't return any rows.</b>
+                          {readMeta.primaryError && (
+                            <span>
+                              <b>Admin method:</b> {readMeta.primaryError}
+                            </span>
+                          )}
+                          {readMeta.fallbackError && (
+                            <span>
+                              <b>Fallback:</b> {readMeta.fallbackError}
+                            </span>
+                          )}
+                          {!readMeta.primaryError && !readMeta.fallbackError && (
+                            <span>
+                              Both read paths returned an empty list without
+                              erroring. The DB may actually be empty on this
+                              tenant — run <b>Seed defaults</b>, or check
+                              whether the Frappe backend has been redeployed.
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   {canManage && (
                     <div className="flex flex-wrap items-center justify-center gap-2">
                       <Button

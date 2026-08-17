@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   AlertCircle,
   CheckCircle2,
   CircleSlash,
+  Filter,
   Loader2,
   PlayCircle,
   Plus,
   RotateCcw,
+  Search,
   Trash2,
   Users,
   X,
@@ -24,10 +26,8 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "@/components/ui/sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import {
-  EmployeePickerField,
-  type EmployeeDirectoryEntry,
-} from "@/components/common/employee-picker-field";
+import { SelectInput } from "@/components/employee/form-bits";
+import { type EmployeeDirectoryEntry } from "@/components/common/employee-picker-field";
 import {
   addTrainingEventAttendeesAction,
   removeTrainingEventAttendeeAction,
@@ -151,46 +151,107 @@ function AddAttendeesDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
-  const [staged, setStaged] = useState<string[]>([]);
-  const [pick, setPick] = useState<string>("");
+  const existingSet = useMemo(() => new Set(existingIds), [existingIds]);
+  // Only offer employees who aren't already on the list — dedup at
+  // the source rather than filtering silently on submit.
+  const selectable = useMemo(
+    () => employeeDirectory.filter((e) => !existingSet.has(e.id)),
+    [employeeDirectory, existingSet],
+  );
+
+  const [query, setQuery] = useState("");
+  const [dept, setDept] = useState("");
+  const [company, setCompany] = useState("");
+  const [grade, setGrade] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [pending, startTransition] = useTransition();
 
-  // Reset local state whenever the dialog reopens so a prior
-  // partial selection doesn't carry over.
+  // Filter option lists derived from what's actually on the roster.
+  const departments = useMemo(
+    () =>
+      Array.from(
+        new Set(selectable.map((e) => e.department).filter(Boolean) as string[]),
+      ).sort(),
+    [selectable],
+  );
+  const companies = useMemo(
+    () =>
+      Array.from(
+        new Set(selectable.map((e) => e.company).filter(Boolean) as string[]),
+      ).sort(),
+    [selectable],
+  );
+  const grades = useMemo(
+    () =>
+      Array.from(
+        new Set(selectable.map((e) => e.pay_grade).filter(Boolean) as string[]),
+      ).sort(),
+    [selectable],
+  );
+
+  // Rows visible after applying search + filters. Selection is
+  // stored globally so switching filters doesn't lose earlier
+  // picks — the counter always shows total picks, not just those
+  // matching the current filter.
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return selectable.filter((e) => {
+      if (dept && e.department !== dept) return false;
+      if (company && e.company !== company) return false;
+      if (grade && e.pay_grade !== grade) return false;
+      if (!q) return true;
+      const hay = `${e.employee_name} ${e.id} ${e.department ?? ""} ${e.designation ?? ""}`.toLowerCase();
+      return hay.includes(q);
+    });
+  }, [selectable, query, dept, company, grade]);
+
+  const allFilteredSelected =
+    filtered.length > 0 && filtered.every((e) => selected.has(e.id));
+
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllFiltered = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) {
+        for (const e of filtered) next.delete(e.id);
+      } else {
+        for (const e of filtered) next.add(e.id);
+      }
+      return next;
+    });
+  };
+
+  const clearFilters = () => {
+    setQuery("");
+    setDept("");
+    setCompany("");
+    setGrade("");
+  };
+
   const handleOpenChange = (v: boolean) => {
     onOpenChange(v);
     if (!v) {
-      setStaged([]);
-      setPick("");
+      setSelected(new Set());
+      clearFilters();
     }
   };
-
-  const addPick = () => {
-    if (!pick) return;
-    if (existingIds.includes(pick)) {
-      toast.info("Already on the attendee list.");
-      setPick("");
-      return;
-    }
-    if (staged.includes(pick)) {
-      toast.info("Already staged.");
-      setPick("");
-      return;
-    }
-    setStaged((prev) => [...prev, pick]);
-    setPick("");
-  };
-
-  const removeStaged = (id: string) =>
-    setStaged((prev) => prev.filter((x) => x !== id));
 
   const submit = () => {
-    if (staged.length === 0) {
+    const ids = Array.from(selected);
+    if (ids.length === 0) {
       toast.info("Pick at least one employee.");
       return;
     }
     startTransition(async () => {
-      const res = await addTrainingEventAttendeesAction(eventId, staged);
+      const res = await addTrainingEventAttendeesAction(eventId, ids);
       if (!res.ok) {
         toast.error(res.error);
         return;
@@ -203,73 +264,142 @@ function AddAttendeesDialog({
     });
   };
 
-  const nameFor = (id: string) => {
-    const e = employeeDirectory.find((x) => x.id === id);
-    return e ? `${e.employee_name} (${e.id})` : id;
-  };
+  const hasAnyFilter = Boolean(query || dept || company || grade);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Add attendees
           </DialogTitle>
           <DialogDescription>
-            Pick employees to add to this training event. Anyone already
-            on the list is skipped silently.
+            Filter the roster and tick everyone who should attend. People
+            already on the list are hidden.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 pt-2">
-          <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-end">
-            <EmployeePickerField
-              name="attendee_pick"
-              label="Employee"
-              directory={employeeDirectory}
-              value={pick}
-              onChange={(e) => setPick(e.target.value)}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={addPick}
-              disabled={!pick}
-              className="gap-1.5"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add to list
-            </Button>
+        <div className="flex flex-col gap-3 pt-2">
+          {/* Search + filter row */}
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto_auto]">
+            <label className="relative flex items-center">
+              <Search className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                type="search"
+                placeholder="Search by name, ID, department, designation…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm placeholder:text-muted-foreground focus-ring"
+              />
+            </label>
+            {departments.length > 0 && (
+              <SelectInput
+                name="filter_dept"
+                value={dept}
+                onChange={(e) => setDept(e.target.value)}
+                options={departments}
+                placeholder="All departments"
+              />
+            )}
+            {companies.length > 1 && (
+              <SelectInput
+                name="filter_company"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+                options={companies}
+                placeholder="All companies"
+              />
+            )}
+            {grades.length > 0 && (
+              <SelectInput
+                name="filter_grade"
+                value={grade}
+                onChange={(e) => setGrade(e.target.value)}
+                options={grades}
+                placeholder="All grades"
+              />
+            )}
           </div>
 
-          <div>
-            <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Staged ({staged.length})
-            </p>
-            {staged.length === 0 ? (
-              <p className="rounded-md border border-dashed border-input px-3 py-3 text-center text-xs text-muted-foreground">
-                No one added yet — pick above.
+          {/* Toolbar: match count + select-all + clear filters */}
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="flex items-center gap-2">
+              <Filter className="h-3 w-3" />
+              {filtered.length} of {selectable.length}{" "}
+              {selectable.length === 1 ? "person" : "people"} match
+              {selected.size > 0 && (
+                <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-medium text-primary">
+                  {selected.size} selected
+                </span>
+              )}
+            </span>
+            <span className="flex items-center gap-2">
+              {hasAnyFilter && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs underline-offset-2 hover:underline"
+                >
+                  Clear filters
+                </button>
+              )}
+              {filtered.length > 0 && (
+                <button
+                  type="button"
+                  onClick={toggleAllFiltered}
+                  className="text-xs underline-offset-2 hover:underline"
+                >
+                  {allFilteredSelected
+                    ? `Deselect all ${filtered.length}`
+                    : `Select all ${filtered.length}`}
+                </button>
+              )}
+            </span>
+          </div>
+
+          {/* Roster list */}
+          <div className="max-h-80 overflow-y-auto rounded-md border border-input">
+            {selectable.length === 0 ? (
+              <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+                Everyone in the directory is already on the attendee list.
+              </p>
+            ) : filtered.length === 0 ? (
+              <p className="px-3 py-6 text-center text-xs text-muted-foreground">
+                No one matches the current filters.
               </p>
             ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {staged.map((id) => (
-                  <span
-                    key={id}
-                    className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/[0.06] px-2 py-1 text-xs font-medium text-primary"
-                  >
-                    {nameFor(id)}
-                    <button
-                      type="button"
-                      onClick={() => removeStaged(id)}
-                      className="rounded p-0.5 hover:bg-primary/20"
-                      title="Remove"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </span>
-                ))}
-              </div>
+              <ul className="divide-y divide-border">
+                {filtered.map((e) => {
+                  const isSel = selected.has(e.id);
+                  return (
+                    <li key={e.id}>
+                      <label
+                        className={`flex cursor-pointer items-center gap-3 px-3 py-2 text-sm transition ${
+                          isSel ? "bg-primary/[0.04]" : "hover:bg-muted/40"
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSel}
+                          onChange={() => toggleOne(e.id)}
+                          className="h-4 w-4 accent-primary"
+                        />
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span className="truncate font-medium text-foreground">
+                            {e.employee_name}
+                          </span>
+                          <span className="truncate text-[10px] text-muted-foreground">
+                            {e.id}
+                            {e.department ? ` · ${e.department}` : ""}
+                            {e.designation ? ` · ${e.designation}` : ""}
+                          </span>
+                        </span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
         </div>
@@ -282,7 +412,7 @@ function AddAttendeesDialog({
           >
             Cancel
           </Button>
-          <Button onClick={submit} disabled={pending || staged.length === 0}>
+          <Button onClick={submit} disabled={pending || selected.size === 0}>
             {pending ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -290,7 +420,9 @@ function AddAttendeesDialog({
             )}
             {pending
               ? "Adding…"
-              : `Add ${staged.length || ""} attendee${staged.length === 1 ? "" : "s"}`.trim()}
+              : selected.size === 0
+                ? "Add attendees"
+                : `Add ${selected.size} attendee${selected.size === 1 ? "" : "s"}`}
           </Button>
         </DialogFooter>
       </DialogContent>

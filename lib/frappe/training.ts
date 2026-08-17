@@ -124,6 +124,7 @@ export async function listTrainingEvents(opts: {
 export type TrainingEvent = TrainingRow & {
   description: string | null;
   introduction: string | null;
+  trainingProgram: string | null;
   attendees: Array<{
     employee: string;
     employeeName: string | null;
@@ -143,6 +144,7 @@ export async function getTrainingEvent(id: string): Promise<TrainingEvent | null
       end_time: string | null;
       location: string | null;
       supplier: string | null;
+      training_program: string | null;
       docstatus: 0 | 1 | 2;
       description: string | null;
       introduction: string | null;
@@ -167,6 +169,7 @@ export async function getTrainingEvent(id: string): Promise<TrainingEvent | null
       endTime: doc.end_time,
       location: doc.location,
       supplier: doc.supplier,
+      trainingProgram: doc.training_program,
       docstatus: doc.docstatus,
       description: doc.description,
       introduction: doc.introduction,
@@ -327,6 +330,120 @@ export async function createTrainingProgram(
     as: "user",
   });
   return saved.name;
+}
+
+/** Full-doc update via frappe.client.save. Child tables (attendees)
+ *  aren't set_value-patchable, so any change that might touch them
+ *  goes through get + mutate + save. The event form only exposes
+ *  parent-level fields so attendees stay intact. */
+export async function updateTrainingEvent(
+  eventId: string,
+  input: TrainingEventInput,
+): Promise<void> {
+  const doc = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    args: { doctype: "Training Event", name: eventId },
+    as: "user",
+  });
+  doc.event_name = input.eventName;
+  doc.type = input.type;
+  doc.training_program = input.trainingProgram ?? null;
+  doc.start_time = input.startTime;
+  doc.end_time = input.endTime ?? null;
+  doc.location = input.location ?? null;
+  doc.supplier = input.supplier ?? null;
+  doc.introduction = input.introduction ?? null;
+  if (input.status) doc.event_status = input.status;
+  await frappeCall<unknown>({
+    method: "frappe.client.save",
+    verb: "POST",
+    args: { doc },
+    as: "user",
+  });
+}
+
+/** Move a Training Event through its status lifecycle without
+ *  touching other fields. Uses set_value so the event's child
+ *  tables (attendees) are preserved. */
+export async function setTrainingEventStatus(
+  eventId: string,
+  status: "Scheduled" | "In Progress" | "Completed" | "Cancelled",
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "frappe.client.set_value",
+    verb: "POST",
+    args: {
+      doctype: "Training Event",
+      name: eventId,
+      fieldname: { event_status: status },
+    },
+    as: "user",
+  });
+}
+
+/** Append attendees to a Training Event. Fetches the doc, dedupes
+ *  against existing employees, appends the new ones as
+ *  `Training Event Employee` child rows, saves. Idempotent on the
+ *  employee set — re-adding someone already on the list is a no-op. */
+export async function addTrainingEventAttendees(
+  eventId: string,
+  employeeIds: string[],
+): Promise<{ added: string[]; skipped: string[] }> {
+  const doc = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    args: { doctype: "Training Event", name: eventId },
+    as: "user",
+  });
+  const rows = (doc.employees as Array<{ employee: string }> | null) ?? [];
+  const existing = new Set(rows.map((r) => r.employee));
+  const added: string[] = [];
+  const skipped: string[] = [];
+  for (const emp of employeeIds) {
+    if (existing.has(emp)) {
+      skipped.push(emp);
+      continue;
+    }
+    rows.push({
+      doctype: "Training Event Employee",
+      employee: emp,
+      status: "Open",
+    } as unknown as { employee: string });
+    added.push(emp);
+    existing.add(emp);
+  }
+  if (added.length === 0) return { added, skipped };
+  doc.employees = rows;
+  await frappeCall<unknown>({
+    method: "frappe.client.save",
+    verb: "POST",
+    args: { doc },
+    as: "user",
+  });
+  return { added, skipped };
+}
+
+/** Remove an attendee from a Training Event by employee id. Fetches
+ *  the doc, drops the matching child row(s), saves. No-op when the
+ *  employee isn't on the attendee list. */
+export async function removeTrainingEventAttendee(
+  eventId: string,
+  employeeId: string,
+): Promise<void> {
+  const doc = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    args: { doctype: "Training Event", name: eventId },
+    as: "user",
+  });
+  const rows = (doc.employees as Array<{ employee: string }> | null) ?? [];
+  const filtered = rows.filter((r) => r.employee !== employeeId);
+  if (filtered.length === rows.length) return;
+  doc.employees = filtered;
+  await frappeCall<unknown>({
+    method: "frappe.client.save",
+    verb: "POST",
+    args: { doc },
+    as: "user",
+  });
 }
 
 /** Pulled once for the event form's Training Program picker. Uses

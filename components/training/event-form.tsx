@@ -20,16 +20,38 @@ const EMPTY: FormState = {};
 const TYPES = ["Internal", "External", "Selected", "Not Attended"];
 
 export function TrainingEventForm({
+  mode = "create",
   action,
   programs,
   cancelHref,
+  initial,
 }: {
+  mode?: "create" | "edit";
   action: Action;
   programs: Array<{ id: string; label: string }>;
   cancelHref: string;
+  /** Pre-fill values for the edit flow. datetime-local inputs need
+   *  "YYYY-MM-DDTHH:MM" — pass the Frappe string as-is; the input
+   *  displays it fine after normalisation. */
+  initial?: {
+    eventName?: string | null;
+    type?: string | null;
+    trainingProgram?: string | null;
+    startTime?: string | null;
+    endTime?: string | null;
+    location?: string | null;
+    supplier?: string | null;
+    introduction?: string | null;
+  };
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+  /** Frappe stores datetime as "YYYY-MM-DD HH:MM:SS" but the native
+   *  <input type="datetime-local"> wants "YYYY-MM-DDTHH:MM". */
+  const toInputDT = (v: string | null | undefined): string => {
+    if (!v) return "";
+    return v.replace(" ", "T").slice(0, 16);
+  };
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -55,6 +77,7 @@ export function TrainingEventForm({
             id="event_name"
             name="event_name"
             placeholder="e.g. Q3 Compliance Refresher"
+            defaultValue={initial?.eventName ?? undefined}
             invalid={Boolean(fe.event_name)}
           />
         </Field>
@@ -63,7 +86,7 @@ export function TrainingEventForm({
             id="type"
             name="type"
             options={TYPES}
-            defaultValue="Internal"
+            defaultValue={initial?.type ?? "Internal"}
             invalid={Boolean(fe.type)}
           />
         </Field>
@@ -80,6 +103,7 @@ export function TrainingEventForm({
             id="training_program"
             name="training_program"
             options={programs.map((p) => ({ value: p.id, label: p.label }))}
+            defaultValue={initial?.trainingProgram ?? undefined}
             placeholder="— none —"
           />
         </Field>
@@ -93,6 +117,7 @@ export function TrainingEventForm({
             id="start_time"
             name="start_time"
             type="datetime-local"
+            defaultValue={toInputDT(initial?.startTime)}
             invalid={Boolean(fe.start_time)}
           />
         </Field>
@@ -101,6 +126,7 @@ export function TrainingEventForm({
             id="end_time"
             name="end_time"
             type="datetime-local"
+            defaultValue={toInputDT(initial?.endTime)}
             invalid={Boolean(fe.end_time)}
           />
         </Field>
@@ -109,6 +135,7 @@ export function TrainingEventForm({
             id="location"
             name="location"
             placeholder="e.g. Head Office Boardroom / Zoom"
+            defaultValue={initial?.location ?? undefined}
           />
         </Field>
         <Field
@@ -120,6 +147,7 @@ export function TrainingEventForm({
             id="supplier"
             name="supplier"
             placeholder="e.g. PwC Zimbabwe"
+            defaultValue={initial?.supplier ?? undefined}
           />
         </Field>
         <Field label="Introduction" htmlFor="introduction" wide>
@@ -128,6 +156,7 @@ export function TrainingEventForm({
             name="introduction"
             rows={3}
             placeholder="What the event covers — appears in attendee invites."
+            defaultValue={initial?.introduction ?? undefined}
           />
         </Field>
       </FormSection>
@@ -139,14 +168,22 @@ export function TrainingEventForm({
         >
           Cancel
         </Link>
-        <Submit />
+        <Submit mode={mode} />
       </div>
     </form>
   );
 }
 
-function Submit() {
+function Submit({ mode }: { mode: "create" | "edit" }) {
   const { pending } = useFormStatus();
+  const label =
+    mode === "edit"
+      ? pending
+        ? "Saving…"
+        : "Save changes"
+      : pending
+        ? "Scheduling…"
+        : "Schedule event";
   return (
     <button
       type="submit"
@@ -157,7 +194,7 @@ function Submit() {
       )}
     >
       <Save className="h-4 w-4" />
-      {pending ? "Scheduling…" : "Schedule event"}
+      {label}
     </button>
   );
 }

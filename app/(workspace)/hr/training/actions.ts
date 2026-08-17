@@ -4,8 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
+  addTrainingEventAttendees,
   createTrainingEvent,
   createTrainingProgram,
+  removeTrainingEventAttendee,
+  setTrainingEventStatus,
+  updateTrainingEvent,
 } from "@/lib/frappe/training";
 import {
   formToRecord,
@@ -123,4 +127,100 @@ export async function createTrainingProgramAction(
   }
   revalidatePath("/hr/training?tab=programs");
   redirect(`/hr/training?tab=programs`);
+}
+
+export async function updateTrainingEventAction(
+  eventId: string,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { error: blocked };
+  const parsed = eventSchema.safeParse(formToRecord(form));
+  if (!parsed.success) return fieldErrors(parsed);
+  try {
+    await updateTrainingEvent(eventId, {
+      eventName: parsed.data.event_name,
+      type: parsed.data.type,
+      trainingProgram: parsed.data.training_program || undefined,
+      startTime: parsed.data.start_time,
+      endTime: parsed.data.end_time,
+      location: parsed.data.location || undefined,
+      supplier: parsed.data.supplier || undefined,
+      introduction: parsed.data.introduction || undefined,
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath("/hr/training");
+  revalidatePath(`/hr/training/${encodeURIComponent(eventId)}`);
+  redirect(`/hr/training/${encodeURIComponent(eventId)}`);
+}
+
+// ── attendee mutations ────────────────────────────────────────────────
+
+const STATUS_ENUM = z.enum([
+  "Scheduled",
+  "In Progress",
+  "Completed",
+  "Cancelled",
+]);
+
+export async function setTrainingEventStatusAction(
+  eventId: string,
+  status: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { ok: false, error: blocked };
+  const parsed = STATUS_ENUM.safeParse(status);
+  if (!parsed.success) return { ok: false, error: "Invalid status." };
+  try {
+    await setTrainingEventStatus(eventId, parsed.data);
+  } catch (err) {
+    const s = toFormState(err);
+    return { ok: false, error: s.error ?? "Failed to update status." };
+  }
+  revalidatePath(`/hr/training/${encodeURIComponent(eventId)}`);
+  revalidatePath("/hr/training");
+  return { ok: true };
+}
+
+export async function addTrainingEventAttendeesAction(
+  eventId: string,
+  employeeIds: string[],
+): Promise<
+  | { ok: true; added: string[]; skipped: string[] }
+  | { ok: false; error: string }
+> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { ok: false, error: blocked };
+  const ids = (employeeIds ?? [])
+    .map((v) => (typeof v === "string" ? v.trim() : ""))
+    .filter(Boolean);
+  if (ids.length === 0) return { ok: false, error: "Pick at least one employee." };
+  try {
+    const res = await addTrainingEventAttendees(eventId, ids);
+    revalidatePath(`/hr/training/${encodeURIComponent(eventId)}`);
+    return { ok: true, added: res.added, skipped: res.skipped };
+  } catch (err) {
+    const s = toFormState(err);
+    return { ok: false, error: s.error ?? "Failed to add attendees." };
+  }
+}
+
+export async function removeTrainingEventAttendeeAction(
+  eventId: string,
+  employeeId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await requireHrAdmin();
+  if (blocked) return { ok: false, error: blocked };
+  if (!employeeId) return { ok: false, error: "Missing employee id." };
+  try {
+    await removeTrainingEventAttendee(eventId, employeeId);
+    revalidatePath(`/hr/training/${encodeURIComponent(eventId)}`);
+    return { ok: true };
+  } catch (err) {
+    const s = toFormState(err);
+    return { ok: false, error: s.error ?? "Failed to remove attendee." };
+  }
 }

@@ -315,16 +315,20 @@ export type TrainingProgramInput = {
 export async function createTrainingProgram(
   input: TrainingProgramInput,
 ): Promise<string> {
-  // Training Program uses autoname `field:training_program_name` in
-  // vanilla Frappe HR, but some tenants ship a customised schema
-  // where the autoname resolves late and Frappe throws
-  // "Training Program is required" on insert. Setting `name`
-  // explicitly matches whatever the autoname would have produced
-  // and avoids the round-trip.
+  // Frappe HR ships Training Program with autoname
+  // `field:training_program_name`, so setting that field should
+  // populate `name` automatically. Some tenants customise the
+  // schema — the label of the mandatory field is "Training
+  // Program", not "Training Program Name", which produced the
+  // confusing "Training Program is required" throw when we sent
+  // only training_program_name. Sending both keys covers both
+  // vanilla and customised schemas; Frappe silently ignores keys
+  // it doesn't recognise.
   const doc: Record<string, unknown> = {
     doctype: "Training Program",
     name: input.trainingProgramName,
     training_program_name: input.trainingProgramName,
+    training_program: input.trainingProgramName,
     is_public: input.isPublic ? 1 : 0,
   };
   if (input.description) doc.description = input.description;
@@ -470,68 +474,102 @@ export async function removeTrainingEventAttendee(
  *      - Link field    → row names from the linked doctype.
  *    Falls back to the vanilla Frappe HR set if metadata isn't
  *    readable, so the form keeps working on default installs. */
-export async function getTrainingFormOptions(): Promise<{
+export type TrainingFormOptions = {
   suppliers: string[];
   eventTypeOptions: string[];
-}> {
+  /** When empty AND event.typeFieldtype === "Link", the tenant's
+   *  Link doctype has no records — form should warn instead of
+   *  offering hardcoded values Frappe would reject. */
+  eventTypeFieldtype: "Select" | "Link" | null;
+  eventTypeLinkDoctype: string | null;
+  /** Custom mandatory fields on Training Program that our form
+   *  doesn't cover. Surface a warning so admins know to add
+   *  them via Frappe HR before using this create surface. */
+  programMissingRequired: Array<{ fieldname: string; label: string }>;
+};
+
+const FALLBACK_TYPES = ["Internal", "External", "Selected", "Not Attended"];
+const OUR_PROGRAM_FIELDS = new Set([
+  "name",
+  "training_program",
+  "training_program_name",
+  "description",
+  "supplier",
+  "is_public",
+]);
+
+export async function getTrainingFormOptions(): Promise<TrainingFormOptions> {
   type SupplierRow = { name: string };
-  type FieldMetaRow = { fieldtype: string; options: string | null };
+  type MetaResponse = {
+    event: {
+      type_field: {
+        fieldtype: "Select" | "Link";
+        options: string[];
+        link_doctype: string | null;
+      } | null;
+    };
+    program: {
+      required_fields: Array<{ fieldname: string; label: string }>;
+      autoname?: string;
+    };
+    supplier: { enabled: boolean };
+  };
 
-  const [suppliers, typeMeta] = await Promise.all([
-    frappeCall<SupplierRow[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Supplier",
-        fields: ["name"],
-        order_by: "name asc",
-        limit_page_length: 500,
-      },
-      as: "service",
-    }).catch(() => [] as SupplierRow[]),
-    frappeCall<FieldMetaRow[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "DocField",
-        filters: { parent: "Training Event", fieldname: "type" },
-        fields: ["fieldtype", "options"],
-        limit_page_length: 1,
-      },
-      as: "service",
-    }).catch(() => [] as FieldMetaRow[]),
-  ]);
+  // Backend introspection endpoint — uses frappe.get_meta which is
+  // the right way to read field defs. Falls back to raw list reads
+  // when the backend method isn't deployed yet.
+  let meta: MetaResponse | null = null;
+  try {
+    meta = await frappeCall<MetaResponse>({
+      method: "recruitment_app.api.me.training_form_meta",
+      as: "user",
+    });
+  } catch {
+    meta = null;
+  }
 
-  const FALLBACK_TYPES = ["Internal", "External", "Selected", "Not Attended"];
-  let eventTypeOptions: string[] = FALLBACK_TYPES;
-  const meta = typeMeta[0];
-  if (meta) {
-    if (meta.fieldtype === "Select" && meta.options) {
-      eventTypeOptions = meta.options
-        .split("\n")
-        .map((s) => s.trim())
-        .filter(Boolean);
-    } else if (meta.fieldtype === "Link" && meta.options) {
-      // Type is a Link — pull the actual records from the linked
-      // doctype so the picker offers what Frappe will accept.
-      type LinkRow = { name: string };
-      const linkRows = await frappeCall<LinkRow[]>({
+  // Suppliers list — cheap and consistent, still via client.get_list
+  // (Supplier is a well-known doctype with permissive perms).
+  const supplierRows = meta?.supplier?.enabled === false
+    ? []
+    : await frappeCall<SupplierRow[]>({
         method: "frappe.client.get_list",
         args: {
-          doctype: meta.options,
+          doctype: "Supplier",
           fields: ["name"],
           order_by: "name asc",
-          limit_page_length: 200,
+          limit_page_length: 500,
         },
         as: "service",
-      }).catch(() => [] as LinkRow[]);
-      if (linkRows.length > 0) {
-        eventTypeOptions = linkRows.map((r) => r.name);
-      }
+      }).catch(() => [] as SupplierRow[]);
+
+  let eventTypeOptions: string[] = FALLBACK_TYPES;
+  let eventTypeFieldtype: "Select" | "Link" | null = null;
+  let eventTypeLinkDoctype: string | null = null;
+
+  if (meta?.event?.type_field) {
+    eventTypeFieldtype = meta.event.type_field.fieldtype;
+    eventTypeLinkDoctype = meta.event.type_field.link_doctype;
+    if (meta.event.type_field.options.length > 0) {
+      eventTypeOptions = meta.event.type_field.options;
+    } else if (meta.event.type_field.fieldtype === "Link") {
+      // Link with zero rows — don't fake the fallback values,
+      // Frappe would reject them.
+      eventTypeOptions = [];
     }
   }
 
+  const programMissingRequired = (meta?.program?.required_fields ?? [])
+    .filter((r) => !OUR_PROGRAM_FIELDS.has(r.fieldname))
+    // Filter out `name` — we set it explicitly on insert already.
+    .filter((r) => r.fieldname !== "name");
+
   return {
-    suppliers: suppliers.map((r) => r.name),
+    suppliers: supplierRows.map((r) => r.name),
     eventTypeOptions,
+    eventTypeFieldtype,
+    eventTypeLinkDoctype,
+    programMissingRequired,
   };
 }
 

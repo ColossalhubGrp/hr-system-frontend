@@ -62,6 +62,8 @@ export default async function EditTrainingEventPage({
         programs={programs}
         suppliers={options.suppliers}
         typeOptions={options.eventTypeOptions}
+        typeFieldtype={options.eventTypeFieldtype}
+        typeLinkDoctype={options.eventTypeLinkDoctype}
         cancelHref={backHref}
         initial={{
           eventName: event.eventName,

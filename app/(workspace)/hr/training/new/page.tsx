@@ -39,6 +39,8 @@ export default async function NewTrainingEventPage() {
         programs={programs}
         suppliers={options.suppliers}
         typeOptions={options.eventTypeOptions}
+        typeFieldtype={options.eventTypeFieldtype}
+        typeLinkDoctype={options.eventTypeLinkDoctype}
         cancelHref="/hr/training"
       />
     </div>

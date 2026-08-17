@@ -25,26 +25,22 @@ export function TrainingEventForm({
   programs,
   suppliers,
   typeOptions,
+  typeFieldtype,
+  typeLinkDoctype,
   cancelHref,
   initial,
 }: {
   mode?: "create" | "edit";
   action: Action;
   programs: Array<{ id: string; label: string }>;
-  /** Existing ERPNext Supplier records. Empty on tenants that
-   *  haven't configured any — the field is then hidden entirely
-   *  (Frappe would reject free text with "Could not find
-   *  Supplier: X"). */
   suppliers: string[];
-  /** Accepted values for Training Event.type on this tenant.
-   *  Reads real DocField metadata upstream so what's shown here
-   *  is what Frappe will actually accept, matching either a
-   *  Select field's options list or a Link field's record set. */
   typeOptions: string[];
+  /** Whether Training Event.type is Select or Link on this tenant.
+   *  Drives the "no values available" warning when it's a Link
+   *  doctype with zero records. */
+  typeFieldtype?: "Select" | "Link" | null;
+  typeLinkDoctype?: string | null;
   cancelHref: string;
-  /** Pre-fill values for the edit flow. datetime-local inputs need
-   *  "YYYY-MM-DDTHH:MM" — pass the Frappe string as-is; the input
-   *  displays it fine after normalisation. */
   initial?: {
     eventName?: string | null;
     type?: string | null;
@@ -58,6 +54,7 @@ export function TrainingEventForm({
 }) {
   const effectiveTypes =
     typeOptions.length > 0 ? typeOptions : FALLBACK_TYPES;
+  const typeIsEmpty = typeOptions.length === 0 && typeFieldtype === "Link";
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   /** Frappe stores datetime as "YYYY-MM-DD HH:MM:SS" but the native
@@ -95,7 +92,17 @@ export function TrainingEventForm({
             invalid={Boolean(fe.event_name)}
           />
         </Field>
-        <Field label="Type" htmlFor="type" required error={fe.type}>
+        <Field
+          label="Type"
+          htmlFor="type"
+          required
+          error={fe.type}
+          hint={
+            typeIsEmpty
+              ? `Your tenant has no "${typeLinkDoctype}" records yet — the save will fail until at least one is created.`
+              : undefined
+          }
+        >
           <SelectInput
             id="type"
             name="type"

@@ -6,6 +6,7 @@ import { FieldGrid } from "@/components/employee/field-grid";
 import { StatusPill } from "@/components/common/status-pill";
 import { ExpenseDecisionBar } from "@/components/expense/decision-bar";
 import { getExpenseClaim } from "@/lib/frappe/expense-claims";
+import { readSession } from "@/lib/frappe/session";
 import { approveClaimAction, rejectClaimAction } from "../actions";
 
 export async function generateMetadata({
@@ -35,6 +36,20 @@ export default async function ExpenseClaimDetailPage({
   const decidable = claim.docstatus === 0;
   const approve = approveClaimAction.bind(null, id);
   const reject = rejectClaimAction.bind(null, id);
+  // Frappe HR gates Expense Claim decisions to the assigned
+  // expense_approver — surface that constraint upfront.
+  const { userId } = readSession();
+  const isApprover = Boolean(
+    claim.expenseApprover &&
+      userId &&
+      claim.expenseApprover.toLowerCase() === userId.toLowerCase(),
+  );
+  const canDecide = isApprover || userId === "Administrator";
+  const lockedToLabel = claim.expenseApprover
+    ? claim.expenseApproverName
+      ? `${claim.expenseApproverName} (${claim.expenseApprover})`
+      : claim.expenseApprover
+    : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -63,7 +78,13 @@ export default async function ExpenseClaimDetailPage({
         </p>
       </header>
 
-      {decidable && <ExpenseDecisionBar approve={approve} reject={reject} />}
+      {decidable && (
+        <ExpenseDecisionBar
+          approve={approve}
+          reject={reject}
+          lock={{ canDecide, lockedToLabel }}
+        />
+      )}
 
       <section className="card p-6">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">
@@ -87,7 +108,14 @@ export default async function ExpenseClaimDetailPage({
             { label: "Company", value: claim.company },
             { label: "Status", value: claim.status },
             { label: "Approval status", value: claim.approvalStatus },
-            { label: "Approver", value: claim.expenseApprover },
+            {
+              label: "Approver",
+              value: claim.expenseApproverName
+                ? claim.expenseApprover
+                  ? `${claim.expenseApproverName} (${claim.expenseApprover})`
+                  : claim.expenseApproverName
+                : claim.expenseApprover,
+            },
             { label: "Posted on", value: fmtDate(claim.postingDate) },
             { label: "Remarks", value: claim.remark, wide: true },
           ]}

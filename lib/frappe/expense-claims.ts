@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "./client";
+import { resolveUserDisplayName } from "./employee-approvers";
 
 export type ExpenseClaimStatus =
   | "Draft"
@@ -178,6 +179,7 @@ export type ExpenseClaim = {
   status: string;
   approvalStatus: string;
   expenseApprover: string | null;
+  expenseApproverName: string | null;
   company: string | null;
   remark: string | null;
   expenses: Array<{
@@ -218,6 +220,9 @@ export async function getExpenseClaim(id: string): Promise<ExpenseClaim | null> 
       args: { doctype: "Expense Claim", name: id },
       as: "user",
     });
+    const expenseApproverName = doc.expense_approver
+      ? (await resolveUserDisplayName(doc.expense_approver)) ?? null
+      : null;
     return {
       id: doc.name,
       docstatus: doc.docstatus,
@@ -229,6 +234,7 @@ export async function getExpenseClaim(id: string): Promise<ExpenseClaim | null> 
       status: doc.status,
       approvalStatus: doc.approval_status,
       expenseApprover: doc.expense_approver,
+      expenseApproverName,
       company: doc.company,
       remark: doc.remark,
       expenses: (doc.expenses ?? []).map((e) => ({

@@ -8,6 +8,7 @@ import { DeleteConfirm } from "@/components/common/delete-confirm";
 import { StatusPill } from "@/components/common/status-pill";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { getShiftRequest } from "@/lib/frappe/shifts";
+import { readSession } from "@/lib/frappe/session";
 import {
   approveShiftRequestAction,
   deleteShiftRequestAction,
@@ -40,6 +41,23 @@ export default async function ShiftRequestDetailPage({
   const approve = approveShiftRequestAction.bind(null, id);
   const reject = rejectShiftRequestAction.bind(null, id);
   const onDelete = deleteShiftRequestAction.bind(null, id);
+  // Frappe HR gates approval to the specific user set on the doc's
+  // `approver` field. Compare against the signed-in user's email so
+  // the DecisionBar can surface who CAN act instead of letting the
+  // filer click through into a cryptic doctype-access permission
+  // error. Admins (Administrator) are the only always-can-decide
+  // path — anyone else has to BE the approver.
+  const { userId } = readSession();
+  const isApprover = Boolean(
+    r.approver && userId && r.approver.toLowerCase() === userId.toLowerCase(),
+  );
+  const isSuperUser = userId === "Administrator";
+  const canDecide = isApprover || isSuperUser;
+  const lockedToLabel = r.approver
+    ? r.approverName
+      ? `${r.approverName} (${r.approver})`
+      : r.approver
+    : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -69,6 +87,7 @@ export default async function ShiftRequestDetailPage({
           description="Approving submits the request and (typically) creates a Shift Assignment for the window."
           approve={approve}
           reject={reject}
+          lock={{ canDecide, lockedToLabel }}
         />
       )}
 

@@ -6,6 +6,7 @@ import { FieldGrid } from "@/components/employee/field-grid";
 import { LeaveStatusBadge } from "@/components/leaves/leave-status-badge";
 import { LeaveDecisionBar } from "@/components/leaves/decision-bar";
 import { getLeaveApplication } from "@/lib/frappe/leaves";
+import { readSession } from "@/lib/frappe/session";
 import {
   approveLeaveAction,
   rejectLeaveAction,
@@ -38,6 +39,20 @@ export default async function LeaveDetailPage({
   const decidable = app.status === "Open" && app.docstatus === 0;
   const approve = approveLeaveAction.bind(null, id);
   const reject = rejectLeaveAction.bind(null, id);
+  // Frappe HR locks Leave Application decisions to the assigned
+  // leave_approver — mirror the constraint upfront in the UI.
+  const { userId } = readSession();
+  const isApprover = Boolean(
+    app.leaveApprover &&
+      userId &&
+      app.leaveApprover.toLowerCase() === userId.toLowerCase(),
+  );
+  const canDecide = isApprover || userId === "Administrator";
+  const lockedToLabel = app.leaveApprover
+    ? app.leaveApproverName
+      ? `${app.leaveApproverName} (${app.leaveApprover})`
+      : app.leaveApprover
+    : null;
 
   return (
     <div className="flex flex-col gap-5">
@@ -65,7 +80,13 @@ export default async function LeaveDetailPage({
         </p>
       </header>
 
-      {decidable && <LeaveDecisionBar approve={approve} reject={reject} />}
+      {decidable && (
+        <LeaveDecisionBar
+          approve={approve}
+          reject={reject}
+          lock={{ canDecide, lockedToLabel }}
+        />
+      )}
 
       <section className="card p-6">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { AlertCircle, Check, X } from "lucide-react";
+import { AlertCircle, Check, Lock, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type {
   DecisionState,
@@ -11,16 +11,32 @@ type Action = (prev: DecisionState) => Promise<DecisionState>;
 
 const EMPTY: DecisionState = {};
 
+/** Optional lock context surfacing who the assigned approver is.
+ *  Frappe HR limits approval to the specific user on
+ *  leave_approver, so we disable the buttons + name that person
+ *  upfront rather than letting the filer click through into an
+ *  opaque doctype-permission error. */
+export type LockContext = {
+  canDecide: boolean;
+  lockedToLabel?: string | null;
+};
+
 export function LeaveDecisionBar({
   approve,
   reject,
+  lock,
 }: {
   approve: Action;
   reject: Action;
+  lock?: LockContext;
 }) {
   const [approveState, approveDispatch] = useFormState(approve, EMPTY);
   const [rejectState, rejectDispatch] = useFormState(reject, EMPTY);
-  const error = approveState.error ?? rejectState.error;
+  const rawError = approveState.error ?? rejectState.error;
+  const error = rawError
+    ? translatePermissionError(rawError, lock?.lockedToLabel ?? null)
+    : null;
+  const locked = lock ? !lock.canDecide : false;
 
   return (
     <div className="flex flex-col gap-3 rounded-card border border-hairline bg-surface p-4 shadow-card">
@@ -31,6 +47,16 @@ export function LeaveDecisionBar({
           Rejection is final but recoverable by HR.
         </p>
       </div>
+
+      {locked && lock?.lockedToLabel && (
+        <p
+          role="status"
+          className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-100/60 px-3 py-2 text-xs font-medium text-amber-900"
+        >
+          <Lock className="h-3.5 w-3.5 text-amber-700" />
+          Only {lock.lockedToLabel} can approve or reject this.
+        </p>
+      )}
 
       {error && (
         <p
@@ -44,13 +70,13 @@ export function LeaveDecisionBar({
 
       <div className="flex items-center gap-2">
         <form action={approveDispatch}>
-          <DecisionButton tone="approve" pendingLabel="Approving…">
+          <DecisionButton tone="approve" pendingLabel="Approving…" disabled={locked}>
             <Check className="h-4 w-4" />
             Approve
           </DecisionButton>
         </form>
         <form action={rejectDispatch}>
-          <DecisionButton tone="reject" pendingLabel="Rejecting…">
+          <DecisionButton tone="reject" pendingLabel="Rejecting…" disabled={locked}>
             <X className="h-4 w-4" />
             Reject
           </DecisionButton>
@@ -60,20 +86,34 @@ export function LeaveDecisionBar({
   );
 }
 
+function translatePermissionError(
+  raw: string,
+  lockedToLabel: string | null,
+): string {
+  const isPerm = /does not have doctype access via role permission/i.test(raw);
+  if (!isPerm) return raw;
+  if (lockedToLabel) {
+    return `Only ${lockedToLabel} can approve or reject this.`;
+  }
+  return "Only the assigned approver can act on this request.";
+}
+
 function DecisionButton({
   tone,
   pendingLabel,
+  disabled,
   children,
 }: {
   tone: "approve" | "reject";
   pendingLabel: string;
+  disabled?: boolean;
   children: React.ReactNode;
 }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
-      disabled={pending}
+      disabled={pending || disabled}
       className={cn(
         "inline-flex h-10 items-center gap-1.5 rounded-chip px-4 text-sm font-semibold transition focus-ring",
         tone === "approve"

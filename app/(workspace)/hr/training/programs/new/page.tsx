@@ -2,11 +2,13 @@ import Link from "next/link";
 import type { Route } from "next";
 import { BookOpen, ChevronLeft } from "lucide-react";
 import { TrainingProgramForm } from "@/components/training/program-form";
+import { getTrainingFormOptions } from "@/lib/frappe/training";
 import { createTrainingProgramAction } from "../../actions";
 
 export const metadata = { title: "New training program · Colossal HR" };
 
-export default function NewTrainingProgramPage() {
+export default async function NewTrainingProgramPage() {
+  const options = await getTrainingFormOptions();
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -28,6 +30,7 @@ export default function NewTrainingProgramPage() {
 
       <TrainingProgramForm
         action={createTrainingProgramAction}
+        suppliers={options.suppliers}
         cancelHref="/hr/training?tab=programs"
       />
     </div>

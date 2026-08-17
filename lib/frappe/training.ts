@@ -315,8 +315,15 @@ export type TrainingProgramInput = {
 export async function createTrainingProgram(
   input: TrainingProgramInput,
 ): Promise<string> {
+  // Training Program uses autoname `field:training_program_name` in
+  // vanilla Frappe HR, but some tenants ship a customised schema
+  // where the autoname resolves late and Frappe throws
+  // "Training Program is required" on insert. Setting `name`
+  // explicitly matches whatever the autoname would have produced
+  // and avoids the round-trip.
   const doc: Record<string, unknown> = {
     doctype: "Training Program",
+    name: input.trainingProgramName,
     training_program_name: input.trainingProgramName,
     is_public: input.isPublic ? 1 : 0,
   };
@@ -444,6 +451,88 @@ export async function removeTrainingEventAttendee(
     args: { doc },
     as: "user",
   });
+}
+
+/** Options bundle for the Training Event / Program forms. Pulled
+ *  in one call so the create + edit pages don't hit Frappe three
+ *  separate times.
+ *
+ *  * `suppliers` — existing ERPNext Supplier records. Frappe rejects
+ *    free-text values on the Supplier Link field with
+ *    "Could not find Supplier: <name>" — surfacing the real list
+ *    upfront prevents that. Empty on tenants that haven't added
+ *    any Suppliers (common for HR-only installs) → forms should
+ *    hide the field entirely.
+ *
+ *  * `eventTypeOptions` — the actual accepted values for Training
+ *    Event.type on THIS tenant. Reads the DocField metadata:
+ *      - Select field  → newline-split `options` list.
+ *      - Link field    → row names from the linked doctype.
+ *    Falls back to the vanilla Frappe HR set if metadata isn't
+ *    readable, so the form keeps working on default installs. */
+export async function getTrainingFormOptions(): Promise<{
+  suppliers: string[];
+  eventTypeOptions: string[];
+}> {
+  type SupplierRow = { name: string };
+  type FieldMetaRow = { fieldtype: string; options: string | null };
+
+  const [suppliers, typeMeta] = await Promise.all([
+    frappeCall<SupplierRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Supplier",
+        fields: ["name"],
+        order_by: "name asc",
+        limit_page_length: 500,
+      },
+      as: "service",
+    }).catch(() => [] as SupplierRow[]),
+    frappeCall<FieldMetaRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "DocField",
+        filters: { parent: "Training Event", fieldname: "type" },
+        fields: ["fieldtype", "options"],
+        limit_page_length: 1,
+      },
+      as: "service",
+    }).catch(() => [] as FieldMetaRow[]),
+  ]);
+
+  const FALLBACK_TYPES = ["Internal", "External", "Selected", "Not Attended"];
+  let eventTypeOptions: string[] = FALLBACK_TYPES;
+  const meta = typeMeta[0];
+  if (meta) {
+    if (meta.fieldtype === "Select" && meta.options) {
+      eventTypeOptions = meta.options
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    } else if (meta.fieldtype === "Link" && meta.options) {
+      // Type is a Link — pull the actual records from the linked
+      // doctype so the picker offers what Frappe will accept.
+      type LinkRow = { name: string };
+      const linkRows = await frappeCall<LinkRow[]>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: meta.options,
+          fields: ["name"],
+          order_by: "name asc",
+          limit_page_length: 200,
+        },
+        as: "service",
+      }).catch(() => [] as LinkRow[]);
+      if (linkRows.length > 0) {
+        eventTypeOptions = linkRows.map((r) => r.name);
+      }
+    }
+  }
+
+  return {
+    suppliers: suppliers.map((r) => r.name),
+    eventTypeOptions,
+  };
 }
 
 /** Pulled once for the event form's Training Program picker. Uses

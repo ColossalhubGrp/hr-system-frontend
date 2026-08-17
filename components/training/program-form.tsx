@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import {
   Field,
   FormSection,
+  SelectInput,
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
@@ -18,9 +19,14 @@ const EMPTY: FormState = {};
 
 export function TrainingProgramForm({
   action,
+  suppliers,
   cancelHref,
 }: {
   action: Action;
+  /** Existing ERPNext Supplier records. Empty on tenants that
+   *  haven't configured any — the field is hidden entirely
+   *  (Frappe rejects free text with "Could not find Supplier: X"). */
+  suppliers: string[];
   cancelHref: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -53,17 +59,20 @@ export function TrainingProgramForm({
             invalid={Boolean(fe.training_program_name)}
           />
         </Field>
-        <Field
-          label="Supplier"
-          htmlFor="supplier"
-          hint="External provider, if applicable."
-        >
-          <TextInput
-            id="supplier"
-            name="supplier"
-            placeholder="e.g. PwC Zimbabwe"
-          />
-        </Field>
+        {suppliers.length > 0 && (
+          <Field
+            label="Supplier"
+            htmlFor="supplier"
+            hint="External provider, if applicable."
+          >
+            <SelectInput
+              id="supplier"
+              name="supplier"
+              options={suppliers}
+              placeholder="— none —"
+            />
+          </Field>
+        )}
         <Field
           label="Visibility"
           htmlFor="is_public"

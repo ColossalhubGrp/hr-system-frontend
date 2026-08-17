@@ -17,18 +17,30 @@ import type { FormState } from "@/app/(workspace)/hr/training/actions";
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
 const EMPTY: FormState = {};
 
-const TYPES = ["Internal", "External", "Selected", "Not Attended"];
+const FALLBACK_TYPES = ["Internal", "External", "Selected", "Not Attended"];
 
 export function TrainingEventForm({
   mode = "create",
   action,
   programs,
+  suppliers,
+  typeOptions,
   cancelHref,
   initial,
 }: {
   mode?: "create" | "edit";
   action: Action;
   programs: Array<{ id: string; label: string }>;
+  /** Existing ERPNext Supplier records. Empty on tenants that
+   *  haven't configured any — the field is then hidden entirely
+   *  (Frappe would reject free text with "Could not find
+   *  Supplier: X"). */
+  suppliers: string[];
+  /** Accepted values for Training Event.type on this tenant.
+   *  Reads real DocField metadata upstream so what's shown here
+   *  is what Frappe will actually accept, matching either a
+   *  Select field's options list or a Link field's record set. */
+  typeOptions: string[];
   cancelHref: string;
   /** Pre-fill values for the edit flow. datetime-local inputs need
    *  "YYYY-MM-DDTHH:MM" — pass the Frappe string as-is; the input
@@ -44,6 +56,8 @@ export function TrainingEventForm({
     introduction?: string | null;
   };
 }) {
+  const effectiveTypes =
+    typeOptions.length > 0 ? typeOptions : FALLBACK_TYPES;
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   /** Frappe stores datetime as "YYYY-MM-DD HH:MM:SS" but the native
@@ -85,8 +99,8 @@ export function TrainingEventForm({
           <SelectInput
             id="type"
             name="type"
-            options={TYPES}
-            defaultValue={initial?.type ?? "Internal"}
+            options={effectiveTypes}
+            defaultValue={initial?.type ?? effectiveTypes[0]}
             invalid={Boolean(fe.type)}
           />
         </Field>
@@ -138,18 +152,21 @@ export function TrainingEventForm({
             defaultValue={initial?.location ?? undefined}
           />
         </Field>
-        <Field
-          label="Supplier"
-          htmlFor="supplier"
-          hint="External training provider, if any."
-        >
-          <TextInput
-            id="supplier"
-            name="supplier"
-            placeholder="e.g. PwC Zimbabwe"
-            defaultValue={initial?.supplier ?? undefined}
-          />
-        </Field>
+        {suppliers.length > 0 && (
+          <Field
+            label="Supplier"
+            htmlFor="supplier"
+            hint="External training provider, if any."
+          >
+            <SelectInput
+              id="supplier"
+              name="supplier"
+              options={suppliers}
+              defaultValue={initial?.supplier ?? undefined}
+              placeholder="— none —"
+            />
+          </Field>
+        )}
         <Field label="Introduction" htmlFor="introduction" wide>
           <TextArea
             id="introduction"

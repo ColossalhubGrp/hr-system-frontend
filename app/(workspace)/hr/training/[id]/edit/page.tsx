@@ -5,6 +5,7 @@ import { ChevronLeft, GraduationCap } from "lucide-react";
 import { TrainingEventForm } from "@/components/training/event-form";
 import {
   getTrainingEvent,
+  getTrainingFormOptions,
   listTrainingProgramOptions,
 } from "@/lib/frappe/training";
 import { updateTrainingEventAction } from "../../actions";
@@ -26,9 +27,10 @@ export default async function EditTrainingEventPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const [event, programs] = await Promise.all([
+  const [event, programs, options] = await Promise.all([
     getTrainingEvent(id),
     listTrainingProgramOptions(),
+    getTrainingFormOptions(),
   ]);
   if (!event) notFound();
 
@@ -58,6 +60,8 @@ export default async function EditTrainingEventPage({
         mode="edit"
         action={action}
         programs={programs}
+        suppliers={options.suppliers}
+        typeOptions={options.eventTypeOptions}
         cancelHref={backHref}
         initial={{
           eventName: event.eventName,

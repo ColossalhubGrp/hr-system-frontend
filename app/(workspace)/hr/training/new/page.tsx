@@ -2,13 +2,19 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, GraduationCap } from "lucide-react";
 import { TrainingEventForm } from "@/components/training/event-form";
-import { listTrainingProgramOptions } from "@/lib/frappe/training";
+import {
+  getTrainingFormOptions,
+  listTrainingProgramOptions,
+} from "@/lib/frappe/training";
 import { createTrainingEventAction } from "../actions";
 
 export const metadata = { title: "New training event · Colossal HR" };
 
 export default async function NewTrainingEventPage() {
-  const programs = await listTrainingProgramOptions();
+  const [programs, options] = await Promise.all([
+    listTrainingProgramOptions(),
+    getTrainingFormOptions(),
+  ]);
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -31,6 +37,8 @@ export default async function NewTrainingEventPage() {
       <TrainingEventForm
         action={createTrainingEventAction}
         programs={programs}
+        suppliers={options.suppliers}
+        typeOptions={options.eventTypeOptions}
         cancelHref="/hr/training"
       />
     </div>

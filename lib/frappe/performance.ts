@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "./client";
+import { resolveUserDisplayName } from "./employee-approvers";
 
 export type AppraisalRow = {
   id: string;
@@ -623,6 +624,13 @@ export async function getAppraisal(id: string): Promise<AppraisalFull | null> {
       args: { doctype: "Appraisal", name: id },
       as: "user",
     });
+    // Fallback to Employee/User lookup when Frappe didn't
+    // populate reviewer_name on API insert.
+    const reviewerName =
+      (doc.reviewer_name && doc.reviewer_name.trim()) ||
+      (doc.reviewer
+        ? (await resolveUserDisplayName(doc.reviewer)) ?? null
+        : null);
     return {
       id: doc.name,
       employee: doc.employee,
@@ -638,7 +646,7 @@ export async function getAppraisal(id: string): Promise<AppraisalFull | null> {
       startDate: doc.start_date,
       endDate: doc.end_date,
       reviewer: doc.reviewer,
-      reviewerName: doc.reviewer_name,
+      reviewerName,
       docstatus: doc.docstatus,
     };
   } catch (err) {
@@ -728,12 +736,18 @@ export async function getFeedback(id: string): Promise<FeedbackFull | null> {
       args: { doctype: "Employee Performance Feedback", name: id },
       as: "user",
     });
+    // Fallback when Frappe didn't populate reviewer_name.
+    const reviewerName =
+      (doc.reviewer_name && doc.reviewer_name.trim()) ||
+      (doc.reviewer
+        ? (await resolveUserDisplayName(doc.reviewer)) ?? null
+        : null);
     return {
       id: doc.name,
       employee: doc.employee,
       employeeName: doc.employee_name,
       reviewer: doc.reviewer,
-      reviewerName: doc.reviewer_name,
+      reviewerName,
       feedbackDate: doc.feedback_date,
       totalScore: doc.total_score,
       appraisalCycle: doc.appraisal_cycle,

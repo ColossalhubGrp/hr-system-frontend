@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "./client";
+import { resolveUserDisplayName } from "./employee-approvers";
 
 export type LeaveStatus = "Open" | "Approved" | "Rejected" | "Cancelled";
 
@@ -271,6 +272,15 @@ export async function getLeaveApplication(
       args: { doctype: "Leave Application", name: id },
       as: "user",
     });
+    // Frappe's fetch_from-driven leave_approver_name isn't always
+    // populated on API inserts. Resolve the display name from
+    // the linked Employee (or User full_name) as a fallback so
+    // the detail page never has to fall back to the raw email.
+    const leaveApproverName =
+      (doc.leave_approver_name && doc.leave_approver_name.trim()) ||
+      (doc.leave_approver
+        ? (await resolveUserDisplayName(doc.leave_approver)) ?? null
+        : null);
     return {
       id: doc.name,
       docstatus: doc.docstatus,
@@ -286,7 +296,7 @@ export async function getLeaveApplication(
       postingDate: doc.posting_date,
       description: doc.description,
       leaveApprover: doc.leave_approver,
-      leaveApproverName: doc.leave_approver_name,
+      leaveApproverName,
       department: doc.department,
       company: doc.company,
     };

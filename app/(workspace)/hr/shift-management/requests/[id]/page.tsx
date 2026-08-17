@@ -95,7 +95,14 @@ export default async function ShiftRequestDetailPage({
             { label: "From", value: fmtDate(r.fromDate) },
             { label: "To", value: r.toDate ? fmtDate(r.toDate) : "Open-ended" },
             { label: "Status", value: r.status },
-            { label: "Approver", value: r.approverName ?? r.approver },
+            {
+              label: "Approver",
+              value: r.approverName
+                ? r.approver
+                  ? `${r.approverName} (${r.approver})`
+                  : r.approverName
+                : r.approver,
+            },
             { label: "Company", value: r.company },
             { label: "Department", value: r.department },
           ]}

@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "./client";
+import { resolveUserDisplayName } from "./employee-approvers";
 
 export type ShiftType = {
   name: string;
@@ -779,6 +780,16 @@ export async function getShiftRequest(
       args: { doctype: "Shift Request", name: id },
       as: "user",
     });
+    // Frappe's fetch_from-driven `approver_name` doesn't always
+    // populate when the doc is inserted via API. Resolve on read
+    // so the detail page never has to fall back to the raw email
+    // when a real name is available (Employee.employee_name or,
+    // failing that, User.full_name).
+    const approverName =
+      (doc.approver_name && doc.approver_name.trim()) ||
+      (doc.approver
+        ? (await resolveUserDisplayName(doc.approver)) ?? null
+        : null);
     return {
       id: doc.name,
       employee: doc.employee,
@@ -788,7 +799,7 @@ export async function getShiftRequest(
       toDate: doc.to_date,
       status: doc.status,
       approver: doc.approver,
-      approverName: doc.approver_name,
+      approverName,
       company: doc.company,
       department: doc.department,
       docstatus: doc.docstatus,

@@ -84,7 +84,14 @@ export default async function FeedbackDetailPage({
                 </Link>
               ),
             },
-            { label: "Reviewer", value: f.reviewerName ?? f.reviewer },
+            {
+              label: "Reviewer",
+              value: f.reviewerName
+                ? f.reviewer
+                  ? `${f.reviewerName} (${f.reviewer})`
+                  : f.reviewerName
+                : f.reviewer,
+            },
             { label: "Appraisal cycle", value: f.appraisalCycle },
             { label: "Date", value: f.feedbackDate },
             {

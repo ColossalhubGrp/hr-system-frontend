@@ -107,7 +107,14 @@ export default async function AppraisalDetailPage({
             { label: "Template", value: a.appraisalTemplate },
             { label: "Start", value: a.startDate },
             { label: "End", value: a.endDate },
-            { label: "Reviewer", value: a.reviewerName ?? a.reviewer },
+            {
+              label: "Reviewer",
+              value: a.reviewerName
+                ? a.reviewer
+                  ? `${a.reviewerName} (${a.reviewer})`
+                  : a.reviewerName
+                : a.reviewer,
+            },
             { label: "Status", value: a.status },
             {
               label: "Rating",

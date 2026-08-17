@@ -157,6 +157,72 @@ export async function resolveApproverUserId(
   }
 }
 
+/** Given a User email (as stored in Frappe's Link-to-User approver
+ *  fields), resolve a friendly display name. Tries the linked Employee
+ *  first (matches by user_id → employee_name — the label everyone
+ *  actually recognises), then falls back to the User's full_name.
+ *  Returns null when no display name is discoverable so callers can
+ *  fall through to showing the raw email.
+ *
+ *  Used by the request/detail read paths across HR (Shift Request,
+ *  Leave Application, Expense Claim, etc.) — Frappe's built-in
+ *  `approver_name` fetch_from field is populated inconsistently on
+ *  inserts done via API, so we resolve on read instead of relying
+ *  on it. */
+export async function resolveUserDisplayName(
+  email: string | null | undefined,
+): Promise<string | null> {
+  const val = (email ?? "").trim();
+  if (!val || !val.includes("@")) return null;
+  // 1. Try Employee by user_id — this is the label the app's
+  //    pickers render everywhere, so it's the most consistent
+  //    thing to show.
+  try {
+    const row = await frappeCall<
+      { employee_name: string | null } | Array<never> | null
+    >({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "Employee",
+        filters: { user_id: val },
+        fieldname: "employee_name",
+      },
+      as: "user",
+    });
+    const empName =
+      row && typeof row === "object" && !Array.isArray(row)
+        ? (row.employee_name ?? "").trim()
+        : "";
+    if (empName) return empName;
+  } catch {
+    /* fall through */
+  }
+  // 2. Fall back to User.full_name — covers Administrator,
+  //    integration users, ex-employees whose Employee row was
+  //    removed but the User is still around.
+  try {
+    const row = await frappeCall<
+      { full_name: string | null } | Array<never> | null
+    >({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "User",
+        filters: { name: val },
+        fieldname: "full_name",
+      },
+      as: "user",
+    });
+    const userName =
+      row && typeof row === "object" && !Array.isArray(row)
+        ? (row.full_name ?? "").trim()
+        : "";
+    if (userName) return userName;
+  } catch {
+    /* fall through */
+  }
+  return null;
+}
+
 /** Friendly message paired with an ApproverResolution failure. Use in
  *  the calling action's fieldErrors for the approver / reviewer field.
  *  When `detail` is provided (provision_failed branch), the underlying

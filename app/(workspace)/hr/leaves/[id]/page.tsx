@@ -93,7 +93,14 @@ export default async function LeaveDetailPage({
             { label: "To", value: fmtDate(app.toDate) },
             { label: "Half day", value: app.halfDay ? "Yes" : "No" },
             { label: "Half day date", value: fmtDate(app.halfDayDate) },
-            { label: "Approver", value: app.leaveApproverName ?? app.leaveApprover },
+            {
+              label: "Approver",
+              value: app.leaveApproverName
+                ? app.leaveApprover
+                  ? `${app.leaveApproverName} (${app.leaveApprover})`
+                  : app.leaveApproverName
+                : app.leaveApprover,
+            },
             { label: "Filed on", value: fmtDate(app.postingDate) },
             { label: "Reason", value: app.description, wide: true },
           ]}

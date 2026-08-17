@@ -75,11 +75,40 @@ export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
   // ignore_permissions with an HR-bundle role gate so the list is
   // consistent for every HR user without touching each tenant's
   // DocPerm config.
-  const rows = await frappeCall<Raw[]>({
-    method: "recruitment_app.api.me.list_leave_types_admin",
-    as: "user",
-  }).catch(() => [] as Raw[]);
-  return rows.map(toRow);
+  //
+  // Falls back to the raw client.get_list (service token) if the
+  // whitelisted method isn't deployed yet — matters during the
+  // window between shipping this change and the VPS pull; without
+  // the fallback the empty-state UI stays with no clear signal
+  // that the backend needs updating.
+  try {
+    const rows = await frappeCall<Raw[]>({
+      method: "recruitment_app.api.me.list_leave_types_admin",
+      as: "user",
+    });
+    return (rows ?? []).map(toRow);
+  } catch {
+    const rows = await frappeCall<Raw[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Leave Type",
+        fields: [
+          "name",
+          "max_leaves_allowed",
+          "is_earned_leave",
+          "is_carry_forward",
+          "is_lwp",
+          "include_holiday",
+          "applicable_after",
+          "description",
+        ],
+        order_by: "name asc",
+        limit_page_length: 500,
+      },
+      as: "service",
+    }).catch(() => [] as Raw[]);
+    return rows.map(toRow);
+  }
 }
 
 export async function createLeaveType(input: LeaveTypeInput): Promise<string> {

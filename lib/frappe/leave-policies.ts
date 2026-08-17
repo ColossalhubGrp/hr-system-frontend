@@ -44,16 +44,47 @@ export async function listLeavePolicies(): Promise<LeavePolicyRow[]> {
   // Backend method uses ignore_permissions with an HR-bundle role
   // gate so the list is consistent for every HR user — matches the
   // pattern used for Leave Types. See lib/frappe/leave-types.ts
-  // for full rationale.
-  const bundle = await frappeCall<{
-    parents: RawParent[];
-    details: RawDetail[];
-  }>({
-    method: "recruitment_app.api.me.list_leave_policies_admin",
-    as: "user",
-  }).catch(() => ({ parents: [] as RawParent[], details: [] as RawDetail[] }));
-  const parents = bundle.parents ?? [];
-  const details = bundle.details ?? [];
+  // for full rationale (including the fallback shape).
+  let parents: RawParent[] = [];
+  let details: RawDetail[] = [];
+  try {
+    const bundle = await frappeCall<{
+      parents: RawParent[];
+      details: RawDetail[];
+    }>({
+      method: "recruitment_app.api.me.list_leave_policies_admin",
+      as: "user",
+    });
+    parents = bundle?.parents ?? [];
+    details = bundle?.details ?? [];
+  } catch {
+    // Backend method not yet deployed — fall back to raw reads via
+    // the service token so the page still renders whatever the
+    // tenant has (may be an empty list on tenants whose service
+    // user lacks perms; the admin method is the eventual fix).
+    [parents, details] = await Promise.all([
+      frappeCall<RawParent[]>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "Leave Policy",
+          fields: ["name", "title"],
+          order_by: "title asc",
+          limit_page_length: 200,
+        },
+        as: "service",
+      }).catch(() => [] as RawParent[]),
+      frappeCall<RawDetail[]>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "Leave Policy Detail",
+          fields: ["parent", "leave_type", "annual_allocation", "idx"],
+          order_by: "parent asc, idx asc",
+          limit_page_length: 2000,
+        },
+        as: "service",
+      }).catch(() => [] as RawDetail[]),
+    ]);
+  }
 
   const detailsByParent = new Map<string, LeavePolicyDetail[]>();
   for (const d of details) {

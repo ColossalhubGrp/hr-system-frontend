@@ -97,8 +97,12 @@ export default async function LifecycleKindPage({
         columns={[
           {
             header: "Employee",
+            // noLink so the row-level rowHref (lifecycle record detail)
+            // drives the click. Without this the embedded /employee/…
+            // Link inside the cell swallows the click and users end
+            // up on the employee profile instead of the record.
             cell: (r) => (
-              <EmployeeCell id={r.employee} name={r.employeeName} />
+              <EmployeeCell id={r.employee} name={r.employeeName} noLink />
             ),
           },
           {

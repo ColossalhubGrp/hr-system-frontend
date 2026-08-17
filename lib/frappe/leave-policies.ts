@@ -41,6 +41,11 @@ type RawDetail = {
 };
 
 export async function listLeavePolicies(): Promise<LeavePolicyRow[]> {
+  // Same rationale as listLeaveTypes: Leave Policy is tenant-wide
+  // reference data, and Frappe HR's DocPerm for the doctype doesn't
+  // include the app's custom HR roles by default. Reading as the
+  // signed-in user silently returns [] on such rows — service token
+  // sidesteps the check for read-only reference lists.
   const [parents, details] = await Promise.all([
     frappeCall<RawParent[]>({
       method: "frappe.client.get_list",
@@ -50,7 +55,7 @@ export async function listLeavePolicies(): Promise<LeavePolicyRow[]> {
         order_by: "title asc",
         limit_page_length: 200,
       },
-      as: "user",
+      as: "service",
     }).catch(() => [] as RawParent[]),
     frappeCall<RawDetail[]>({
       method: "frappe.client.get_list",
@@ -60,7 +65,7 @@ export async function listLeavePolicies(): Promise<LeavePolicyRow[]> {
         order_by: "parent asc, idx asc",
         limit_page_length: 2000,
       },
-      as: "user",
+      as: "service",
     }).catch(() => [] as RawDetail[]),
   ]);
 

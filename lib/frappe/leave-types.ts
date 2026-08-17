@@ -66,6 +66,13 @@ function toRow(r: Raw): LeaveTypeRow {
 }
 
 export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
+  // Leave Type is tenant-wide reference data (every filer sees the
+  // same list), so read via the service token. Reading as the
+  // signed-in user runs Frappe HR's DocPerm chain which — for
+  // custom roles like HR Director — can silently return an empty
+  // list even when the rows exist (Leave Type ships without a
+  // DocPerm entry for the role and Frappe returns [] rather than
+  // erroring). Same treatment as other reference lookups.
   const rows = await frappeCall<Raw[]>({
     method: "frappe.client.get_list",
     args: {
@@ -83,7 +90,7 @@ export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
       order_by: "name asc",
       limit_page_length: 500,
     },
-    as: "user",
+    as: "service",
   }).catch(() => [] as Raw[]);
   return rows.map(toRow);
 }

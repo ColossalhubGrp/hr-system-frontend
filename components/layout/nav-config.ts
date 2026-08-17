@@ -223,6 +223,7 @@ export const NAV: NavItem[] = [
       { label: "Holiday lists", href: "/settings/holiday-lists", requires: "HR_ADMIN" },
       { label: "Grievance types", href: "/settings/grievance-types", requires: "HR_ADMIN" },
       { label: "Leave types", href: "/settings/leave-types", requires: "HR_ADMIN" },
+      { label: "Leave policies", href: "/settings/leave-policies", requires: "HR_ADMIN" },
       { label: "Performance default", href: "/settings/performance", requires: "HR_ADMIN" },
       { label: "Overtime rules", href: "/settings/overtime", requires: "HR_ADMIN" },
       // IT-admin-only — explicitly NOT shown to HR Director / HR Manager.

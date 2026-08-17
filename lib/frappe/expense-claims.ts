@@ -270,11 +270,18 @@ export type ExpenseClaimCreateInput = {
 export async function createExpenseClaim(
   input: ExpenseClaimCreateInput,
 ): Promise<string> {
+  // Frappe's Expense Claim schema treats exchange_rate as required
+  // and rejects the API insert with "Value missing for Expense
+  // Claim: Exchange Rate" when it's not set. Defaults to 1 —
+  // correct when the claim is filed in the company's own currency
+  // (the common case). Multi-currency claims would need the caller
+  // to pass a real rate; not modeled in the UI yet.
   const doc: Record<string, unknown> = {
     doctype: "Expense Claim",
     employee: input.employee,
     posting_date: input.posting_date,
     company: input.company,
+    exchange_rate: 1,
     expenses: input.expenses.map((e) => ({
       doctype: "Expense Claim Detail",
       expense_date: e.expense_date,

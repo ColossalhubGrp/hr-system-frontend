@@ -8,7 +8,7 @@ import {
   decideLeaveApplication,
   type LeaveCreateInput,
 } from "@/lib/frappe/leaves";
-import { FrappeRequestError } from "@/lib/frappe/client";
+import { FrappeRequestError, frappeCall } from "@/lib/frappe/client";
 import {
   approverErrorMessage,
   resolveApproverUserId,
@@ -111,6 +111,32 @@ export async function createLeaveAction(
       return { error: msg, fieldErrors: { leave_approver: msg } };
     }
     leaveApprover = resolved?.ok ? resolved.userId : undefined;
+  }
+
+  // Ensure the employee has a Leave Allocation covering the
+  // application window BEFORE the insert. Frappe HR rejects the
+  // application with "Application period cannot be outside leave
+  // allocation period" when no allocation exists — the backend
+  // method creates one on the fly using Leave Type's own day cap.
+  // Idempotent: no-op when a covering allocation already exists.
+  try {
+    await frappeCall({
+      method: "recruitment_app.api.me.ensure_leave_allocation",
+      args: {
+        employee: parsed.data.employee,
+        leave_type: parsed.data.leave_type,
+        from_date: parsed.data.from_date,
+        to_date: parsed.data.to_date,
+      },
+      verb: "POST",
+      as: "user",
+    });
+  } catch (err) {
+    // Fall through — the create below will surface Frappe's own
+    // error text if the allocation genuinely can't be created (bad
+    // Leave Type config, etc.), which is still more actionable
+    // than swallowing.
+    if (!(err instanceof FrappeRequestError)) throw err;
   }
 
   let newId: string;

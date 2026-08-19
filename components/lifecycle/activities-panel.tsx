@@ -30,6 +30,10 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import {
+  EmployeePickerField,
+  type EmployeeDirectoryEntry,
+} from "@/components/common/employee-picker-field";
 import { toast } from "@/components/ui/sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { cn } from "@/lib/cn";
@@ -56,8 +60,6 @@ type Activity = {
   completedBy: string | null;
 };
 
-type AssignmentUser = { email: string; fullName: string };
-
 const EMPTY: AddActivityState = {};
 
 /**
@@ -73,7 +75,7 @@ export function ActivitiesPanel({
   parentId,
   initial,
   editable,
-  users,
+  directory,
   roles,
 }: {
   kind: "onboarding" | "separation";
@@ -82,8 +84,11 @@ export function ActivitiesPanel({
   /** Read-only viewers get the list + checkboxes rendered as static,
    *  no add/remove/tick controls. */
   editable: boolean;
-  /** Enabled non-website users the assign-to-user dropdown lists. */
-  users: AssignmentUser[];
+  /** Every employee — the "Assign to user" picker lists everyone the
+   *  same way leave-approver and other HR-wide pickers do; the Server
+   *  Action resolves the picked employee to a Frappe user_id (creating
+   *  a login on the fly if needed) before writing the row. */
+  directory: EmployeeDirectoryEntry[];
   /** Enabled Frappe roles the …or-by-role dropdown lists. */
   roles: string[];
 }) {
@@ -143,6 +148,7 @@ export function ActivitiesPanel({
                 parentId={parentId}
                 activity={a}
                 editable={editable}
+                directory={directory}
                 onCompletedChange={(updated) =>
                   setItems((prev) =>
                     prev.map((row) =>
@@ -167,7 +173,7 @@ export function ActivitiesPanel({
             parentId={parentId}
             open={openAdd}
             onOpenChange={setOpenAdd}
-            users={users}
+            directory={directory}
             roles={roles}
             onCreated={(created) => {
               setItems((prev) => [...prev, created]);
@@ -178,7 +184,7 @@ export function ActivitiesPanel({
             kind={kind}
             parentId={parentId}
             editing={editing}
-            users={users}
+            directory={directory}
             roles={roles}
             onOpenChange={(v) => {
               if (!v) setEditing(null);
@@ -203,6 +209,7 @@ function ActivityRow({
   parentId,
   activity,
   editable,
+  directory,
   onCompletedChange,
   onRemoved,
   onEdit,
@@ -211,6 +218,7 @@ function ActivityRow({
   parentId: string;
   activity: Activity;
   editable: boolean;
+  directory: EmployeeDirectoryEntry[];
   onCompletedChange: (
     updated: Pick<Activity, "name" | "completed" | "completedOn" | "completedBy">,
   ) => void;
@@ -307,9 +315,12 @@ function ActivityRow({
 
         <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
           {activity.user && (
-            <span className="inline-flex items-center gap-1">
+            <span
+              className="inline-flex items-center gap-1"
+              title={activity.user}
+            >
               <UserRound className="h-3 w-3" />
-              {activity.user}
+              {displayForAssignedUser(activity.user, directory)}
             </span>
           )}
           {activity.role && !activity.user && (
@@ -378,24 +389,26 @@ function ActivityFormBody({
   fieldErrors,
   initial,
   showRequiredToggle,
-  users,
+  directory,
   roles,
 }: {
   fieldErrors: Record<string, string> | undefined;
   initial?: Activity | null;
   showRequiredToggle: boolean;
-  users: AssignmentUser[];
+  directory: EmployeeDirectoryEntry[];
   roles: string[];
 }) {
-  // Preserve a legacy value (Inactive user, deleted role) as an option so the
-  // edit dialog doesn't silently swap it for the placeholder on load.
-  const userOptions = ensureOption(
-    users.map((u) => ({
-      value: u.email,
-      label: `${u.fullName} (${u.email})`,
-    })),
-    initial?.user ?? "",
-  );
+  // The activity row stores the assignee as a Frappe user_id (email).
+  // The picker deals in employee ids, so reverse-lookup the existing
+  // email against the directory to pre-select the right employee on
+  // the edit dialog. If no employee matches (legacy value, or a user
+  // with no linked employee like Administrator), the picker falls
+  // back to showing the raw email via its ensureValue path.
+  const initialAssignee = initial?.user ?? "";
+  const initialAssigneeAsEmployee =
+    initialAssignee && initialAssignee.includes("@")
+      ? (directory.find((e) => e.user_id === initialAssignee)?.id ?? initialAssignee)
+      : initialAssignee;
   const roleOptions = ensureOption(
     roles.map((r) => ({ value: r, label: r })),
     initial?.role ?? "",
@@ -419,23 +432,15 @@ function ActivityFormBody({
         />
       </Field>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field
-          label="Assign to user"
-          htmlFor="user"
-          hint={
-            userOptions.length === 0
-              ? "No users available to assign to on this tenant."
-              : "Specific user. Leave blank + pick a role to assign to anyone with that role."
-          }
-        >
-          <SelectInput
-            id="user"
-            name="user"
-            options={userOptions}
-            defaultValue={initial?.user ?? ""}
-            placeholder="— pick a user —"
-          />
-        </Field>
+        <EmployeePickerField
+          name="user"
+          label="Assign to employee"
+          directory={directory}
+          defaultValue={initialAssigneeAsEmployee}
+          placeholder="— pick an employee —"
+          hint="A login is auto-created for the picked employee if they don't have one yet. Leave blank + pick a role to assign to anyone with that role."
+          error={fieldErrors?.user}
+        />
         <Field
           label="…or by role"
           htmlFor="role"
@@ -515,12 +520,24 @@ function ensureOption(
   return [{ value, label: value }, ...options];
 }
 
+/** Row-display helper: activity.user is a Frappe user_id (email). Show
+ *  the linked employee's name when we can find one in the directory,
+ *  fall back to the raw email otherwise. Kept in-file because the
+ *  panel is the only surface that needs it. */
+function displayForAssignedUser(
+  user: string,
+  directory: EmployeeDirectoryEntry[],
+): string {
+  const match = directory.find((e) => e.user_id === user);
+  return match?.employee_name ?? user;
+}
+
 function AddActivityDialog({
   kind,
   parentId,
   open,
   onOpenChange,
-  users,
+  directory,
   roles,
   onCreated,
 }: {
@@ -528,7 +545,7 @@ function AddActivityDialog({
   parentId: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  users: AssignmentUser[];
+  directory: EmployeeDirectoryEntry[];
   roles: string[];
   onCreated: (created: Activity) => void;
 }) {
@@ -564,7 +581,7 @@ function AddActivityDialog({
           <ActivityFormBody
             fieldErrors={state.fieldErrors}
             showRequiredToggle={kind === "onboarding"}
-            users={users}
+            directory={directory}
             roles={roles}
           />
           <DialogFooter>
@@ -585,7 +602,7 @@ function EditActivityDialog({
   kind,
   parentId,
   editing,
-  users,
+  directory,
   roles,
   onOpenChange,
   onSaved,
@@ -593,7 +610,7 @@ function EditActivityDialog({
   kind: "onboarding" | "separation";
   parentId: string;
   editing: Activity | null;
-  users: AssignmentUser[];
+  directory: EmployeeDirectoryEntry[];
   roles: string[];
   onOpenChange: (v: boolean) => void;
   onSaved: (updated: Activity) => void;
@@ -620,7 +637,7 @@ function EditActivityDialog({
             kind={kind}
             parentId={parentId}
             activity={editing}
-            users={users}
+            directory={directory}
             roles={roles}
             onCancel={() => onOpenChange(false)}
             onSaved={onSaved}
@@ -635,7 +652,7 @@ function EditActivityInner({
   kind,
   parentId,
   activity,
-  users,
+  directory,
   roles,
   onCancel,
   onSaved,
@@ -643,7 +660,7 @@ function EditActivityInner({
   kind: "onboarding" | "separation";
   parentId: string;
   activity: Activity;
-  users: AssignmentUser[];
+  directory: EmployeeDirectoryEntry[];
   roles: string[];
   onCancel: () => void;
   onSaved: (updated: Activity) => void;
@@ -669,7 +686,7 @@ function EditActivityInner({
         fieldErrors={state.fieldErrors}
         initial={activity}
         showRequiredToggle={kind === "onboarding"}
-        users={users}
+        directory={directory}
         roles={roles}
       />
       <DialogFooter>

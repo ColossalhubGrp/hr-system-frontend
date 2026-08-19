@@ -14,9 +14,9 @@ import { frappeCall } from "@/lib/frappe/client";
 import { LIFECYCLE_META, type LifecycleKind } from "@/lib/frappe/lifecycle";
 import {
   listAssignmentRoles,
-  listAssignmentUsers,
   listLifecycleActivities,
 } from "@/lib/frappe/lifecycle-activities";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { ActivitiesPanel } from "@/components/lifecycle/activities-panel";
 import {
@@ -90,7 +90,7 @@ export default async function LifecycleDetailPage({
   // DocTypes whose child `activities` table backs the Employee Boarding
   // Activity rows. Transfers / Promotions / Grievances have no checklist.
   const isBoardingKind = kind === "onboarding" || kind === "separation";
-  const [activities, access, assignableUsers, assignableRoles] =
+  const [activities, access, employeeDirectory, assignableRoles] =
     isBoardingKind
       ? await Promise.all([
           listLifecycleActivities(
@@ -98,7 +98,12 @@ export default async function LifecycleDetailPage({
             kind === "onboarding" ? "Employee Onboarding" : "Employee Separation",
           ),
           getMyAccess(),
-          listAssignmentUsers(),
+          // Every employee shows in the "Assign to user" picker — the
+          // Server Action resolves the picked Employee id to a user_id
+          // (auto-provisioning a login if needed) before writing the
+          // activity, so we don't have to gate the dropdown on who
+          // already has a User account.
+          listEmployeeDirectory(),
           listAssignmentRoles(),
         ])
       : [[], null, [], []];
@@ -183,7 +188,7 @@ export default async function LifecycleDetailPage({
           parentId={id}
           initial={activities}
           editable={canEditActivities}
-          users={assignableUsers}
+          directory={employeeDirectory}
           roles={assignableRoles}
         />
       )}

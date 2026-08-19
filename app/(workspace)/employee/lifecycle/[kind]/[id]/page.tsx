@@ -180,7 +180,11 @@ export default async function LifecycleDetailPage({
         </div>
       )}
 
-      <WorkflowPanels kind={kind} record={record} />
+      <WorkflowPanels
+        kind={kind}
+        record={record}
+        activitySummary={activitySummary(activities)}
+      />
 
       {(kind === "onboarding" || kind === "separation") && (
         <ActivitiesPanel
@@ -232,15 +236,39 @@ export default async function LifecycleDetailPage({
 
 // -------------------------------------------------- workflow panel switch
 
+/** Small summary the Mark-Complete gate reads. Empty activities is a
+ *  soft warning; required-but-incomplete activities are a hard block. */
+type ActivitySummary = {
+  total: number;
+  requiredPending: string[];
+};
+
+function activitySummary(rows: Awaited<ReturnType<typeof listLifecycleActivities>>): ActivitySummary {
+  return {
+    total: rows.length,
+    requiredPending: rows
+      .filter((a) => a.requiredForEmployeeCreation && !a.completed)
+      .map((a) => a.activityName),
+  };
+}
+
 function WorkflowPanels({
   kind,
   record,
+  activitySummary,
 }: {
   kind: LifecycleKind;
   record: LifecycleRecord;
+  activitySummary: ActivitySummary;
 }) {
   if (kind === "onboarding" || kind === "separation") {
-    return <BoardingPanels kind={kind} record={record} />;
+    return (
+      <BoardingPanels
+        kind={kind}
+        record={record}
+        activitySummary={activitySummary}
+      />
+    );
   }
   if (kind === "transfer" || kind === "promotion") {
     return <SubmittablePanels kind={kind} record={record} />;
@@ -251,9 +279,11 @@ function WorkflowPanels({
 function BoardingPanels({
   kind,
   record,
+  activitySummary,
 }: {
   kind: "onboarding" | "separation";
   record: LifecycleRecord;
+  activitySummary: ActivitySummary;
 }) {
   const start =
     kind === "onboarding" ? startOnboardingAction : startSeparationAction;
@@ -273,6 +303,25 @@ function BoardingPanels({
     );
   }
   if (record.status === "In Process") {
+    // Gate the Complete transition against the activities checklist:
+    //   * Any activity flagged "required for employee creation" that
+    //     isn't ticked off is a hard block (matches the backend guard
+    //     in human_resources.api.lifecycle_activities.set_boarding_status).
+    //   * An empty checklist is a soft warning — HR can still complete
+    //     a run they never populated, but they see the nudge first.
+    const requiredPending = activitySummary.requiredPending;
+    const blocked =
+      requiredPending.length > 0
+        ? `${requiredPending.length} required ${
+            requiredPending.length === 1 ? "activity is" : "activities are"
+          } still outstanding: ${requiredPending.join(
+            ", ",
+          )}. Tick them off in the Activities panel before completing.`
+        : null;
+    const warning =
+      !blocked && activitySummary.total === 0
+        ? `This ${kind} has no activities yet. Add the tasks that need to happen (welcome pack, NDA, orientation…) before finishing — or continue if you're really done.`
+        : null;
     return (
       <ActionPanel
         title="Mark complete"
@@ -284,6 +333,8 @@ function BoardingPanels({
         label="Mark complete"
         pendingLabel="Completing…"
         action={action(complete)}
+        blocked={blocked}
+        warning={warning}
       />
     );
   }

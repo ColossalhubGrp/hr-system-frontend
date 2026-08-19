@@ -1,7 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -16,6 +16,13 @@ const EMPTY: ActionState = {};
  *
  * Migrated to shadcn primitives. `tone="danger"` maps onto the shadcn
  * destructive variant; `tone="primary"` uses the default brand button.
+ *
+ * Two optional gates for pre-submit UX:
+ *   * `blocked` disables the button entirely and renders the reason
+ *     in a rose alert-style banner (use when a prerequisite is missing
+ *     that the server would also reject).
+ *   * `warning` renders an amber advisory banner but leaves the button
+ *     enabled (use for "you might want to X first" nudges).
  */
 export function ActionPanel({
   title,
@@ -25,6 +32,8 @@ export function ActionPanel({
   tone = "primary",
   icon,
   action,
+  blocked,
+  warning,
 }: {
   title: string;
   description?: string;
@@ -33,6 +42,8 @@ export function ActionPanel({
   tone?: "primary" | "danger";
   icon?: React.ReactNode;
   action: Action;
+  blocked?: string | null;
+  warning?: string | null;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
 
@@ -45,6 +56,24 @@ export function ActionPanel({
             <p className="text-xs text-muted-foreground">{description}</p>
           )}
         </div>
+        {blocked && (
+          <p
+            role="alert"
+            className="flex items-start gap-2 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-xs text-rose-800"
+          >
+            <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>{blocked}</span>
+          </p>
+        )}
+        {warning && !blocked && (
+          <p
+            role="status"
+            className="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+          >
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>{warning}</span>
+          </p>
+        )}
         {state.error && (
           <p
             role="alert"
@@ -55,7 +84,13 @@ export function ActionPanel({
           </p>
         )}
         <form action={dispatch}>
-          <SubmitBtn tone={tone} pendingLabel={pendingLabel} icon={icon} label={label} />
+          <SubmitBtn
+            tone={tone}
+            pendingLabel={pendingLabel}
+            icon={icon}
+            label={label}
+            blocked={Boolean(blocked)}
+          />
         </form>
       </CardContent>
     </Card>
@@ -67,17 +102,19 @@ function SubmitBtn({
   pendingLabel,
   icon,
   label,
+  blocked,
 }: {
   tone: "primary" | "danger";
   pendingLabel: string;
   icon?: React.ReactNode;
   label: string;
+  blocked: boolean;
 }) {
   const { pending } = useFormStatus();
   return (
     <Button
       type="submit"
-      disabled={pending}
+      disabled={pending || blocked}
       variant={tone === "danger" ? "outline" : "default"}
       className={
         tone === "danger"

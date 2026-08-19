@@ -407,27 +407,53 @@ export async function createGrievance(input: GrievanceInput): Promise<string> {
 
 // ----------------------------------------------------------- transitions
 
-/** For onboarding & separation — flips the Select column that tracks
- *  which phase of the workflow we're in. Onboarding calls it
- *  boarding_status; Separation calls it status. Keep both names in
- *  one helper so the Server Action doesn't have to know the schema
- *  quirk. */
+/** For onboarding & separation — flips the phase column via the
+ *  guarded backend helper, so a "Completed" move is refused when any
+ *  activity flagged `required_for_employee_creation` is still open.
+ *  The helper also handles the Onboarding-vs-Separation column-name
+ *  quirk (`boarding_status` vs `status`) server-side.
+ *
+ *  Falls back to plain `frappe.client.set_value` when the helper
+ *  hasn't been deployed yet (the guard only lives on the backend post
+ *  this change) so the button keeps working across the deploy gap. */
 export async function setBoardingStatus(
   kind: "onboarding" | "separation",
   id: string,
   status: "Pending" | "In Process" | "Completed",
 ): Promise<void> {
-  const fieldName = kind === "onboarding" ? "boarding_status" : "status";
-  await frappeCall({
-    method: "frappe.client.set_value",
-    args: {
-      doctype: KIND_META[kind].doctype,
-      name: id,
-      fieldname: { [fieldName]: status },
-    },
-    verb: "POST",
-    as: "user",
-  });
+  try {
+    await frappeCall({
+      method: "human_resources.api.lifecycle_activities.set_boarding_status",
+      args: {
+        parent: id,
+        parenttype: KIND_META[kind].doctype,
+        status,
+      },
+      verb: "POST",
+      as: "user",
+    });
+    return;
+  } catch (err) {
+    // If the helper is deployed, its ValidationError becomes the
+    // client-facing message ("Can't mark this Completed — ...").
+    // Only fall back for the specific "method not found" 404 that a
+    // pre-deploy backend produces.
+    if (err instanceof FrappeRequestError && err.status === 404) {
+      const fieldName = kind === "onboarding" ? "boarding_status" : "status";
+      await frappeCall({
+        method: "frappe.client.set_value",
+        args: {
+          doctype: KIND_META[kind].doctype,
+          name: id,
+          fieldname: { [fieldName]: status },
+        },
+        verb: "POST",
+        as: "user",
+      });
+      return;
+    }
+    throw err;
+  }
 }
 
 export async function setGrievanceStatus(

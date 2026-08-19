@@ -11,6 +11,8 @@ import {
   createSeparation,
   createTransfer,
   createTypedTransfer,
+  findActiveOnboardingForEmployee,
+  findActiveSeparationForEmployee,
   setBoardingStatus,
   setGrievanceStatus,
   submitLifecycle,
@@ -72,6 +74,18 @@ export async function createOnboardingAction(
 ): Promise<FormState> {
   const parsed = onboardingSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+
+  // Duplicate guard — Frappe HR's Employee Onboarding transitions
+  // fail with a cryptic 417 once a second draft exists for the
+  // same employee. Redirect to whichever active record they
+  // already have instead of piling another draft on top; the
+  // detail page surfaces a banner explaining the redirect
+  // (via ?duplicate=1).
+  const existing = await findActiveOnboardingForEmployee(parsed.data.employee);
+  if (existing) {
+    redirect(`${detailHref("onboarding", existing)}?duplicate=1`);
+  }
+
   try {
     const input: OnboardingInput = parsed.data;
     const id = await createOnboarding(input);
@@ -100,6 +114,13 @@ export async function createSeparationAction(
 ): Promise<FormState> {
   const parsed = separationSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
+
+  // Same duplicate-guard rationale as onboarding.
+  const existing = await findActiveSeparationForEmployee(parsed.data.employee);
+  if (existing) {
+    redirect(`${detailHref("separation", existing)}?duplicate=1`);
+  }
+
   try {
     const input: SeparationInput = parsed.data;
     const id = await createSeparation(input);

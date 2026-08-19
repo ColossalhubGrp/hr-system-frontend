@@ -166,6 +166,57 @@ async function insert(doc: Record<string, unknown>): Promise<string> {
   return saved.name;
 }
 
+/** Find an existing Employee Onboarding for a given employee that
+ *  is still "active" (Pending or In Process) — i.e. hasn't been
+ *  Completed yet. Used by the create action to short-circuit into
+ *  the existing record instead of piling up parallel drafts that
+ *  Frappe HR then refuses to transition.
+ *
+ *  Returns the name of the first matching row, or null. */
+export async function findActiveOnboardingForEmployee(
+  employee: string,
+): Promise<string | null> {
+  type Row = { name: string };
+  const rows = await frappeCall<Row[]>({
+    method: "frappe.client.get_list",
+    args: {
+      doctype: "Employee Onboarding",
+      filters: JSON.stringify([
+        ["employee", "=", employee],
+        ["boarding_status", "in", ["Pending", "In Process"]],
+      ]),
+      fields: ["name"],
+      order_by: "modified desc",
+      limit_page_length: 1,
+    },
+    as: "user",
+  }).catch(() => [] as Row[]);
+  return rows[0]?.name ?? null;
+}
+
+/** Same shape for Separation. Separation's phase column is `status`
+ *  (not `boarding_status`) — matches the write-path mapping. */
+export async function findActiveSeparationForEmployee(
+  employee: string,
+): Promise<string | null> {
+  type Row = { name: string };
+  const rows = await frappeCall<Row[]>({
+    method: "frappe.client.get_list",
+    args: {
+      doctype: "Employee Separation",
+      filters: JSON.stringify([
+        ["employee", "=", employee],
+        ["status", "in", ["Pending", "In Process"]],
+      ]),
+      fields: ["name"],
+      order_by: "modified desc",
+      limit_page_length: 1,
+    },
+    as: "user",
+  }).catch(() => [] as Row[]);
+  return rows[0]?.name ?? null;
+}
+
 export async function createOnboarding(input: OnboardingInput): Promise<string> {
   return insert({
     doctype: "Employee Onboarding",

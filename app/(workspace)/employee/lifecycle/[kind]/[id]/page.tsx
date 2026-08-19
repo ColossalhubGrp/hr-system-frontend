@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
-import { ChevronLeft, GitBranch } from "lucide-react";
+import { ChevronLeft, GitBranch, Info } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { ActionPanel } from "@/components/common/action-bar";
@@ -58,14 +58,23 @@ export async function generateMetadata({
 
 export default async function LifecycleDetailPage({
   params,
+  searchParams,
 }: {
   params: { kind: string; id: string };
+  searchParams: { duplicate?: string };
 }) {
   if (!isKind(params.kind)) notFound();
   const kind = params.kind;
   const id = decodeURIComponent(params.id);
   const record = await getLifecycleRecord(kind, id);
   if (!record) notFound();
+
+  // `?duplicate=1` is set by the create action when it detects an
+  // active (Pending / In Process) record already exists for the
+  // same employee and redirects here instead of piling another
+  // draft on top. The banner tells the user why they're on this
+  // page rather than the fresh-record page they were expecting.
+  const wasDuplicateRedirect = searchParams.duplicate === "1";
 
   const meta = LIFECYCLE_META[kind];
   const back = `/employee/lifecycle/${kind}` as Route;
@@ -136,6 +145,26 @@ export default async function LifecycleDetailPage({
           </span>
         }
       />
+
+      {wasDuplicateRedirect && (
+        <div
+          role="status"
+          className="flex items-start gap-2 rounded-card border border-amber-300 bg-amber-100/60 px-4 py-3 text-sm text-amber-900"
+        >
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-amber-700" />
+          <div className="flex flex-col gap-0.5">
+            <b>
+              {record.employeeName ?? record.employee ?? "This employee"}{" "}
+              already has an active {meta.label.toLowerCase()} in progress.
+            </b>
+            <span className="text-xs">
+              We opened it here instead of starting a duplicate. Finish or
+              cancel this one first, then a fresh {meta.label.toLowerCase()}{" "}
+              can be filed.
+            </span>
+          </div>
+        </div>
+      )}
 
       <WorkflowPanels kind={kind} record={record} />
 

@@ -129,33 +129,55 @@ export type ToggleCompletedResult = {
 
 export type AssignmentUser = { email: string; fullName: string };
 
-/** Enabled non-website users the activity form can assign an activity to.
- *  Falls back to empty (dropdown renders just current value + placeholder)
- *  if the tenant scopes User reads out. */
+/** Enabled non-website users the activity form can assign an activity
+ *  to. Prefers the whitelisted `recruitment_app.api.me.assignable_users`
+ *  helper because Frappe's stock User DocType read is locked to self
+ *  for everyone but System Manager — so `frappe.client.get_list` on
+ *  User collapses to a single row for the caller, which is why the
+ *  dropdown was showing just the current user. The whitelisted helper
+ *  returns name + full_name only (no secrets).
+ *
+ *  Falls back to a bare get_list (best-effort, will only see the
+ *  caller) if the helper isn't deployed yet, and to empty otherwise. */
 export async function listAssignmentUsers(): Promise<AssignmentUser[]> {
   try {
-    const rows = await frappeCall<Array<{ name: string; full_name: string | null }>>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "User",
-        fields: ["name", "full_name"],
-        filters: JSON.stringify([
-          ["enabled", "=", 1],
-          ["user_type", "!=", "Website User"],
-          ["name", "!=", "Guest"],
-        ]),
-        order_by: "full_name asc",
-        limit_page_length: 500,
-      },
+    const rows = await frappeCall<Array<{ email: string; full_name: string | null }>>({
+      method: "recruitment_app.api.me.assignable_users",
       as: "user",
     });
     return (rows ?? []).map((r) => ({
-      email: r.name,
-      fullName: r.full_name ?? r.name,
+      email: r.email,
+      fullName: r.full_name ?? r.email,
     }));
   } catch (err) {
-    console.error("[listAssignmentUsers] fetch failed:", err);
-    return [];
+    console.warn(
+      "[listAssignmentUsers] whitelisted helper failed, falling back to bare get_list:",
+      err,
+    );
+    try {
+      const rows = await frappeCall<Array<{ name: string; full_name: string | null }>>({
+        method: "frappe.client.get_list",
+        args: {
+          doctype: "User",
+          fields: ["name", "full_name"],
+          filters: JSON.stringify([
+            ["enabled", "=", 1],
+            ["user_type", "!=", "Website User"],
+            ["name", "!=", "Guest"],
+          ]),
+          order_by: "full_name asc",
+          limit_page_length: 500,
+        },
+        as: "user",
+      });
+      return (rows ?? []).map((r) => ({
+        email: r.name,
+        fullName: r.full_name ?? r.name,
+      }));
+    } catch (inner) {
+      console.error("[listAssignmentUsers] fallback also failed:", inner);
+      return [];
+    }
   }
 }
 

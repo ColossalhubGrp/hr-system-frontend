@@ -24,6 +24,8 @@ import {
   cancelTransferAction,
   completeOnboardingAction,
   completeSeparationAction,
+  deleteOnboardingAction,
+  deleteSeparationAction,
   invalidateGrievanceAction,
   investigateGrievanceAction,
   resolveGrievanceAction,
@@ -32,6 +34,7 @@ import {
   submitPromotionAction,
   submitTransferAction,
 } from "../../actions";
+import { DeleteRecordButton } from "@/components/lifecycle/delete-record-button";
 
 const KINDS: LifecycleKind[] = [
   "onboarding",
@@ -61,7 +64,7 @@ export default async function LifecycleDetailPage({
   searchParams,
 }: {
   params: { kind: string; id: string };
-  searchParams: { duplicate?: string };
+  searchParams: { duplicate?: string; existing_status?: string };
 }) {
   if (!isKind(params.kind)) notFound();
   const kind = params.kind;
@@ -70,11 +73,15 @@ export default async function LifecycleDetailPage({
   if (!record) notFound();
 
   // `?duplicate=1` is set by the create action when it detects an
-  // active (Pending / In Process) record already exists for the
-  // same employee and redirects here instead of piling another
-  // draft on top. The banner tells the user why they're on this
-  // page rather than the fresh-record page they were expecting.
+  // existing record already exists for the same employee and redirects
+  // here instead of piling another row on top (Frappe HR's duplicate
+  // validator blocks even Completed rows). The banner tells the user
+  // why they're on this page rather than the fresh-record page they
+  // were expecting; `existing_status` picks the copy so a Completed
+  // row's banner offers Delete-and-refile while an active row's banner
+  // asks the user to finish / cancel first.
   const wasDuplicateRedirect = searchParams.duplicate === "1";
+  const existingStatus = searchParams.existing_status;
 
   const meta = LIFECYCLE_META[kind];
   const back = `/employee/lifecycle/${kind}` as Route;
@@ -155,12 +162,14 @@ export default async function LifecycleDetailPage({
           <div className="flex flex-col gap-0.5">
             <b>
               {record.employeeName ?? record.employee ?? "This employee"}{" "}
-              already has an active {meta.label.toLowerCase()} in progress.
+              already has {existingStatus === "Completed" ? "a" : "an active"}{" "}
+              {existingStatus === "Completed" ? "completed" : ""}{" "}
+              {meta.label.toLowerCase()} on file.
             </b>
             <span className="text-xs">
-              We opened it here instead of starting a duplicate. Finish or
-              cancel this one first, then a fresh {meta.label.toLowerCase()}{" "}
-              can be filed.
+              {existingStatus === "Completed"
+                ? `We opened it here instead of starting a duplicate. Frappe HR won't allow two ${meta.label.toLowerCase()}s per employee — delete this one below if you need to file a fresh ${meta.label.toLowerCase()} (e.g. a rehire).`
+                : `We opened it here instead of starting a duplicate. Finish or cancel this one first, then a fresh ${meta.label.toLowerCase()} can be filed.`}
             </span>
           </div>
         </div>
@@ -185,6 +194,33 @@ export default async function LifecycleDetailPage({
         </h2>
         <FieldGrid fields={fieldsFor(kind, record)} />
       </section>
+
+      {isBoardingKind && canEditActivities && (
+        <section className="flex flex-col gap-3 rounded-card border border-hairline bg-canvas/40 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-0.5">
+            <p className="text-sm font-medium text-foreground">
+              Delete this {meta.label.toLowerCase()}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Removes the row entirely. Use this to clean up duplicates or to
+              unblock a fresh {meta.label.toLowerCase()} for the same employee.
+            </p>
+          </div>
+          <DeleteRecordButton
+            id={record.id}
+            action={
+              kind === "onboarding"
+                ? deleteOnboardingAction
+                : deleteSeparationAction
+            }
+            label={`Delete ${meta.label.toLowerCase()}`}
+            confirmTitle={`Delete ${record.id}?`}
+            confirmBody={`This permanently removes ${meta.label.toLowerCase()} ${record.id} for ${
+              record.employeeName ?? record.employee ?? "this employee"
+            }. Activities on the checklist are removed with it. This can't be undone.`}
+          />
+        </section>
+      )}
     </div>
   );
 }

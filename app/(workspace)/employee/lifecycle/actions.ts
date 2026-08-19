@@ -11,8 +11,9 @@ import {
   createSeparation,
   createTransfer,
   createTypedTransfer,
-  findActiveOnboardingForEmployee,
-  findActiveSeparationForEmployee,
+  deleteLifecycleRecord,
+  findExistingOnboardingForEmployee,
+  findExistingSeparationForEmployee,
   setBoardingStatus,
   setGrievanceStatus,
   submitLifecycle,
@@ -75,15 +76,22 @@ export async function createOnboardingAction(
   const parsed = onboardingSchema.safeParse(formToRecord(form));
   if (!parsed.success) return fieldErrors(parsed);
 
-  // Duplicate guard — Frappe HR's Employee Onboarding transitions
-  // fail with a cryptic 417 once a second draft exists for the
-  // same employee. Redirect to whichever active record they
-  // already have instead of piling another draft on top; the
-  // detail page surfaces a banner explaining the redirect
-  // (via ?duplicate=1).
-  const existing = await findActiveOnboardingForEmployee(parsed.data.employee);
+  // Duplicate guard — Frappe HR's `validate_duplicate_employee_onboarding`
+  // refuses to save a second onboarding for the same job_applicant,
+  // *including* when the earlier row is already Completed. When
+  // job_applicant is null (HR-created onboardings), the check collapses
+  // to "any two nulls collide", which then breaks the Pending → In
+  // Process transition on the newer row with a cryptic 417. Guarding
+  // at create-time is the only clean fix — redirect to whichever
+  // record already exists and surface a banner explaining why via
+  // ?duplicate=1&existing_status=<status>. HR can then delete the
+  // stale one from the detail page if they need to file a fresh
+  // onboarding (e.g. a rehire).
+  const existing = await findExistingOnboardingForEmployee(parsed.data.employee);
   if (existing) {
-    redirect(`${detailHref("onboarding", existing)}?duplicate=1`);
+    redirect(
+      `${detailHref("onboarding", existing.name)}?duplicate=1&existing_status=${encodeURIComponent(existing.status)}`,
+    );
   }
 
   try {
@@ -116,9 +124,11 @@ export async function createSeparationAction(
   if (!parsed.success) return fieldErrors(parsed);
 
   // Same duplicate-guard rationale as onboarding.
-  const existing = await findActiveSeparationForEmployee(parsed.data.employee);
+  const existing = await findExistingSeparationForEmployee(parsed.data.employee);
   if (existing) {
-    redirect(`${detailHref("separation", existing)}?duplicate=1`);
+    redirect(
+      `${detailHref("separation", existing.name)}?duplicate=1&existing_status=${encodeURIComponent(existing.status)}`,
+    );
   }
 
   try {
@@ -317,6 +327,27 @@ export const startOnboardingAction = boardingDecide("onboarding", "In Process");
 export const completeOnboardingAction = boardingDecide("onboarding", "Completed");
 export const startSeparationAction = boardingDecide("separation", "In Process");
 export const completeSeparationAction = boardingDecide("separation", "Completed");
+
+// --- Delete (Onboarding + Separation) -----------------------------------
+
+// Hard-delete used to clean up duplicates and stale rows that block
+// Frappe HR's duplicate validator. The detail page confirms with the
+// user first. On success, redirect back to the list so the user sees
+// their cleanup reflected instead of a 404 on the deleted id.
+function deleteLifecycleAction(kind: "onboarding" | "separation") {
+  return async (id: string, _prev: DecisionState): Promise<DecisionState> => {
+    try {
+      await deleteLifecycleRecord(kind, id);
+    } catch (err) {
+      return toFormState(err) as DecisionState;
+    }
+    revalidatePath(listHref(kind));
+    redirect(`${listHref(kind)}?deleted=1`);
+  };
+}
+
+export const deleteOnboardingAction = deleteLifecycleAction("onboarding");
+export const deleteSeparationAction = deleteLifecycleAction("separation");
 
 // --- Grievance transitions ----------------------------------------------
 

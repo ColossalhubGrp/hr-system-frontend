@@ -166,55 +166,62 @@ async function insert(doc: Record<string, unknown>): Promise<string> {
   return saved.name;
 }
 
-/** Find an existing Employee Onboarding for a given employee that
- *  is still "active" (Pending or In Process) — i.e. hasn't been
- *  Completed yet. Used by the create action to short-circuit into
- *  the existing record instead of piling up parallel drafts that
- *  Frappe HR then refuses to transition.
+/** Find ANY existing Employee Onboarding for a given employee,
+ *  regardless of status. Frappe HR's `validate_duplicate_employee_onboarding`
+ *  refuses to save a second onboarding for the same job_applicant —
+ *  including when the earlier one is already Completed. When
+ *  job_applicant is null (HR-created onboarding), the check collapses
+ *  to "any two nulls collide", which then blocks the Pending→In Process
+ *  transition on the second row with a cryptic 417. Guarding at
+ *  create-time is the only clean fix: we short-circuit into whichever
+ *  row already exists rather than creating a doomed second draft.
  *
- *  Returns the name of the first matching row, or null. */
-export async function findActiveOnboardingForEmployee(
+ *  Active rows (Pending / In Process) beat Completed ones so the
+ *  redirect lands on the row the user is most likely to want to work
+ *  on. Returns the row's name + status, or null. */
+export async function findExistingOnboardingForEmployee(
   employee: string,
-): Promise<string | null> {
-  type Row = { name: string };
+): Promise<{ name: string; status: string } | null> {
+  type Row = { name: string; boarding_status: string };
   const rows = await frappeCall<Row[]>({
     method: "frappe.client.get_list",
     args: {
       doctype: "Employee Onboarding",
-      filters: JSON.stringify([
-        ["employee", "=", employee],
-        ["boarding_status", "in", ["Pending", "In Process"]],
-      ]),
-      fields: ["name"],
-      order_by: "modified desc",
+      filters: JSON.stringify([["employee", "=", employee]]),
+      fields: ["name", "boarding_status"],
+      // "Pending"/"In Process" sort before "Completed" alphabetically,
+      // which happens to be the priority we want anyway; tie-break on
+      // most-recently-modified so the freshest active draft wins.
+      order_by: "boarding_status asc, modified desc",
       limit_page_length: 1,
     },
     as: "user",
   }).catch(() => [] as Row[]);
-  return rows[0]?.name ?? null;
+  const hit = rows[0];
+  return hit ? { name: hit.name, status: hit.boarding_status } : null;
 }
 
 /** Same shape for Separation. Separation's phase column is `status`
- *  (not `boarding_status`) — matches the write-path mapping. */
-export async function findActiveSeparationForEmployee(
+ *  (not `boarding_status`) — matches the write-path mapping. Frappe HR's
+ *  Employee Separation carries the same one-per-applicant validator, so
+ *  we broaden the guard the same way as onboarding. */
+export async function findExistingSeparationForEmployee(
   employee: string,
-): Promise<string | null> {
-  type Row = { name: string };
+): Promise<{ name: string; status: string } | null> {
+  type Row = { name: string; status: string };
   const rows = await frappeCall<Row[]>({
     method: "frappe.client.get_list",
     args: {
       doctype: "Employee Separation",
-      filters: JSON.stringify([
-        ["employee", "=", employee],
-        ["status", "in", ["Pending", "In Process"]],
-      ]),
-      fields: ["name"],
-      order_by: "modified desc",
+      filters: JSON.stringify([["employee", "=", employee]]),
+      fields: ["name", "status"],
+      order_by: "status asc, modified desc",
       limit_page_length: 1,
     },
     as: "user",
   }).catch(() => [] as Row[]);
-  return rows[0]?.name ?? null;
+  const hit = rows[0];
+  return hit ? { name: hit.name, status: hit.status } : null;
 }
 
 export async function createOnboarding(input: OnboardingInput): Promise<string> {
@@ -464,6 +471,23 @@ export async function cancelLifecycle(
 ): Promise<void> {
   await frappeCall<unknown>({
     method: "frappe.client.cancel",
+    args: { doctype: KIND_META[kind].doctype, name: id },
+    verb: "POST",
+    as: "user",
+  });
+}
+
+/** Hard-delete an onboarding or separation row. Used to clean up
+ *  duplicates that slipped past the create-time guard, and to unblock
+ *  the Frappe HR duplicate validator when an old Completed row is
+ *  preventing transitions on a newer one. Callers should confirm with
+ *  the user before invoking — Frappe's client.delete is unrecoverable. */
+export async function deleteLifecycleRecord(
+  kind: LifecycleKind,
+  id: string,
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "frappe.client.delete",
     args: { doctype: KIND_META[kind].doctype, name: id },
     verb: "POST",
     as: "user",

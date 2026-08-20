@@ -4,6 +4,7 @@ import { ChevronLeft, UserRoundPlus } from "lucide-react";
 import { EmployeeForm } from "@/components/employee/employee-form";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { requireGroup } from "@/lib/frappe/require-role";
+import { getMyAccess, PERSONA_ROLES } from "@/lib/frappe/roles";
 import { createEmployeeAction } from "../actions";
 
 export const metadata = { title: "New employee · Colossal HR" };
@@ -11,7 +12,15 @@ export const metadata = { title: "New employee · Colossal HR" };
 export default async function NewEmployeePage() {
   // Creating an Employee is HR-only.
   await requireGroup("HR_ANY", "/employee/new");
-  const options = await fetchEmployeeFormOptions();
+  const [options, access] = await Promise.all([
+    fetchEmployeeFormOptions(),
+    getMyAccess(),
+  ]);
+  // Only admins can assign persona roles — mirrors the gate on
+  // recruitment_app.api.me.set_login_roles_for_employee. Non-admin
+  // HR still creates the Employee (they always land with the
+  // Employee self-service role); the picker just isn't shown.
+  const canAssignRoles = Boolean(access?.isItAdmin || access?.isHrAdmin);
 
   return (
     <div className="flex flex-col gap-5">
@@ -40,6 +49,8 @@ export default async function NewEmployeePage() {
         mode="create"
         action={createEmployeeAction}
         options={options}
+        personaRoles={PERSONA_ROLES}
+        canAssignRoles={canAssignRoles}
         cancelHref="/employee"
       />
     </div>

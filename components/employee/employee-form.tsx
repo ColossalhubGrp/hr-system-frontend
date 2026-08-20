@@ -28,6 +28,15 @@ type Props = {
   options: EmployeeFormOptions;
   initial?: EmployeeFull;
   cancelHref: string;
+  /** Persona roles the login-roles picker offers on create. Empty
+   *  array or missing hides the picker; pass PERSONA_ROLES from
+   *  lib/frappe/roles.ts to get the canonical set. */
+  personaRoles?: string[];
+  /** Only IT/HR Admins can assign persona roles; matches the backend
+   *  gate on recruitment_app.api.me.set_login_roles_for_employee.
+   *  When false, the picker is hidden entirely — non-admin HR still
+   *  gets to create the employee, they just don't see the picker. */
+  canAssignRoles?: boolean;
 };
 
 const EMPTY: FormState = {};
@@ -99,6 +108,8 @@ export function EmployeeForm({
   options,
   initial,
   cancelHref,
+  personaRoles,
+  canAssignRoles,
 }: Props) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
@@ -824,6 +835,9 @@ export function EmployeeForm({
               invalid={Boolean(fe.personal_email)}
             />
           </Field>
+          {mode === "create" && canAssignRoles && personaRoles && personaRoles.length > 0 && (
+            <LoginRolesSection personaRoles={personaRoles} />
+          )}
           <Field label="Current address" htmlFor="current_address" wide>
             <TextArea
               id="current_address"
@@ -1084,6 +1098,67 @@ function Grid({ children }: { children: React.ReactNode }) {
   return (
     <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
       {children}
+    </div>
+  );
+}
+
+/**
+ * Login roles picker for the Employee create wizard. Renders a
+ * two-column checkbox grid of every persona role, plus an amber
+ * "Employee (self-service) is always applied" hint so admins know the
+ * base role isn't optional. Only visible on `mode="create"` and only
+ * when the caller is an IT/HR Admin (gated at the callsite) — matches
+ * the server-side gate on
+ * `recruitment_app.api.me.set_login_roles_for_employee`.
+ *
+ * Posts each ticked role as a repeated `login_roles` FormData entry;
+ * the Server Action reads them with `form.getAll("login_roles")`.
+ */
+function LoginRolesSection({
+  personaRoles,
+}: {
+  personaRoles: string[];
+}) {
+  // Employee is auto-applied backend-side (set_login_roles_for_employee
+  // forces it back in), so we don't offer it here — showing a checkbox
+  // that can't actually be unchecked would be a lie.
+  const roles = personaRoles.filter((r) => r !== "Employee");
+  return (
+    <div className="sm:col-span-2 flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
+        <label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Login roles (optional)
+        </label>
+        <p className="text-xs text-muted-foreground">
+          Extra personas this employee gets on their login. Anything
+          you skip can still be added later from Settings → Users.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-1.5 rounded-card border border-hairline bg-canvas/40 p-3 sm:grid-cols-2">
+        {roles.map((role) => (
+          <label
+            key={role}
+            className="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm text-foreground hover:bg-muted/40"
+          >
+            <input
+              type="checkbox"
+              name="login_roles"
+              value={role}
+              className="h-4 w-4 rounded border-input"
+            />
+            <span>{role}</span>
+          </label>
+        ))}
+      </div>
+      <p className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-100/60 px-3 py-2 text-[11px] text-amber-900">
+        <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-700" aria-hidden />
+        <span>
+          <b>Employee</b> (self-service — attendance, leave, payslips,
+          profile) is always applied so the hire can access their own
+          dashboard. You don&apos;t need to tick anything if that&apos;s all
+          they need.
+        </span>
+      </p>
     </div>
   );
 }

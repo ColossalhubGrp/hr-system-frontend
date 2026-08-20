@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Users as UsersIcon, ChevronLeft } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
-import { ROLE } from "@/lib/frappe/roles";
+import { PERSONA_ROLES } from "@/lib/frappe/roles";
 import { requireGroup } from "@/lib/frappe/require-role";
 import { EditRolesDrawer } from "@/components/settings/edit-roles-drawer";
 
@@ -19,27 +19,12 @@ type UserRow = {
 type UserRoleMap = { users: UserRow[] };
 type AllRolesResp = { roles: Array<{ name: string }> };
 
-// The SRS personas (+ Frappe-native equivalents the system also uses). We
-// drive the role-edit drawer with this list and also use it for the per-role
-// occupancy table at the top of the page.
-const SRS_ROLES = [
-  ROLE.HR_DIRECTOR,
-  ROLE.HR_MANAGER,
-  ROLE.HR_OPERATIONS,
-  ROLE.HR_USER,
-  ROLE.HR_OFFICER,
-  ROLE.RECRUITER,
-  ROLE.HIRING_MANAGER,
-  ROLE.LINE_MANAGER,
-  ROLE.EMPLOYEE,
-  ROLE.PAYROLL_OFFICER,
-  ROLE.FINANCE_REVIEWER,
-  ROLE.EXECUTIVE_VIEWER,
-  ROLE.DATA_STEWARD,
-  ROLE.IT_ADMIN,
-  ROLE.AUDITOR,
-  ROLE.ALUMNI,
-];
+// Canonical persona list — SRS §3.2.2 + the Frappe-native HR / accounts
+// roles the app also uses. Both this page (per-role occupancy table +
+// drawer checkboxes) and the Login-roles picker on Employee create read
+// from the shared PERSONA_ROLES export so a new persona shows up in
+// every surface at once.
+const SRS_ROLES = PERSONA_ROLES;
 
 export default async function UsersAndRolesPage() {
   // Even though /settings/layout.tsx allows the broader SETTINGS_ANY bundle,

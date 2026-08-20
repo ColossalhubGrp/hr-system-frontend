@@ -8,7 +8,8 @@ import {
   updateEmployee,
   type EmployeeFormInput,
 } from "@/lib/frappe/employee-write";
-import { FrappeRequestError } from "@/lib/frappe/client";
+import { FrappeRequestError, frappeCall } from "@/lib/frappe/client";
+import { getMyAccess, PERSONA_ROLES } from "@/lib/frappe/roles";
 
 export type FormState = {
   error?: string;
@@ -196,11 +197,52 @@ export async function createEmployeeAction(
     };
   }
 
+  // Persona roles are picked from the Login-roles checkbox section
+  // on the Contact Details tab (see LoginRolesSection in employee-
+  // form.tsx). Filter against the canonical PERSONA_ROLES list so a
+  // client that tampered with the form can't inject arbitrary role
+  // names into the User doc.
+  const rawRoles = form.getAll("login_roles").filter(
+    (v): v is string => typeof v === "string" && v.length > 0,
+  );
+  const validRoles = Array.from(new Set(rawRoles)).filter((r) =>
+    PERSONA_ROLES.includes(r),
+  );
+
+  let employeeId: string;
   try {
-    await createEmployee(parsed.data);
+    employeeId = await createEmployee(parsed.data);
   } catch (err) {
     return toFormState(err);
   }
+
+  // Best-effort role application. If it fails we still succeed the
+  // whole create — the Employee is real, they have Employee (self-
+  // service) via the after_insert hook, and HR can retry the persona
+  // assignment from Settings → Users. Rolling back a valid Employee
+  // over a role-assignment error would confuse the user.
+  if (validRoles.length > 0) {
+    const access = await getMyAccess();
+    if (access?.isItAdmin || access?.isHrAdmin) {
+      try {
+        await frappeCall<{ ok: boolean; roles: string[] }>({
+          method: "recruitment_app.api.me.set_login_roles_for_employee",
+          verb: "POST",
+          args: {
+            employee: employeeId,
+            roles: JSON.stringify(validRoles),
+          },
+          as: "user",
+        });
+      } catch (err) {
+        console.error(
+          `[createEmployeeAction] set_login_roles_for_employee failed for ${employeeId}:`,
+          err,
+        );
+      }
+    }
+  }
+
   revalidatePath("/employee");
   redirect("/employee");
 }

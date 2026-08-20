@@ -38,6 +38,35 @@ export const ROLE = {
 export type RoleName = (typeof ROLE)[keyof typeof ROLE] | (string & {});
 
 /**
+ * Canonical persona list — the SRS §3.2.2 personas plus the Frappe-native
+ * HR / accounts roles the app also uses. Every surface that presents "which
+ * personas is this person" — the /settings/users drawer, the persona table,
+ * and the login-roles picker on Employee create — reads this list so a new
+ * persona is added in one place and shows up everywhere.
+ *
+ * Order is the intended display order (highest-privilege first, then
+ * horizontal peers).
+ */
+export const PERSONA_ROLES: RoleName[] = [
+  ROLE.HR_DIRECTOR,
+  ROLE.HR_MANAGER,
+  ROLE.HR_OPERATIONS,
+  ROLE.HR_USER,
+  ROLE.HR_OFFICER,
+  ROLE.RECRUITER,
+  ROLE.HIRING_MANAGER,
+  ROLE.LINE_MANAGER,
+  ROLE.EMPLOYEE,
+  ROLE.PAYROLL_OFFICER,
+  ROLE.FINANCE_REVIEWER,
+  ROLE.EXECUTIVE_VIEWER,
+  ROLE.DATA_STEWARD,
+  ROLE.IT_ADMIN,
+  ROLE.AUDITOR,
+  ROLE.ALUMNI,
+];
+
+/**
  * Named groups of roles for permission checks. Each route in the workspace
  * asks "is the signed-in user in group X?" — never "is the user role-name
  * exactly Y?". Adding a new role (or a custom one) is a one-line change here.

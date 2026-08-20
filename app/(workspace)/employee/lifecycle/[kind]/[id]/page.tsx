@@ -353,45 +353,74 @@ function SubmittablePanels({
   const cancel = kind === "transfer" ? cancelTransferAction : cancelPromotionAction;
 
   if (record.docstatus === 0) {
-    // Frappe's before_submit throws when transfer_date / promotion_date > today
-    // ("cannot be submitted before Transfer Date"). Rather than let HR hit that
-    // wall, surface it as a static waiting-card so the affordance is honest.
+    // Backend compat classes (recruitment_app.compat.employee_transfer /
+    // employee_promotion) allow future-dated submits: HR submits now,
+    // the daily scheduler applies the change on the effective date.
+    // The panel copy tells the user what to expect either way; the
+    // static "Waiting for date" gate that used to live here is gone.
     const dateField = kind === "transfer" ? "transfer_date" : "promotion_date";
     const effectiveDate = (record.raw[dateField] as string | null) ?? null;
     const isFuture = effectiveDate ? effectiveDate > isoToday() : false;
 
     const change = describeChange(kind, record);
 
-    if (isFuture && effectiveDate) {
-      return (
-        <div className="rounded-card border border-hairline bg-canvas/60 p-4">
-          <p className="text-sm font-medium text-foreground">
-            Waiting for {kind === "transfer" ? "transfer" : "promotion"} date
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            {change ? `${change}. ` : ""}
-            This becomes submittable on <b>{effectiveDate}</b>. Until then it
-            stays as Draft so the change doesn&apos;t apply early.
-          </p>
-        </div>
-      );
-    }
+    const description = isFuture && effectiveDate
+      ? `${change ? `${change}. ` : ""}Submit now to lock this in — the change applies automatically to the employee record on ${effectiveDate}. Nobody needs to come back on the day.`
+      : change
+        ? `${change}. Submitting applies it to the employee record now.`
+        : `Submitting applies the recorded change to the employee record.`;
 
     return (
       <ActionPanel
-        title={`Submit this ${kind}`}
-        description={
-          change
-            ? `${change}. Submitting applies it to the employee record now.`
-            : `Submitting applies the recorded change to the employee record on the ${kind} date.`
+        title={
+          isFuture
+            ? `Schedule this ${kind}`
+            : `Submit this ${kind}`
         }
-        label="Submit"
+        description={description}
+        label={isFuture ? "Submit & schedule" : "Submit"}
         pendingLabel="Submitting…"
         action={submit.bind(null, record.id)}
       />
     );
   }
   if (record.docstatus === 1) {
+    // A submitted future-dated Transfer / Promotion has `applied_on`
+    // NULL until the scheduler runs on the effective date. Surface a
+    // hint so HR knows why the Employee record looks unchanged.
+    const dateField = kind === "transfer" ? "transfer_date" : "promotion_date";
+    const effectiveDate = (record.raw[dateField] as string | null) ?? null;
+    const appliedOn = (record.raw.applied_on as string | null) ?? null;
+    const isPendingApply =
+      !appliedOn && Boolean(effectiveDate) && effectiveDate! > isoToday();
+
+    if (isPendingApply) {
+      return (
+        <div className="flex flex-col gap-3">
+          <div
+            role="status"
+            className="rounded-card border border-amber-300 bg-amber-50 px-4 py-3 text-xs text-amber-900"
+          >
+            <p className="text-sm font-medium text-amber-900">
+              Scheduled — applies on {effectiveDate}
+            </p>
+            <p className="mt-0.5">
+              Locked in. The employee record still shows the current
+              values; the daily job flips them to the new ones on the
+              effective date. Cancel below if plans change.
+            </p>
+          </div>
+          <ActionPanel
+            title={`Cancel this ${kind}`}
+            description="Cancels the schedule; the employee record is untouched (no changes have been applied yet). The audit row stays for the trail."
+            label="Cancel"
+            pendingLabel="Cancelling…"
+            tone="danger"
+            action={cancel.bind(null, record.id)}
+          />
+        </div>
+      );
+    }
     return (
       <ActionPanel
         title={`Cancel this ${kind}`}

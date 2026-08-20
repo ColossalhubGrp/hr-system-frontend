@@ -179,6 +179,23 @@ export async function createEmployeeAction(
   const parsed = parseForm(form);
   if (!parsed.ok) return parsed.state;
 
+  // Login-account provisioning is non-optional: every new employee
+  // gets a User created on save (see recruitment_app's
+  // employee_login_provisioning after_insert hook), and that needs
+  // an email address to send the welcome / set-password link to.
+  // We also mirror this check on the backend (validate hook), so
+  // this is really just to keep the error tight next to the field
+  // instead of round-tripping a Frappe throw.
+  if (!parsed.data.company_email && !parsed.data.personal_email) {
+    return {
+      error: "Check the highlighted fields.",
+      fieldErrors: {
+        company_email:
+          "Required — we auto-create a login account for the employee at this address so they can access their self-service dashboard.",
+      },
+    };
+  }
+
   try {
     await createEmployee(parsed.data);
   } catch (err) {

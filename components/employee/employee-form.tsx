@@ -791,6 +791,12 @@ export function EmployeeForm({
             label="Company email"
             htmlFor="company_email"
             error={fe.company_email}
+            required={mode === "create"}
+            hint={
+              mode === "create"
+                ? "Required — we auto-create a login account for the employee at this address on save, and Frappe emails a set-your-password link so they can access their self-service dashboard. Personal email works as a fallback if there's no company address yet."
+                : undefined
+            }
           >
             <TextInput
               id="company_email"
@@ -804,6 +810,11 @@ export function EmployeeForm({
             label="Personal email"
             htmlFor="personal_email"
             error={fe.personal_email}
+            hint={
+              mode === "create"
+                ? "Used as the login address only when Company email is empty."
+                : undefined
+            }
           >
             <TextInput
               id="personal_email"

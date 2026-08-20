@@ -225,21 +225,27 @@ export async function findExistingSeparationForEmployee(
 }
 
 export async function createOnboarding(input: OnboardingInput): Promise<string> {
+  // Skip Pending entirely — the extra "Start" click was pure friction
+  // for HR, who's already committed by clicking "Create onboarding".
+  // Records go straight to In Process and become Completed once every
+  // required activity is ticked (guarded server-side in
+  // human_resources.api.lifecycle_activities.set_boarding_status).
   return insert({
     doctype: "Employee Onboarding",
-    boarding_status: "Pending",
+    boarding_status: "In Process",
     ...compact(input),
   });
 }
 
 export async function createSeparation(input: SeparationInput): Promise<string> {
-  // Map our shared form field `boarding_begins_on` to the doctype's real
-  // `separation_begins_on` column. Separation's phase column is `status`,
-  // not `boarding_status` — writing the wrong one silently no-ops.
+  // Same rationale as createOnboarding — skip Pending on create.
+  // Separation's phase column is `status`, not `boarding_status` —
+  // writing the wrong one silently no-ops. Form's shared
+  // `boarding_begins_on` maps to the doctype's `separation_begins_on`.
   const { boarding_begins_on, ...rest } = input;
   return insert({
     doctype: "Employee Separation",
-    status: "Pending",
+    status: "In Process",
     separation_begins_on: boarding_begins_on,
     ...compact(rest),
   });

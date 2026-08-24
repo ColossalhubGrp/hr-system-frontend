@@ -8,6 +8,7 @@ import {
   createShiftAssignment,
   createShiftRequest,
   createShiftType,
+  adminDecideShiftRequest,
   decideShiftRequest,
   deleteShiftAssignment,
   deleteShiftRequest,
@@ -46,6 +47,7 @@ import {
   toFormState,
   type StdFormState,
 } from "@/lib/frappe/form-errors";
+import { getMyAccess } from "@/lib/frappe/roles";
 
 export type FormState = StdFormState;
 export type DecisionState = { error?: string };
@@ -382,12 +384,22 @@ export async function createShiftRequestAction(
   }
 }
 
-export async function approveShiftRequestAction(
+async function decideShift(
   id: string,
-  _prev: DecisionState,
+  decision: "Approved" | "Rejected",
 ): Promise<DecisionState> {
   try {
-    await decideShiftRequest(id, "Approved");
+    // HR admins go through the admin-override endpoint that bypasses
+    // both DocPerm and Frappe HR's "Only Approvers can Approve this
+    // Request" check. Regular users keep the standard submit path so
+    // per-approver routing still works for them.
+    const access = await getMyAccess();
+    const useAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
+    if (useAdmin) {
+      await adminDecideShiftRequest(id, decision);
+    } else {
+      await decideShiftRequest(id, decision);
+    }
     revalidatePath("/hr/shift-management");
     revalidatePath(`/hr/shift-management/requests/${encodeURIComponent(id)}`);
     redirect(`/hr/shift-management/requests/${encodeURIComponent(id)}`);
@@ -396,18 +408,18 @@ export async function approveShiftRequestAction(
   }
 }
 
+export async function approveShiftRequestAction(
+  id: string,
+  _prev: DecisionState,
+): Promise<DecisionState> {
+  return decideShift(id, "Approved");
+}
+
 export async function rejectShiftRequestAction(
   id: string,
   _prev: DecisionState,
 ): Promise<DecisionState> {
-  try {
-    await decideShiftRequest(id, "Rejected");
-    revalidatePath("/hr/shift-management");
-    revalidatePath(`/hr/shift-management/requests/${encodeURIComponent(id)}`);
-    redirect(`/hr/shift-management/requests/${encodeURIComponent(id)}`);
-  } catch (err) {
-    return toFormState(err) as DecisionState;
-  }
+  return decideShift(id, "Rejected");
 }
 
 // --- Delete actions ------------------------------------------------------

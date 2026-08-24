@@ -877,4 +877,23 @@ export async function decideShiftRequest(
   });
 }
 
+/** HR-admin override path. Routes through
+ *  `recruitment_app.api.approvals.admin_decide_shift_request`, which
+ *  sets `bypass_approver_check=True` (honoured by the ShiftRequest
+ *  compat subclass) + `ignore_permissions=True` so DocPerm gaps and
+ *  the "Only Approvers can Approve this Request" throw don't block
+ *  legitimate admin overrides. Backend re-checks the HR admin role
+ *  set — this method is never a bypass-for-anyone path. */
+export async function adminDecideShiftRequest(
+  id: string,
+  decision: "Approved" | "Rejected",
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "recruitment_app.api.approvals.admin_decide_shift_request",
+    args: { name: id, decision },
+    verb: "POST",
+    as: "user",
+  });
+}
+
 export const SHIFT_REQUEST_STATUSES = ["Draft", "Approved", "Rejected"];

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
+  adminDecideLeaveApplication,
   createLeaveApplication,
   decideLeaveApplication,
   type LeaveCreateInput,
@@ -13,6 +14,7 @@ import {
   approverErrorMessage,
   resolveApproverUserId,
 } from "@/lib/frappe/employee-approvers";
+import { getMyAccess } from "@/lib/frappe/roles";
 
 export type FormState = {
   error?: string;
@@ -161,12 +163,21 @@ export async function createLeaveAction(
 
 export type DecisionState = { error?: string };
 
-export async function approveLeaveAction(
+async function decideLeave(
   id: string,
-  _prev: DecisionState,
+  decision: "Approved" | "Rejected",
 ): Promise<DecisionState> {
   try {
-    await decideLeaveApplication(id, "Approved");
+    // HR admins go through the admin-override endpoint that bypasses
+    // DocPerm gaps. Regular users keep the standard submit path so
+    // the named leave_approver requirement still applies for them.
+    const access = await getMyAccess();
+    const useAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
+    if (useAdmin) {
+      await adminDecideLeaveApplication(id, decision);
+    } else {
+      await decideLeaveApplication(id, decision);
+    }
   } catch (err) {
     return toFormState(err) as DecisionState;
   }
@@ -175,16 +186,16 @@ export async function approveLeaveAction(
   redirect(`/hr/leaves/${encodeURIComponent(id)}`);
 }
 
+export async function approveLeaveAction(
+  id: string,
+  _prev: DecisionState,
+): Promise<DecisionState> {
+  return decideLeave(id, "Approved");
+}
+
 export async function rejectLeaveAction(
   id: string,
   _prev: DecisionState,
 ): Promise<DecisionState> {
-  try {
-    await decideLeaveApplication(id, "Rejected");
-  } catch (err) {
-    return toFormState(err) as DecisionState;
-  }
-  revalidatePath("/hr/leaves");
-  revalidatePath(`/hr/leaves/${encodeURIComponent(id)}`);
-  redirect(`/hr/leaves/${encodeURIComponent(id)}`);
+  return decideLeave(id, "Rejected");
 }

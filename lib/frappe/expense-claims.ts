@@ -323,6 +323,22 @@ export async function decideExpenseClaim(
   });
 }
 
+/** HR-admin override path — bypasses DocPerm via ignore_permissions
+ *  on the backend so admins can approve without needing per-doctype
+ *  submit rights on Expense Claim. Backend re-checks the HR admin
+ *  role set; never a bypass-for-anyone path. */
+export async function adminDecideExpenseClaim(
+  id: string,
+  decision: "Approved" | "Rejected",
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "recruitment_app.api.approvals.admin_decide_expense_claim",
+    args: { name: id, decision },
+    verb: "POST",
+    as: "user",
+  });
+}
+
 export const EXPENSE_CLAIM_STATUSES = STATUSES;
 
 export async function listExpenseTypes(): Promise<string[]> {

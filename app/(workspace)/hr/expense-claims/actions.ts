@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
+  adminDecideExpenseClaim,
   createExpenseClaim,
   decideExpenseClaim,
   type ExpenseClaimCreateInput,
@@ -13,6 +14,7 @@ import {
   approverErrorMessage,
   resolveApproverUserId,
 } from "@/lib/frappe/employee-approvers";
+import { getMyAccess } from "@/lib/frappe/roles";
 
 export type FormState = {
   error?: string;
@@ -145,12 +147,21 @@ export async function createExpenseClaimAction(
 
 export type DecisionState = { error?: string };
 
-export async function approveClaimAction(
+async function decideClaim(
   id: string,
-  _prev: DecisionState,
+  decision: "Approved" | "Rejected",
 ): Promise<DecisionState> {
   try {
-    await decideExpenseClaim(id, "Approved");
+    // HR admins go through the admin-override endpoint that bypasses
+    // DocPerm gaps. Regular users keep the standard submit path so
+    // the named expense_approver requirement still applies for them.
+    const access = await getMyAccess();
+    const useAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
+    if (useAdmin) {
+      await adminDecideExpenseClaim(id, decision);
+    } else {
+      await decideExpenseClaim(id, decision);
+    }
   } catch (err) {
     return toFormState(err) as DecisionState;
   }
@@ -159,16 +170,16 @@ export async function approveClaimAction(
   redirect(`/hr/expense-claims/${encodeURIComponent(id)}`);
 }
 
+export async function approveClaimAction(
+  id: string,
+  _prev: DecisionState,
+): Promise<DecisionState> {
+  return decideClaim(id, "Approved");
+}
+
 export async function rejectClaimAction(
   id: string,
   _prev: DecisionState,
 ): Promise<DecisionState> {
-  try {
-    await decideExpenseClaim(id, "Rejected");
-  } catch (err) {
-    return toFormState(err) as DecisionState;
-  }
-  revalidatePath("/hr/expense-claims");
-  revalidatePath(`/hr/expense-claims/${encodeURIComponent(id)}`);
-  redirect(`/hr/expense-claims/${encodeURIComponent(id)}`);
+  return decideClaim(id, "Rejected");
 }

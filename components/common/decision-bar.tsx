@@ -96,10 +96,13 @@ export function DecisionBar({
   );
 }
 
-/** Turn Frappe's cryptic "does not have doctype access via role
- *  permission" throw into something a filer can actually act on. When
- *  we know who the approver is, name them; otherwise stay generic
- *  but at least drop the "doctype access" phrasing. */
+/** Rephrase Frappe's cryptic "does not have doctype access via role
+ *  permission" throw for regular users — for them, the actionable
+ *  message is "ask the named approver". For HR admins (who now go
+ *  through the admin-override backend that bypasses DocPerm), if
+ *  this error still surfaces it means something else is genuinely
+ *  wrong; the raw text is more useful than a misleading "only X"
+ *  hint, so pass it through untouched. */
 function translatePermissionError(
   raw: string,
   lockedToLabel: string | null,
@@ -107,7 +110,7 @@ function translatePermissionError(
   const isPerm = /does not have doctype access via role permission/i.test(raw);
   if (!isPerm) return raw;
   if (lockedToLabel) {
-    return `Only ${lockedToLabel} can approve or reject this.`;
+    return `Only ${lockedToLabel} can approve or reject this. If you're an HR admin, refresh — you may need to sign in again to pick up the admin-override path.`;
   }
   return "Only the assigned approver can act on this request.";
 }

@@ -378,3 +378,19 @@ export async function decideLeaveApplication(
     as: "user",
   });
 }
+
+/** HR-admin override path — bypasses DocPerm via ignore_permissions
+ *  on the backend so admins can approve without needing per-doctype
+ *  submit rights on Leave Application. Backend re-checks the HR
+ *  admin role set; never a bypass-for-anyone path. */
+export async function adminDecideLeaveApplication(
+  id: string,
+  decision: "Approved" | "Rejected",
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "recruitment_app.api.approvals.admin_decide_leave_application",
+    args: { name: id, decision },
+    verb: "POST",
+    as: "user",
+  });
+}

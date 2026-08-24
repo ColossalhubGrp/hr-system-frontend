@@ -271,8 +271,15 @@ async function Assignments({
         columns={[
           {
             header: "Employee",
+            // Match the lifecycle pattern: clicking the employee stays
+            // in the row's context (the assignment record) rather than
+            // hopping over to the employee master-data page.
             cell: (a) => (
-              <EmployeeCell id={a.employee} name={a.employeeName} />
+              <EmployeeCell
+                id={a.employee}
+                name={a.employeeName}
+                linkTo={`/hr/shift-management/assignments/${encodeURIComponent(a.id)}`}
+              />
             ),
           },
           { header: "Shift", className: "text-ash-800", cell: (a) => a.shiftType },
@@ -357,7 +364,11 @@ async function Requests({
           {
             header: "Employee",
             cell: (r) => (
-              <EmployeeCell id={r.employee} name={r.employeeName} />
+              <EmployeeCell
+                id={r.employee}
+                name={r.employeeName}
+                linkTo={`/hr/shift-management/requests/${encodeURIComponent(r.id)}`}
+              />
             ),
           },
           { header: "Shift", className: "text-ash-800", cell: (r) => r.shiftType },
@@ -731,7 +742,11 @@ async function ScheduleAssignments({
           {
             header: "Employee",
             cell: (r) => (
-              <EmployeeCell id={r.employee} name={r.employeeName} />
+              <EmployeeCell
+                id={r.employee}
+                name={r.employeeName}
+                linkTo={`/hr/shift-management/schedule-assignments/${encodeURIComponent(r.id)}`}
+              />
             ),
           },
           {

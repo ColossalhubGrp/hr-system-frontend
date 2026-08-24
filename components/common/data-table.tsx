@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ClickableRow } from "./clickable-row";
 
 export type DataTableColumn<T> = {
   /** Header text or node. */
@@ -78,8 +79,19 @@ export function DataTable<T>({
         <TableBody>
           {rows.map((row, ri) => {
             const key = rowKey(row);
+            const href = rowHref ? rowHref(row) : undefined;
+            const label = rowAriaLabel ? rowAriaLabel(row) : `Open ${key}`;
             return (
-              <TableRow key={key}>
+              // Whole row navigates when rowHref is set — clicks on
+              // inner interactive elements (anchors, buttons, inputs)
+              // are respected via a target.closest() bail-out inside
+              // ClickableRow, so per-cell Links (EmployeeCell, name
+              // links) still do their own thing.
+              <ClickableRow
+                key={key}
+                href={href}
+                ariaLabel={label}
+              >
                 {columns.map((c, ci) => (
                   <TableCell key={ci} className={cn("px-5 py-3", c.className)}>
                     {c.cell(row, ri)}
@@ -89,16 +101,14 @@ export function DataTable<T>({
                   <TableCell className="px-2 py-3 text-right">
                     <Link
                       href={rowHref(row) as Route}
-                      aria-label={
-                        rowAriaLabel ? rowAriaLabel(row) : `Open ${key}`
-                      }
+                      aria-label={label}
                       className="inline-grid h-8 w-8 place-items-center rounded-full text-muted-foreground transition hover:bg-accent focus-ring"
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Link>
                   </TableCell>
                 )}
-              </TableRow>
+              </ClickableRow>
             );
           })}
         </TableBody>

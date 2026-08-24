@@ -220,6 +220,7 @@ export const NAV: NavItem[] = [
       // HR admins set these.
       { label: "Company", href: "/settings/company", requires: "HR_ADMIN" },
       { label: "Branches", href: "/settings/branches", requires: "HR_ADMIN" },
+      { label: "Departments", href: "/settings/departments", requires: "HR_ADMIN" },
       { label: "Holiday lists", href: "/settings/holiday-lists", requires: "HR_ADMIN" },
       { label: "Grievance types", href: "/settings/grievance-types", requires: "HR_ADMIN" },
       { label: "Leave types", href: "/settings/leave-types", requires: "HR_ADMIN" },

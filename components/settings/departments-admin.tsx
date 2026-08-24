@@ -115,10 +115,10 @@ export function DepartmentsAdmin({
             ) : (
               rows.map((d) => (
                 <TableRow key={d.name} className="align-middle">
-                  <TableCell className="px-5">
+                  <TableCell className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <Building className="h-3.5 w-3.5 text-ash-500" />
-                      <span className="font-medium text-ink-800">
+                      <Building className="h-4 w-4 text-ash-500" />
+                      <span className="text-base font-semibold text-ink-900">
                         {d.department_name}
                       </span>
                       {d.is_group && (
@@ -132,9 +132,11 @@ export function DepartmentsAdmin({
                         </span>
                       )}
                     </div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {d.name}
-                    </div>
+                    {d.name !== d.department_name && (
+                      <div className="mt-0.5 text-[11px] text-muted-foreground">
+                        {d.name}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="px-5 text-sm text-ink-700">
                     {d.company ?? "—"}

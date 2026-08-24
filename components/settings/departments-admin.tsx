@@ -117,7 +117,6 @@ export function DepartmentsAdmin({
                 <TableRow key={d.name} className="align-middle">
                   <TableCell className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <Building className="h-4 w-4 text-ash-500" />
                       <span className="text-base font-semibold text-ink-900">
                         {d.department_name}
                       </span>

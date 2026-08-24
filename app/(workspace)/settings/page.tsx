@@ -5,6 +5,7 @@ import {
   Users as UsersIcon,
   ShieldCheck,
   Building2,
+  Building,
   Target,
   Clock,
   Lock,
@@ -56,6 +57,13 @@ const COMPANY_CARDS: SettingCardSpec[] = [
     icon: <MapPin className="h-4 w-4" />,
     title: "Branches",
     desc: "Business locations employees can be assigned to (name + optional weekly labour budget). Assigned per Employee on the Overview tab.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/departments",
+    icon: <Building className="h-4 w-4" />,
+    title: "Departments",
+    desc: "Manage the department tree and set the fallback approvers (leave, expense, shift) that Employee approver fields inherit when left blank.",
     show: (a) => a.isHrAdmin,
   },
   {

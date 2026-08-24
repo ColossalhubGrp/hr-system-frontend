@@ -14,7 +14,11 @@ export function LeavesTable({ rows }: { rows: LeaveRow[] }) {
         {
           header: "Employee",
           cell: (r) => (
-            <EmployeeCell id={r.employee} name={r.employeeName} />
+            <EmployeeCell
+              id={r.employee}
+              name={r.employeeName}
+              linkTo={`/hr/leaves/${encodeURIComponent(r.id)}`}
+            />
           ),
         },
         {

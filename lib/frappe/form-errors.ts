@@ -16,6 +16,15 @@ export type StdFormState = {
  * of `{message, title}` objects); we extract the first one verbatim because
  * it's already user-facing.
  */
+/** Frappe titles that carry no useful information — treat them as
+ *  "no message" so we keep digging for the real error text. */
+const GENERIC_MESSAGES = new Set([
+  "Invalid Request",
+  "Message",
+  "Internal Server Error",
+  "",
+]);
+
 export function toFormState(err: unknown): StdFormState {
   // Next.js signals redirect() / notFound() by THROWING internal errors that
   // the framework catches at the outer boundary — the digest starts with
@@ -34,21 +43,80 @@ export function toFormState(err: unknown): StdFormState {
   }
   if (err instanceof FrappeRequestError) {
     const detail = err.detail as
-      | { _server_messages?: string; message?: string }
+      | {
+          _server_messages?: string;
+          message?: string;
+          exception?: string;
+          exc_type?: string;
+          exc?: string;
+        }
       | undefined;
+
+    // Prefer _server_messages — that's where frappe.throw /
+    // frappe.msgprint(raise_exception=True) put user-facing text.
+    // Collect ALL of them; validate() sometimes accumulates a few.
     if (detail?._server_messages) {
       try {
         const arr = JSON.parse(detail._server_messages) as string[];
-        const first = arr[0]
-          ? (JSON.parse(arr[0]) as { message?: string })
-          : undefined;
-        if (first?.message) return { error: stripHtml(first.message) };
+        const messages: string[] = [];
+        for (const raw of arr) {
+          try {
+            const parsed = JSON.parse(raw) as {
+              message?: string;
+              title?: string;
+            };
+            const msg = stripHtml(parsed.message ?? "");
+            if (msg && !GENERIC_MESSAGES.has(msg)) {
+              const title = stripHtml(parsed.title ?? "");
+              // Prepend the title only when it adds context beyond
+              // Frappe's defaults ("Message", "Invalid Request", …).
+              messages.push(
+                title && !GENERIC_MESSAGES.has(title)
+                  ? `${title}: ${msg}`
+                  : msg,
+              );
+            }
+          } catch {
+            /* ignore this entry */
+          }
+        }
+        if (messages.length > 0) return { error: messages.join(" · ") };
       } catch {
         /* fall through */
       }
     }
-    if (typeof detail?.message === "string") return { error: detail.message };
-    return { error: err.message };
+
+    // Fall back to detail.message — but skip Frappe's generic HTTP
+    // titles ("Invalid Request" etc.) that hide the real cause.
+    const message = typeof detail?.message === "string" ? detail.message : "";
+    if (message && !GENERIC_MESSAGES.has(message)) {
+      return { error: message };
+    }
+
+    // Last resort: Frappe includes the exception name + traceback tail
+    // in `exception` — pull the final line, which is usually the
+    // actual "SomethingError: real message" text the API refused to
+    // surface upfront.
+    const exception =
+      typeof detail?.exception === "string" ? detail.exception : "";
+    if (exception) {
+      const lastLine = exception
+        .trim()
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .pop();
+      if (lastLine && !GENERIC_MESSAGES.has(lastLine)) {
+        return { error: stripHtml(lastLine) };
+      }
+    }
+
+    const excType = typeof detail?.exc_type === "string" ? detail.exc_type : "";
+    if (excType) {
+      return { error: `${excType}${message ? ` — ${message}` : ""}` };
+    }
+
+    return { error: message || err.message };
   }
   return { error: "Something went wrong. Try again." };
 }

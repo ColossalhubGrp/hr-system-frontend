@@ -104,7 +104,11 @@ export default async function ExpenseClaimsPage({
           {
             header: "Employee",
             cell: (r) => (
-              <EmployeeCell id={r.employee} name={r.employeeName} />
+              <EmployeeCell
+                id={r.employee}
+                name={r.employeeName}
+                linkTo={`/hr/expense-claims/${encodeURIComponent(r.id)}`}
+              />
             ),
           },
           {

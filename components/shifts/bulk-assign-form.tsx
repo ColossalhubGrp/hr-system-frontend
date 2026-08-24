@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import {
   AlertCircle,
@@ -203,18 +203,26 @@ export function BulkAssignForm({
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            onClick={toggleAll}
-            className="h-10 rounded-chip border border-hairline bg-surface px-3 text-xs font-medium text-ash-700 transition hover:bg-canvas focus-ring"
-          >
-            {filtered.every((e) => picked.has(e.id))
-              ? "Clear filtered"
-              : "Select filtered"}
-          </button>
         </div>
 
-        <ul className="max-h-[400px] divide-y divide-hairline overflow-y-auto rounded-card border border-hairline">
+        {/* Header row with a tri-state select-all checkbox — matches
+            the visual language of the per-row checkboxes so it's
+            obvious the whole list can be selected in one click.
+            Respects the current search + department filters (only
+            toggles what's actually shown). */}
+        <SelectAllHeader
+          filteredCount={filtered.length}
+          allFilteredSelected={
+            filtered.length > 0 && filtered.every((e) => picked.has(e.id))
+          }
+          someFilteredSelected={
+            filtered.some((e) => picked.has(e.id)) &&
+            !filtered.every((e) => picked.has(e.id))
+          }
+          onToggle={toggleAll}
+        />
+
+        <ul className="max-h-[400px] divide-y divide-hairline overflow-y-auto rounded-card rounded-t-none border border-t-0 border-hairline">
           {filtered.length === 0 && (
             <li className="px-4 py-6 text-center text-sm text-ash-500">
               No employees match the current filters.
@@ -289,6 +297,50 @@ export function BulkAssignForm({
         <Submit count={picked.size} />
       </div>
     </form>
+  );
+}
+
+function SelectAllHeader({
+  filteredCount,
+  allFilteredSelected,
+  someFilteredSelected,
+  onToggle,
+}: {
+  filteredCount: number;
+  allFilteredSelected: boolean;
+  someFilteredSelected: boolean;
+  onToggle: () => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  // Native HTML doesn't have "indeterminate" as an attribute — it's
+  // an imperative property. Sync via effect so the checkbox draws
+  // the tri-state hash when a subset is selected.
+  useEffect(() => {
+    if (ref.current) ref.current.indeterminate = someFilteredSelected;
+  }, [someFilteredSelected]);
+  return (
+    <label
+      className={cn(
+        "flex cursor-pointer items-center gap-3 rounded-t-card border border-b-0 border-hairline bg-canvas/60 px-4 py-2.5 text-xs font-medium text-ash-700",
+        filteredCount === 0 && "cursor-not-allowed opacity-60",
+      )}
+    >
+      <input
+        ref={ref}
+        type="checkbox"
+        checked={allFilteredSelected}
+        disabled={filteredCount === 0}
+        onChange={onToggle}
+        className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+      />
+      <span>
+        {allFilteredSelected
+          ? `All ${filteredCount} selected — click to clear`
+          : someFilteredSelected
+            ? `Some selected — click to select all ${filteredCount}`
+            : `Select all ${filteredCount} shown`}
+      </span>
+    </label>
   );
 }
 

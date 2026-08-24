@@ -174,7 +174,11 @@ export default async function PerformancePage({
               {
                 header: "Employee",
                 cell: (r) => (
-                  <EmployeeCell id={r.employee} name={r.employeeName} />
+                  <EmployeeCell
+                    id={r.employee}
+                    name={r.employeeName}
+                    linkTo={perfLinkTo(tab, r.id)}
+                  />
                 ),
               },
               {
@@ -340,7 +344,11 @@ export default async function PerformancePage({
               {
                 header: "Employee",
                 cell: (r) => (
-                  <EmployeeCell id={r.employee} name={r.employeeName} />
+                  <EmployeeCell
+                    id={r.employee}
+                    name={r.employeeName}
+                    linkTo={perfLinkTo(tab, r.id)}
+                  />
                 ),
               },
               {
@@ -413,7 +421,11 @@ export default async function PerformancePage({
               {
                 header: "Employee",
                 cell: (r) => (
-                  <EmployeeCell id={r.employee} name={r.employeeName} />
+                  <EmployeeCell
+                    id={r.employee}
+                    name={r.employeeName}
+                    linkTo={perfLinkTo(tab, r.id)}
+                  />
                 ),
               },
               {
@@ -457,6 +469,19 @@ function Progress({ value }: { value: number }) {
       <span className="text-xs text-ash-700">{Math.round(v)}%</span>
     </div>
   );
+}
+
+/** Detail-page URL per performance tab. Mirrors the rowHref values
+ *  used on each list so the employee-name link stays in-context
+ *  (record detail) instead of jumping to the employee master data. */
+function perfLinkTo(tab: Tab, id: string): string {
+  const base =
+    tab === "appraisals"
+      ? "/hr/performance/appraisals"
+      : tab === "feedback"
+        ? "/hr/performance/feedback"
+        : "/hr/performance/pip";
+  return `${base}/${encodeURIComponent(id)}`;
 }
 
 function fmtDate(iso: string) {

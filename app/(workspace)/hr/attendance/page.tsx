@@ -186,7 +186,11 @@ async function Records({
           {
             header: "Employee",
             cell: (r) => (
-              <EmployeeCell id={r.employee} name={r.employeeName} />
+              <EmployeeCell
+                id={r.employee}
+                name={r.employeeName}
+                linkTo={`/hr/attendance/${encodeURIComponent(r.id)}`}
+              />
             ),
           },
           {
@@ -266,7 +270,11 @@ async function Checkins({
           {
             header: "Employee",
             cell: (r) => (
-              <EmployeeCell id={r.employee} name={r.employeeName} />
+              <EmployeeCell
+                id={r.employee}
+                name={r.employeeName}
+                linkTo={`/hr/attendance/checkins/${encodeURIComponent(r.id)}`}
+              />
             ),
           },
           {
@@ -349,7 +357,11 @@ async function Requests({
           {
             header: "Employee",
             cell: (r) => (
-              <EmployeeCell id={r.employee} name={r.employeeName} />
+              <EmployeeCell
+                id={r.employee}
+                name={r.employeeName}
+                linkTo={`/hr/attendance/requests/${encodeURIComponent(r.id)}`}
+              />
             ),
           },
           {

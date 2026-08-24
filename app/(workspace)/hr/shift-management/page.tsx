@@ -437,11 +437,17 @@ async function Locations({
         columns={[
           {
             header: "Name",
+            // Same-destination as the row's chevron so the name is a
+            // real link too — matches the lifecycle list behavior HR
+            // has come to expect (arrow-only was easy to miss).
             cell: (l) => (
-              <span className="inline-flex items-center gap-2 font-medium text-ash-900">
+              <Link
+                href={`/hr/shift-management/locations/${encodeURIComponent(l.id)}` as Route}
+                className="inline-flex items-center gap-2 font-medium text-ash-900 hover:underline focus-ring rounded-md"
+              >
                 <MapPin className="h-3.5 w-3.5 text-ash-400" />
                 {l.locationName}
-              </span>
+              </Link>
             ),
           },
           {
@@ -672,10 +678,13 @@ async function Schedules({
           {
             header: "Name",
             cell: (r) => (
-              <span className="inline-flex items-center gap-2 font-medium text-ash-900">
+              <Link
+                href={`/hr/shift-management/schedules/${encodeURIComponent(r.id)}` as Route}
+                className="inline-flex items-center gap-2 font-medium text-ash-900 hover:underline focus-ring rounded-md"
+              >
                 <CalendarRange className="h-3.5 w-3.5 text-ash-400" />
                 {r.scheduleName}
-              </span>
+              </Link>
             ),
           },
           {

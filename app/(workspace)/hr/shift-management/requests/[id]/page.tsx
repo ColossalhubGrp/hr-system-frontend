@@ -9,6 +9,7 @@ import { StatusPill } from "@/components/common/status-pill";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { getShiftRequest } from "@/lib/frappe/shifts";
 import { readSession } from "@/lib/frappe/session";
+import { getMyAccess } from "@/lib/frappe/roles";
 import {
   approveShiftRequestAction,
   deleteShiftRequestAction,
@@ -41,18 +42,21 @@ export default async function ShiftRequestDetailPage({
   const approve = approveShiftRequestAction.bind(null, id);
   const reject = rejectShiftRequestAction.bind(null, id);
   const onDelete = deleteShiftRequestAction.bind(null, id);
-  // Frappe HR gates approval to the specific user set on the doc's
-  // `approver` field. Compare against the signed-in user's email so
-  // the DecisionBar can surface who CAN act instead of letting the
-  // filer click through into a cryptic doctype-access permission
-  // error. Admins (Administrator) are the only always-can-decide
-  // path — anyone else has to BE the approver.
-  const { userId } = readSession();
+  // Frappe HR's validate_approver() enforces that the DOC's `approver`
+  // field is a valid designated approver for the employee (or the
+  // department). It does NOT check the current user — that's DocPerm
+  // territory. HR admins therefore should always be able to act;
+  // regular users can act only when they ARE the named approver. The
+  // lock UI still surfaces the named approver so the filer knows who's
+  // expected, but stops incorrectly blocking HR Director / HR Manager /
+  // IT Admin / System Manager.
+  const [{ userId }, access] = [readSession(), await getMyAccess()];
   const isApprover = Boolean(
     r.approver && userId && r.approver.toLowerCase() === userId.toLowerCase(),
   );
   const isSuperUser = userId === "Administrator";
-  const canDecide = isApprover || isSuperUser;
+  const isHrAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
+  const canDecide = isApprover || isSuperUser || isHrAdmin;
   const lockedToLabel = r.approver
     ? r.approverName
       ? `${r.approverName} (${r.approver})`

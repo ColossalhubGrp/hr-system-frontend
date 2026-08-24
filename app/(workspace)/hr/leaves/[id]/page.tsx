@@ -7,6 +7,7 @@ import { LeaveStatusBadge } from "@/components/leaves/leave-status-badge";
 import { LeaveDecisionBar } from "@/components/leaves/decision-bar";
 import { getLeaveApplication } from "@/lib/frappe/leaves";
 import { readSession } from "@/lib/frappe/session";
+import { getMyAccess } from "@/lib/frappe/roles";
 import {
   approveLeaveAction,
   rejectLeaveAction,
@@ -39,15 +40,19 @@ export default async function LeaveDetailPage({
   const decidable = app.status === "Open" && app.docstatus === 0;
   const approve = approveLeaveAction.bind(null, id);
   const reject = rejectLeaveAction.bind(null, id);
-  // Frappe HR locks Leave Application decisions to the assigned
-  // leave_approver — mirror the constraint upfront in the UI.
-  const { userId } = readSession();
+  // Frappe HR's approver check validates the DOC's leave_approver is
+  // a valid designated approver — not the current user. HR admins can
+  // always act (DocPerm-based submit right); other users only when
+  // they ARE the named approver. See parallel logic on shift
+  // request / expense claim.
+  const [{ userId }, access] = [readSession(), await getMyAccess()];
   const isApprover = Boolean(
     app.leaveApprover &&
       userId &&
       app.leaveApprover.toLowerCase() === userId.toLowerCase(),
   );
-  const canDecide = isApprover || userId === "Administrator";
+  const isHrAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
+  const canDecide = isApprover || userId === "Administrator" || isHrAdmin;
   const lockedToLabel = app.leaveApprover
     ? app.leaveApproverName
       ? `${app.leaveApproverName} (${app.leaveApprover})`

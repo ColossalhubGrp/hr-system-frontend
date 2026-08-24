@@ -7,6 +7,7 @@ import { StatusPill } from "@/components/common/status-pill";
 import { ExpenseDecisionBar } from "@/components/expense/decision-bar";
 import { getExpenseClaim } from "@/lib/frappe/expense-claims";
 import { readSession } from "@/lib/frappe/session";
+import { getMyAccess } from "@/lib/frappe/roles";
 import { approveClaimAction, rejectClaimAction } from "../actions";
 
 export async function generateMetadata({
@@ -36,15 +37,20 @@ export default async function ExpenseClaimDetailPage({
   const decidable = claim.docstatus === 0;
   const approve = approveClaimAction.bind(null, id);
   const reject = rejectClaimAction.bind(null, id);
-  // Frappe HR gates Expense Claim decisions to the assigned
-  // expense_approver — surface that constraint upfront.
-  const { userId } = readSession();
+  // Frappe HR's approver check validates the DOC's expense_approver
+  // is a valid designated approver — not the current user. HR admins
+  // can always act (DocPerm-based submit right); other users only
+  // when they ARE the named approver. See parallel logic on shift
+  // request / leave.
+  const [{ userId }, access] = [readSession(), await getMyAccess()];
   const isApprover = Boolean(
     claim.expenseApprover &&
       userId &&
       claim.expenseApprover.toLowerCase() === userId.toLowerCase(),
   );
-  const canDecide = isApprover || userId === "Administrator";
+  const isHrAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
+  const canDecide =
+    isApprover || userId === "Administrator" || isHrAdmin;
   const lockedToLabel = claim.expenseApprover
     ? claim.expenseApproverName
       ? `${claim.expenseApproverName} (${claim.expenseApprover})`

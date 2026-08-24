@@ -118,7 +118,7 @@ export function DepartmentsAdmin({
                   <TableCell className="px-5 py-3">
                     <div className="flex items-center gap-2">
                       <span className="text-base font-semibold text-ink-900">
-                        {d.department_name}
+                        {d.department_name || d.name}
                       </span>
                       {d.is_group && (
                         <span className="rounded-chip bg-canvas px-1.5 py-0.5 text-[10px] uppercase text-ash-500">
@@ -369,7 +369,10 @@ function DepartmentForm({
   onCancel: () => void;
   onSaved: (row: DepartmentDetail) => void;
 }) {
-  const [name, setName] = useState(initial.department_name);
+  // Fall back to the doc name when department_name is null — legacy
+  // departments imported without setting the label column would
+  // otherwise open with a blank Name field.
+  const [name, setName] = useState(initial.department_name || initial.name);
   const [company, setCompany] = useState(initial.company ?? "");
   const [parent, setParent] = useState(initial.parent_department ?? "");
   const [isGroup, setIsGroup] = useState(initial.is_group);
@@ -423,7 +426,10 @@ function DepartmentForm({
     .filter((p) => p.name !== initial.name)
     .map((p) => ({
       value: p.name,
-      label: `${p.department_name}${p.company ? ` (${p.company})` : ""}`,
+      // Template literals stringify null → "null", so the fallback
+      // matters even when department_name is genuinely empty on a
+      // record — show something meaningful instead of "null (...)".
+      label: `${p.department_name || p.name}${p.company ? ` (${p.company})` : ""}`,
     }));
 
   return (

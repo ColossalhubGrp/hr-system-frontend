@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import {
   deleteDepartmentAdmin,
+  getDepartmentAdmin,
   saveDepartmentAdmin,
   type DepartmentDetail,
   type DepartmentPayload,
@@ -13,6 +14,27 @@ import {
 } from "@/lib/frappe/employee-approvers";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { FrappeRequestError } from "@/lib/frappe/client";
+
+export type LoadDepartmentResult =
+  | { ok: true; row: DepartmentDetail }
+  | { ok: false; error: string };
+
+/** Client-callable wrapper for getDepartmentAdmin. The direct helper
+ *  in `lib/frappe/departments-admin.ts` is marked "server-only" (it
+ *  uses frappeCall which reads cookies via next/headers), so a
+ *  client component can't import it — Vercel's build catches it
+ *  even though local dev doesn't. Router it through a Server
+ *  Action instead. */
+export async function loadDepartmentAction(
+  name: string,
+): Promise<LoadDepartmentResult> {
+  try {
+    const row = await getDepartmentAdmin(name);
+    return { ok: true, row };
+  } catch (err) {
+    return { ok: false, error: friendlyError(err) };
+  }
+}
 
 export type SaveDepartmentResult =
   | { ok: true; row: DepartmentDetail }

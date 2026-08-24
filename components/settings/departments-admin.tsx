@@ -37,7 +37,6 @@ import {
 import { SelectInput as _select } from "@/components/employee/form-bits";
 import { toast } from "@/components/ui/sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
-import { getDepartmentAdmin } from "@/lib/frappe/departments-admin";
 import type {
   DepartmentDetail,
   DepartmentRow,
@@ -45,6 +44,7 @@ import type {
 } from "@/lib/frappe/departments-admin";
 import {
   deleteDepartmentAction,
+  loadDepartmentAction,
   saveDepartmentAction,
   type DepartmentClientInput,
 } from "@/app/(workspace)/settings/departments/actions";
@@ -303,8 +303,15 @@ function DepartmentDialog({
     }
     if (mode === "edit" && editingName) {
       setLoading(true);
-      getDepartmentAdmin(editingName)
-        .then((d) => setDetail(d))
+      loadDepartmentAction(editingName)
+        .then((res) => {
+          if (res.ok) {
+            setDetail(res.row);
+          } else {
+            toast.error(res.error);
+            onOpenChange(false);
+          }
+        })
         .catch((err) => {
           toast.error(err?.message ?? "Failed to load department.");
           onOpenChange(false);

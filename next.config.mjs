@@ -9,6 +9,23 @@ const nextConfig = {
     // rejects without per-call `as Route` casts. We keep runtime routing
     // intact; this only relaxes the compile-time RouteImpl<T> guard.
     typedRoutes: false,
+
+    // Client-side Router Cache TTLs. Next 14.2 defaults `dynamic` to 0
+    // seconds — meaning every back-nav to a previously-visited page
+    // (Attendance list, Leaves list, Employee directory, …) refetches
+    // from scratch. Every workspace page is auto-dynamic because
+    // frappeCookieHeader() reads cookies() during render, so this
+    // default is what makes revisits feel slow.
+    //
+    // Router Cache is per-browser and keyed by the client's own
+    // session — no cross-user leak possible. Mutations already call
+    // revalidatePath so post-edit navigations bust the cache
+    // deterministically for the acting user; the 60s TTL is a
+    // hard fallback in case a mutation elsewhere is missed.
+    staleTimes: {
+      dynamic: 60,
+      static: 300,
+    },
   },
 
   /**

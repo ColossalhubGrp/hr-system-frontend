@@ -96,9 +96,15 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     method: verb,
     headers,
     body,
-    // User- and guest-scoped calls are inherently per-request; never
-    // cache. (Guest reads bump per-visit audit counters — caching
-    // would break the access-count trail.)
+    // User- and guest-scoped calls are never cached at the fetch
+    // layer: Next's fetch cache key doesn't include the Cookie
+    // header, so a cached user-scoped response could leak between
+    // signed-in users. Speedups for those come from
+    //   (a) React cache() dedupe within a single render, and
+    //   (b) the client-side Router Cache on same-user back-nav,
+    // which is per-browser and keyed by session automatically.
+    // Service-scoped calls (system-token-authenticated background
+    // reads) are safe to cache and default to 60s.
     next:
       as === "user" || as === "guest"
         ? { revalidate: 0 }

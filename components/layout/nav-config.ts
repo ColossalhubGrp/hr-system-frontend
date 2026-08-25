@@ -141,6 +141,12 @@ export const NAV: NavItem[] = [
       { label: "Feed", href: "/analytics/feed", requires: "EXECUTIVE_VIEWER" },
       { label: "Dashboards", href: "/analytics/dashboards", requires: "EXECUTIVE_VIEWER" },
       { label: "Semantics", href: "/analytics/semantics", requires: "EXECUTIVE_VIEWER" },
+      // AI Settings iframes nao's own settings surface (starts on the
+      // Experimental tab — that's where "Dangerous write permissions"
+      // lives). Admin-gated because that toggle lets nao run raw
+      // INSERT/UPDATE/DELETE/DDL against the DB, bypassing every
+      // Frappe hook, validation and audit trail.
+      { label: "AI Settings", href: "/analytics/settings", requires: "HR_ADMIN" },
     ],
   },
 

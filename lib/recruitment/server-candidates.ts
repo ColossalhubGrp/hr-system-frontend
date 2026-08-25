@@ -58,3 +58,28 @@ export async function fetchCandidatesInitial(): Promise<{
     candidates: candidatesRes?.data ?? [],
   };
 }
+
+/**
+ * Server-side fetch for /recruitment/candidates/profile/[email].
+ * The backend expects the caller's `email` (from the session) plus
+ * a `candidate_email` (the subject of the profile). Returns null
+ * when the caller isn't signed in OR the backend refuses; the
+ * client component then falls back to its error path.
+ */
+export async function fetchCandidateProfile(
+  candidateEmail: string,
+): Promise<{ success?: boolean; error?: string } | null> {
+  const { userId } = readSession();
+  if (!userId) return null;
+  try {
+    const res = await frappeCall<any>({
+      method: "recruitment_app.api.candidate_details.get_candidate_profile",
+      args: { email: userId, candidate_email: candidateEmail },
+      as: "user",
+    });
+    return res ?? null;
+  } catch (err) {
+    console.error("[fetchCandidateProfile] failed:", err);
+    return null;
+  }
+}

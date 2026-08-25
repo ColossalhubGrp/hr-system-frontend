@@ -29,8 +29,18 @@ export function NaoChatFrame() {
   // not yet set for iframe context), and renders its own login form —
   // the /login nginx interceptor doesn't fire because SPA routing is
   // in-page, not a real navigation.
+  // `?embed=1` on the SSO redirect target triggers nao's Colossal-embed
+  // chrome overrides — see `main.tsx` on the fork's `colossal-embed`
+  // branch. Hides the duplicate sidebar user card, "Latest story"
+  // panel, model picker + `+` + mic in the input row, and force-
+  // collapses nao's inner nav. Same-session navigations preserve the
+  // mode via sessionStorage, so the flag only needs to fly on the
+  // initial load.
   const embedUrl = embedOrigin
-    ? new URL("/_sso/bootstrap?target=/", embedOrigin).toString()
+    ? new URL(
+        "/_sso/bootstrap?target=" + encodeURIComponent("/?embed=1"),
+        embedOrigin,
+      ).toString()
     : undefined;
   const [status, setStatus] = useState<"loading" | "loaded" | "blocked">(
     embedUrl ? "loading" : "blocked",

@@ -96,7 +96,11 @@ export const NAV: NavItem[] = [
       { label: "Feedback", href: "/recruitment/feedback", requires: "RECRUITER" },
       { label: "Billing", href: "/recruitment/billing", requires: "RECRUITER" },
       { label: "Billing analytics", href: "/recruitment/billing/analytics", requires: "RECRUITER" },
-      { label: "HR Messages", href: "/recruitment/hr/messages", requires: "RECRUITER" },
+      // HR Messages temporarily hidden — the /recruitment/hr/messages
+      // page still exists but is off the nav until the messaging
+      // surface is ready for HR to use. Restore this line to bring
+      // it back.
+      // { label: "HR Messages", href: "/recruitment/hr/messages", requires: "RECRUITER" },
     ],
   },
 

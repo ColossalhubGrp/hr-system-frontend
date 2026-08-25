@@ -20,7 +20,16 @@ import { publicEnv } from "@/lib/env";
  * without nao provisioned) we render a static "not configured"
  * placeholder rather than a broken iframe.
  */
-export function NaoChatFrame() {
+export function NaoChatFrame({
+  naoPath = "/",
+}: {
+  /** Which nao route to land on inside the iframe. Defaults to `/`
+   *  (new chat / home). Callers pass `/stories` or `/feed` to iframe
+   *  those surfaces; the outer Colossal sidebar exposes each as its
+   *  own nav item so users navigate through the host chrome, not the
+   *  nao inner rail (which is fully hidden in embed mode). */
+  naoPath?: string;
+} = {}) {
   const embedOrigin = publicEnv.NEXT_PUBLIC_NAO_EMBED_URL;
   // Always route the initial iframe load through the SSO bootstrap so
   // the sidecar auto-provisions (or re-signs-in) the current Frappe
@@ -29,18 +38,25 @@ export function NaoChatFrame() {
   // not yet set for iframe context), and renders its own login form —
   // the /login nginx interceptor doesn't fire because SPA routing is
   // in-page, not a real navigation.
-  // `?embed=1` on the SSO redirect target triggers nao's Colossal-embed
-  // chrome overrides — see `main.tsx` on the fork's `colossal-embed`
-  // branch. Hides the duplicate sidebar user card, "Latest story"
-  // panel, model picker + `+` + mic in the input row, and force-
-  // collapses nao's inner nav. Same-session navigations preserve the
-  // mode via sessionStorage, so the flag only needs to fly on the
-  // initial load.
+  // `?embed=1` on the target triggers nao's Colossal-embed chrome
+  // overrides (see `main.tsx` on the colossal-embed branch): hides
+  // duplicate sidebar, "Latest story" panel, input-row extras, and
+  // fully hides the inner sidebar so nao is pure content. The mode
+  // is persisted in sessionStorage inside nao so any client-side
+  // nav there keeps the overrides active without the query string.
+  //
+  // Path assembly: append `?embed=1` (or `&embed=1` if the caller's
+  // path already has a query). URL-encode the whole thing so
+  // sso_bridge's `_safe_target` sees a single opaque string.
   const embedUrl = embedOrigin
-    ? new URL(
-        "/_sso/bootstrap?target=" + encodeURIComponent("/?embed=1"),
-        embedOrigin,
-      ).toString()
+    ? (() => {
+        const sep = naoPath.includes("?") ? "&" : "?";
+        const naoTarget = `${naoPath}${sep}embed=1`;
+        return new URL(
+          "/_sso/bootstrap?target=" + encodeURIComponent(naoTarget),
+          embedOrigin,
+        ).toString();
+      })()
     : undefined;
   const [status, setStatus] = useState<"loading" | "loaded" | "blocked">(
     embedUrl ? "loading" : "blocked",

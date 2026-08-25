@@ -130,6 +130,11 @@ export const NAV: NavItem[] = [
     requires: "EXECUTIVE_VIEWER",
     children: [
       { label: "Ask (AI)", href: "/analytics/ask", requires: "EXECUTIVE_VIEWER" },
+      // Stories + Feed replace the nao inner sidebar's equivalents
+      // (which is hidden in embed mode). Each iframes the same nao
+      // runtime at /stories or /feed via NaoChatFrame's naoPath prop.
+      { label: "Stories", href: "/analytics/stories", requires: "EXECUTIVE_VIEWER" },
+      { label: "Feed", href: "/analytics/feed", requires: "EXECUTIVE_VIEWER" },
       { label: "Dashboards", href: "/analytics/dashboards", requires: "EXECUTIVE_VIEWER" },
       { label: "Semantics", href: "/analytics/semantics", requires: "EXECUTIVE_VIEWER" },
     ],

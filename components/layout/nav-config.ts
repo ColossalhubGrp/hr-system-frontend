@@ -130,9 +130,13 @@ export const NAV: NavItem[] = [
     requires: "EXECUTIVE_VIEWER",
     children: [
       { label: "Ask (AI)", href: "/analytics/ask", requires: "EXECUTIVE_VIEWER" },
-      // Stories + Feed replace the nao inner sidebar's equivalents
-      // (which is hidden in embed mode). Each iframes the same nao
-      // runtime at /stories or /feed via NaoChatFrame's naoPath prop.
+      // Chats / Stories / Feed replace the nao inner sidebar's
+      // equivalents (which is hidden in embed mode). Each iframes
+      // the same nao runtime at a different path via NaoChatFrame's
+      // naoPath prop. `/chats` is a route added by our fork
+      // (colossal-embed branch) since upstream nao doesn't ship a
+      // full-page chats list; the other two use nao's built-in routes.
+      { label: "Chats", href: "/analytics/chats", requires: "EXECUTIVE_VIEWER" },
       { label: "Stories", href: "/analytics/stories", requires: "EXECUTIVE_VIEWER" },
       { label: "Feed", href: "/analytics/feed", requires: "EXECUTIVE_VIEWER" },
       { label: "Dashboards", href: "/analytics/dashboards", requires: "EXECUTIVE_VIEWER" },

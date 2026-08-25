@@ -68,6 +68,41 @@ function getBaseUrl() {
   );
 }
 
+/**
+ * Stale-while-revalidate read cache — one instance per tab. Client
+ * components in the recruitment surfaces fetch on every mount via
+ * useEffect, so navigating away and back always spun a fresh spinner.
+ * With this cache, repeat reads of the same (method, params, user)
+ * return the previous response instantly and refresh in the
+ * background so the next render sees fresh data.
+ *
+ * Gates:
+ *   * FRESH_MS — cached data younger than this returns without any
+ *     background refresh (rapid remounts under React Strict Mode,
+ *     back-nav within seconds).
+ *   * STALE_MS — cached data older than fresh but younger than this
+ *     is served immediately AND kicks a background refresh.
+ *   * Anything older is a full cache miss and fetched normally.
+ *
+ * A concurrent `inflight` map dedupes identical in-flight requests
+ * so mount / effect double-fire never triggers two network calls.
+ *
+ * READ_METHOD_RE is a conservative allowlist: only methods whose
+ * name contains `get_` / `list_` / `search_` / `fetch_` are cached.
+ * Everything else — mutations, generators, uploads — bypasses the
+ * cache entirely AND clears it so the next read gets fresh data.
+ */
+type ReadCacheEntry = { data: unknown; ts: number };
+const READ_CACHE_FRESH_MS = 5_000;
+const READ_CACHE_STALE_MS = 30_000;
+const READ_METHOD_RE = /\b(?:get|list|search|fetch)_/;
+const readCache = new Map<string, ReadCacheEntry>();
+const inflight = new Map<string, Promise<unknown>>();
+
+function readCacheKey(user: string | null, method: string, params: unknown): string {
+  return `${user ?? "guest"}::${method}::${JSON.stringify(params ?? {})}`;
+}
+
 class ApiClient {
   private user: string | null = null;
   private unavailableMethods = new Set<string>();
@@ -162,11 +197,66 @@ class ApiClient {
 
   /**
    * Makes an API call through Next.js API route (BFF)
-   * All requests are proxied server-side with environment credentials
+   * All requests are proxied server-side with environment credentials.
+   *
+   * Reads (methods whose name contains get_ / list_ / search_ / fetch_)
+   * go through the stale-while-revalidate read cache — same-tab repeat
+   * mounts return the previous response instantly and refresh in the
+   * background. Writes bypass the cache AND clear it so the next read
+   * sees fresh data.
    */
   async apiCall<T>(method: string, params: any = {}): Promise<T> {
     const userEmail = this.getUser();
 
+    // --- Stale-while-revalidate branch for read methods ------------------
+    if (READ_METHOD_RE.test(method)) {
+      const key = readCacheKey(userEmail, method, params);
+      const now = Date.now();
+      const cached = readCache.get(key);
+
+      if (cached && now - cached.ts < READ_CACHE_STALE_MS) {
+        // Serve cached; if it's past the fresh window and no refresh
+        // is already in flight, kick a background one so the next
+        // remount sees fresh data.
+        if (now - cached.ts > READ_CACHE_FRESH_MS && !inflight.has(key)) {
+          const refresh = this.performApiCall<T>(method, params, userEmail)
+            .then((data) => {
+              readCache.set(key, { data, ts: Date.now() });
+              return data;
+            })
+            .finally(() => inflight.delete(key));
+          inflight.set(key, refresh.catch(() => undefined));
+        }
+        return cached.data as T;
+      }
+
+      // Full miss — dedupe concurrent identical calls.
+      if (inflight.has(key)) {
+        return inflight.get(key)! as Promise<T>;
+      }
+      const p = this.performApiCall<T>(method, params, userEmail)
+        .then((data) => {
+          readCache.set(key, { data, ts: Date.now() });
+          return data;
+        })
+        .finally(() => inflight.delete(key));
+      inflight.set(key, p);
+      return p;
+    }
+
+    // --- Write branch: bypass + invalidate the whole read cache ---------
+    // Simple invalidation because targeted invalidation would need a
+    // method-to-affected-reads map that's easy to drift out of sync.
+    // Clearing on every write is cheap (in-memory Map) and safe.
+    readCache.clear();
+    return this.performApiCall<T>(method, params, userEmail);
+  }
+
+  private async performApiCall<T>(
+    method: string,
+    params: any,
+    userEmail: string | null,
+  ): Promise<T> {
     const methodsRequiringEmail = new Set([
       'recruitment_app.api.job_postings.get_job_postings',
       'recruitment_app.api.job_postings.get_job_posting',

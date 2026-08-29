@@ -1095,8 +1095,8 @@ export function EmployeeForm({
           <TabPane active={tab} id="skills">
             <p className="mb-4 max-w-2xl text-sm text-ash-600">
               Skills feed the Employee Skill Map (used by performance +
-              training). Skill names must match an existing Skill in Frappe —
-              if unsure, ask HR to create it first.
+              training). Type any skill name — if it's new, it's added to
+              the Skill catalogue on save.
             </p>
             <ChildTableEditor
               name="_child_skills"

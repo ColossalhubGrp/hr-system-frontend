@@ -182,6 +182,13 @@ export type ExpenseClaim = {
   expenseApproverName: string | null;
   company: string | null;
   remark: string | null;
+  // Accounting — required by Frappe to submit. Values may be null on a
+  // freshly-created claim if the company defaults aren't set; HR fills
+  // them in on the detail page before approving.
+  payableAccount: string | null;
+  costCenter: string | null;
+  isPaid: boolean;
+  modeOfPayment: string | null;
   expenses: Array<{
     expenseDate: string;
     expenseType: string | null;
@@ -204,6 +211,10 @@ type RawClaim = {
   expense_approver: string | null;
   company: string | null;
   remark: string | null;
+  payable_account: string | null;
+  cost_center: string | null;
+  is_paid: 0 | 1 | null;
+  mode_of_payment: string | null;
   expenses: Array<{
     expense_date: string;
     expense_type: string | null;
@@ -237,6 +248,10 @@ export async function getExpenseClaim(id: string): Promise<ExpenseClaim | null> 
       expenseApproverName,
       company: doc.company,
       remark: doc.remark,
+      payableAccount: doc.payable_account,
+      costCenter: doc.cost_center,
+      isPaid: Boolean(doc.is_paid),
+      modeOfPayment: doc.mode_of_payment,
       expenses: (doc.expenses ?? []).map((e) => ({
         expenseDate: e.expense_date,
         expenseType: e.expense_type,
@@ -259,12 +274,28 @@ export type ExpenseClaimCreateInput = {
   company: string;
   remark?: string;
   approver?: string;
+  // Accounting fields — optional at insert time (Frappe fetch_from will
+  // pull them from company defaults if the caller doesn't set them). Only
+  // become mandatory at submit time; that's when HR fills any that are
+  // still empty via the decision bar.
+  payable_account?: string;
+  cost_center?: string;
+  is_paid?: boolean;
+  mode_of_payment?: string;
   expenses: Array<{
     expense_date: string;
     expense_type: string;
     description?: string;
     amount: number;
   }>;
+};
+
+export type ExpenseAccountingInput = {
+  payable_account?: string;
+  cost_center?: string;
+  is_paid?: boolean;
+  mode_of_payment?: string;
+  remark?: string;
 };
 
 export async function createExpenseClaim(
@@ -293,6 +324,10 @@ export async function createExpenseClaim(
   };
   if (input.remark) doc.remark = input.remark;
   if (input.approver) doc.expense_approver = input.approver;
+  if (input.payable_account) doc.payable_account = input.payable_account;
+  if (input.cost_center) doc.cost_center = input.cost_center;
+  if (input.is_paid) doc.is_paid = 1;
+  if (input.mode_of_payment) doc.mode_of_payment = input.mode_of_payment;
 
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
@@ -330,10 +365,41 @@ export async function decideExpenseClaim(
 export async function adminDecideExpenseClaim(
   id: string,
   decision: "Approved" | "Rejected",
+  accounting?: ExpenseAccountingInput,
 ): Promise<void> {
   await frappeCall<unknown>({
     method: "recruitment_app.api.approvals.admin_decide_expense_claim",
-    args: { name: id, decision },
+    args: {
+      name: id,
+      decision,
+      ...(accounting?.payable_account && { payable_account: accounting.payable_account }),
+      ...(accounting?.cost_center && { cost_center: accounting.cost_center }),
+      ...(accounting?.is_paid !== undefined && { is_paid: accounting.is_paid ? 1 : 0 }),
+      ...(accounting?.mode_of_payment && { mode_of_payment: accounting.mode_of_payment }),
+      ...(accounting?.remark && { remark: accounting.remark }),
+    },
+    verb: "POST",
+    as: "user",
+  });
+}
+
+/** Save accounting fields on a DRAFT Expense Claim without submitting.
+ *  Used when HR wants to fill in payable_account etc. from the detail
+ *  page but isn't ready to approve yet. Backend refuses submitted docs. */
+export async function saveExpenseClaimAccounting(
+  id: string,
+  input: ExpenseAccountingInput,
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "recruitment_app.api.approvals.save_expense_claim_accounting",
+    args: {
+      name: id,
+      ...(input.payable_account !== undefined && { payable_account: input.payable_account }),
+      ...(input.cost_center !== undefined && { cost_center: input.cost_center }),
+      ...(input.is_paid !== undefined && { is_paid: input.is_paid ? 1 : 0 }),
+      ...(input.mode_of_payment !== undefined && { mode_of_payment: input.mode_of_payment }),
+      ...(input.remark !== undefined && { remark: input.remark }),
+    },
     verb: "POST",
     as: "user",
   });
@@ -348,6 +414,80 @@ export async function listExpenseTypes(): Promise<string[]> {
       args: {
         doctype: "Expense Claim Type",
         fields: ["name"],
+        order_by: "name asc",
+        limit_page_length: 100,
+      },
+      as: "user",
+    });
+    return rows.map((r) => r.name).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
+/** Payable accounts for a given company. Same filter shape as the
+ *  payroll new-pay-run form uses — Liability, not group. */
+export async function listPayableAccounts(
+  company: string | null,
+): Promise<Array<{ value: string; label: string }>> {
+  if (!company) return [];
+  try {
+    const rows = await frappeCall<Array<{ name: string; account_name: string }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Account",
+        fields: ["name", "account_name"],
+        filters: JSON.stringify([
+          ["company", "=", company],
+          ["root_type", "=", "Liability"],
+          ["is_group", "=", 0],
+        ]),
+        order_by: "name asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    return rows.map((r) => ({ value: r.name, label: r.account_name || r.name }));
+  } catch {
+    return [];
+  }
+}
+
+/** Cost Centers for a given company (leaf nodes only). */
+export async function listCostCenters(
+  company: string | null,
+): Promise<Array<{ value: string; label: string }>> {
+  if (!company) return [];
+  try {
+    const rows = await frappeCall<Array<{ name: string; cost_center_name: string }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Cost Center",
+        fields: ["name", "cost_center_name"],
+        filters: JSON.stringify([
+          ["company", "=", company],
+          ["is_group", "=", 0],
+        ]),
+        order_by: "name asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    return rows.map((r) => ({ value: r.name, label: r.cost_center_name || r.name }));
+  } catch {
+    return [];
+  }
+}
+
+/** Modes of Payment (Cash / Bank / Cheque / …). Only surface enabled ones. */
+export async function listModesOfPayment(): Promise<string[]> {
+  try {
+    const rows = await frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Mode of Payment",
+        fields: ["name"],
+        filters: JSON.stringify([["enabled", "=", 1]]),
         order_by: "name asc",
         limit_page_length: 100,
       },

@@ -7,6 +7,8 @@ import {
   adminDecideExpenseClaim,
   createExpenseClaim,
   decideExpenseClaim,
+  saveExpenseClaimAccounting,
+  type ExpenseAccountingInput,
   type ExpenseClaimCreateInput,
 } from "@/lib/frappe/expense-claims";
 import { FrappeRequestError } from "@/lib/frappe/client";
@@ -41,6 +43,15 @@ const createSchema = z.object({
     .trim()
     .regex(/^\d+(\.\d+)?$/, "Amount must be a number.")
     .transform((s) => Number(s)),
+  // Accounting — all optional. Blank = leave to Frappe's fetch_from
+  // (company defaults) at insert time; HR completes on the detail page
+  // before approving if the defaults aren't set.
+  payable_account: z.string().trim().optional(),
+  cost_center: z.string().trim().optional(),
+  is_paid: z
+    .union([z.literal("on"), z.literal("1"), z.literal("true")])
+    .optional(),
+  mode_of_payment: z.string().trim().optional(),
 });
 
 function toFormState(err: unknown): FormState {
@@ -124,6 +135,10 @@ export async function createExpenseClaimAction(
     company: parsed.data.company,
     remark: parsed.data.remark,
     approver,
+    payable_account: parsed.data.payable_account || undefined,
+    cost_center: parsed.data.cost_center || undefined,
+    is_paid: Boolean(parsed.data.is_paid),
+    mode_of_payment: parsed.data.mode_of_payment || undefined,
     expenses: [
       {
         expense_date: parsed.data.expense_date,
@@ -147,9 +162,33 @@ export async function createExpenseClaimAction(
 
 export type DecisionState = { error?: string };
 
+function readAccountingFromForm(form: FormData | undefined): ExpenseAccountingInput | undefined {
+  if (!form) return undefined;
+  const get = (k: string) => {
+    const v = form.get(k);
+    return typeof v === "string" && v.trim() ? v.trim() : undefined;
+  };
+  const acc: ExpenseAccountingInput = {
+    payable_account: get("payable_account"),
+    cost_center: get("cost_center"),
+    mode_of_payment: get("mode_of_payment"),
+    remark: get("remark"),
+  };
+  const paid = form.get("is_paid");
+  if (typeof paid === "string") acc.is_paid = paid === "on" || paid === "1" || paid === "true";
+  const anySet =
+    acc.payable_account !== undefined ||
+    acc.cost_center !== undefined ||
+    acc.mode_of_payment !== undefined ||
+    acc.remark !== undefined ||
+    acc.is_paid !== undefined;
+  return anySet ? acc : undefined;
+}
+
 async function decideClaim(
   id: string,
   decision: "Approved" | "Rejected",
+  accounting?: ExpenseAccountingInput,
 ): Promise<DecisionState> {
   try {
     // HR admins go through the admin-override endpoint that bypasses
@@ -158,8 +197,14 @@ async function decideClaim(
     const access = await getMyAccess();
     const useAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
     if (useAdmin) {
-      await adminDecideExpenseClaim(id, decision);
+      await adminDecideExpenseClaim(id, decision, accounting);
     } else {
+      // Non-admin path: save accounting first (via the whitelisted
+      // draft-edit endpoint) then run the standard submit. Two calls
+      // instead of one, but keeps the standard path unchanged.
+      if (accounting) {
+        await saveExpenseClaimAccounting(id, accounting);
+      }
       await decideExpenseClaim(id, decision);
     }
   } catch (err) {
@@ -173,13 +218,34 @@ async function decideClaim(
 export async function approveClaimAction(
   id: string,
   _prev: DecisionState,
+  form?: FormData,
 ): Promise<DecisionState> {
-  return decideClaim(id, "Approved");
+  return decideClaim(id, "Approved", readAccountingFromForm(form));
 }
 
 export async function rejectClaimAction(
   id: string,
   _prev: DecisionState,
+  form?: FormData,
 ): Promise<DecisionState> {
-  return decideClaim(id, "Rejected");
+  return decideClaim(id, "Rejected", readAccountingFromForm(form));
+}
+
+/** HR-side "save accounting" without deciding. Used when a claim needs
+ *  its accounting fields filled but isn't ready to be approved yet. */
+export async function saveClaimAccountingAction(
+  id: string,
+  _prev: DecisionState,
+  form: FormData,
+): Promise<DecisionState> {
+  const accounting = readAccountingFromForm(form);
+  if (!accounting) return { error: "Nothing to save." };
+  try {
+    await saveExpenseClaimAccounting(id, accounting);
+  } catch (err) {
+    return toFormState(err) as DecisionState;
+  }
+  revalidatePath("/hr/expense-claims");
+  revalidatePath(`/hr/expense-claims/${encodeURIComponent(id)}`);
+  return {};
 }

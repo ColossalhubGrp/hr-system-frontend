@@ -1,18 +1,41 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, Receipt } from "lucide-react";
-import { ExpenseClaimForm } from "@/components/expense/expense-form";
-import { listExpenseTypes } from "@/lib/frappe/expense-claims";
+import {
+  ExpenseClaimForm,
+  type OptionsByCompany,
+} from "@/components/expense/expense-form";
+import {
+  listCostCenters,
+  listExpenseTypes,
+  listModesOfPayment,
+  listPayableAccounts,
+} from "@/lib/frappe/expense-claims";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { createExpenseClaimAction } from "../actions";
 
 export const metadata = { title: "New expense claim · Colossal HR" };
 
 export default async function NewExpenseClaimPage() {
-  const [expenseTypes, options] = await Promise.all([
+  const [expenseTypes, options, modesOfPayment] = await Promise.all([
     listExpenseTypes(),
     fetchEmployeeFormOptions(),
+    listModesOfPayment(),
   ]);
+
+  // Preload accounts + cost centers for every company at page-load. Most
+  // tenants have 1-3 companies so this stays cheap; the form filters the
+  // right list into its select as the user picks a company.
+  const [payableEntries, costCenterEntries] = await Promise.all([
+    Promise.all(
+      options.companies.map(async (c) => [c, await listPayableAccounts(c)] as const),
+    ),
+    Promise.all(
+      options.companies.map(async (c) => [c, await listCostCenters(c)] as const),
+    ),
+  ]);
+  const payableAccountsByCompany: OptionsByCompany = Object.fromEntries(payableEntries);
+  const costCentersByCompany: OptionsByCompany = Object.fromEntries(costCenterEntries);
 
   return (
     <div className="flex flex-col gap-5">
@@ -41,6 +64,9 @@ export default async function NewExpenseClaimPage() {
         companies={options.companies}
         expenseTypes={expenseTypes}
         employeeDirectory={options.employeeDirectory}
+        payableAccountsByCompany={payableAccountsByCompany}
+        costCentersByCompany={costCentersByCompany}
+        modesOfPayment={modesOfPayment}
       />
     </div>
   );

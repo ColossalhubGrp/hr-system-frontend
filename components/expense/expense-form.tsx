@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { useMemo, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Send } from "lucide-react";
 import {
@@ -22,19 +23,46 @@ import { cn } from "@/lib/cn";
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
 const EMPTY: FormState = {};
 
+export type AccountOption = { value: string; label: string };
+/** Accounts keyed by company. Empty array (or missing company) → the
+ *  company's chart of accounts isn't set up in ERPNext yet; UI shows a
+ *  hint instead of a select. */
+export type OptionsByCompany = Record<string, AccountOption[]>;
+
 export function ExpenseClaimForm({
   action,
   companies,
   expenseTypes,
   employeeDirectory,
+  payableAccountsByCompany,
+  costCentersByCompany,
+  modesOfPayment,
 }: {
   action: Action;
   companies: string[];
   expenseTypes: string[];
   employeeDirectory: EmployeeDirectoryEntry[];
+  payableAccountsByCompany: OptionsByCompany;
+  costCentersByCompany: OptionsByCompany;
+  modesOfPayment: string[];
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+
+  // Company drives which accounts + cost centers appear in the pickers
+  // below. Default to the first company for a smooth first-load — user
+  // can change it and the accounting selects rebuild.
+  const [company, setCompany] = useState<string>(companies[0] ?? "");
+  const [isPaid, setIsPaid] = useState<boolean>(false);
+
+  const payableAccounts = useMemo(
+    () => (company ? payableAccountsByCompany[company] ?? [] : []),
+    [company, payableAccountsByCompany],
+  );
+  const costCenters = useMemo(
+    () => (company ? costCentersByCompany[company] ?? [] : []),
+    [company, costCentersByCompany],
+  );
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -59,6 +87,8 @@ export function ExpenseClaimForm({
           <SelectInput
             id="company"
             name="company"
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
             options={companies}
             placeholder="Select company"
             invalid={Boolean(fe.company)}
@@ -131,6 +161,73 @@ export function ExpenseClaimForm({
         <Field label="Description" htmlFor="description" wide>
           <TextArea id="description" name="description" rows={2} />
         </Field>
+      </FormSection>
+
+      <FormSection
+        title="Accounting Details"
+        description={
+          "Optional here — if left blank, ERPNext fills them from the company defaults. Frappe requires payable account before approval, so HR can complete these on the detail page too."
+        }
+      >
+        <Field
+          label="Payable account"
+          htmlFor="payable_account"
+          error={fe.payable_account}
+          hint={
+            company && payableAccounts.length === 0
+              ? `No liability accounts found for ${company}. Set them up in ERPNext or ask an admin.`
+              : undefined
+          }
+        >
+          <SelectInput
+            id="payable_account"
+            name="payable_account"
+            options={payableAccounts.map((a) => ({ value: a.value, label: a.label }))}
+            placeholder={payableAccounts.length ? "Inherit from company default" : "—"}
+            invalid={Boolean(fe.payable_account)}
+          />
+        </Field>
+        <Field
+          label="Cost center"
+          htmlFor="cost_center"
+          error={fe.cost_center}
+        >
+          <SelectInput
+            id="cost_center"
+            name="cost_center"
+            options={costCenters.map((c) => ({ value: c.value, label: c.label }))}
+            placeholder={costCenters.length ? "Inherit from company default" : "—"}
+            invalid={Boolean(fe.cost_center)}
+          />
+        </Field>
+        <Field label="Paid on filing?" htmlFor="is_paid">
+          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-white px-3 text-sm text-ash-700 focus-within:ring-2 focus-within:ring-ink-400/40">
+            <input
+              id="is_paid"
+              name="is_paid"
+              type="checkbox"
+              checked={isPaid}
+              onChange={(e) => setIsPaid(e.target.checked)}
+              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            />
+            <span>Employee already paid — mark as reimbursed</span>
+          </label>
+        </Field>
+        {isPaid && (
+          <Field
+            label="Mode of payment"
+            htmlFor="mode_of_payment"
+            error={fe.mode_of_payment}
+          >
+            <SelectInput
+              id="mode_of_payment"
+              name="mode_of_payment"
+              options={modesOfPayment}
+              placeholder="Select mode"
+              invalid={Boolean(fe.mode_of_payment)}
+            />
+          </Field>
+        )}
       </FormSection>
 
       <div className="-mx-1 mt-6 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">

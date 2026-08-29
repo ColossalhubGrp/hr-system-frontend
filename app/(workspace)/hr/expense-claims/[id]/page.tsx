@@ -5,10 +5,19 @@ import { ChevronLeft, Receipt } from "lucide-react";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { StatusPill } from "@/components/common/status-pill";
 import { ExpenseDecisionBar } from "@/components/expense/decision-bar";
-import { getExpenseClaim } from "@/lib/frappe/expense-claims";
+import {
+  getExpenseClaim,
+  listCostCenters,
+  listModesOfPayment,
+  listPayableAccounts,
+} from "@/lib/frappe/expense-claims";
 import { readSession } from "@/lib/frappe/session";
 import { getMyAccess } from "@/lib/frappe/roles";
-import { approveClaimAction, rejectClaimAction } from "../actions";
+import {
+  approveClaimAction,
+  rejectClaimAction,
+  saveClaimAccountingAction,
+} from "../actions";
 
 export async function generateMetadata({
   params,
@@ -37,6 +46,17 @@ export default async function ExpenseClaimDetailPage({
   const decidable = claim.docstatus === 0;
   const approve = approveClaimAction.bind(null, id);
   const reject = rejectClaimAction.bind(null, id);
+  const saveAccounting = saveClaimAccountingAction.bind(null, id);
+
+  // Load account / cost-center options for THIS claim's company so the
+  // decision bar can render them. Modes of Payment are global.
+  const [payableAccounts, costCenters, modesOfPayment] = decidable
+    ? await Promise.all([
+        listPayableAccounts(claim.company),
+        listCostCenters(claim.company),
+        listModesOfPayment(),
+      ])
+    : ([[], [], []] as const);
   // Frappe HR's approver check validates the DOC's expense_approver
   // is a valid designated approver — not the current user. HR admins
   // can always act (DocPerm-based submit right); other users only
@@ -88,7 +108,18 @@ export default async function ExpenseClaimDetailPage({
         <ExpenseDecisionBar
           approve={approve}
           reject={reject}
+          saveAccounting={saveAccounting}
           lock={{ canDecide, lockedToLabel }}
+          payableAccounts={payableAccounts}
+          costCenters={costCenters}
+          modesOfPayment={modesOfPayment}
+          defaults={{
+            payableAccount: claim.payableAccount,
+            costCenter: claim.costCenter,
+            isPaid: claim.isPaid,
+            modeOfPayment: claim.modeOfPayment,
+            remark: claim.remark,
+          }}
         />
       )}
 
@@ -124,6 +155,20 @@ export default async function ExpenseClaimDetailPage({
             },
             { label: "Posted on", value: fmtDate(claim.postingDate) },
             { label: "Remarks", value: claim.remark, wide: true },
+          ]}
+        />
+      </section>
+
+      <section className="card p-6">
+        <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">
+          Accounting
+        </h2>
+        <FieldGrid
+          fields={[
+            { label: "Payable account", value: claim.payableAccount },
+            { label: "Cost center", value: claim.costCenter },
+            { label: "Paid on filing", value: claim.isPaid ? "Yes" : "No" },
+            { label: "Mode of payment", value: claim.modeOfPayment },
           ]}
         />
       </section>

@@ -1119,7 +1119,11 @@ export function EmployeeForm({
               ]}
               serialize={(r) => ({
                 skill: r.skill || undefined,
-                proficiency: r.proficiency ?? undefined,
+                // Frappe Rating stores 0.0-1.0; user types 1-5.
+                proficiency:
+                  r.proficiency == null
+                    ? undefined
+                    : Math.max(0, Math.min(1, Number(r.proficiency) / 5)),
                 evaluation_date: r.evaluation_date || undefined,
               })}
             />

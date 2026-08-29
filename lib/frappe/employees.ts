@@ -487,9 +487,19 @@ function mapInternal(r: RawEmployeeInternalWorkHistory): EmployeeInternalWorkHis
 function mapSkill(r: RawEmployeeSkill): EmployeeSkillRow {
   return {
     skill: r.skill ?? "",
-    proficiency: numOrNull(r.proficiency),
+    // Frappe's Rating field stores 0.0-1.0; UI displays / accepts 1-5.
+    // Multiply by 5 on read, divide by 5 on write (see the Skills tab
+    // serializer in employee-form.tsx). Round to 1 decimal so half-star
+    // ratings survive the round-trip without floating-point noise.
+    proficiency: fromRating(r.proficiency),
     evaluationDate: r.evaluation_date ?? null,
   };
+}
+
+function fromRating(v: number | string | null | undefined): number | null {
+  const n = numOrNull(v);
+  if (n === null) return null;
+  return Math.round(n * 5 * 10) / 10;
 }
 
 function numOrNull(v: number | string | null | undefined): number | null {

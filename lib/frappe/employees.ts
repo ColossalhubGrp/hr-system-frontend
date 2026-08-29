@@ -103,7 +103,57 @@ export type EmployeeFull = {
    *  reason is required. */
   ageWaiverGranted: boolean;
   ageWaiverReason: string | null;
+  // Child tables (Frappe returns these inline with frappe.client.get).
+  // Editable via recruitment_app.api.employee_child_tables.replace_child_tables.
+  education: EmployeeEducationRow[];
+  externalWorkHistory: EmployeeExternalWorkHistoryRow[];
+  // Internal work history is written by transfer/promotion actions —
+  // rendered read-only here.
+  internalWorkHistory: EmployeeInternalWorkHistoryRow[];
+  skills: EmployeeSkillRow[];
 };
+
+export type EmployeeEducationRow = {
+  schoolUniversity: string | null;
+  qualification: string | null;
+  level: string | null;
+  yearOfCompletion: number | null;
+  classGrade: string | null;
+};
+
+export type EmployeeExternalWorkHistoryRow = {
+  company: string | null;
+  jobTitle: string | null;
+  salary: number | null;
+  address: string | null;
+  contact: string | null;
+  totalExperience: string | null;
+};
+
+export type EmployeeInternalWorkHistoryRow = {
+  branch: string | null;
+  department: string | null;
+  jobTitle: string | null;
+  fromDate: string | null;
+  toDate: string | null;
+};
+
+export type EmployeeSkillRow = {
+  skill: string;
+  proficiency: number | null;
+  evaluationDate: string | null;
+};
+
+export type EmployeeSkillMap = {
+  employee: string;
+  employeeSkills: EmployeeSkillRow[];
+  trainings: Array<{
+    training: string | null;
+    fromDate: string | null;
+    toDate: string | null;
+    status: string | null;
+  }>;
+} | null;
 
 type ListArgs = {
   doctype: string;
@@ -291,6 +341,44 @@ type RawEmployeeDoc = RawEmployeeRow & {
   // compliance
   age_waiver_granted: 0 | 1 | boolean | null;
   age_waiver_reason: string | null;
+  // Child tables — `frappe.client.get` returns these inline as arrays.
+  education?: RawEmployeeEducation[] | null;
+  external_work_history?: RawEmployeeExternalWorkHistory[] | null;
+  internal_work_history?: RawEmployeeInternalWorkHistory[] | null;
+  skills?: RawEmployeeSkill[] | null;
+};
+
+type RawEmployeeEducation = {
+  schooluniversity?: string | null;
+  qualification?: string | null;
+  level?: string | null;
+  year_of_completion?: number | string | null;
+  class_grade?: string | null;
+};
+
+type RawEmployeeExternalWorkHistory = {
+  company?: string | null;
+  designation?: string | null;      // some Frappe builds
+  job_title?: string | null;         // this build
+  salary?: number | string | null;
+  address?: string | null;
+  contact?: string | null;
+  total_experience?: string | null;
+};
+
+type RawEmployeeInternalWorkHistory = {
+  branch?: string | null;
+  department?: string | null;
+  job_title?: string | null;
+  designation?: string | null;
+  from_date?: string | null;
+  to_date?: string | null;
+};
+
+type RawEmployeeSkill = {
+  skill?: string | null;
+  proficiency?: number | string | null;
+  evaluation_date?: string | null;
 };
 
 function toRow(r: RawEmployeeRow): EmployeeListRow {
@@ -358,11 +446,148 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     payPoint: d.pay_point,
     ageWaiverGranted: Boolean(d.age_waiver_granted),
     ageWaiverReason: d.age_waiver_reason,
+    education: (d.education ?? []).map(mapEducation),
+    externalWorkHistory: (d.external_work_history ?? []).map(mapExternal),
+    internalWorkHistory: (d.internal_work_history ?? []).map(mapInternal),
+    skills: (d.skills ?? []).map(mapSkill),
   };
+}
+
+function mapEducation(r: RawEmployeeEducation): EmployeeEducationRow {
+  return {
+    schoolUniversity: r.schooluniversity ?? null,
+    qualification: r.qualification ?? null,
+    level: r.level ?? null,
+    yearOfCompletion: numOrNull(r.year_of_completion),
+    classGrade: r.class_grade ?? null,
+  };
+}
+
+function mapExternal(r: RawEmployeeExternalWorkHistory): EmployeeExternalWorkHistoryRow {
+  return {
+    company: r.company ?? null,
+    jobTitle: r.job_title ?? r.designation ?? null,
+    salary: numOrNull(r.salary),
+    address: r.address ?? null,
+    contact: r.contact ?? null,
+    totalExperience: r.total_experience ?? null,
+  };
+}
+
+function mapInternal(r: RawEmployeeInternalWorkHistory): EmployeeInternalWorkHistoryRow {
+  return {
+    branch: r.branch ?? null,
+    department: r.department ?? null,
+    jobTitle: r.job_title ?? r.designation ?? null,
+    fromDate: r.from_date ?? null,
+    toDate: r.to_date ?? null,
+  };
+}
+
+function mapSkill(r: RawEmployeeSkill): EmployeeSkillRow {
+  return {
+    skill: r.skill ?? "",
+    proficiency: numOrNull(r.proficiency),
+    evaluationDate: r.evaluation_date ?? null,
+  };
+}
+
+function numOrNull(v: number | string | null | undefined): number | null {
+  if (v === null || v === undefined || v === "") return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
 }
 
 function isNotFound(err: unknown): boolean {
   if (typeof err !== "object" || err === null) return false;
   const status = (err as { status?: number }).status;
   return status === 404;
+}
+
+/** Read-only fetch of the per-employee Skill Map (skills + trainings matrix
+ *  written by the performance/training modules). Returns null when no map
+ *  exists — HRMS auto-creates it on first save from the Skills tab. */
+export async function getEmployeeSkillMap(
+  employeeId: string,
+): Promise<EmployeeSkillMap> {
+  try {
+    const doc = await frappeCall<{
+      employee: string;
+      employee_skills?: RawEmployeeSkill[] | null;
+      trainings?: Array<{
+        training?: string | null;
+        from_date?: string | null;
+        to_date?: string | null;
+        status?: string | null;
+      }> | null;
+    }>({
+      method: "frappe.client.get",
+      args: { doctype: "Employee Skill Map", name: employeeId },
+      as: "user",
+    });
+    return {
+      employee: doc.employee,
+      employeeSkills: (doc.employee_skills ?? []).map(mapSkill),
+      trainings: (doc.trainings ?? []).map((t) => ({
+        training: t.training ?? null,
+        fromDate: t.from_date ?? null,
+        toDate: t.to_date ?? null,
+        status: t.status ?? null,
+      })),
+    };
+  } catch (err) {
+    if (isNotFound(err)) return null;
+    throw err;
+  }
+}
+
+/** Payload sent to `replace_child_tables`. Omit any field to leave the
+ *  corresponding child table untouched; pass `[]` to clear it. */
+export type ChildTableUpdate = {
+  education?: Array<{
+    schooluniversity?: string;
+    qualification?: string;
+    level?: string;
+    year_of_completion?: number;
+    class_grade?: string;
+  }>;
+  external_work_history?: Array<{
+    company?: string;
+    job_title?: string;
+    salary?: number;
+    address?: string;
+    contact?: string;
+    total_experience?: string;
+  }>;
+  skills?: Array<{
+    skill: string;
+    proficiency?: number;
+    evaluation_date?: string;
+  }>;
+};
+
+/** Whitelisted server call — replaces the specified child tables in-place
+ *  without touching scalar Employee fields (so grade/salary invariants
+ *  stay quiet). See recruitment_app/api/employee_child_tables.py. */
+export async function replaceEmployeeChildTables(
+  employeeId: string,
+  update: ChildTableUpdate,
+): Promise<void> {
+  await frappeCall<{ ok: boolean }>({
+    method: "recruitment_app.api.employee_child_tables.replace_child_tables",
+    verb: "POST",
+    args: {
+      employee: employeeId,
+      ...(update.education !== undefined && {
+        education: JSON.stringify(update.education),
+      }),
+      ...(update.external_work_history !== undefined && {
+        external_work_history: JSON.stringify(update.external_work_history),
+      }),
+      ...(update.skills !== undefined && {
+        skills: JSON.stringify(update.skills),
+      }),
+    },
+    as: "user",
+  });
 }

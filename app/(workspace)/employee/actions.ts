@@ -9,6 +9,10 @@ import {
   type EmployeeFormInput,
 } from "@/lib/frappe/employee-write";
 import { FrappeRequestError, frappeCall } from "@/lib/frappe/client";
+import {
+  replaceEmployeeChildTables,
+  type ChildTableUpdate,
+} from "@/lib/frappe/employees";
 import { getMyAccess, PERSONA_ROLES } from "@/lib/frappe/roles";
 
 export type FormState = {
@@ -257,10 +261,38 @@ export async function updateEmployeeAction(
 
   try {
     await updateEmployee(id, parsed.data);
+    // Child-table tabs (Education, Work Experience, Skills) serialize their
+    // rows into hidden inputs — pull them out and forward to the whitelisted
+    // Python endpoint if any are present. The endpoint leaves other child
+    // tables (addresses, internal_work_history, …) untouched.
+    const childUpdate = parseChildTables(form);
+    if (childUpdate) {
+      await replaceEmployeeChildTables(id, childUpdate);
+    }
   } catch (err) {
     return toFormState(err);
   }
   revalidatePath("/employee");
   revalidatePath(`/employee/${encodeURIComponent(id)}`);
   redirect(`/employee/${encodeURIComponent(id)}`);
+}
+
+function parseChildTables(form: FormData): ChildTableUpdate | null {
+  const upd: ChildTableUpdate = {};
+  const eduRaw = form.get("_child_education");
+  const extRaw = form.get("_child_external_work_history");
+  const skRaw = form.get("_child_skills");
+  if (typeof eduRaw === "string") upd.education = safeJson(eduRaw);
+  if (typeof extRaw === "string") upd.external_work_history = safeJson(extRaw);
+  if (typeof skRaw === "string") upd.skills = safeJson(skRaw);
+  return Object.keys(upd).length ? upd : null;
+}
+
+function safeJson<T>(s: string): T | never[] {
+  try {
+    const v = JSON.parse(s) as unknown;
+    return Array.isArray(v) ? (v as T) : ([] as never[]);
+  } catch {
+    return [] as never[];
+  }
 }

@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn";
 import { toast } from "@/components/ui/sonner";
 import { Field, SelectInput, TextArea, TextInput } from "./form-bits";
 import { ProfileImagePicker } from "./profile-image-picker";
+import { ChildTableEditor } from "./child-table-editor";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
 
@@ -53,7 +54,10 @@ type TabId =
   | "contact"
   | "attendance"
   | "approvers"
-  | "profile";
+  | "profile"
+  | "education"
+  | "experience"
+  | "skills";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
@@ -62,6 +66,9 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "attendance", label: "Attendance" },
   { id: "approvers", label: "Approvers" },
   { id: "profile", label: "Profile" },
+  { id: "education", label: "Education" },
+  { id: "experience", label: "Work Experience" },
+  { id: "skills", label: "Skills" },
 ];
 
 /** Which form field name belongs to which tab — used so a server-side
@@ -100,6 +107,11 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "shift_request_approver",
   ],
   profile: ["image", "bio"],
+  // Child-table tabs — no scalar fields on Employee, so nothing to
+  // route errors to. Kept empty so tab-switch logic doesn't crash.
+  education: [],
+  experience: [],
+  skills: [],
 };
 
 export function EmployeeForm({
@@ -328,16 +340,26 @@ export function EmployeeForm({
     relieving_date: initial?.relievingDate ?? "",
   } satisfies Partial<Record<string, string>>;
 
+  // Child-table tabs (Education / Work Experience / Skills) only make
+  // sense on an existing Employee — the create flow uses frappe.client.insert
+  // with just scalar fields, and HR fills these in on the first edit pass.
+  const visibleTabs = TABS.filter((t) => {
+    if (mode === "create" && (t.id === "education" || t.id === "experience" || t.id === "skills")) {
+      return false;
+    }
+    return true;
+  });
+
   // Mark tabs that currently have an errored field, so the tab nav can flag
   // them with a tiny dot.
   const erroredTabs = new Set<TabId>();
-  for (const t of TABS) {
+  for (const t of visibleTabs) {
     if (FIELDS_BY_TAB[t.id].some((f) => fe[f])) erroredTabs.add(t.id);
   }
 
-  const idx = TABS.findIndex((t) => t.id === tab);
-  const prev = idx > 0 ? TABS[idx - 1] : null;
-  const next = idx >= 0 && idx < TABS.length - 1 ? TABS[idx + 1] : null;
+  const idx = visibleTabs.findIndex((t) => t.id === tab);
+  const prev = idx > 0 ? visibleTabs[idx - 1] : null;
+  const next = idx >= 0 && idx < visibleTabs.length - 1 ? visibleTabs[idx + 1] : null;
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -352,7 +374,7 @@ export function EmployeeForm({
       )}
 
       <FormTabs
-        tabs={TABS}
+        tabs={visibleTabs}
         active={tab}
         onChange={setTab}
         erroredTabs={erroredTabs}
@@ -975,6 +997,135 @@ export function EmployeeForm({
           <TextArea id="bio" name="bio" defaultValue={v.bio} rows={5} />
         </Field>
       </TabPane>
+
+      {/* Child-table tabs — Education, Work Experience, Skills. Each writes
+          a JSON blob to a hidden `_child_*` input; updateEmployeeAction reads
+          those and forwards to recruitment_app.api.employee_child_tables.
+          Only shown in edit mode — creation flow leaves them empty and HR
+          fills them in on the first edit pass. */}
+      {mode === "edit" && (
+        <>
+          <TabPane active={tab} id="education">
+            <p className="mb-4 max-w-2xl text-sm text-ash-600">
+              Formal qualifications on record. Add rows as the employee brings
+              new certificates; leave empty if nothing is on file yet.
+            </p>
+            <ChildTableEditor
+              name="_child_education"
+              addLabel="Add qualification"
+              emptyLabel="No qualifications recorded yet."
+              initial={(initial?.education ?? []).map((r) => ({
+                schooluniversity: r.schoolUniversity ?? "",
+                qualification: r.qualification ?? "",
+                level: r.level ?? "",
+                year_of_completion: r.yearOfCompletion ?? null,
+                class_grade: r.classGrade ?? "",
+              }))}
+              emptyRow={() => ({
+                schooluniversity: "",
+                qualification: "",
+                level: "",
+                year_of_completion: null as number | null,
+                class_grade: "",
+              })}
+              fields={[
+                { key: "schooluniversity", label: "School / University", wide: true, placeholder: "e.g. University of Zimbabwe" },
+                { key: "qualification", label: "Qualification", placeholder: "e.g. BSc Computer Science" },
+                { key: "level", label: "Level", type: "select", options: [
+                  "Post Graduate", "Under Graduate", "Diploma", "Certificate", "A Level", "O Level",
+                ] },
+                { key: "year_of_completion", label: "Year of completion", type: "number", min: 1900, max: 2100 },
+                { key: "class_grade", label: "Class / Grade", placeholder: "e.g. Upper Second" },
+              ]}
+              serialize={(r) => ({
+                schooluniversity: r.schooluniversity || undefined,
+                qualification: r.qualification || undefined,
+                level: r.level || undefined,
+                year_of_completion: r.year_of_completion ?? undefined,
+                class_grade: r.class_grade || undefined,
+              })}
+            />
+          </TabPane>
+
+          <TabPane active={tab} id="experience">
+            <p className="mb-4 max-w-2xl text-sm text-ash-600">
+              Roles held before joining. Internal moves (transfers,
+              promotions) are logged automatically and visible on the
+              read-only view.
+            </p>
+            <ChildTableEditor
+              name="_child_external_work_history"
+              addLabel="Add previous role"
+              emptyLabel="No external work history recorded yet."
+              initial={(initial?.externalWorkHistory ?? []).map((r) => ({
+                company: r.company ?? "",
+                job_title: r.jobTitle ?? "",
+                salary: r.salary ?? null,
+                total_experience: r.totalExperience ?? "",
+                address: r.address ?? "",
+                contact: r.contact ?? "",
+              }))}
+              emptyRow={() => ({
+                company: "",
+                job_title: "",
+                salary: null as number | null,
+                total_experience: "",
+                address: "",
+                contact: "",
+              })}
+              fields={[
+                { key: "company", label: "Company", placeholder: "e.g. Econet Wireless" },
+                { key: "job_title", label: "Job title", placeholder: "e.g. Software Engineer" },
+                { key: "salary", label: "Last salary", type: "number", min: 0, step: 0.01 },
+                { key: "total_experience", label: "Total experience", placeholder: "e.g. 3 years" },
+                { key: "contact", label: "Reference contact", placeholder: "phone or email" },
+                { key: "address", label: "Address", wide: true },
+              ]}
+              serialize={(r) => ({
+                company: r.company || undefined,
+                job_title: r.job_title || undefined,
+                salary: r.salary ?? undefined,
+                total_experience: r.total_experience || undefined,
+                contact: r.contact || undefined,
+                address: r.address || undefined,
+              })}
+            />
+          </TabPane>
+
+          <TabPane active={tab} id="skills">
+            <p className="mb-4 max-w-2xl text-sm text-ash-600">
+              Skills feed the Employee Skill Map (used by performance +
+              training). Skill names must match an existing Skill in Frappe —
+              if unsure, ask HR to create it first.
+            </p>
+            <ChildTableEditor
+              name="_child_skills"
+              addLabel="Add skill"
+              emptyLabel="No skills recorded yet."
+              initial={(initial?.skills ?? []).map((r) => ({
+                skill: r.skill,
+                proficiency: r.proficiency ?? null,
+                evaluation_date: r.evaluationDate ?? "",
+              }))}
+              emptyRow={() => ({
+                skill: "",
+                proficiency: null as number | null,
+                evaluation_date: "",
+              })}
+              fields={[
+                { key: "skill", label: "Skill", required: true, placeholder: "e.g. Python, Payroll, Onboarding" },
+                { key: "proficiency", label: "Proficiency (1-5)", type: "number", min: 1, max: 5, step: 1, required: true },
+                { key: "evaluation_date", label: "Evaluated on", type: "date" },
+              ]}
+              serialize={(r) => ({
+                skill: r.skill || undefined,
+                proficiency: r.proficiency ?? undefined,
+                evaluation_date: r.evaluation_date || undefined,
+              })}
+            />
+          </TabPane>
+        </>
+      )}
 
       <div className="-mx-1 mt-6 flex flex-wrap items-center justify-between gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
         <div className="flex items-center gap-2">

@@ -10,7 +10,12 @@ import { FieldGrid } from "@/components/employee/field-grid";
 import { AttendanceStrip } from "@/components/employee/attendance-strip";
 import { GeofenceToggle } from "@/components/employee/geofence-toggle";
 import { fetchEmployeeAttendance } from "@/lib/frappe/attendance";
-import { getEmployee, type EmployeeFull } from "@/lib/frappe/employees";
+import {
+  getEmployee,
+  getEmployeeSkillMap,
+  type EmployeeFull,
+  type EmployeeSkillMap,
+} from "@/lib/frappe/employees";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { readSession } from "@/lib/frappe/session";
 import { redirect } from "next/navigation";
@@ -59,11 +64,15 @@ export default async function EmployeeDetailPage({
     : "overview";
   const basePath = `/employee/${encodeURIComponent(id)}`;
 
-  // Attendance is the only tab that needs an extra fetch, and only when
-  // selected — avoids paying for it on every detail-page view.
+  // Tabs that need an extra fetch (only when active — avoids paying for
+  // them on every detail-page view).
   const attendance =
     activeTab === "attendance"
       ? await fetchEmployeeAttendance(emp.id, 28).catch(() => null)
+      : null;
+  const skillMap =
+    activeTab === "skills"
+      ? await getEmployeeSkillMap(emp.id).catch(() => null)
       : null;
 
   // `access` was resolved during the role check above; reuse it for the
@@ -87,6 +96,7 @@ export default async function EmployeeDetailPage({
         id={activeTab}
         emp={emp}
         attendance={attendance}
+        skillMap={skillMap}
         canEditGeofence={access.isShiftAdmin}
       />
     </div>
@@ -97,6 +107,7 @@ type TabPanelProps = {
   id: EmployeeTabId;
   emp: EmployeeFull;
   attendance: Awaited<ReturnType<typeof fetchEmployeeAttendance>> | null;
+  skillMap: EmployeeSkillMap;
   canEditGeofence: boolean;
 };
 
@@ -104,6 +115,7 @@ function TabPanel({
   id,
   emp,
   attendance,
+  skillMap,
   canEditGeofence,
 }: TabPanelProps) {
   const tab = EMPLOYEE_TABS.find((t) => t.id === id);
@@ -116,7 +128,7 @@ function TabPanel({
       <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">
         {tab?.label}
       </h2>
-      {renderTab(id, emp, attendance, canEditGeofence)}
+      {renderTab(id, emp, attendance, skillMap, canEditGeofence)}
     </section>
   );
 }
@@ -125,6 +137,7 @@ function renderTab(
   id: EmployeeTabId,
   emp: EmployeeFull,
   attendance: TabPanelProps["attendance"],
+  skillMap: EmployeeSkillMap,
   canEditGeofence: boolean,
 ): React.ReactNode {
   switch (id) {
@@ -230,7 +243,197 @@ function renderTab(
           ]}
         />
       );
+    case "education":
+      if (emp.education.length === 0) {
+        return <Placeholder>No education records on file yet.</Placeholder>;
+      }
+      return (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-hairline text-sm">
+            <thead className="text-left text-xs font-medium uppercase tracking-wide text-ash-500">
+              <tr>
+                <Th>School / University</Th>
+                <Th>Qualification</Th>
+                <Th>Level</Th>
+                <Th className="text-right">Year</Th>
+                <Th>Class / Grade</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-hairline">
+              {emp.education.map((r, i) => (
+                <tr key={`edu-${i}`}>
+                  <Td wrap>{r.schoolUniversity}</Td>
+                  <Td>{r.qualification}</Td>
+                  <Td>{r.level}</Td>
+                  <Td className="text-right">{r.yearOfCompletion}</Td>
+                  <Td>{r.classGrade}</Td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      );
+    case "experience": {
+      const hasExternal = emp.externalWorkHistory.length > 0;
+      const hasInternal = emp.internalWorkHistory.length > 0;
+      if (!hasExternal && !hasInternal) {
+        return <Placeholder>No work history on file yet.</Placeholder>;
+      }
+      return (
+        <div className="flex flex-col gap-8">
+          <section>
+            <h3 className="mb-3 text-sm font-semibold text-ash-700">Previous employers (external)</h3>
+            {hasExternal ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-hairline text-sm">
+                  <thead className="text-left text-xs font-medium uppercase tracking-wide text-ash-500">
+                    <tr>
+                      <Th>Company</Th>
+                      <Th>Job title</Th>
+                      <Th className="text-right">Salary</Th>
+                      <Th>Total experience</Th>
+                      <Th>Contact</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hairline">
+                    {emp.externalWorkHistory.map((r, i) => (
+                      <tr key={`ext-${i}`}>
+                        <Td>{r.company}</Td>
+                        <Td>{r.jobTitle}</Td>
+                        <Td className="text-right">{r.salary != null ? r.salary.toLocaleString() : null}</Td>
+                        <Td>{r.totalExperience}</Td>
+                        <Td>{r.contact}</Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <Placeholder>No external work history on file yet.</Placeholder>
+            )}
+          </section>
+          <section>
+            <h3 className="mb-3 text-sm font-semibold text-ash-700">
+              Internal history <span className="font-normal text-ash-500">(auto-updated by transfers / promotions)</span>
+            </h3>
+            {hasInternal ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-hairline text-sm">
+                  <thead className="text-left text-xs font-medium uppercase tracking-wide text-ash-500">
+                    <tr>
+                      <Th>Branch</Th>
+                      <Th>Department</Th>
+                      <Th>Job title</Th>
+                      <Th>From</Th>
+                      <Th>To</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hairline">
+                    {emp.internalWorkHistory.map((r, i) => (
+                      <tr key={`int-${i}`}>
+                        <Td>{r.branch}</Td>
+                        <Td>{r.department}</Td>
+                        <Td>{r.jobTitle}</Td>
+                        <Td>{fmtDate(r.fromDate)}</Td>
+                        <Td>{fmtDate(r.toDate) ?? <span className="text-ash-500">present</span>}</Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <Placeholder>No internal history yet — this fills in as the employee moves between roles.</Placeholder>
+            )}
+          </section>
+        </div>
+      );
+    }
+    case "skills": {
+      const hasSkills = emp.skills.length > 0;
+      const hasSkillMap = skillMap && (skillMap.employeeSkills.length > 0 || skillMap.trainings.length > 0);
+      if (!hasSkills && !hasSkillMap) {
+        return <Placeholder>No skills recorded yet.</Placeholder>;
+      }
+      return (
+        <div className="flex flex-col gap-8">
+          {hasSkills && (
+            <section>
+              <h3 className="mb-3 text-sm font-semibold text-ash-700">Skills</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-hairline text-sm">
+                  <thead className="text-left text-xs font-medium uppercase tracking-wide text-ash-500">
+                    <tr>
+                      <Th>Skill</Th>
+                      <Th>Proficiency</Th>
+                      <Th>Evaluated on</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hairline">
+                    {emp.skills.map((r, i) => (
+                      <tr key={`sk-${i}`}>
+                        <Td>{r.skill}</Td>
+                        <Td>{r.proficiency != null ? `${r.proficiency} / 5` : null}</Td>
+                        <Td>{fmtDate(r.evaluationDate)}</Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+          {skillMap && skillMap.trainings.length > 0 && (
+            <section>
+              <h3 className="mb-3 text-sm font-semibold text-ash-700">
+                Trainings <span className="font-normal text-ash-500">(from Skill Map)</span>
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-hairline text-sm">
+                  <thead className="text-left text-xs font-medium uppercase tracking-wide text-ash-500">
+                    <tr>
+                      <Th>Training</Th>
+                      <Th>From</Th>
+                      <Th>To</Th>
+                      <Th>Status</Th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-hairline">
+                    {skillMap.trainings.map((t, i) => (
+                      <tr key={`tr-${i}`}>
+                        <Td>{t.training}</Td>
+                        <Td>{fmtDate(t.fromDate)}</Td>
+                        <Td>{fmtDate(t.toDate)}</Td>
+                        <Td>{t.status}</Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+        </div>
+      );
+    }
   }
+}
+
+function Th({ children, className }: { children: React.ReactNode; className?: string }) {
+  return <th scope="col" className={`px-3 py-2 ${className ?? ""}`}>{children}</th>;
+}
+
+function Td({
+  children,
+  className,
+  wrap,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  wrap?: boolean;
+}) {
+  return (
+    <td className={`px-3 py-2 text-ash-700 ${wrap ? "whitespace-normal" : "whitespace-nowrap"} ${className ?? ""}`}>
+      {children ?? <span className="text-ash-400">—</span>}
+    </td>
+  );
 }
 
 function Placeholder({ children }: { children: React.ReactNode }) {

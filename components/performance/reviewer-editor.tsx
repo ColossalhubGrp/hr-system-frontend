@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Check, Loader2, Pencil, X } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { ApproverPickerField } from "@/components/common/approver-picker-field";
 import type { EmployeeDirectoryEntry } from "@/components/common/employee-picker-field";
-import type { StdFormState } from "@/lib/frappe/form-errors";
+import type { ReviewerSaveState } from "@/app/(workspace)/hr/performance/actions";
 
 type Action = (
-  prev: StdFormState,
+  prev: ReviewerSaveState,
   form: FormData,
-) => Promise<StdFormState>;
-const EMPTY: StdFormState = {};
+) => Promise<ReviewerSaveState>;
+const EMPTY: ReviewerSaveState = {};
 
 /**
  * Small inline editor for the Reviewer field on an Appraisal detail
@@ -35,6 +35,13 @@ export function ReviewerEditor({
 }) {
   const [editing, setEditing] = useState(false);
   const [state, dispatch] = useFormState(action, EMPTY);
+
+  // Close the editor once the save action reports success. The revalidate
+  // the action already fired pulls the fresh reviewer value back through
+  // the server-rendered parent, so nothing else to do here.
+  useEffect(() => {
+    if (state.success) setEditing(false);
+  }, [state.success]);
 
   const display = currentReviewerName
     ? currentReviewer

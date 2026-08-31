@@ -193,11 +193,13 @@ export async function createAppraisalAction(
 /** HR retargets the reviewer on an appraisal after creation (org chart
  *  changed, wrong manager auto-picked, etc.). Accepts an employee id
  *  from the picker or an empty string to clear the reviewer. */
+export type ReviewerSaveState = StdFormState & { success?: boolean };
+
 export async function setAppraisalReviewerAction(
   id: string,
-  _prev: StdFormState,
+  _prev: ReviewerSaveState,
   form: FormData,
-): Promise<StdFormState> {
+): Promise<ReviewerSaveState> {
   const raw = String(form.get("reviewer") ?? "").trim();
   const resolved = raw ? await resolveReviewer(raw) : { ok: true as const, userId: undefined };
   if (!resolved.ok) return resolved.state;
@@ -207,7 +209,7 @@ export async function setAppraisalReviewerAction(
     return toFormState(err);
   }
   revalidatePath(`/hr/performance/appraisals/${encodeURIComponent(id)}`);
-  return {};
+  return { success: true };
 }
 
 export async function submitAppraisalAction(

@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search, Check, X } from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
+import { Search, Check, Plus, X } from "lucide-react";
 
 export type PickableGoal = {
   id: string;
@@ -25,12 +27,16 @@ export function GoalPicker({
   goals,
   name = "selected_goals",
   initialSelected,
+  createHref,
 }: {
   goals: PickableGoal[];
   /** Form field name to emit the CSV of selected goal IDs into. */
   name?: string;
   /** Pre-selected goal IDs (for editing an existing cycle's roster). */
   initialSelected?: string[];
+  /** If provided, the empty state renders a "Create goal" button linking
+   *  here — otherwise the empty state is just a text hint. */
+  createHref?: string;
 }) {
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<Set<string>>(
@@ -96,10 +102,18 @@ export function GoalPicker({
       </label>
 
       {goals.length === 0 ? (
-        <p className="rounded-card border border-dashed border-hairline bg-canvas/50 px-4 py-6 text-center text-sm text-ash-600">
-          No standalone goals yet. Create some goals first — they'll show up
-          here for selection.
-        </p>
+        <div className="flex flex-col items-center gap-3 rounded-card border border-dashed border-hairline bg-canvas/50 px-4 py-8 text-center text-sm text-ash-600">
+          <p>No goals to pick from yet. Create one to add it to this cycle.</p>
+          {createHref && (
+            <Link
+              href={createHref as Route}
+              className="inline-flex h-9 items-center gap-1.5 rounded-chip bg-ink-800 px-3.5 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Create goal
+            </Link>
+          )}
+        </div>
       ) : filtered.length === 0 ? (
         <p className="rounded-card border border-dashed border-hairline bg-canvas/50 px-4 py-4 text-center text-xs text-ash-500">
           No goals match "{q}".

@@ -52,6 +52,7 @@ export function ManageCycleGoalsForm({
         goals={goals}
         name="goals"
         initialSelected={currentlySelected}
+        createHref="/hr/performance/goals/new"
       />
 
       <div className="flex justify-end">

@@ -122,7 +122,7 @@ export function CycleForm({
             also add or remove goals after the cycle is created from the
             cycle detail page.
           </p>
-          <GoalPicker goals={goals} />
+          <GoalPicker goals={goals} createHref="/hr/performance/goals/new" />
         </div>
       </FormSection>
 

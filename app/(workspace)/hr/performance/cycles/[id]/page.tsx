@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
-import { ChevronLeft, RefreshCcw, Target, Settings2 } from "lucide-react";
+import { ChevronLeft, Plus, RefreshCcw, Target, Settings2 } from "lucide-react";
 import {
   getAppraisalCycle,
   listSelectableGoals,
@@ -102,9 +102,10 @@ export default async function CycleDetailPage({
           </h2>
           <Link
             href={"/hr/performance/goals/new" as Route}
-            className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline px-3 text-xs font-medium text-ash-700 hover:bg-canvas focus-ring"
+            className="inline-flex h-9 items-center gap-1.5 rounded-chip bg-ink-800 px-3.5 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
           >
-            Create a new goal
+            <Plus className="h-3.5 w-3.5" />
+            Create goal
           </Link>
         </div>
         {cycle.selectedGoals.length === 0 ? (

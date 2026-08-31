@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
-import { AlertCircle, CheckCircle2, Loader2, Star, StarOff } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2, Plus, Star, StarOff, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { FeedbackRatingsSaveState } from "@/app/(workspace)/hr/performance/actions";
 import type { FeedbackRatingRow } from "@/lib/frappe/performance";
@@ -38,6 +38,8 @@ export function FeedbackRatingsEditor({
       rating: r.rating,
     })),
   );
+  const [newCriterion, setNewCriterion] = useState("");
+  const [newWeightage, setNewWeightage] = useState<number>(0);
 
   useEffect(() => {
     if (state.success) {
@@ -54,6 +56,27 @@ export function FeedbackRatingsEditor({
     setRows((prev) =>
       prev.map((r) => (r.criteria === criteria ? { ...r, ...patch } : r)),
     );
+  };
+
+  const removeRow = (criteria: string) => {
+    setRows((prev) => prev.filter((r) => r.criteria !== criteria));
+  };
+
+  const addRow = () => {
+    const name = newCriterion.trim();
+    if (!name) return;
+    if (rows.some((r) => r.criteria.toLowerCase() === name.toLowerCase())) {
+      // Already exists — just clear the inputs.
+      setNewCriterion("");
+      setNewWeightage(0);
+      return;
+    }
+    setRows((prev) => [
+      ...prev,
+      { criteria: name, weightage: newWeightage || 0, rating: 0 },
+    ]);
+    setNewCriterion("");
+    setNewWeightage(0);
   };
 
   if (rows.length === 0) {
@@ -91,6 +114,7 @@ export function FeedbackRatingsEditor({
               <th className="px-3 py-2">Criterion</th>
               <th className="px-3 py-2 w-40 text-right">Weightage %</th>
               <th className="px-3 py-2 w-56">Rating</th>
+              <th className="px-3 py-2 w-10" />
             </tr>
           </thead>
           <tbody className="divide-y divide-hairline">
@@ -120,6 +144,19 @@ export function FeedbackRatingsEditor({
                     name={`rating_${r.criteria}`}
                   />
                 </td>
+                <td className="px-3 py-3 text-right">
+                  {rows.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeRow(r.criteria)}
+                      className="rounded-md p-1 text-ash-500 transition hover:bg-fall/10 hover:text-fall focus-ring"
+                      aria-label={`Remove ${r.criteria}`}
+                      title={`Remove ${r.criteria}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -136,13 +173,65 @@ export function FeedbackRatingsEditor({
               >
                 {totalWeightage.toFixed(0)}%
               </td>
-              <td className="px-3 py-2 text-ash-500">
+              <td className="px-3 py-2 text-ash-500" colSpan={2}>
                 {weightageOk ? "" : "must total 100"}
               </td>
             </tr>
           </tfoot>
         </table>
       </div>
+
+      {/* Add-criterion row: HR types a name + weightage; Add appends to
+          the table. Unknown criteria are auto-created on save by the
+          backend so HR doesn't have to seed them in Frappe Desk first. */}
+      <div className="flex flex-wrap items-end gap-2 rounded-card border border-dashed border-hairline bg-canvas/30 p-3">
+        <div className="flex flex-1 min-w-[220px] flex-col gap-1">
+          <label className="text-xs font-medium text-ash-600" htmlFor="new-criterion">
+            New criterion
+          </label>
+          <input
+            id="new-criterion"
+            type="text"
+            value={newCriterion}
+            onChange={(e) => setNewCriterion(e.target.value)}
+            placeholder="e.g. Communication, Ownership, Technical delivery"
+            className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-ash-600" htmlFor="new-weightage">
+            Weightage %
+          </label>
+          <input
+            id="new-weightage"
+            type="number"
+            value={newWeightage}
+            onChange={(e) => setNewWeightage(Number(e.target.value) || 0)}
+            min={0}
+            max={100}
+            step={1}
+            className="w-24 rounded-md border border-hairline bg-white px-2 py-1.5 text-right text-sm focus-ring"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={addRow}
+          disabled={!newCriterion.trim()}
+          className={cn(
+            "inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline px-3 text-xs font-semibold text-ash-700 transition focus-ring",
+            "hover:border-ink-400 hover:text-ink-800",
+            "disabled:opacity-40 disabled:cursor-not-allowed",
+          )}
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Add
+        </button>
+      </div>
+
+      <p className="text-xs text-ash-500">
+        Tip: keep total weightage at 100%. Delete a row (trash icon) or
+        rebalance the numbers before saving.
+      </p>
 
       <div className="flex justify-end">
         <SaveBtn disabled={!weightageOk} />

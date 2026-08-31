@@ -928,15 +928,13 @@ export async function setFeedbackRatings(
 }
 
 export async function submitFeedback(id: string): Promise<void> {
-  const full = await frappeCall<Record<string, unknown>>({
-    method: "frappe.client.get",
-    args: { doctype: "Employee Performance Feedback", name: id },
-    as: "user",
-  });
-  await frappeCall<unknown>({
-    method: "frappe.client.submit",
-    args: { doc: full },
+  // Routes through the HR-admin endpoint that runs the submit as
+  // Administrator internally. HR admins don't hold Feedback doctype
+  // submit rights directly — same pattern as admin_submit_appraisal.
+  await frappeCall<{ ok: boolean }>({
+    method: "recruitment_app.api.approvals.admin_submit_feedback",
     verb: "POST",
+    args: { name: id },
     as: "user",
   });
 }

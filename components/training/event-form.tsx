@@ -174,13 +174,20 @@ export function TrainingEventForm({
             />
           </Field>
         )}
-        <Field label="Introduction" htmlFor="introduction" wide>
+        <Field
+          label="Introduction"
+          htmlFor="introduction"
+          required
+          error={fe.introduction}
+          wide
+        >
           <TextArea
             id="introduction"
             name="introduction"
             rows={3}
             placeholder="What the event covers — appears in attendee invites."
             defaultValue={initial?.introduction ?? undefined}
+            invalid={Boolean(fe.introduction)}
           />
         </Field>
       </FormSection>

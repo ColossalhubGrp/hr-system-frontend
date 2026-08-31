@@ -51,7 +51,10 @@ const eventSchema = z
       .transform((v) => (v ? v : undefined)),
     location: z.string().trim().optional(),
     supplier: z.string().trim().optional(),
-    introduction: z.string().trim().optional(),
+    introduction: z
+      .string()
+      .trim()
+      .min(1, "Add a short intro — this appears on attendee invites."),
   })
   .refine((d) => !d.end_time || d.end_time >= d.start_time, {
     message: "End must be on or after start.",

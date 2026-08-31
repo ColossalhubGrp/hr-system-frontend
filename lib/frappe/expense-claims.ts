@@ -320,6 +320,10 @@ export async function createExpenseClaim(
       description: e.description,
       amount: e.amount,
       sanctioned_amount: e.amount,
+      // Frappe validates cost_center on each expense line at submit
+      // time. Propagate the parent-level pick here so employees don't
+      // have to fill it per row, and HR isn't left picking it later.
+      ...(input.cost_center && { cost_center: input.cost_center }),
     })),
   };
   if (input.remark) doc.remark = input.remark;

@@ -764,9 +764,45 @@ export type FeedbackInput = {
   employee: string;
   reviewer: string;
   feedback: string;
+  /** Cycle for display/reporting only — Frappe HR requires the specific
+   *  `appraisal` field below for its validate_appraisal check. */
   appraisal_cycle?: string;
+  /** Frappe HR's Employee Performance Feedback expects a Link to Appraisal
+   *  here; it rejects the save with "Appraisal None does not belong to
+   *  Employee X" if omitted. Server action looks this up from
+   *  (employee, appraisal_cycle) before calling createFeedback. */
+  appraisal?: string;
   feedback_date?: string;
 };
+
+/** Find the Appraisal doc for a given employee in a given cycle. Returns
+ *  null when there isn't one (e.g. cycle hasn't opened appraisals for
+ *  this employee yet), so callers can throw a friendly error rather than
+ *  letting Frappe's raw "Appraisal None does not belong to Employee X"
+ *  reach the user. */
+export async function findAppraisalForEmployeeCycle(
+  employee: string,
+  cycle: string,
+): Promise<string | null> {
+  try {
+    const rows = await frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Appraisal",
+        fields: ["name"],
+        filters: JSON.stringify([
+          ["employee", "=", employee],
+          ["appraisal_cycle", "=", cycle],
+        ]),
+        limit_page_length: 1,
+      },
+      as: "user",
+    });
+    return rows[0]?.name ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function createFeedback(input: FeedbackInput): Promise<string> {
   const doc = {

@@ -9,6 +9,7 @@ import {
   createAppraisalCycle,
   createAppraisalTemplate,
   createFeedback,
+  findAppraisalForEmployeeCycle,
   createGoal,
   createPip,
   submitAppraisal,
@@ -229,12 +230,32 @@ export async function createFeedbackAction(
     const msg = "Reviewer is required.";
     return { error: msg, fieldErrors: { reviewer: msg } };
   }
+  // Frappe HR's Feedback validate_appraisal check needs a Link to a
+  // specific Appraisal doc (not just the cycle) — otherwise it throws
+  // "Appraisal None does not belong to Employee X". Look one up for
+  // this (employee, cycle) pair and refuse politely if there isn't one
+  // yet, instead of letting the raw Frappe error reach the user.
+  let appraisalName: string | undefined;
+  if (parsed.data.appraisal_cycle) {
+    appraisalName =
+      (await findAppraisalForEmployeeCycle(
+        parsed.data.employee,
+        parsed.data.appraisal_cycle,
+      )) ?? undefined;
+    if (!appraisalName) {
+      const msg =
+        "This employee has no appraisal in the selected cycle yet. Open the cycle first and add the employee, then come back to leave feedback.";
+      return { error: msg, fieldErrors: { appraisal_cycle: msg } };
+    }
+  }
+
   try {
     const input: FeedbackInput = {
       employee: parsed.data.employee,
       reviewer: reviewer.userId,
       feedback: parsed.data.feedback,
       appraisal_cycle: parsed.data.appraisal_cycle,
+      appraisal: appraisalName,
       feedback_date: parsed.data.feedback_date,
     };
     const id = await createFeedback(input);

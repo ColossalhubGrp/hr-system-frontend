@@ -10,6 +10,8 @@ import {
   createAppraisalTemplate,
   createFeedback,
   findAppraisalForEmployeeCycle,
+  getEmployeeManagerUser,
+  setAppraisalReviewer,
   createGoal,
   createPip,
   submitAppraisal,
@@ -160,6 +162,17 @@ export async function createAppraisalAction(
   if (!parsed.success) return fieldErrors(parsed);
   const reviewer = await resolveReviewer(parsed.data.reviewer);
   if (!reviewer.ok) return reviewer.state;
+
+  // Auto-populate reviewer from the employee's manager if HR didn't
+  // pick one — saves HR having to re-set it on every appraisal when
+  // the org chart already knows who the reviewer should be. HR can
+  // still override later via the editable field on the detail page.
+  let reviewerUserId = reviewer.userId;
+  if (!reviewerUserId && parsed.data.employee) {
+    reviewerUserId =
+      (await getEmployeeManagerUser(parsed.data.employee)) ?? undefined;
+  }
+
   try {
     const input: AppraisalInput = {
       employee: parsed.data.employee,
@@ -167,7 +180,7 @@ export async function createAppraisalAction(
       appraisal_template: parsed.data.appraisal_template,
       start_date: parsed.data.start_date,
       end_date: parsed.data.end_date,
-      reviewer: reviewer.userId,
+      reviewer: reviewerUserId,
     };
     const id = await createAppraisal(input);
     revalidatePath("/hr/performance");
@@ -175,6 +188,26 @@ export async function createAppraisalAction(
   } catch (err) {
     return toFormState(err);
   }
+}
+
+/** HR retargets the reviewer on an appraisal after creation (org chart
+ *  changed, wrong manager auto-picked, etc.). Accepts an employee id
+ *  from the picker or an empty string to clear the reviewer. */
+export async function setAppraisalReviewerAction(
+  id: string,
+  _prev: StdFormState,
+  form: FormData,
+): Promise<StdFormState> {
+  const raw = String(form.get("reviewer") ?? "").trim();
+  const resolved = raw ? await resolveReviewer(raw) : { ok: true as const, userId: undefined };
+  if (!resolved.ok) return resolved.state;
+  try {
+    await setAppraisalReviewer(id, resolved.userId ?? null);
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath(`/hr/performance/appraisals/${encodeURIComponent(id)}`);
+  return {};
 }
 
 export async function submitAppraisalAction(

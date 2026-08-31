@@ -7,8 +7,12 @@ import { ActionPanel } from "@/components/common/action-bar";
 import { StatusPill } from "@/components/common/status-pill";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { getAppraisal } from "@/lib/frappe/performance";
+import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
+import { getMyAccess } from "@/lib/frappe/roles";
+import { ReviewerEditor } from "@/components/performance/reviewer-editor";
 import {
   cancelAppraisalAction,
+  setAppraisalReviewerAction,
   submitAppraisalAction,
 } from "../../actions";
 
@@ -29,11 +33,20 @@ export default async function AppraisalDetailPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const a = await getAppraisal(id);
+  const [a, access] = await Promise.all([
+    getAppraisal(id),
+    getMyAccess(),
+  ]);
   if (!a) notFound();
 
   const submit = submitAppraisalAction.bind(null, id);
   const cancel = cancelAppraisalAction.bind(null, id);
+  const setReviewer = setAppraisalReviewerAction.bind(null, id);
+
+  const canEditReviewer = Boolean(access?.isHrAdmin || access?.isItAdmin);
+  const directory = canEditReviewer
+    ? (await fetchEmployeeFormOptions()).employeeDirectory
+    : [];
 
   return (
     <div className="flex flex-col gap-5">
@@ -109,11 +122,20 @@ export default async function AppraisalDetailPage({
             { label: "End", value: a.endDate },
             {
               label: "Reviewer",
-              value: a.reviewerName
-                ? a.reviewer
+              value: canEditReviewer ? (
+                <ReviewerEditor
+                  action={setReviewer}
+                  currentReviewer={a.reviewer}
+                  currentReviewerName={a.reviewerName}
+                  directory={directory}
+                />
+              ) : a.reviewerName ? (
+                a.reviewer
                   ? `${a.reviewerName} (${a.reviewer})`
                   : a.reviewerName
-                : a.reviewer,
+              ) : (
+                a.reviewer
+              ),
             },
             { label: "Status", value: a.status },
             {

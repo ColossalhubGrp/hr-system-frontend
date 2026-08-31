@@ -679,6 +679,60 @@ export async function createAppraisal(input: AppraisalInput): Promise<string> {
   return saved.name;
 }
 
+/** Update an Appraisal's `reviewer` field via frappe.client.set_value.
+ *  Works on drafts and submitted docs alike (HR admins can retarget the
+ *  reviewer post-submit if the org chart changed). */
+export async function setAppraisalReviewer(
+  id: string,
+  reviewerUserId: string | null,
+): Promise<void> {
+  await frappeCall<{ name: string }>({
+    method: "frappe.client.set_value",
+    args: {
+      doctype: "Appraisal",
+      name: id,
+      fieldname: { reviewer: reviewerUserId ?? "" },
+    },
+    verb: "POST",
+    as: "user",
+  });
+}
+
+/** Look up an employee's manager (reports_to) and return that manager's
+ *  User email — matches what Appraisal.reviewer stores. Returns null if
+ *  the employee has no manager or the manager has no user account.
+ *  Used to auto-populate reviewer on new appraisals. */
+export async function getEmployeeManagerUser(
+  employeeId: string,
+): Promise<string | null> {
+  try {
+    const rt = await frappeCall<{ reports_to?: string | null }>({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "Employee",
+        filters: JSON.stringify({ name: employeeId }),
+        fieldname: JSON.stringify(["reports_to"]),
+      },
+      as: "user",
+    });
+    const managerEmp = (rt?.reports_to ?? "").trim();
+    if (!managerEmp) return null;
+    const managerUser = await frappeCall<{ user_id?: string | null }>({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "Employee",
+        filters: JSON.stringify({ name: managerEmp }),
+        fieldname: JSON.stringify(["user_id"]),
+      },
+      as: "user",
+    });
+    const uid = (managerUser?.user_id ?? "").trim();
+    return uid || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function submitAppraisal(id: string): Promise<void> {
   const full = await frappeCall<Record<string, unknown>>({
     method: "frappe.client.get",

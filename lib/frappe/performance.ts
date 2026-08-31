@@ -861,14 +861,24 @@ export async function findAppraisalForEmployeeCycle(
 }
 
 export async function createFeedback(input: FeedbackInput): Promise<string> {
-  const doc = {
-    doctype: "Employee Performance Feedback",
-    ...compact(input),
-  };
-  const saved = await frappeCall<{ name: string }>({
-    method: "frappe.client.insert",
-    args: { doc },
+  // Routes through the HR-admin endpoint that (a) runs as Administrator
+  // internally (HR admins don't hold Employee Performance Feedback role
+  // perms directly), (b) auto-populates feedback_ratings from the
+  // Appraisal's rating_criteria so Frappe's "weightage must add up to
+  // 100" validation passes without HR having to pick criteria manually,
+  // and (c) resolves the Appraisal doc from (employee, cycle) if the
+  // caller only knows the cycle.
+  const saved = await frappeCall<{ ok: boolean; name: string }>({
+    method: "recruitment_app.api.approvals.admin_create_feedback",
     verb: "POST",
+    args: {
+      employee: input.employee,
+      reviewer: input.reviewer,
+      feedback: input.feedback,
+      ...(input.appraisal_cycle && { appraisal_cycle: input.appraisal_cycle }),
+      ...(input.appraisal && { appraisal: input.appraisal }),
+      ...(input.feedback_date && { feedback_date: input.feedback_date }),
+    },
     as: "user",
   });
   return saved.name;

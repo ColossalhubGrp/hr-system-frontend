@@ -84,21 +84,41 @@ function toFormState(err: unknown): FormState {
         /* fall through */
       }
     }
-    if (typeof detail?.message === "string" && !/^Call .+ failed:/.test(detail.message)) {
+    // Only pass through Frappe messages that read as user-facing copy.
+    // Internal patterns (module paths, "Call X failed", "Failed to get
+    // method", tracebacks, Python identifiers) are logged server-side
+    // and replaced with a friendly line — none of that vocabulary
+    // means anything to HR users.
+    if (typeof detail?.message === "string" && isUserFacing(detail.message)) {
       return { error: detail.message };
     }
-    // Log the raw Frappe error server-side so ops can investigate the 500
-    // without exposing "Call recruitment_app.api.… failed" to HR users.
     console.error("[expense-claims] server error:", err.message, detail);
     if (err.status === 500) {
       return {
         error: "Couldn't complete that action right now. Try again in a moment, or ask an admin to check the server logs.",
       };
     }
-    // Fall through to a generic user-facing line for other statuses.
     return { error: "Couldn't complete that action. Please try again." };
   }
   return { error: "Couldn't complete that action. Please try again." };
+}
+
+/** Whitelist Frappe error messages that are safe to show HR users.
+ *  Reject anything that looks like an internal error surface. */
+function isUserFacing(msg: string): boolean {
+  const trimmed = msg.trim();
+  if (!trimmed) return false;
+  const banned = [
+    /^Call .+ failed:/i,                       // Frappe's own "Call X failed:"
+    /^Failed to get method/i,                   // "Failed to get method for command …"
+    /has no attribute/,                         // AttributeError chains
+    /Traceback \(most recent call last\)/,      // Python stack
+    /recruitment_app\./,                        // module paths leaking
+    /human_resources\./,                        //
+    /^frappe\./,                                //
+    /Internal Server Error/i,
+  ];
+  return !banned.some((rx) => rx.test(trimmed));
 }
 
 function stripHtml(s: string): string {

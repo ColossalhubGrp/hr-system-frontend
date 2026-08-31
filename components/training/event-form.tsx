@@ -142,7 +142,7 @@ export function TrainingEventForm({
             invalid={Boolean(fe.start_time)}
           />
         </Field>
-        <Field label="Ends" htmlFor="end_time" error={fe.end_time}>
+        <Field label="Ends" htmlFor="end_time" required error={fe.end_time}>
           <TextInput
             id="end_time"
             name="end_time"
@@ -151,12 +151,18 @@ export function TrainingEventForm({
             invalid={Boolean(fe.end_time)}
           />
         </Field>
-        <Field label="Location" htmlFor="location">
+        <Field
+          label="Location"
+          htmlFor="location"
+          required
+          error={fe.location}
+        >
           <TextInput
             id="location"
             name="location"
             placeholder="e.g. Head Office Boardroom / Zoom"
             defaultValue={initial?.location ?? undefined}
+            invalid={Boolean(fe.location)}
           />
         </Field>
         {suppliers.length > 0 && (

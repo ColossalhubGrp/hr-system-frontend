@@ -45,11 +45,8 @@ const eventSchema = z
     type: z.string().trim().min(1, "Pick a type."),
     training_program: z.string().trim().optional(),
     start_time: dateTimeLocal,
-    end_time: z
-      .union([dateTimeLocal, z.literal("")])
-      .optional()
-      .transform((v) => (v ? v : undefined)),
-    location: z.string().trim().optional(),
+    end_time: dateTimeLocal,
+    location: z.string().trim().min(1, "Where is it happening?"),
     supplier: z.string().trim().optional(),
     introduction: z
       .string()

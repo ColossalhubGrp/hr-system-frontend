@@ -165,12 +165,16 @@ export function TrainingEventForm({
             invalid={Boolean(fe.location)}
           />
         </Field>
-        {suppliers.length > 0 && (
-          <Field
-            label="Supplier"
-            htmlFor="supplier"
-            hint="External training provider, if any."
-          >
+        <Field
+          label="Supplier"
+          htmlFor="supplier"
+          hint={
+            suppliers.length === 0
+              ? "No external training providers on file yet. Add one from Buying if needed."
+              : "External training provider, if any."
+          }
+        >
+          {suppliers.length > 0 ? (
             <SelectInput
               id="supplier"
               name="supplier"
@@ -178,10 +182,17 @@ export function TrainingEventForm({
               defaultValue={initial?.supplier ?? undefined}
               placeholder="— none —"
             />
-          </Field>
-        )}
+          ) : (
+            <TextInput
+              id="supplier"
+              name="supplier"
+              placeholder="Supplier name (must exist in the system)"
+              defaultValue={initial?.supplier ?? undefined}
+            />
+          )}
+        </Field>
         <Field
-          label="Introduction"
+          label="Description"
           htmlFor="introduction"
           required
           error={fe.introduction}

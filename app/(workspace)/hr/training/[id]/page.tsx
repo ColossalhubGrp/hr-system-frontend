@@ -108,8 +108,7 @@ export default async function TrainingEventPage({
             { label: "Start", value: event.startTime ? fmtDateTime(event.startTime) : null },
             { label: "End", value: event.endTime ? fmtDateTime(event.endTime) : null },
             { label: "Status", value: event.status },
-            { label: "Introduction", value: event.introduction, wide: true },
-            { label: "Description", value: event.description, wide: true },
+            { label: "Description", value: event.introduction, wide: true },
           ]}
         />
       </section>

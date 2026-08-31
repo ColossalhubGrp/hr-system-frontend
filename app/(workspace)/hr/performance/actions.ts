@@ -12,6 +12,7 @@ import {
   findAppraisalForEmployeeCycle,
   getEmployeeManagerUser,
   setAppraisalReviewer,
+  setFeedbackRatings,
   createGoal,
   createPip,
   submitAppraisal,
@@ -296,6 +297,47 @@ export async function createFeedbackAction(
     const id = await createFeedback(input);
     revalidatePath("/hr/performance?tab=feedback");
     redirect(`/hr/performance/feedback/${encodeURIComponent(id)}`);
+  } catch (err) {
+    return toFormState(err);
+  }
+}
+
+export type FeedbackRatingsSaveState = StdFormState & {
+  success?: boolean;
+  totalScore?: number | null;
+};
+
+/** HR sets per-criterion ratings on a Draft Feedback. Reads a variable-
+ *  length set of `rating_<criteria>` inputs from FormData (each 1-5)
+ *  plus optional `weightage_<criteria>` overrides. */
+export async function setFeedbackRatingsAction(
+  id: string,
+  _prev: FeedbackRatingsSaveState,
+  form: FormData,
+): Promise<FeedbackRatingsSaveState> {
+  const rows: Array<{
+    criteria: string;
+    weightage_percent?: number;
+    rating_1_to_5?: number;
+  }> = [];
+  for (const [k, v] of form.entries()) {
+    if (!k.startsWith("rating_") || typeof v !== "string") continue;
+    const criteria = k.slice("rating_".length);
+    const rating = Number(v);
+    if (!Number.isFinite(rating)) continue;
+    const wRaw = form.get(`weightage_${criteria}`);
+    const weightage = typeof wRaw === "string" ? Number(wRaw) : NaN;
+    rows.push({
+      criteria,
+      rating_1_to_5: rating,
+      ...(Number.isFinite(weightage) && { weightage_percent: weightage }),
+    });
+  }
+  if (rows.length === 0) return { error: "Nothing to save." };
+  try {
+    const res = await setFeedbackRatings(id, rows);
+    revalidatePath(`/hr/performance/feedback/${encodeURIComponent(id)}`);
+    return { success: true, totalScore: res.total_score };
   } catch (err) {
     return toFormState(err);
   }

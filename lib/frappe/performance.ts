@@ -760,6 +760,13 @@ export async function cancelAppraisal(id: string): Promise<void> {
 
 // Employee Performance Feedback -------------------------------------------
 
+export type FeedbackRatingRow = {
+  criteria: string;
+  weightagePercent: number;
+  /** Rating displayed 0-5 to the user (Frappe stores 0-1; mapper multiplies). */
+  rating: number;
+};
+
 export type FeedbackFull = {
   id: string;
   employee: string;
@@ -771,6 +778,7 @@ export type FeedbackFull = {
   appraisalCycle: string | null;
   feedback: string | null;
   docstatus: 0 | 1 | 2;
+  ratings: FeedbackRatingRow[];
 };
 
 export async function getFeedback(id: string): Promise<FeedbackFull | null> {
@@ -786,6 +794,11 @@ export async function getFeedback(id: string): Promise<FeedbackFull | null> {
       appraisal_cycle: string | null;
       feedback: string | null;
       docstatus: 0 | 1 | 2;
+      feedback_ratings?: Array<{
+        criteria?: string | null;
+        weightage_percent?: number | string | null;
+        rating?: number | string | null;
+      }> | null;
     };
     const doc = await frappeCall<Raw>({
       method: "frappe.client.get",
@@ -809,6 +822,12 @@ export async function getFeedback(id: string): Promise<FeedbackFull | null> {
       appraisalCycle: doc.appraisal_cycle,
       feedback: doc.feedback,
       docstatus: doc.docstatus,
+      ratings: (doc.feedback_ratings ?? []).map((r) => ({
+        criteria: r.criteria ?? "",
+        weightagePercent: Number(r.weightage_percent ?? 0),
+        // Frappe Rating stores 0.0-1.0; UI shows 1-5.
+        rating: Math.round(Number(r.rating ?? 0) * 5 * 10) / 10,
+      })),
     };
   } catch (err) {
     if (err instanceof FrappeRequestError && err.status === 404) return null;
@@ -882,6 +901,30 @@ export async function createFeedback(input: FeedbackInput): Promise<string> {
     as: "user",
   });
   return saved.name;
+}
+
+/** Save the per-criterion ratings on a Draft feedback. Rating comes in
+ *  0-5 (UI) — converts to Frappe's 0-1 storage range before sending. */
+export async function setFeedbackRatings(
+  id: string,
+  rows: Array<{ criteria: string; weightage_percent?: number; rating_1_to_5?: number }>,
+): Promise<{ total_score: number | null }> {
+  const ratings = rows.map((r) => ({
+    criteria: r.criteria,
+    weightage_percent: r.weightage_percent,
+    // Frappe stores 0-1; user picks 1-5. Clamp defensively.
+    rating:
+      r.rating_1_to_5 === undefined
+        ? undefined
+        : Math.max(0, Math.min(1, Number(r.rating_1_to_5) / 5)),
+  }));
+  const res = await frappeCall<{ ok: boolean; total_score: number | null }>({
+    method: "recruitment_app.api.approvals.admin_set_feedback_ratings",
+    verb: "POST",
+    args: { name: id, ratings: JSON.stringify(ratings) },
+    as: "user",
+  });
+  return { total_score: res.total_score };
 }
 
 export async function submitFeedback(id: string): Promise<void> {

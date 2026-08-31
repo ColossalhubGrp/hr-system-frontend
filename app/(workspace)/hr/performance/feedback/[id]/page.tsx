@@ -7,7 +7,8 @@ import { ActionPanel } from "@/components/common/action-bar";
 import { StatusPill } from "@/components/common/status-pill";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { getFeedback } from "@/lib/frappe/performance";
-import { submitFeedbackAction } from "../../actions";
+import { FeedbackRatingsEditor } from "@/components/performance/feedback-ratings-editor";
+import { setFeedbackRatingsAction, submitFeedbackAction } from "../../actions";
 
 export async function generateMetadata({
   params,
@@ -28,6 +29,7 @@ export default async function FeedbackDetailPage({
   if (!f) notFound();
 
   const submit = submitFeedbackAction.bind(null, id);
+  const saveRatings = setFeedbackRatingsAction.bind(null, id);
 
   return (
     <div className="flex flex-col gap-5">
@@ -56,13 +58,31 @@ export default async function FeedbackDetailPage({
       />
 
       {f.docstatus === 0 && (
-        <ActionPanel
-          title="Submit this feedback"
-          description="Once submitted it counts towards the employee's feedback average."
-          label="Submit feedback"
-          pendingLabel="Submitting…"
-          action={submit}
-        />
+        <>
+          <section className="card p-6">
+            <div className="mb-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-ash-500">
+                Score
+              </h2>
+              <p className="mt-1 text-xs text-ash-500">
+                Rate each criterion 1-5. Weightages must total 100 — the
+                total score is the weighted average.
+              </p>
+            </div>
+            <FeedbackRatingsEditor
+              action={saveRatings}
+              initialRatings={f.ratings}
+            />
+          </section>
+
+          <ActionPanel
+            title="Submit this feedback"
+            description="Once submitted it counts towards the employee's feedback average."
+            label="Submit feedback"
+            pendingLabel="Submitting…"
+            action={submit}
+          />
+        </>
       )}
 
       <section className="card p-6">

@@ -82,10 +82,21 @@ function toFormState(err: unknown): FormState {
         /* fall through */
       }
     }
-    if (typeof detail?.message === "string") return { error: detail.message };
-    return { error: err.message };
+    if (typeof detail?.message === "string" && !/^Call .+ failed:/.test(detail.message)) {
+      return { error: detail.message };
+    }
+    // Log the raw Frappe error server-side so ops can investigate the 500
+    // without exposing "Call recruitment_app.api.… failed" to HR users.
+    console.error("[expense-claims] server error:", err.message, detail);
+    if (err.status === 500) {
+      return {
+        error: "Couldn't complete that action right now. Try again in a moment, or ask an admin to check the server logs.",
+      };
+    }
+    // Fall through to a generic user-facing line for other statuses.
+    return { error: "Couldn't complete that action. Please try again." };
   }
-  return { error: "Something went wrong. Try again." };
+  return { error: "Couldn't complete that action. Please try again." };
 }
 
 function stripHtml(s: string): string {

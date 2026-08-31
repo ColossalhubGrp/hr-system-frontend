@@ -87,9 +87,14 @@ export function toFormState(err: unknown): StdFormState {
     }
 
     // Fall back to detail.message — but skip Frappe's generic HTTP
-    // titles ("Invalid Request" etc.) that hide the real cause.
+    // titles ("Invalid Request" etc.) that hide the real cause, and
+    // strip messages that leak internal shapes (module paths, role /
+    // doctype permission speak). Non-tech users shouldn't see
+    // "User X does not have doctype access via role permission for
+    // document Y" — either we should have routed through an admin
+    // endpoint, or the frontend needs to explain in plain language.
     const message = typeof detail?.message === "string" ? detail.message : "";
-    if (message && !GENERIC_MESSAGES.has(message)) {
+    if (message && !GENERIC_MESSAGES.has(message) && isPlainLanguage(message)) {
       return { error: message };
     }
 
@@ -123,6 +128,23 @@ export function toFormState(err: unknown): StdFormState {
 
 export function stripHtml(s: string): string {
   return s.replace(/<[^>]+>/g, "").trim();
+}
+
+/** Return true when a Frappe error string is safe to render to HR users
+ *  verbatim. Blocks internal shapes: module paths, permission speak,
+ *  Python identifiers. See user_facing_copy_no_jargon memory. */
+function isPlainLanguage(msg: string): boolean {
+  const banned = [
+    /does not have doctype access via role permission/i,
+    /^Call .+ failed:/i,
+    /^Failed to get method/i,
+    /has no attribute/i,
+    /Traceback \(most recent call last\)/i,
+    /recruitment_app\./,
+    /human_resources\./,
+    /^frappe\./,
+  ];
+  return !banned.some((rx) => rx.test(msg));
 }
 
 /**

@@ -679,21 +679,22 @@ export async function createAppraisal(input: AppraisalInput): Promise<string> {
   return saved.name;
 }
 
-/** Update an Appraisal's `reviewer` field via frappe.client.set_value.
- *  Works on drafts and submitted docs alike (HR admins can retarget the
- *  reviewer post-submit if the org chart changed). */
+/** Update an Appraisal's `reviewer` field. Goes through a whitelisted
+ *  HR-admin endpoint that runs as Administrator internally — HR admins
+ *  don't hold direct role permissions on Appraisal doctype, so
+ *  frappe.client.set_value from the frontend gets rejected. Works on
+ *  drafts and submitted docs alike. */
 export async function setAppraisalReviewer(
   id: string,
   reviewerUserId: string | null,
 ): Promise<void> {
-  await frappeCall<{ name: string }>({
-    method: "frappe.client.set_value",
-    args: {
-      doctype: "Appraisal",
-      name: id,
-      fieldname: { reviewer: reviewerUserId ?? "" },
-    },
+  await frappeCall<{ ok: boolean }>({
+    method: "recruitment_app.api.approvals.admin_set_appraisal_reviewer",
     verb: "POST",
+    args: {
+      name: id,
+      reviewer: reviewerUserId ?? "",
+    },
     as: "user",
   });
 }
@@ -734,15 +735,16 @@ export async function getEmployeeManagerUser(
 }
 
 export async function submitAppraisal(id: string): Promise<void> {
-  const full = await frappeCall<Record<string, unknown>>({
-    method: "frappe.client.get",
-    args: { doctype: "Appraisal", name: id },
-    as: "user",
-  });
-  await frappeCall<unknown>({
-    method: "frappe.client.submit",
-    args: { doc: full },
+  // Routes through the HR-admin endpoint that runs the submit as
+  // Administrator internally. HR admins don't hold Appraisal-doctype
+  // submit rights directly (that lives with HR Manager on the doctype
+  // permission table); the previous frappe.client.submit call rejected
+  // with "User X does not have doctype access via role permission for
+  // document Appraisal". Backend re-checks HR admin role at entry.
+  await frappeCall<{ ok: boolean }>({
+    method: "recruitment_app.api.approvals.admin_submit_appraisal",
     verb: "POST",
+    args: { name: id },
     as: "user",
   });
 }

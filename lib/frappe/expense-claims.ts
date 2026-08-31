@@ -29,11 +29,17 @@ export type ExpenseClaimList = {
   page: number;
   pageSize: number;
   counts: {
+    /** New claims awaiting approval. */
     draft: number;
-    submitted: number;
-    approved: number;
-    rejected: number;
+    /** Approved but not yet reimbursed (Frappe status "Unpaid" +
+     *  legacy "Approved"). Represents money the company owes. */
+    owed: number;
+    /** Approved and fully reimbursed. */
     paid: number;
+    /** Rejected at approval. */
+    rejected: number;
+    /** Sum of sanctioned amounts across owed + paid — total value
+     *  committed to employees (whether paid out yet or not). */
     sanctionedTotal: number;
   };
 };
@@ -103,7 +109,10 @@ export async function listExpenseClaims(opts: {
       as: "user",
     }).catch(() => 0),
     Promise.all(
-      ["Draft", "Submitted", "Approved", "Rejected", "Paid"].map((s) =>
+      // "Unpaid" is Frappe HR's status for approved-but-not-yet-paid.
+      // Legacy docs sometimes sit at "Approved" too, so we sum both
+      // into the "owed" tile.
+      ["Draft", "Unpaid", "Approved", "Rejected", "Paid"].map((s) =>
         frappeCall<number>({
           method: "frappe.client.get_count",
           args: {
@@ -126,7 +135,7 @@ export async function listExpenseClaims(opts: {
         fields: ["total_sanctioned_amount"],
         filters: JSON.stringify([
           ...(opts.employee ? [["employee", "=", opts.employee] as [string, string, string]] : []),
-          ["status", "in", ["Approved", "Paid"]],
+          ["status", "in", ["Approved", "Unpaid", "Paid"]],
         ]),
         limit_page_length: 1000,
       },
@@ -154,10 +163,9 @@ export async function listExpenseClaims(opts: {
     pageSize,
     counts: {
       draft: counts.Draft ?? 0,
-      submitted: counts.Submitted ?? 0,
-      approved: counts.Approved ?? 0,
-      rejected: counts.Rejected ?? 0,
+      owed: (counts.Unpaid ?? 0) + (counts.Approved ?? 0),
       paid: counts.Paid ?? 0,
+      rejected: counts.Rejected ?? 0,
       sanctionedTotal: sanctioned.reduce(
         (acc, r) => acc + Number(r.total_sanctioned_amount ?? 0),
         0,

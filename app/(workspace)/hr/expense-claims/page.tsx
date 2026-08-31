@@ -4,7 +4,7 @@ import {
   Receipt,
   Plus,
   FileText,
-  CheckCircle2,
+  Clock,
   Banknote,
   XCircle,
 } from "lucide-react";
@@ -57,20 +57,23 @@ export default async function ExpenseClaimsPage({
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <SummaryTile
-          label="Submitted"
-          value={result.counts.submitted}
+          label="Draft"
+          value={result.counts.draft}
+          hint="Awaiting approval"
           icon={FileText}
           tone="amber"
         />
         <SummaryTile
-          label="Approved"
-          value={result.counts.approved}
-          icon={CheckCircle2}
-          tone="rise"
+          label="Owed"
+          value={result.counts.owed}
+          hint="Approved, not yet paid"
+          icon={Clock}
+          tone="amber"
         />
         <SummaryTile
           label="Paid"
           value={result.counts.paid}
+          hint="Reimbursed"
           icon={Banknote}
           tone="rise"
         />
@@ -83,7 +86,7 @@ export default async function ExpenseClaimsPage({
         <SummaryTile
           label="Sanctioned"
           value={formatMoney(result.counts.sanctionedTotal)}
-          hint="Approved + paid"
+          hint="Owed + paid"
           tone="ink"
         />
       </div>

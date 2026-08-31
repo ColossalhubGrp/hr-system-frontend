@@ -827,7 +827,7 @@ export function EmployeeForm({
             required={mode === "create"}
             hint={
               mode === "create"
-                ? "Required — we auto-create a login account for the employee at this address on save, and Frappe emails a set-your-password link so they can access their self-service dashboard. Personal email works as a fallback if there's no company address yet."
+                ? "Required — we create a login for the employee at this address on save and email them a link to set their password. If there's no company email yet, personal email works too."
                 : undefined
             }
           >
@@ -1049,9 +1049,9 @@ export function EmployeeForm({
 
           <TabPane active={tab} id="experience">
             <p className="mb-4 max-w-2xl text-sm text-ash-600">
-              Roles held before joining. Internal moves (transfers,
-              promotions) are logged automatically and visible on the
-              read-only view.
+              Roles held before joining. Moves inside the company (transfers,
+              promotions) are recorded automatically — you'll see them on the
+              employee's profile.
             </p>
             <ChildTableEditor
               name="_child_external_work_history"
@@ -1094,9 +1094,8 @@ export function EmployeeForm({
 
           <TabPane active={tab} id="skills">
             <p className="mb-4 max-w-2xl text-sm text-ash-600">
-              Skills feed the Employee Skill Map (used by performance +
-              training). Type any skill name — if it's new, it's added to
-              the Skill catalogue on save.
+              Skills feed performance reviews and training suggestions. Type any
+              skill — new ones are added to the shared list automatically.
             </p>
             <ChildTableEditor
               name="_child_skills"

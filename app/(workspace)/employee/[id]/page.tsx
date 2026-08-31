@@ -314,7 +314,7 @@ function renderTab(
           </section>
           <section>
             <h3 className="mb-3 text-sm font-semibold text-ash-700">
-              Internal history <span className="font-normal text-ash-500">(auto-updated by transfers / promotions)</span>
+              Moves within the company <span className="font-normal text-ash-500">(added automatically after transfers and promotions)</span>
             </h3>
             {hasInternal ? (
               <div className="overflow-x-auto">
@@ -384,7 +384,7 @@ function renderTab(
           {skillMap && skillMap.trainings.length > 0 && (
             <section>
               <h3 className="mb-3 text-sm font-semibold text-ash-700">
-                Trainings <span className="font-normal text-ash-500">(from Skill Map)</span>
+                Trainings <span className="font-normal text-ash-500">(from the employee's skill profile)</span>
               </h3>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-hairline text-sm">

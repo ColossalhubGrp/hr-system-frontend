@@ -82,9 +82,7 @@ export function ExpenseDecisionBar({
       <div>
         <p className="text-sm font-medium text-ash-900">Decide on this claim</p>
         <p className="text-xs text-ash-500">
-          Approving submits the doc and posts the sanctioned amount. Fill in
-          any missing accounting fields below first — Frappe requires them
-          before submission.
+          Fill in any missing details below, then approve or reject.
         </p>
       </div>
 
@@ -104,8 +102,7 @@ export function ExpenseDecisionBar({
           className="flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900"
         >
           <AlertCircle className="h-3.5 w-3.5" />
-          Payable account is empty — pick one below (or set the company
-          default in Frappe Desk to auto-fill on future claims).
+          Pick a payable account below before you can approve.
         </p>
       )}
 
@@ -164,7 +161,7 @@ export function ExpenseDecisionBar({
               onChange={(e) => setCostCenter(e.target.value)}
               className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
             >
-              <option value="">— inherit from company default —</option>
+              <option value="">— use company default —</option>
               {costCenters.map((c) => (
                 <option key={c.value} value={c.value}>{c.label}</option>
               ))}

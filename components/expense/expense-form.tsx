@@ -164,9 +164,9 @@ export function ExpenseClaimForm({
       </FormSection>
 
       <FormSection
-        title="Accounting Details"
+        title="Accounting"
         description={
-          "Optional here — if left blank, ERPNext fills them from the company defaults. Frappe requires payable account before approval, so HR can complete these on the detail page too."
+          "Optional at this stage. HR can also fill these in later, before approving."
         }
       >
         <Field
@@ -175,7 +175,7 @@ export function ExpenseClaimForm({
           error={fe.payable_account}
           hint={
             company && payableAccounts.length === 0
-              ? `No liability accounts found for ${company}. Set them up in ERPNext or ask an admin.`
+              ? `No payable accounts are set up for ${company} yet. Ask an admin to add one.`
               : undefined
           }
         >
@@ -183,7 +183,7 @@ export function ExpenseClaimForm({
             id="payable_account"
             name="payable_account"
             options={payableAccounts.map((a) => ({ value: a.value, label: a.label }))}
-            placeholder={payableAccounts.length ? "Inherit from company default" : "—"}
+            placeholder={payableAccounts.length ? "Use company default" : "—"}
             invalid={Boolean(fe.payable_account)}
           />
         </Field>
@@ -196,7 +196,7 @@ export function ExpenseClaimForm({
             id="cost_center"
             name="cost_center"
             options={costCenters.map((c) => ({ value: c.value, label: c.label }))}
-            placeholder={costCenters.length ? "Inherit from company default" : "—"}
+            placeholder={costCenters.length ? "Use company default" : "—"}
             invalid={Boolean(fe.cost_center)}
           />
         </Field>

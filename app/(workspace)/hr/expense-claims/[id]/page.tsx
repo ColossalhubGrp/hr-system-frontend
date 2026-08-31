@@ -49,14 +49,16 @@ export default async function ExpenseClaimDetailPage({
   const saveAccounting = saveClaimAccountingAction.bind(null, id);
 
   // Load account / cost-center options for THIS claim's company so the
-  // decision bar can render them. Modes of Payment are global.
+  // decision bar can render them. Modes of Payment are global. Skip the
+  // fetch entirely once the doc is submitted (the decision bar isn't
+  // shown then).
   const [payableAccounts, costCenters, modesOfPayment] = decidable
     ? await Promise.all([
         listPayableAccounts(claim.company),
         listCostCenters(claim.company),
         listModesOfPayment(),
       ])
-    : ([[], [], []] as const);
+    : [[], [], [] as string[]];
   // Frappe HR's approver check validates the DOC's expense_approver
   // is a valid designated approver — not the current user. HR admins
   // can always act (DocPerm-based submit right); other users only

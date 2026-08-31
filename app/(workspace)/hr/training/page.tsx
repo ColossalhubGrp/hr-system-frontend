@@ -223,14 +223,17 @@ async function Programs({ page }: { page: number }) {
           {
             header: "Program",
             cell: (r) => (
-              <>
-                <p className="font-medium text-ash-900">
+              <Link
+                href={`/hr/training/programs/${encodeURIComponent(r.id)}` as Route}
+                className="flex flex-col gap-0.5 focus-ring rounded-xl"
+              >
+                <span className="font-medium text-ash-900">
                   {r.trainingProgramName}
-                </p>
+                </span>
                 {r.description && (
-                  <p className="text-xs text-ash-500">{r.description}</p>
+                  <span className="text-xs text-ash-500">{r.description}</span>
                 )}
-              </>
+              </Link>
             ),
           },
           {

@@ -205,7 +205,7 @@ export function GoalForm({
           wide
           hint={
             framework === "OKR"
-              ? "3–5 measurable key results, one per line. Score 0.0–1.0 each."
+              ? "3–5 measurable key results, one per line. Overall achievement is captured in Progress % above — not per line."
               : undefined
           }
         >

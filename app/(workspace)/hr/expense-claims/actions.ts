@@ -7,7 +7,9 @@ import {
   adminDecideExpenseClaim,
   createExpenseClaim,
   decideExpenseClaim,
+  recordExpenseClaimPayment,
   saveExpenseClaimAccounting,
+  setModeOfPaymentDefaultAccount,
   type ExpenseAccountingInput,
   type ExpenseClaimCreateInput,
 } from "@/lib/frappe/expense-claims";
@@ -240,6 +242,75 @@ export async function rejectClaimAction(
   form?: FormData,
 ): Promise<DecisionState> {
   return decideClaim(id, "Rejected", readAccountingFromForm(form));
+}
+
+export type RecordPaymentState = { error?: string; success?: boolean };
+
+/** Record a payment against an approved-but-unpaid Expense Claim. Creates
+ *  a submitted Payment Entry via the whitelisted backend endpoint, which
+ *  flips the claim's status Unpaid → Paid via Frappe's on_update hook. */
+export async function recordPaymentAction(
+  id: string,
+  _prev: RecordPaymentState,
+  form: FormData,
+): Promise<RecordPaymentState> {
+  const get = (k: string) => {
+    const v = form.get(k);
+    return typeof v === "string" && v.trim() ? v.trim() : "";
+  };
+  const paid_from = get("paid_from");
+  const amountRaw = get("amount");
+  const posting_date = get("posting_date");
+  const mode_of_payment = get("mode_of_payment") || undefined;
+  const reference_no = get("reference_no") || undefined;
+  const reference_date = get("reference_date") || undefined;
+
+  if (!paid_from) return { error: "Pick the account you're paying from." };
+  if (!posting_date) return { error: "Pick a payment date." };
+  const amount = Number(amountRaw);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { error: "Enter a payment amount greater than zero." };
+  }
+
+  try {
+    await recordExpenseClaimPayment({
+      claim: id,
+      paid_from,
+      amount,
+      posting_date,
+      mode_of_payment,
+      reference_no,
+      reference_date,
+    });
+  } catch (err) {
+    return toFormState(err) as RecordPaymentState;
+  }
+  revalidatePath("/hr/expense-claims");
+  revalidatePath(`/hr/expense-claims/${encodeURIComponent(id)}`);
+  return { success: true };
+}
+
+export type SetupModeState = { error?: string; success?: boolean };
+
+/** Configure a Mode of Payment's default account for the given company.
+ *  Used inline on the decision bar when the approve flow hits
+ *  "Please set default Cash or Bank account in Mode of Payment X". */
+export async function setupModeOfPaymentAction(
+  _prev: SetupModeState,
+  form: FormData,
+): Promise<SetupModeState> {
+  const mode = String(form.get("mode") ?? "").trim();
+  const company = String(form.get("company") ?? "").trim();
+  const account = String(form.get("account") ?? "").trim();
+  if (!mode || !company || !account) {
+    return { error: "Pick an account to save." };
+  }
+  try {
+    await setModeOfPaymentDefaultAccount({ mode, company, account });
+  } catch (err) {
+    return toFormState(err) as SetupModeState;
+  }
+  return { success: true };
 }
 
 /** HR-side "save accounting" without deciding. Used when a claim needs

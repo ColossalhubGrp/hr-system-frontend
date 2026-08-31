@@ -4,8 +4,15 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Check, Lock, Save, X } from "lucide-react";
 import { cn } from "@/lib/cn";
-import type { DecisionState } from "@/app/(workspace)/hr/expense-claims/actions";
+import type {
+  DecisionState,
+  SetupModeState,
+} from "@/app/(workspace)/hr/expense-claims/actions";
 import type { AccountOption } from "./expense-form";
+import {
+  extractMissingModeOfPayment,
+  SetupModeOfPaymentInline,
+} from "./setup-mode-of-payment-inline";
 
 type Action = (
   prev: DecisionState,
@@ -41,23 +48,34 @@ export type AccountingDefaults = {
  * server actions; each form mirrors the accounting values into hidden
  * inputs so whichever button HR clicks gets the current values.
  */
+type SetupAction = (
+  prev: SetupModeState,
+  form: FormData,
+) => Promise<SetupModeState>;
+
 export function ExpenseDecisionBar({
   approve,
   reject,
   saveAccounting,
+  setupModeOfPayment,
   lock,
   payableAccounts,
   costCenters,
   modesOfPayment,
+  cashOrBankAccounts,
+  company,
   defaults,
 }: {
   approve: Action;
   reject: Action;
   saveAccounting: Action;
+  setupModeOfPayment: SetupAction;
   lock?: LockContext;
   payableAccounts: AccountOption[];
   costCenters: AccountOption[];
   modesOfPayment: string[];
+  cashOrBankAccounts: AccountOption[];
+  company: string;
   defaults: AccountingDefaults;
 }) {
   const [approveState, approveDispatch] = useFormState(approve, EMPTY);
@@ -67,6 +85,7 @@ export function ExpenseDecisionBar({
   const error = rawError
     ? translatePermissionError(rawError, lock?.lockedToLabel ?? null)
     : null;
+  const missingModeAccount = rawError ? extractMissingModeOfPayment(rawError) : null;
   const locked = lock ? !lock.canDecide : false;
 
   const [payableAccount, setPayableAccount] = useState(defaults.payableAccount ?? "");
@@ -106,7 +125,7 @@ export function ExpenseDecisionBar({
         </p>
       )}
 
-      {error && (
+      {error && !missingModeAccount && (
         <p
           role="alert"
           className="flex items-center gap-2 rounded-xl border border-fall/30 bg-fall/[0.06] px-3 py-2 text-xs text-fall"
@@ -114,6 +133,15 @@ export function ExpenseDecisionBar({
           <AlertCircle className="h-3.5 w-3.5" />
           {error}
         </p>
+      )}
+
+      {missingModeAccount && company && (
+        <SetupModeOfPaymentInline
+          action={setupModeOfPayment}
+          mode={missingModeAccount}
+          company={company}
+          cashOrBankAccounts={cashOrBankAccounts}
+        />
       )}
 
       {/* Visible controls — controlled by parent state, mirrored into

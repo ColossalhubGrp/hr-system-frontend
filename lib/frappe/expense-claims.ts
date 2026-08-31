@@ -483,6 +483,83 @@ export async function listCostCenters(
   }
 }
 
+/** Bank + Cash accounts a Payment Entry's "Paid From" can draw from,
+ *  for the given company. Only leaf accounts (is_group=0) with
+ *  account_type in (Bank, Cash). */
+export async function listCashOrBankAccounts(
+  company: string | null,
+): Promise<Array<{ value: string; label: string }>> {
+  if (!company) return [];
+  try {
+    const rows = await frappeCall<Array<{ name: string; account_name: string }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Account",
+        fields: ["name", "account_name"],
+        filters: JSON.stringify([
+          ["company", "=", company],
+          ["account_type", "in", ["Bank", "Cash"]],
+          ["is_group", "=", 0],
+        ]),
+        order_by: "name asc",
+        limit_page_length: 100,
+      },
+      as: "user",
+    });
+    return rows.map((r) => ({ value: r.name, label: r.account_name || r.name }));
+  } catch {
+    return [];
+  }
+}
+
+export type RecordPaymentInput = {
+  claim: string;
+  paid_from: string;
+  amount: number;
+  posting_date: string;
+  mode_of_payment?: string;
+  reference_no?: string;
+  reference_date?: string;
+};
+
+/** Post a Payment Entry that settles an approved Expense Claim. Frappe
+ *  flips the claim status Unpaid → Paid on the server side. */
+export async function recordExpenseClaimPayment(
+  input: RecordPaymentInput,
+): Promise<{ payment_entry: string; claim_status: string; amount: number }> {
+  return frappeCall<{ payment_entry: string; claim_status: string; amount: number }>({
+    method: "recruitment_app.api.approvals.record_expense_claim_payment",
+    verb: "POST",
+    args: {
+      claim: input.claim,
+      paid_from: input.paid_from,
+      amount: input.amount,
+      posting_date: input.posting_date,
+      ...(input.mode_of_payment && { mode_of_payment: input.mode_of_payment }),
+      ...(input.reference_no && { reference_no: input.reference_no }),
+      ...(input.reference_date && { reference_date: input.reference_date }),
+    },
+    as: "user",
+  });
+}
+
+/** Configure the default Bank/Cash account for a Mode of Payment on a
+ *  given company. Fixes "Please set default Cash or Bank account in
+ *  Mode of Payment X" when HR ticks is_paid + a mode that has no
+ *  per-company default. */
+export async function setModeOfPaymentDefaultAccount(input: {
+  mode: string;
+  company: string;
+  account: string;
+}): Promise<void> {
+  await frappeCall<unknown>({
+    method: "recruitment_app.api.approvals.set_mode_of_payment_default_account",
+    verb: "POST",
+    args: input,
+    as: "user",
+  });
+}
+
 /** Modes of Payment (Cash / Bank / Cheque / …). Only surface enabled ones. */
 export async function listModesOfPayment(): Promise<string[]> {
   try {

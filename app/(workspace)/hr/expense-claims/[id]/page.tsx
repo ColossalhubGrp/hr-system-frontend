@@ -5,8 +5,10 @@ import { ChevronLeft, Receipt } from "lucide-react";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { StatusPill } from "@/components/common/status-pill";
 import { ExpenseDecisionBar } from "@/components/expense/decision-bar";
+import { RecordPaymentButton } from "@/components/expense/record-payment-modal";
 import {
   getExpenseClaim,
+  listCashOrBankAccounts,
   listCostCenters,
   listModesOfPayment,
   listPayableAccounts,
@@ -15,8 +17,10 @@ import { readSession } from "@/lib/frappe/session";
 import { getMyAccess } from "@/lib/frappe/roles";
 import {
   approveClaimAction,
+  recordPaymentAction,
   rejectClaimAction,
   saveClaimAccountingAction,
+  setupModeOfPaymentAction,
 } from "../actions";
 
 export async function generateMetadata({
@@ -47,18 +51,27 @@ export default async function ExpenseClaimDetailPage({
   const approve = approveClaimAction.bind(null, id);
   const reject = rejectClaimAction.bind(null, id);
   const saveAccounting = saveClaimAccountingAction.bind(null, id);
+  const recordPayment = recordPaymentAction.bind(null, id);
 
-  // Load account / cost-center options for THIS claim's company so the
-  // decision bar can render them. Modes of Payment are global. Skip the
-  // fetch entirely once the doc is submitted (the decision bar isn't
-  // shown then).
-  const [payableAccounts, costCenters, modesOfPayment] = decidable
-    ? await Promise.all([
-        listPayableAccounts(claim.company),
-        listCostCenters(claim.company),
-        listModesOfPayment(),
-      ])
-    : [[], [], [] as string[]];
+  // Approved but not yet paid (docstatus=1, status includes "Unpaid" or
+  // "Approved" pre-payment) → HR can log a payment. Frappe uses the
+  // status string to flag payment state; "Paid" means done.
+  const payable =
+    claim.docstatus === 1 && claim.status !== "Paid" && claim.status !== "Rejected";
+
+  // Load account / cost-center options for THIS claim's company. Payable
+  // accounts + cost centers + modes power the decision bar (pre-approve);
+  // cash-or-bank accounts + modes power the Record Payment modal
+  // (post-approve). Both surfaces share the modes-of-payment fetch.
+  const [payableAccounts, costCenters, modesOfPayment, cashOrBankAccounts] =
+    decidable || payable
+      ? await Promise.all([
+          listPayableAccounts(claim.company),
+          listCostCenters(claim.company),
+          listModesOfPayment(),
+          listCashOrBankAccounts(claim.company),
+        ])
+      : [[], [], [] as string[], []];
   // Frappe HR's approver check validates the DOC's expense_approver
   // is a valid designated approver — not the current user. HR admins
   // can always act (DocPerm-based submit right); other users only
@@ -111,10 +124,13 @@ export default async function ExpenseClaimDetailPage({
           approve={approve}
           reject={reject}
           saveAccounting={saveAccounting}
+          setupModeOfPayment={setupModeOfPaymentAction}
           lock={{ canDecide, lockedToLabel }}
           payableAccounts={payableAccounts}
           costCenters={costCenters}
           modesOfPayment={modesOfPayment}
+          cashOrBankAccounts={cashOrBankAccounts}
+          company={claim.company ?? ""}
           defaults={{
             payableAccount: claim.payableAccount,
             costCenter: claim.costCenter,
@@ -123,6 +139,30 @@ export default async function ExpenseClaimDetailPage({
             remark: claim.remark,
           }}
         />
+      )}
+
+      {payable && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-card border border-hairline bg-surface p-4 shadow-card">
+          <div>
+            <p className="text-sm font-medium text-ash-900">
+              Ready to pay
+            </p>
+            <p className="text-xs text-ash-500">
+              Log the reimbursement once you've paid {claim.employeeName ?? claim.employee}
+              . The claim will move to Paid.
+            </p>
+          </div>
+          <RecordPaymentButton
+            action={recordPayment}
+            claimId={claim.id}
+            employeeName={claim.employeeName ?? claim.employee}
+            sanctionedAmount={claim.totalSanctionedAmount}
+            payableAccountLabel={claim.payableAccount}
+            paidFromOptions={cashOrBankAccounts}
+            modesOfPayment={modesOfPayment}
+            today={new Date().toISOString().slice(0, 10)}
+          />
+        </div>
       )}
 
       <section className="card p-6">

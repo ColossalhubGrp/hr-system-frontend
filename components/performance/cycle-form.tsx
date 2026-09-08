@@ -24,6 +24,7 @@ export function CycleForm({
   companies,
   goals,
   defaultFramework = "KRA & Goals",
+  templates,
   cancelHref,
 }: {
   action: Action;
@@ -32,6 +33,10 @@ export function CycleForm({
   goals: PickableGoal[];
   /** Org-wide default from HR Settings — pre-selected, HR can override. */
   defaultFramework?: (typeof FRAMEWORKS)[number];
+  /** Appraisal Template names — feedback + appraisal criteria come from
+   *  the picked template. Empty array → no picker (HR should create a
+   *  template in Settings first). */
+  templates: string[];
   cancelHref: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -110,6 +115,23 @@ export function CycleForm({
             name="kra_evaluation_method"
             options={["Manual Rating", "Automated Based on Goal Progress"]}
             defaultValue="Manual Rating"
+          />
+        </Field>
+        <Field
+          label="Appraisal template"
+          htmlFor="appraisal_template"
+          hint={
+            templates.length === 0
+              ? "No templates defined yet — create one under Settings → Appraisal templates so appraisals + feedback inherit their rating criteria."
+              : "Rating criteria + weightages new appraisals + feedback under this cycle will inherit. Leave blank to pick per-feedback."
+          }
+        >
+          <SelectInput
+            id="appraisal_template"
+            name="appraisal_template"
+            options={templates}
+            placeholder={templates.length === 0 ? "None defined" : "— none —"}
+            disabled={templates.length === 0}
           />
         </Field>
       </FormSection>

@@ -98,7 +98,7 @@ export async function getAppraisalTemplate(
       description: string | null;
       rating_criteria?: Array<{
         criteria: string;
-        per_weightage: number | string | null;
+        weightage_percent: number | string | null;
       }> | null;
     };
     const doc = await frappeCall<Raw>({
@@ -111,7 +111,7 @@ export async function getAppraisalTemplate(
       description: doc.description,
       ratingCriteria: (doc.rating_criteria ?? []).map((r) => ({
         criteria: r.criteria,
-        perWeightage: Number(r.per_weightage ?? 0),
+        perWeightage: Number(r.weightage_percent ?? 0),
       })),
     };
   } catch (err) {

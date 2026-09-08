@@ -5,6 +5,7 @@ import { CycleForm } from "@/components/performance/cycle-form";
 import { listCompanies } from "@/lib/frappe/lookups";
 import { listSelectableGoals } from "@/lib/frappe/performance";
 import { getDefaultPerformanceFramework } from "@/lib/frappe/hr-settings";
+import { listAppraisalTemplates } from "@/lib/frappe/setup-appraisal-templates";
 import { createCycleAction } from "../../actions";
 
 export const metadata = { title: "New appraisal cycle · Colossal HR" };
@@ -14,10 +15,11 @@ export default async function NewCyclePage() {
   // the pool of standalone goals to surface in the new "Select goals" step,
   // and the org-wide default performance framework (set via /settings/performance)
   // which the cycle form pre-selects.
-  const [companies, goals, defaultFramework] = await Promise.all([
+  const [companies, goals, defaultFramework, templates] = await Promise.all([
     listCompanies(),
     listSelectableGoals({ includeAttached: false, limit: 300 }),
     getDefaultPerformanceFramework(),
+    listAppraisalTemplates(),
   ]);
 
   return (
@@ -46,6 +48,7 @@ export default async function NewCyclePage() {
         action={createCycleAction}
         companies={companies}
         defaultFramework={defaultFramework}
+        templates={templates.map((t) => t.name)}
         goals={goals.map((g) => ({
           id: g.id,
           goalName: g.goalName,

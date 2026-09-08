@@ -1,14 +1,26 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Plus, RefreshCcw, Target, Settings2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ClipboardList,
+  Plus,
+  RefreshCcw,
+  Target,
+  Settings2,
+} from "lucide-react";
 import {
   getAppraisalCycle,
   listSelectableGoals,
 } from "@/lib/frappe/performance";
+import { listAppraisalTemplates } from "@/lib/frappe/setup-appraisal-templates";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { ManageCycleGoalsForm } from "@/components/performance/manage-cycle-goals-form";
-import { setCycleSelectedGoalsAction } from "../../actions";
+import { CycleTemplateEditor } from "@/components/performance/cycle-template-editor";
+import {
+  setCycleSelectedGoalsAction,
+  setCycleTemplateAction,
+} from "../../actions";
 
 export const metadata = { title: "Appraisal cycle · Colossal HR" };
 
@@ -18,9 +30,10 @@ export default async function CycleDetailPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const [cycle, access] = await Promise.all([
+  const [cycle, access, templates] = await Promise.all([
     getAppraisalCycle(id),
     getMyAccess(),
+    listAppraisalTemplates(),
   ]);
   if (!cycle) notFound();
 
@@ -51,6 +64,7 @@ export default async function CycleDetailPage({
 
   const currentlySelected = cycle.selectedGoals.map((g) => g.goal);
   const saveAction = setCycleSelectedGoalsAction.bind(null, cycle.id);
+  const saveTemplateAction = setCycleTemplateAction.bind(null, cycle.id);
 
   return (
     <div className="flex flex-col gap-5">
@@ -93,6 +107,33 @@ export default async function CycleDetailPage({
           </div>
         )}
       </header>
+
+      {access.isHrAdmin && (
+        <section className="card flex flex-col gap-3 p-5">
+          <div className="flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ash-500">
+              <ClipboardList className="h-3.5 w-3.5" />
+              Appraisal template
+            </h2>
+            <Link
+              href={"/settings/appraisal-templates" as Route}
+              className="text-xs text-ash-500 underline underline-offset-2 hover:text-ink-700"
+            >
+              Manage templates
+            </Link>
+          </div>
+          <p className="text-sm text-ash-600">
+            Every appraisal opened under this cycle inherits its rating
+            criteria and weightages from the chosen template. Change it here
+            and new appraisals pick up the update immediately.
+          </p>
+          <CycleTemplateEditor
+            action={saveTemplateAction}
+            current={cycle.appraisalTemplate}
+            templates={templates.map((t) => t.name)}
+          />
+        </section>
+      )}
 
       <section className="card flex flex-col gap-3 p-5">
         <div className="flex items-center justify-between">

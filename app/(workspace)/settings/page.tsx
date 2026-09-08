@@ -13,6 +13,7 @@ import {
   MapPin,
   MessageSquareWarning,
   ChevronRight,
+  RefreshCcw,
   Star,
   ClipboardList,
   Wallet,
@@ -114,6 +115,13 @@ const HR_CARDS: SettingCardSpec[] = [
     icon: <ClipboardList className="h-4 w-4" />,
     title: "Appraisal templates",
     desc: "Rating criteria + weightages a cycle uses to open appraisals. Set once — every new appraisal and its feedback forms inherit them.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/hr/performance",
+    icon: <RefreshCcw className="h-4 w-4" />,
+    title: "Appraisal cycles",
+    desc: "Create and manage cycles (dates, framework, goals, template). Opens the Performance workspace where HR builds cycles end-to-end.",
     show: (a) => a.isHrAdmin,
   },
 ];

@@ -423,6 +423,10 @@ const cycleSchema = z
      * below.
      */
     selected_goals: z.string().trim().optional(),
+    // Optional Appraisal Template. When picked, every new appraisal
+    // spawned under the cycle inherits the template's rating criteria
+    // (and so do feedback forms) — no per-feedback fiddling required.
+    appraisal_template: z.string().trim().optional(),
   })
   .refine((d) => d.end_date >= d.start_date, {
     message: "End must be on or after start.",
@@ -448,6 +452,7 @@ export async function createCycleAction(
     company: parsed.data.company,
     kra_evaluation_method: parsed.data.kra_evaluation_method,
     evaluation_framework: parsed.data.evaluation_framework,
+    appraisal_template: parsed.data.appraisal_template,
     selected_goals: goalIds.map((goal) => ({ goal })),
   };
   let id: string;
@@ -491,6 +496,34 @@ export async function setCycleSelectedGoalsAction(
     revalidatePath(`/hr/performance/cycles/${encodeURIComponent(cycleId)}`);
     revalidatePath("/hr/performance");
     return {};
+  } catch (err) {
+    return toFormState(err);
+  }
+}
+
+export type CycleTemplateSaveState = StdFormState & { success?: boolean };
+
+/**
+ * HR-only: set (or clear) the Appraisal Template on an existing cycle.
+ * New appraisals under the cycle inherit the template's criteria + weightages.
+ * Pass an empty string in the form field to clear.
+ */
+export async function setCycleTemplateAction(
+  cycleId: string,
+  _prev: CycleTemplateSaveState,
+  form: FormData,
+): Promise<CycleTemplateSaveState> {
+  const template = String(form.get("appraisal_template") ?? "").trim();
+  const access = await getMyAccess();
+  if (!access.isHrAdmin) {
+    return { error: "You need HR Admin to change the appraisal template." };
+  }
+  try {
+    const { setCycleTemplate } = await import("@/lib/frappe/performance");
+    await setCycleTemplate(cycleId, template || null);
+    revalidatePath(`/hr/performance/cycles/${encodeURIComponent(cycleId)}`);
+    revalidatePath("/hr/performance");
+    return { success: true };
   } catch (err) {
     return toFormState(err);
   }

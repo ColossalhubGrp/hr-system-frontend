@@ -1117,6 +1117,9 @@ export type CycleInput = {
   company?: string;
   kra_evaluation_method?: "Manual Rating" | "Automated Based on Goal Progress";
   evaluation_framework?: "KRA & Goals" | "OKR" | "Balanced Scorecard";
+  /** Optional Appraisal Template — sets the criteria new appraisals under
+   *  this cycle inherit. */
+  appraisal_template?: string;
   /** Goals chosen into the cycle. Rendered as the `selected_goals` child
    *  table on the Appraisal Cycle doc. */
   selected_goals?: SelectedGoalRow[];
@@ -1159,6 +1162,7 @@ export type CycleFull = {
   status: string | null;
   company: string | null;
   evaluationFramework: string | null;
+  appraisalTemplate: string | null;
   selectedGoals: Array<{
     goal: string;
     goalName: string | null;
@@ -1177,6 +1181,7 @@ export async function getAppraisalCycle(id: string): Promise<CycleFull | null> {
       status: string | null;
       company: string | null;
       evaluation_framework: string | null;
+      appraisal_template: string | null;
       selected_goals?: Array<{
         goal: string;
         goal_name?: string | null;
@@ -1197,6 +1202,7 @@ export async function getAppraisalCycle(id: string): Promise<CycleFull | null> {
       status: doc.status,
       company: doc.company,
       evaluationFramework: doc.evaluation_framework,
+      appraisalTemplate: doc.appraisal_template ?? null,
       selectedGoals: (doc.selected_goals ?? []).map((r) => ({
         goal: r.goal,
         goalName: r.goal_name ?? null,
@@ -1250,6 +1256,25 @@ export async function setCycleSelectedGoals(
       args: { doc },
       as: "user",
     });
+  });
+}
+
+/** Change (or clear) the Appraisal Template on an existing cycle. Routes
+ *  through a whitelisted HR-admin endpoint so we don't have to rely on HR
+ *  holding direct write permission on Appraisal Cycle. Passing an empty
+ *  string clears the field. */
+export async function setCycleTemplate(
+  cycleId: string,
+  templateName: string | null,
+): Promise<void> {
+  await frappeCall<{ ok: boolean }>({
+    method: "recruitment_app.api.approvals.admin_set_appraisal_cycle_template",
+    verb: "POST",
+    args: {
+      name: cycleId,
+      appraisal_template: templateName ?? "",
+    },
+    as: "user",
   });
 }
 

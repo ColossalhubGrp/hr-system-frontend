@@ -34,17 +34,18 @@ export async function createFeedbackCriterionAction(
 }
 
 export async function deleteFeedbackCriterionAction(
-  criteria: string,
   _prev: StdFormState,
-  // useFormState always calls actions with (prev, form). Required (not
-  // optional) so React's dispatch inference includes the form arg,
-  // otherwise the client-side <form action={dispatch}> callsite is a
-  // type error ("expected 0 args, got 1").
-  _form: FormData,
+  form: FormData,
 ): Promise<StdFormState> {
   const blocked = await requireHrAdmin();
   if (blocked) return blocked;
-  if (!criteria.trim()) return { error: "Missing criterion name." };
+  // Criterion name arrives as a hidden input in the per-row delete
+  // form. Can't bind it via .bind on the server side — Next.js refuses
+  // to serialize partially-applied functions across the server → client
+  // boundary. Reading from form keeps this a plain server action the
+  // client can call for any row.
+  const criteria = String(form.get("criteria") ?? "").trim();
+  if (!criteria) return { error: "Missing criterion name." };
   try {
     await deleteFeedbackCriterion(criteria);
   } catch (err) {

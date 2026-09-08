@@ -51,7 +51,7 @@ export default async function FeedbackCriteriaPage() {
           usage: usage[r.name] ?? 0,
         }))}
         createAction={createFeedbackCriterionAction}
-        deleteAction={(name) => deleteFeedbackCriterionAction.bind(null, name)}
+        deleteAction={deleteFeedbackCriterionAction}
       />
     </div>
   );

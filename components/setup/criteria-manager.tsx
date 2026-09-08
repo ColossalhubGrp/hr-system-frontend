@@ -25,7 +25,9 @@ export function CriteriaManager({
 }: {
   initialRows: CriterionRow[];
   createAction: CreateAction;
-  deleteAction: (name: string) => DeleteAction;
+  /** Server action that reads the criterion name from a hidden
+   *  `criteria` FormData field. Same action used for every row. */
+  deleteAction: DeleteAction;
 }) {
   const [createState, createDispatch] = useFormState(createAction, EMPTY);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -110,7 +112,7 @@ export function CriteriaManager({
                   <td className="px-4 py-3 text-right">
                     <DeleteRow
                       name={r.name}
-                      action={deleteAction(r.name)}
+                      action={deleteAction}
                       disabled={r.usage > 0}
                       isDeletingHere={deletingName === r.name}
                       onDeleting={() => setDeletingName(r.name)}
@@ -183,6 +185,9 @@ function DeleteRow({
       }}
       className="inline-flex"
     >
+      {/* Server action reads `criteria` from FormData — one server action
+          shared across every row, no per-row bind needed. */}
+      <input type="hidden" name="criteria" value={name} />
       <button
         type="submit"
         disabled={disabled}

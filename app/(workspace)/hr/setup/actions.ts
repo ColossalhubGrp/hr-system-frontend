@@ -36,9 +36,11 @@ export async function createFeedbackCriterionAction(
 export async function deleteFeedbackCriterionAction(
   criteria: string,
   _prev: StdFormState,
-  // useFormState always calls actions with (prev, form) — unused here
-  // but the signature has to match, else TS + runtime disagree.
-  _form?: FormData,
+  // useFormState always calls actions with (prev, form). Required (not
+  // optional) so React's dispatch inference includes the form arg,
+  // otherwise the client-side <form action={dispatch}> callsite is a
+  // type error ("expected 0 args, got 1").
+  _form: FormData,
 ): Promise<StdFormState> {
   const blocked = await requireHrAdmin();
   if (blocked) return blocked;

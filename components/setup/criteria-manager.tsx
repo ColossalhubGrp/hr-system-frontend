@@ -12,7 +12,7 @@ type CreateAction = (
 ) => Promise<StdFormState>;
 type DeleteAction = (
   prev: StdFormState,
-  form?: FormData,
+  form: FormData,
 ) => Promise<StdFormState>;
 const EMPTY: StdFormState = {};
 

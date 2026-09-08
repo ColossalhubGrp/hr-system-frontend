@@ -26,9 +26,15 @@ const EMPTY: FeedbackRatingsSaveState = {};
 export function FeedbackRatingsEditor({
   action,
   initialRatings,
+  criteriaPool,
 }: {
   action: Action;
   initialRatings: FeedbackRatingRow[];
+  /** Names of Employee Feedback Criteria in the reusable pool (from
+   *  Workspace Settings → Feedback criteria). Used as datalist
+   *  suggestions on the "New criterion" input. HR can also type a new
+   *  name — the backend auto-creates the criterion on save. */
+  criteriaPool: string[];
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const [rows, setRows] = useState(
@@ -192,11 +198,25 @@ export function FeedbackRatingsEditor({
           <input
             id="new-criterion"
             type="text"
+            list="criteria-pool"
             value={newCriterion}
             onChange={(e) => setNewCriterion(e.target.value)}
-            placeholder="e.g. Communication, Ownership, Technical delivery"
+            placeholder={
+              criteriaPool.length > 0
+                ? "Pick from Workspace Settings or type a new one"
+                : "e.g. Communication, Ownership, Technical delivery"
+            }
             className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
           />
+          <datalist id="criteria-pool">
+            {criteriaPool
+              // Hide criteria the user already added to this feedback,
+              // so the picker only shows what's actually addable.
+              .filter((n) => !rows.some((r) => r.criteria === n))
+              .map((n) => (
+                <option key={n} value={n} />
+              ))}
+          </datalist>
         </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs font-medium text-ash-600" htmlFor="new-weightage">

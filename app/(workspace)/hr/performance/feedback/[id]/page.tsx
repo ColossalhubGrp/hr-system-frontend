@@ -7,6 +7,7 @@ import { ActionPanel } from "@/components/common/action-bar";
 import { StatusPill } from "@/components/common/status-pill";
 import { FieldGrid } from "@/components/employee/field-grid";
 import { getFeedback } from "@/lib/frappe/performance";
+import { listFeedbackCriteria } from "@/lib/frappe/setup-criteria";
 import { FeedbackRatingsEditor } from "@/components/performance/feedback-ratings-editor";
 import { setFeedbackRatingsAction, submitFeedbackAction } from "../../actions";
 
@@ -30,6 +31,11 @@ export default async function FeedbackDetailPage({
 
   const submit = submitFeedbackAction.bind(null, id);
   const saveRatings = setFeedbackRatingsAction.bind(null, id);
+
+  // Pull the reusable Feedback Criteria pool only when we're rendering
+  // the editor (docstatus=0). Powers the datalist on the "New criterion"
+  // input so HR picks from what's already defined instead of retyping.
+  const criteriaPool = f.docstatus === 0 ? await listFeedbackCriteria() : [];
 
   return (
     <div className="flex flex-col gap-5">
@@ -72,6 +78,7 @@ export default async function FeedbackDetailPage({
             <FeedbackRatingsEditor
               action={saveRatings}
               initialRatings={f.ratings}
+              criteriaPool={criteriaPool.map((c) => c.name)}
             />
           </section>
 

@@ -25,9 +25,7 @@ export function CriteriaManager({
 }: {
   initialRows: CriterionRow[];
   createAction: CreateAction;
-  deleteAction: (
-    name: string,
-  ) => (prev: StdFormState) => Promise<StdFormState>;
+  deleteAction: (name: string) => DeleteAction;
 }) {
   const [createState, createDispatch] = useFormState(createAction, EMPTY);
   const inputRef = useRef<HTMLInputElement>(null);

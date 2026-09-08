@@ -13,6 +13,11 @@ import {
   MapPin,
   MessageSquareWarning,
   ChevronRight,
+  Star,
+  ClipboardList,
+  Wallet,
+  Receipt,
+  Banknote,
 } from "lucide-react";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { Card, CardContent } from "@/components/ui/card";
@@ -95,6 +100,13 @@ const HR_CARDS: SettingCardSpec[] = [
     icon: <Clock className="h-4 w-4" />,
     title: "Overtime rules",
     desc: "Define and assign overtime thresholds, calculation methods and effective dates — cascading from company → department → employee.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/feedback-criteria",
+    icon: <Star className="h-4 w-4" />,
+    title: "Feedback criteria",
+    desc: "Reusable criteria HR picks when scoring appraisal feedback (Communication, Ownership, Technical delivery…). Set them here, feedback forms use them everywhere.",
     show: (a) => a.isHrAdmin,
   },
 ];

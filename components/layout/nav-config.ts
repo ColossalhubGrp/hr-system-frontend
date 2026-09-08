@@ -117,11 +117,6 @@ export const NAV: NavItem[] = [
       { label: "Training", href: "/hr/training", requires: "HR_ANY" },
       { label: "Performance", href: "/hr/performance", requires: "HR_ANY" },
       { label: "Calibration (9-box)", href: "/hr/performance/calibration", requires: "HR_ANY" },
-      // HR-admin-only entry for reusable configuration (feedback
-      // criteria, appraisal templates, modes of payment defaults,
-      // expense claim types, etc.). Removes the need to jump into
-      // Frappe Desk for one-off setup tasks.
-      { label: "Setup", href: "/hr/setup", requires: "HR_ADMIN" },
     ],
   },
 

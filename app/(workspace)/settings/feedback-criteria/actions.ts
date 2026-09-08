@@ -29,7 +29,7 @@ export async function createFeedbackCriterionAction(
   } catch (err) {
     return toFormState(err);
   }
-  revalidatePath("/hr/setup/feedback-criteria");
+  revalidatePath("/settings/feedback-criteria");
   return {};
 }
 
@@ -50,6 +50,6 @@ export async function deleteFeedbackCriterionAction(
   } catch (err) {
     return toFormState(err);
   }
-  revalidatePath("/hr/setup/feedback-criteria");
+  revalidatePath("/settings/feedback-criteria");
   return {};
 }

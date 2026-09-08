@@ -12,16 +12,16 @@ import { CriteriaManager } from "@/components/setup/criteria-manager";
 import {
   createFeedbackCriterionAction,
   deleteFeedbackCriterionAction,
-} from "../actions";
+} from "./actions";
 
-export const metadata = { title: "Feedback criteria · HR Setup · Colossal HR" };
+export const metadata = { title: "Feedback criteria · Settings · Colossal HR" };
 
 export default async function FeedbackCriteriaPage() {
   const access = await getMyAccess();
   if (!(access?.isHrAdmin || access?.isItAdmin)) {
     redirect(
       "/forbidden?need=HR_ADMIN&from=" +
-        encodeURIComponent("/hr/setup/feedback-criteria"),
+        encodeURIComponent("/settings/feedback-criteria"),
     );
   }
 
@@ -31,18 +31,18 @@ export default async function FeedbackCriteriaPage() {
   return (
     <div className="flex flex-col gap-5">
       <Link
-        href={"/hr/setup" as Route}
+        href={"/settings" as Route}
         className="inline-flex w-fit items-center gap-1 rounded-chip px-2 py-1 text-xs font-medium text-ash-500 transition hover:bg-canvas focus-ring"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
-        Back to Setup
+        Back to Workspace settings
       </Link>
 
       <PageHeader
         icon={Star}
-        crumb="HR · Setup · Feedback criteria"
+        crumb="Settings · HR policy · Feedback criteria"
         title="Feedback criteria"
-        subtitle="The reusable pool of criteria HR picks when scoring feedback. Delete only ones not in use."
+        subtitle="The reusable pool of criteria HR picks when scoring appraisal feedback. Delete only ones not in use."
       />
 
       <CriteriaManager

@@ -34,7 +34,6 @@ export async function listAppraisalTemplates(): Promise<TemplateSummary[]> {
     type Row = {
       name: string;
       description: string | null;
-      rating_criteria?: Array<{ criteria: string | null }> | null;
     };
     const templates = await frappeCall<Row[]>({
       method: "frappe.client.get_list",
@@ -47,41 +46,28 @@ export async function listAppraisalTemplates(): Promise<TemplateSummary[]> {
       as: "user",
     });
 
-    // Frappe's list API doesn't include child tables — pull criteria
-    // counts via a separate query against Employee Feedback Rating on
-    // the parent. Same pattern for KRA counts and cycle usage counts.
     const names = templates.map((t) => t.name);
-    const [criteriaRows, kraRows, cycleRows] = await Promise.all([
-      names.length
-        ? frappeCall<Array<{ parent: string }>>({
-            method: "frappe.client.get_list",
-            args: {
-              doctype: "Employee Feedback Rating",
-              fields: ["parent"],
-              filters: JSON.stringify([
-                ["parenttype", "=", "Appraisal Template"],
-                ["parent", "in", names],
-              ]),
-              limit_page_length: 0,
-            },
+
+    // Child-table counts have to come off the parent doc — a direct
+    // get_list on the child DocType (Employee Feedback Rating / Appraisal
+    // Template Goal) needs a role perm HR admins don't hold, so it silently
+    // returns []. Fanning out `frappe.client.get` per parent uses the
+    // parent's read perm (which HR admin does have) and returns child
+    // tables inline.
+    type ChildRead = {
+      rating_criteria?: unknown[] | null;
+      goals?: unknown[] | null;
+    };
+    const [fulls, cycleRows] = await Promise.all([
+      Promise.all(
+        names.map((name) =>
+          frappeCall<ChildRead>({
+            method: "frappe.client.get",
+            args: { doctype: "Appraisal Template", name },
             as: "user",
-          }).catch(() => [])
-        : [],
-      names.length
-        ? frappeCall<Array<{ parent: string }>>({
-            method: "frappe.client.get_list",
-            args: {
-              doctype: "Appraisal Template Goal",
-              fields: ["parent"],
-              filters: JSON.stringify([
-                ["parenttype", "=", "Appraisal Template"],
-                ["parent", "in", names],
-              ]),
-              limit_page_length: 0,
-            },
-            as: "user",
-          }).catch(() => [])
-        : [],
+          }).catch(() => ({}) as ChildRead),
+        ),
+      ),
       names.length
         ? frappeCall<Array<{ appraisal_template: string }>>({
             method: "frappe.client.get_list",
@@ -97,9 +83,14 @@ export async function listAppraisalTemplates(): Promise<TemplateSummary[]> {
     ]);
 
     const critCount: Record<string, number> = {};
-    for (const r of criteriaRows) critCount[r.parent] = (critCount[r.parent] ?? 0) + 1;
     const kraCount: Record<string, number> = {};
-    for (const r of kraRows) kraCount[r.parent] = (kraCount[r.parent] ?? 0) + 1;
+    fulls.forEach((doc, i) => {
+      const name = names[i];
+      critCount[name] = Array.isArray(doc.rating_criteria)
+        ? doc.rating_criteria.length
+        : 0;
+      kraCount[name] = Array.isArray(doc.goals) ? doc.goals.length : 0;
+    });
     const cycleCount: Record<string, number> = {};
     for (const r of cycleRows)
       cycleCount[r.appraisal_template] = (cycleCount[r.appraisal_template] ?? 0) + 1;

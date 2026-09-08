@@ -36,6 +36,9 @@ export async function createFeedbackCriterionAction(
 export async function deleteFeedbackCriterionAction(
   criteria: string,
   _prev: StdFormState,
+  // useFormState always calls actions with (prev, form) — unused here
+  // but the signature has to match, else TS + runtime disagree.
+  _form?: FormData,
 ): Promise<StdFormState> {
   const blocked = await requireHrAdmin();
   if (blocked) return blocked;

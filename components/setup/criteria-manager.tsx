@@ -10,7 +10,10 @@ type CreateAction = (
   prev: StdFormState,
   form: FormData,
 ) => Promise<StdFormState>;
-type DeleteAction = (prev: StdFormState) => Promise<StdFormState>;
+type DeleteAction = (
+  prev: StdFormState,
+  form?: FormData,
+) => Promise<StdFormState>;
 const EMPTY: StdFormState = {};
 
 export type CriterionRow = { name: string; usage: number };

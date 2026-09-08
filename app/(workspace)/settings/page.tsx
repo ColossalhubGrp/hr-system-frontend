@@ -118,10 +118,10 @@ const HR_CARDS: SettingCardSpec[] = [
     show: (a) => a.isHrAdmin,
   },
   {
-    href: "/hr/performance",
+    href: "/hr/performance/cycles",
     icon: <RefreshCcw className="h-4 w-4" />,
     title: "Appraisal cycles",
-    desc: "Create and manage cycles (dates, framework, goals, template). Opens the Performance workspace where HR builds cycles end-to-end.",
+    desc: "Create and manage cycles (dates, framework, goals, template). New appraisals inherit their criteria from the cycle's template.",
     show: (a) => a.isHrAdmin,
   },
 ];

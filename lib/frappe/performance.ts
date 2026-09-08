@@ -223,6 +223,85 @@ export async function listAppraisalCycles(): Promise<string[]> {
   }
 }
 
+export type CycleSummary = {
+  id: string;
+  cycleName: string;
+  status: string | null;
+  company: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  evaluationFramework: string | null;
+  appraisalTemplate: string | null;
+  appraisalCount: number;
+};
+
+/** All Appraisal Cycles for the cycles list page. Includes a count of
+ *  Appraisals attached to each so HR can see impact at a glance. */
+export async function listAppraisalCyclesSummary(): Promise<CycleSummary[]> {
+  try {
+    type Row = {
+      name: string;
+      cycle_name: string | null;
+      status: string | null;
+      company: string | null;
+      start_date: string | null;
+      end_date: string | null;
+      evaluation_framework: string | null;
+      appraisal_template: string | null;
+    };
+    const rows = await frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Appraisal Cycle",
+        fields: [
+          "name",
+          "cycle_name",
+          "status",
+          "company",
+          "start_date",
+          "end_date",
+          "evaluation_framework",
+          "appraisal_template",
+        ],
+        order_by: "start_date desc, name desc",
+        limit_page_length: 100,
+      },
+      as: "user",
+    });
+
+    const names = rows.map((r) => r.name);
+    const apprRows = names.length
+      ? await frappeCall<Array<{ appraisal_cycle: string }>>({
+          method: "frappe.client.get_list",
+          args: {
+            doctype: "Appraisal",
+            fields: ["appraisal_cycle"],
+            filters: JSON.stringify([["appraisal_cycle", "in", names]]),
+            limit_page_length: 0,
+          },
+          as: "user",
+        }).catch(() => [])
+      : [];
+    const apprCount: Record<string, number> = {};
+    for (const r of apprRows)
+      apprCount[r.appraisal_cycle] = (apprCount[r.appraisal_cycle] ?? 0) + 1;
+
+    return rows.map((r) => ({
+      id: r.name,
+      cycleName: r.cycle_name ?? r.name,
+      status: r.status,
+      company: r.company,
+      startDate: r.start_date,
+      endDate: r.end_date,
+      evaluationFramework: r.evaluation_framework,
+      appraisalTemplate: r.appraisal_template,
+      appraisalCount: apprCount[r.name] ?? 0,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export const APPRAISAL_STATUSES = [
   "Draft",
   "Apply",

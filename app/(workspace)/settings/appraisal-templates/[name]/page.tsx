@@ -4,7 +4,10 @@ import { notFound, redirect } from "next/navigation";
 import { ChevronLeft, ClipboardList } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { getMyAccess } from "@/lib/frappe/roles";
-import { getAppraisalTemplate } from "@/lib/frappe/setup-appraisal-templates";
+import {
+  getAppraisalTemplate,
+  listKrasPool,
+} from "@/lib/frappe/setup-appraisal-templates";
 import { listFeedbackCriteria } from "@/lib/frappe/setup-criteria";
 import { TemplateEditor } from "@/components/setup/template-editor";
 import { upsertAppraisalTemplateAction } from "../actions";
@@ -33,9 +36,10 @@ export default async function EditAppraisalTemplatePage({
     );
   }
   const name = decodeURIComponent(params.name);
-  const [tpl, pool] = await Promise.all([
+  const [tpl, pool, krasPool] = await Promise.all([
     getAppraisalTemplate(name),
     listFeedbackCriteria(),
+    listKrasPool(),
   ]);
   if (!tpl) notFound();
 
@@ -63,8 +67,10 @@ export default async function EditAppraisalTemplatePage({
           name: tpl.name,
           description: tpl.description,
           ratingCriteria: tpl.ratingCriteria,
+          kras: tpl.kras,
         }}
         criteriaPool={pool.map((c) => c.name)}
+        krasPool={krasPool}
       />
     </div>
   );

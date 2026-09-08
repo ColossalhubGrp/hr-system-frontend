@@ -5,6 +5,7 @@ import { ChevronLeft, ClipboardList } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { listFeedbackCriteria } from "@/lib/frappe/setup-criteria";
+import { listKrasPool } from "@/lib/frappe/setup-appraisal-templates";
 import { TemplateEditor } from "@/components/setup/template-editor";
 import { upsertAppraisalTemplateAction } from "../actions";
 
@@ -20,7 +21,10 @@ export default async function NewAppraisalTemplatePage() {
         encodeURIComponent("/settings/appraisal-templates/new"),
     );
   }
-  const pool = (await listFeedbackCriteria()).map((c) => c.name);
+  const [pool, krasPool] = await Promise.all([
+    listFeedbackCriteria().then((rs) => rs.map((c) => c.name)),
+    listKrasPool(),
+  ]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -43,6 +47,7 @@ export default async function NewAppraisalTemplatePage() {
         mode="new"
         action={upsertAppraisalTemplateAction}
         criteriaPool={pool}
+        krasPool={krasPool}
       />
     </div>
   );

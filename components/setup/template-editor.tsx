@@ -7,7 +7,10 @@ import type { Route } from "next";
 import { AlertCircle, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { StdFormState } from "@/lib/frappe/form-errors";
-import type { TemplateRatingRow } from "@/lib/frappe/setup-appraisal-templates";
+import type {
+  TemplateKraRow,
+  TemplateRatingRow,
+} from "@/lib/frappe/setup-appraisal-templates";
 
 type Action = (prev: StdFormState, form: FormData) => Promise<StdFormState>;
 const EMPTY: StdFormState = {};
@@ -17,6 +20,7 @@ export function TemplateEditor({
   action,
   initial,
   criteriaPool,
+  krasPool,
   cancelHref = "/settings/appraisal-templates",
 }: {
   mode: "new" | "edit";
@@ -25,10 +29,14 @@ export function TemplateEditor({
     name: string;
     description: string | null;
     ratingCriteria: TemplateRatingRow[];
+    kras: TemplateKraRow[];
   };
   /** Existing Employee Feedback Criteria — populates the "New criterion"
    *  datalist so HR picks from what's already defined. */
   criteriaPool: string[];
+  /** Existing KRA titles — populates the "New KRA" datalist so HR picks
+   *  from what's already defined (unknown titles are auto-created on save). */
+  krasPool: string[];
   cancelHref?: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -43,11 +51,26 @@ export function TemplateEditor({
   const [newCriterion, setNewCriterion] = useState("");
   const [newWeightage, setNewWeightage] = useState<number>(0);
 
+  const [kraRows, setKraRows] = useState(
+    (initial?.kras ?? []).map((r) => ({
+      keyResultArea: r.keyResultArea,
+      perWeightage: r.perWeightage,
+    })),
+  );
+  const [newKra, setNewKra] = useState("");
+  const [newKraWeight, setNewKraWeight] = useState<number>(0);
+
   const total = useMemo(
     () => rows.reduce((acc, r) => acc + (r.perWeightage || 0), 0),
     [rows],
   );
   const totalOk = Math.abs(total - 100) < 0.5;
+
+  const kraTotal = useMemo(
+    () => kraRows.reduce((acc, r) => acc + (r.perWeightage || 0), 0),
+    [kraRows],
+  );
+  const kraTotalOk = Math.abs(kraTotal - 100) < 0.5;
 
   const addRow = () => {
     const name = newCriterion.trim();
@@ -72,8 +95,45 @@ export function TemplateEditor({
     );
   };
 
+  const addKraRow = () => {
+    const title = newKra.trim();
+    if (!title) return;
+    if (
+      kraRows.some((r) => r.keyResultArea.toLowerCase() === title.toLowerCase())
+    ) {
+      setNewKra("");
+      setNewKraWeight(0);
+      return;
+    }
+    setKraRows((prev) => [
+      ...prev,
+      { keyResultArea: title, perWeightage: newKraWeight || 0 },
+    ]);
+    setNewKra("");
+    setNewKraWeight(0);
+  };
+
+  const removeKraRow = (title: string) => {
+    setKraRows((prev) => prev.filter((r) => r.keyResultArea !== title));
+  };
+
+  const updateKraWeight = (title: string, w: number) => {
+    setKraRows((prev) =>
+      prev.map((r) =>
+        r.keyResultArea === title ? { ...r, perWeightage: w } : r,
+      ),
+    );
+  };
+
   const criteriaJson = JSON.stringify(
     rows.map((r) => ({ criteria: r.criteria, per_weightage: r.perWeightage })),
+  );
+
+  const krasJson = JSON.stringify(
+    kraRows.map((r) => ({
+      key_result_area: r.keyResultArea,
+      per_weightage: r.perWeightage,
+    })),
   );
 
   return (
@@ -131,6 +191,146 @@ export function TemplateEditor({
               className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
             />
           </label>
+        </div>
+      </section>
+
+      <section className="card p-6">
+        <div className="mb-4">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-ash-500">
+            Goals (KRAs)
+          </h2>
+          <p className="mt-1 text-xs text-ash-500">
+            The Key Result Areas HR scores on the appraisal itself. New
+            titles are added to the shared KRA pool on save. Weightages must
+            total 100.
+          </p>
+        </div>
+
+        {kraRows.length === 0 ? (
+          <p className="mb-4 rounded-card border border-dashed border-hairline bg-canvas/40 px-4 py-6 text-center text-sm text-ash-500">
+            No KRAs yet. Add at least one — HR needs something to score
+            against.
+          </p>
+        ) : (
+          <div className="mb-4 overflow-hidden rounded-card border border-hairline">
+            <table className="w-full text-sm">
+              <thead className="bg-canvas/50 text-left text-xs font-medium uppercase tracking-wide text-ash-500">
+                <tr>
+                  <th className="px-3 py-2">KRA</th>
+                  <th className="px-3 py-2 w-40 text-right">Weightage %</th>
+                  <th className="px-3 py-2 w-10" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-hairline">
+                {kraRows.map((r) => (
+                  <tr key={r.keyResultArea}>
+                    <td className="px-3 py-3 text-ash-800">{r.keyResultArea}</td>
+                    <td className="px-3 py-3 text-right">
+                      <input
+                        type="number"
+                        value={r.perWeightage}
+                        onChange={(e) =>
+                          updateKraWeight(
+                            r.keyResultArea,
+                            Number(e.target.value) || 0,
+                          )
+                        }
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-24 rounded-md border border-hairline bg-white px-2 py-1.5 text-right text-sm focus-ring"
+                      />
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => removeKraRow(r.keyResultArea)}
+                        title={`Remove ${r.keyResultArea}`}
+                        className="rounded-md p-1 text-ash-500 transition hover:bg-fall/10 hover:text-fall focus-ring"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot className="border-t border-hairline bg-canvas/30 text-xs">
+                <tr>
+                  <td className="px-3 py-2 text-right font-medium text-ash-600">
+                    Total weightage
+                  </td>
+                  <td
+                    className={cn(
+                      "px-3 py-2 text-right font-semibold",
+                      kraTotalOk ? "text-ash-800" : "text-fall",
+                    )}
+                  >
+                    {kraTotal.toFixed(0)}%
+                  </td>
+                  <td className="px-3 py-2 text-ash-500">
+                    {kraTotalOk ? "" : "must total 100"}
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        )}
+
+        {/* Add-KRA surface */}
+        <div className="flex flex-wrap items-end gap-2 rounded-card border border-dashed border-hairline bg-canvas/30 p-3">
+          <div className="flex flex-1 min-w-[220px] flex-col gap-1">
+            <label className="text-xs font-medium text-ash-600" htmlFor="tpl-new-kra">
+              New KRA
+            </label>
+            <input
+              id="tpl-new-kra"
+              type="text"
+              list="tpl-kras-pool"
+              value={newKra}
+              onChange={(e) => setNewKra(e.target.value)}
+              placeholder={
+                krasPool.length > 0
+                  ? "Pick from the pool or type a new one"
+                  : "e.g. Sales targets, Product delivery, Team development"
+              }
+              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+            />
+            <datalist id="tpl-kras-pool">
+              {krasPool
+                .filter((n) => !kraRows.some((r) => r.keyResultArea === n))
+                .map((n) => (
+                  <option key={n} value={n} />
+                ))}
+            </datalist>
+          </div>
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-ash-600" htmlFor="tpl-new-kra-weight">
+              Weightage %
+            </label>
+            <input
+              id="tpl-new-kra-weight"
+              type="number"
+              value={newKraWeight}
+              onChange={(e) => setNewKraWeight(Number(e.target.value) || 0)}
+              min={0}
+              max={100}
+              step={1}
+              className="w-24 rounded-md border border-hairline bg-white px-2 py-1.5 text-right text-sm focus-ring"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={addKraRow}
+            disabled={!newKra.trim()}
+            className={cn(
+              "inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline px-3 text-xs font-semibold text-ash-700 transition focus-ring",
+              "hover:border-ink-400 hover:text-ink-800",
+              "disabled:opacity-40 disabled:cursor-not-allowed",
+            )}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add
+          </button>
         </div>
       </section>
 
@@ -269,8 +469,9 @@ export function TemplateEditor({
         </div>
       </section>
 
-      {/* Hidden field the server action reads. */}
+      {/* Hidden fields the server action reads. */}
       <input type="hidden" name="criteria_json" value={criteriaJson} />
+      <input type="hidden" name="kras_json" value={krasJson} />
 
       <div className="-mx-1 mt-2 flex items-center justify-end gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
         <Link
@@ -279,7 +480,14 @@ export function TemplateEditor({
         >
           Cancel
         </Link>
-        <SaveBtn disabled={!totalOk || rows.length === 0} />
+        <SaveBtn
+          disabled={
+            !totalOk ||
+            rows.length === 0 ||
+            !kraTotalOk ||
+            kraRows.length === 0
+          }
+        />
       </div>
     </form>
   );
@@ -291,7 +499,7 @@ function SaveBtn({ disabled }: { disabled: boolean }) {
     <button
       type="submit"
       disabled={pending || disabled}
-      title={disabled ? "Add at least one criterion and total weightages to 100 before saving." : undefined}
+      title={disabled ? "Both KRAs and rating criteria need at least one row summing to 100 before saving." : undefined}
       className={cn(
         "inline-flex h-10 items-center gap-2 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition focus-ring",
         "hover:bg-ink-700 disabled:opacity-60 disabled:cursor-not-allowed",

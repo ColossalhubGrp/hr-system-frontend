@@ -109,6 +109,13 @@ const HR_CARDS: SettingCardSpec[] = [
     desc: "Reusable criteria HR picks when scoring appraisal feedback (Communication, Ownership, Technical delivery…). Set them here, feedback forms use them everywhere.",
     show: (a) => a.isHrAdmin,
   },
+  {
+    href: "/settings/appraisal-templates",
+    icon: <ClipboardList className="h-4 w-4" />,
+    title: "Appraisal templates",
+    desc: "Rating criteria + weightages a cycle uses to open appraisals. Set once — every new appraisal and its feedback forms inherit them.",
+    show: (a) => a.isHrAdmin,
+  },
 ];
 
 const IT_CARDS: SettingCardSpec[] = [

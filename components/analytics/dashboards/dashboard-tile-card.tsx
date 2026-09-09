@@ -11,6 +11,7 @@ import type {
   RefreshTileResponse,
   RemoveTileResponse,
 } from "./types";
+import { AnswerContext } from "./answer-context";
 import { ReviewBadge } from "./review-badge";
 import { ShareTileModal } from "./share-tile-modal";
 
@@ -222,8 +223,12 @@ export function DashboardTileCard({
         )}
       </div>
 
-      {/* Body: narrative + chart + optional issue trace */}
+      {/* Body: storytelling caption + narrative + chart + optional issue trace */}
       <div className="space-y-3 p-4">
+        <AnswerContext
+          dateRange={tile.date_range_used}
+          stability={tile.stability}
+        />
         {primaryNarrative && (
           <p className="text-sm text-foreground">{primaryNarrative}</p>
         )}

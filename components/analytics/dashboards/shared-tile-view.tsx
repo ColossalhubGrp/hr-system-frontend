@@ -5,6 +5,7 @@ import { AlertTriangle, Loader2 } from "lucide-react";
 import { VizRenderer } from "@/components/analytics/viz-renderer";
 import type { AnalyzeData } from "@/components/analytics/types";
 import type { SharedTilePayload } from "./types";
+import { AnswerContext } from "./answer-context";
 import { ReviewBadge } from "./review-badge";
 
 /**
@@ -120,6 +121,11 @@ function TileBody({ payload }: { payload: SharedTilePayload }) {
             <span>· snapshot from {tile.last_refreshed_at.split(" ")[0]}</span>
           )}
         </div>
+        <AnswerContext
+          className="mt-2"
+          dateRange={tile.date_range_used}
+          stability={tile.stability}
+        />
       </div>
 
       {primaryNarrative && (

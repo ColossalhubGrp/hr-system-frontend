@@ -37,6 +37,19 @@ export interface DashboardTile {
   /** Row snapshot at save time. Refresh re-executes and replaces. */
   data_rows: Record<string, unknown>[];
   data_row_count: number;
+  /**
+   * Storytelling — captured at save/refresh time so the tile caption
+   * cites the horizon without recomputing. Null when the plan is
+   * period-agnostic (e.g. current headcount).
+   */
+  date_range_used: { start: string; end: string } | null;
+  /**
+   * Storytelling classifier from services/compare.classify_stability
+   * (colossal_bi). "stable" (compare ran, no material delta),
+   * "material_change" (compare ran, at least one delta ≥ 5%),
+   * "unknown" (no compare pass or plan had no time_range).
+   */
+  stability: "stable" | "material_change" | "unknown";
   saved_at: string | null;
   last_refreshed_at: string | null;
   /** Freshness hint — UI can flag "stale" past this age. */

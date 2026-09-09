@@ -91,6 +91,14 @@ export interface Provenance {
   connector_dialect?: string | null;
   data_source_code?: string | null;
   params: Record<string, string>;
+  /**
+   * Storytelling — the concrete window the executor queried and the
+   * number of result rows returned. Rendered in the trace panel so
+   * a reader can verify the answer's horizon + sample without decoding
+   * SQL. `date_range_used` is null for period-agnostic metrics.
+   */
+  date_range_used?: { start: string; end: string } | null;
+  result_rows?: number | null;
   metric: {
     code: string;
     name: string;

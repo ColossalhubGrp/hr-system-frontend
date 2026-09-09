@@ -42,6 +42,35 @@ export function CalculationTrace({ provenance }: { provenance: Provenance }) {
       </button>
       {open && (
         <div className="space-y-4 border-t px-4 py-3 text-xs text-foreground">
+          {(provenance.date_range_used ||
+            typeof provenance.result_rows === "number") && (
+            <Section title="Answer horizon">
+              <dl className="grid grid-cols-1 gap-1 sm:grid-cols-[max-content_1fr] sm:gap-x-4">
+                <Row
+                  k="Date range"
+                  v={
+                    provenance.date_range_used ? (
+                      <span>
+                        {provenance.date_range_used.start}{" "}
+                        <span className="text-muted-foreground">→</span>{" "}
+                        {provenance.date_range_used.end}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground">
+                        Period-agnostic — no time window applied.
+                      </span>
+                    )
+                  }
+                />
+                {typeof provenance.result_rows === "number" && (
+                  <Row
+                    k="Result rows"
+                    v={provenance.result_rows.toLocaleString()}
+                  />
+                )}
+              </dl>
+            </Section>
+          )}
           {provenance.semantic && (
             <Section title="Semantic layer">
               <dl className="grid grid-cols-1 gap-1 sm:grid-cols-[max-content_1fr] sm:gap-x-4">

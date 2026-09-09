@@ -80,6 +80,13 @@ const COMPANY_CARDS: SettingCardSpec[] = [
     desc: "Create tenant calendars (name + date range + weekly off). Assign one as a Company or Employee default so leave, attendance and payroll pick it up.",
     show: (a) => a.isHrAdmin,
   },
+  {
+    href: "/admin/references",
+    icon: <Database className="h-4 w-4" />,
+    title: "Reference data",
+    desc: "Master lists that feed dropdowns across the workspace — training modes, competency categories, payroll tax rules and anything else promoted to a shared list.",
+    show: (a) => a.isHrAdmin,
+  },
 ];
 
 const HR_CARDS: SettingCardSpec[] = [
@@ -123,13 +130,6 @@ const HR_CARDS: SettingCardSpec[] = [
     icon: <RefreshCcw className="h-4 w-4" />,
     title: "Appraisal cycles",
     desc: "Create and manage cycles (dates, framework, goals, template). New appraisals inherit their criteria from the cycle's template.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/admin/references",
-    icon: <Database className="h-4 w-4" />,
-    title: "Reference data",
-    desc: "Manage the master lists behind every dropdown across the app — training modes, competency categories, tax rules and so on.",
     show: (a) => a.isHrAdmin,
   },
 ];

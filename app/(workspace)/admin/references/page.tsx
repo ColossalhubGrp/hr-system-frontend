@@ -41,7 +41,7 @@ export default async function ReferenceMastersPage() {
       </Link>
       <PageHeader
         icon={Database}
-        crumb="Configuration · HR policy · Reference data"
+        crumb="Configuration · Company-wide · Reference data"
         title="Reference masters"
         subtitle={
           masters.length === 0

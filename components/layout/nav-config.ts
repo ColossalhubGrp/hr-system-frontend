@@ -227,29 +227,15 @@ export const NAV: NavItem[] = [
     ],
   },
 
-  // Settings is shared between HR-policy admins and IT admins. The landing
-  // page renders cards filtered by which sub-pages each persona can use.
+  // Configuration is shared between HR-policy admins and IT admins. The
+  // landing page renders tabs (Company-wide / HR policy / IT administration)
+  // filtered by which sub-pages each persona can use — sub-items live there,
+  // not in the side nav.
   {
-    label: "Settings",
+    label: "Configuration",
     href: "/settings",
     icon: Settings,
     requires: "SETTINGS_ANY",
-    children: [
-      // Company-wide settings (currency, address, performance default) —
-      // HR admins set these.
-      { label: "Company", href: "/settings/company", requires: "HR_ADMIN" },
-      { label: "Branches", href: "/settings/branches", requires: "HR_ADMIN" },
-      { label: "Departments", href: "/settings/departments", requires: "HR_ADMIN" },
-      { label: "Holiday lists", href: "/settings/holiday-lists", requires: "HR_ADMIN" },
-      { label: "Grievance types", href: "/settings/grievance-types", requires: "HR_ADMIN" },
-      { label: "Leave types", href: "/settings/leave-types", requires: "HR_ADMIN" },
-      { label: "Leave policies", href: "/settings/leave-policies", requires: "HR_ADMIN" },
-      { label: "Performance default", href: "/settings/performance", requires: "HR_ADMIN" },
-      { label: "Overtime rules", href: "/settings/overtime", requires: "HR_ADMIN" },
-      // IT-admin-only — explicitly NOT shown to HR Director / HR Manager.
-      { label: "Users & Roles", href: "/settings/users", requires: "IT_ADMIN" },
-      { label: "Permissions", href: "/settings/permissions", requires: "IT_ADMIN" },
-    ],
   },
 
   // ERPNext modules — admin-only by default.

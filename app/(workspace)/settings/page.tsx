@@ -37,7 +37,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-export const metadata = { title: "Settings · Colossal HR" };
+export const metadata = { title: "Configuration · Colossal HR" };
 
 type SettingCardSpec = {
   href: string;
@@ -185,10 +185,10 @@ export default async function SettingsHome() {
       <header className="flex flex-col gap-1">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Settings className="h-3.5 w-3.5" />
-          Settings
+          Configuration
         </div>
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Workspace settings
+          Configuration
         </h1>
         <p className="text-sm text-muted-foreground">
           Configuration that shapes the rest of the workspace. Each section

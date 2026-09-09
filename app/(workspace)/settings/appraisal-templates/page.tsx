@@ -30,7 +30,7 @@ export default async function AppraisalTemplatesPage() {
         className="inline-flex w-fit items-center gap-1 rounded-chip px-2 py-1 text-xs font-medium text-ash-500 transition hover:bg-canvas focus-ring"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
-        Back to Workspace settings
+        Back to Configuration
       </Link>
 
       <PageHeader

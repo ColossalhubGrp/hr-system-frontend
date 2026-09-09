@@ -26,8 +26,9 @@ export default async function ReferenceMastersPage() {
     listMasters(),
     listAvailableModules(),
   ]);
-  const masters = allMasters.filter((m) => !CODE_LEVEL_MASTERS.has(m.name));
-  const grouped = groupByModule(masters);
+  const masters = allMasters
+    .filter((m) => !CODE_LEVEL_MASTERS.has(m.name))
+    .sort((a, b) => a.name.localeCompare(b.name));
   const totalRows = masters.reduce((s, m) => s + m.rowCount, 0);
 
   return (
@@ -63,74 +64,54 @@ export default async function ReferenceMastersPage() {
           </CardContent>
         </Card>
       ) : (
-        Object.entries(grouped).map(([module, items]) => (
-          <section key={module} className="flex flex-col gap-2">
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              {module}
-            </h2>
-            <Card>
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Master</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead className="text-right">Rows</TableHead>
-                      <TableHead className="w-8" />
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Master</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Rows</TableHead>
+                  <TableHead className="w-8" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {masters.map((m) => {
+                  const href = `/admin/references/${encodeURIComponent(m.name)}` as Route;
+                  return (
+                    <TableRow key={m.name} className="group">
+                      <TableCell className="align-top font-medium">
+                        <Link href={href} className="text-foreground hover:underline">
+                          {m.name}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="align-top text-muted-foreground">
+                        <Link href={href} className="block">
+                          {m.description || "—"}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-right align-top text-muted-foreground">
+                        <Link href={href} className="block">
+                          {m.rowCount.toLocaleString()}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-right align-top">
+                        <Link
+                          href={href}
+                          className="inline-flex text-muted-foreground group-hover:text-foreground"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {items.map((m) => {
-                      const href = `/admin/references/${encodeURIComponent(m.name)}` as Route;
-                      return (
-                        <TableRow key={m.name} className="group">
-                          <TableCell className="align-top font-medium">
-                            <Link href={href} className="text-foreground hover:underline">
-                              {m.name}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="align-top text-muted-foreground">
-                            <Link href={href} className="block">
-                              {m.description || "—"}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="text-right align-top text-muted-foreground">
-                            <Link href={href} className="block">
-                              {m.rowCount.toLocaleString()}
-                            </Link>
-                          </TableCell>
-                          <TableCell className="text-right align-top">
-                            <Link
-                              href={href}
-                              className="inline-flex text-muted-foreground group-hover:text-foreground"
-                            >
-                              <ChevronRight className="h-4 w-4" />
-                            </Link>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </section>
-        ))
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
 }
 
-function groupByModule(
-  masters: Awaited<ReturnType<typeof listMasters>>,
-): Record<string, Awaited<ReturnType<typeof listMasters>>> {
-  const out: Record<string, typeof masters> = {};
-  for (const m of masters) {
-    const k = m.module || "Other";
-    (out[k] ??= []).push(m);
-  }
-  for (const k of Object.keys(out)) {
-    out[k]!.sort((a, b) => a.name.localeCompare(b.name));
-  }
-  return out;
-}

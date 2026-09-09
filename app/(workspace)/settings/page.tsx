@@ -14,6 +14,7 @@ import {
   MessageSquareWarning,
   ChevronRight,
   RefreshCcw,
+  Database,
   Star,
   ClipboardList,
   Wallet,
@@ -122,6 +123,13 @@ const HR_CARDS: SettingCardSpec[] = [
     icon: <RefreshCcw className="h-4 w-4" />,
     title: "Appraisal cycles",
     desc: "Create and manage cycles (dates, framework, goals, template). New appraisals inherit their criteria from the cycle's template.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/admin/references",
+    icon: <Database className="h-4 w-4" />,
+    title: "Reference data",
+    desc: "Manage the master lists behind every dropdown across the app — training modes, competency categories, tax rules and so on.",
     show: (a) => a.isHrAdmin,
   },
 ];

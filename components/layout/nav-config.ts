@@ -201,19 +201,6 @@ export const NAV: NavItem[] = [
     requires: "DATA_STEWARD",
   },
 
-  // Admin workspace — reference-data manager + (future) audit / IT tools.
-  // Gated on HR_ADMIN (same as the /admin layout). Individual pages
-  // hide platform-level masters from anyone below PLATFORM_OPERATOR.
-  {
-    label: "Admin",
-    href: "/admin/references",
-    icon: ShieldCheck,
-    requires: "HR_ADMIN",
-    children: [
-      { label: "Reference data", href: "/admin/references", requires: "HR_ADMIN" },
-    ],
-  },
-
   // Platform — site Administrator only. NOT for per-tenant HR/IT admins;
   // this is where the platform operator (System Manager / site owner)
   // controls cross-company subscriptions and multi-tenant settings.

@@ -6,26 +6,11 @@ import {
   ShieldCheck,
   Building2,
   Building,
-  Target,
-  Clock,
   Lock,
-  CalendarCheck,
   CalendarDays,
   MapPin,
-  MessageSquareWarning,
-  Plane,
   ChevronRight,
-  RefreshCcw,
-  BadgeCheck,
-  CalendarRange,
-  CalendarX,
   Database,
-  Fingerprint,
-  Star,
-  ClipboardList,
-  Wallet,
-  Receipt,
-  Banknote,
 } from "lucide-react";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { Card, CardContent } from "@/components/ui/card";
@@ -102,106 +87,14 @@ const COMPANY_CARDS: SettingCardSpec[] = [
   },
 ];
 
-const HR_CARDS: SettingCardSpec[] = [
-  {
-    href: "/settings/grievance-types",
-    icon: <MessageSquareWarning className="h-4 w-4" />,
-    title: "Grievance types",
-    desc: "Categories HR can classify a filed grievance under. Feeds the type dropdown on the grievance form.",
-    show: (a) => a.isHrAdmin || a.isHrAny,
-  },
-  {
-    href: "/settings/performance",
-    icon: <Target className="h-4 w-4" />,
-    title: "Performance management",
-    desc: "Default evaluation framework (KRA & Goals / OKR / Balanced Scorecard) — new cycles inherit it; HR can still override per cycle.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/overtime",
-    icon: <Clock className="h-4 w-4" />,
-    title: "Overtime rules",
-    desc: "Define and assign overtime thresholds, calculation methods and effective dates — cascading from company → department → employee.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/feedback-criteria",
-    icon: <Star className="h-4 w-4" />,
-    title: "Feedback criteria",
-    desc: "Reusable criteria HR picks when scoring appraisal feedback (Communication, Ownership, Technical delivery…). Set them here, feedback forms use them everywhere.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/designations",
-    icon: <BadgeCheck className="h-4 w-4" />,
-    title: "Designations",
-    desc: "Job titles employees hold + the skills each role requires. Feeds appraisal skill-maps and interview scoring.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/leave-types",
-    icon: <Plane className="h-4 w-4" />,
-    title: "Leave types",
-    desc: "Sick, casual, comp-off, encashable — with the fine-grained flags (earned / carry-forward / LWP / partially-paid / encashment) each type needs.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/leave-policies",
-    icon: <Plane className="h-4 w-4" />,
-    title: "Leave policies",
-    desc: "Reusable bundles of leave-type quotas HR can assign to many employees in one action.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/leave-periods",
-    icon: <CalendarRange className="h-4 w-4" />,
-    title: "Leave periods",
-    desc: "Time windows leave policies + earned-leave accrual are anchored to (typically the fiscal year).",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/leave-block-lists",
-    icon: <CalendarX className="h-4 w-4" />,
-    title: "Leave block lists",
-    desc: "Dates on which leave applications are refused unless the applier's approver is on the bypass list — year-end close, product launches, exam periods.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/appraisal-templates",
-    icon: <ClipboardList className="h-4 w-4" />,
-    title: "Appraisal templates",
-    desc: "Rating criteria + weightages a cycle uses to open appraisals. Set once — every new appraisal and its feedback forms inherit them.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/boarding-templates",
-    icon: <ClipboardList className="h-4 w-4" />,
-    title: "Onboarding + separation templates",
-    desc: "Reusable activity checklists. Pick a template when opening an onboarding or separation record and the tasks auto-fill.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/attendance",
-    icon: <CalendarCheck className="h-4 w-4" />,
-    title: "Attendance & shifts",
-    desc: "Org-wide switches for geolocation tracking on check-ins and whether the same employee can hold overlapping Shift Assignments.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/settings/biometric",
-    icon: <Fingerprint className="h-4 w-4" />,
-    title: "Biometric devices",
-    desc: "How to wire on-site fingerprint / face / RFID readers so punches flow into Attendance automatically. Step-by-step setup + API keys.",
-    show: (a) => a.isHrAdmin,
-  },
-  {
-    href: "/hr/performance/cycles",
-    icon: <RefreshCcw className="h-4 w-4" />,
-    title: "Appraisal cycles",
-    desc: "Create and manage cycles (dates, framework, goals, template). New appraisals inherit their criteria from the cycle's template.",
-    show: (a) => a.isHrAdmin,
-  },
-];
+// Module-specific settings moved to each module's own Setup page:
+//   Leaves settings         → /hr/leaves/setup
+//   Attendance settings     → /hr/attendance/setup
+//   Performance settings    → /hr/performance/setup
+//   Employee master setup   → /employee/setup
+//   Payroll setup           → /payroll/setup
+// Only cross-module cards (company, branches, departments, holiday lists,
+// reference data, users, permissions) live here.
 
 const IT_CARDS: SettingCardSpec[] = [
   {
@@ -226,10 +119,9 @@ export default async function SettingsHome() {
   // Per the security model: filter cards BEFORE rendering. If a user can't
   // use a card, it doesn't appear — no greyed-out variants.
   const company = COMPANY_CARDS.filter((c) => c.show(access));
-  const hr = HR_CARDS.filter((c) => c.show(access));
   const it = IT_CARDS.filter((c) => c.show(access));
 
-  const totalVisible = company.length + hr.length + it.length;
+  const totalVisible = company.length + it.length;
 
   const tabs: Array<{ id: string; label: string; subtitle: string; rows: SettingCardSpec[] }> = [];
   if (company.length > 0) {
@@ -238,14 +130,6 @@ export default async function SettingsHome() {
       label: "Company-wide",
       subtitle: "Applies to the entire org",
       rows: company,
-    });
-  }
-  if (hr.length > 0) {
-    tabs.push({
-      id: "hr",
-      label: "HR policy",
-      subtitle: "Performance, time-off, overtime — set by HR leadership",
-      rows: hr,
     });
   }
   if (it.length > 0) {
@@ -268,9 +152,9 @@ export default async function SettingsHome() {
           Configuration
         </h1>
         <p className="text-sm text-muted-foreground">
-          Configuration that shapes the rest of the workspace. Each section
-          requires a different role bundle — you&apos;re only seeing the tabs
-          your access lets you actually use.
+          Cross-module configuration only — organisation, users and
+          permissions. Module-specific settings live on each module&apos;s own
+          Setup page (Leaves, Attendance, Performance, Employee, Payroll).
         </p>
       </header>
 

@@ -13,6 +13,7 @@ import {
   Smartphone,
   Upload,
   Plus,
+  Settings2,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
@@ -82,6 +83,13 @@ export default async function AttendancePage({
         subtitle="Marked records, raw check-ins, and pending requests."
         actions={
           <div className="flex flex-wrap gap-2">
+            <Link
+              href={"/hr/attendance/setup" as Route}
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            >
+              <Settings2 className="h-4 w-4" />
+              Setup
+            </Link>
             <Link
               href={"/hr/attendance/bulk" as Route}
               className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"

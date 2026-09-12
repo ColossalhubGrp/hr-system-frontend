@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Settings2 } from "lucide-react";
 import { DirectoryFilters } from "@/components/employee/directory-filters";
 import { DirectoryTable } from "@/components/employee/directory-table";
 import { DirectoryPagination } from "@/components/employee/directory-pagination";
@@ -73,13 +73,22 @@ export default async function EmployeeDirectoryPage({
             {list.total.toLocaleString()} on the roster.
           </p>
         </div>
-        <Link
-          href={"/employee/new" as Route}
-          className="inline-flex h-10 w-fit items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
-        >
-          <Plus className="h-4 w-4" />
-          New employee
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={"/employee/setup" as Route}
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+          >
+            <Settings2 className="h-4 w-4" />
+            Setup
+          </Link>
+          <Link
+            href={"/employee/new" as Route}
+            className="inline-flex h-10 w-fit items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+          >
+            <Plus className="h-4 w-4" />
+            New employee
+          </Link>
+        </div>
       </header>
 
       <DirectoryFilters

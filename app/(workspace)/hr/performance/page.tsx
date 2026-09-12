@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   Plus,
   RefreshCcw,
+  Settings2,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
@@ -516,6 +517,13 @@ function HeaderActions({ tab }: { tab: string }) {
           : { href: "/hr/performance/pip/new", label: "New PIP" };
   return (
     <div className="flex items-center gap-2">
+      <Link
+        href={"/hr/performance/setup" as Route}
+        className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-xs font-semibold text-ash-800 transition hover:bg-canvas focus-ring"
+      >
+        <Settings2 className="h-3.5 w-3.5" />
+        Setup
+      </Link>
       <Link
         href={"/hr/performance/cycles/new" as Route}
         className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-xs font-semibold text-ash-800 transition hover:bg-canvas focus-ring"

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Plane, Plus } from "lucide-react";
+import { Plane, Plus, Settings2 } from "lucide-react";
 import { LeavesFilters } from "@/components/leaves/leaves-filters";
 import { LeavesTable } from "@/components/leaves/leaves-table";
 import { DirectoryPagination } from "@/components/employee/directory-pagination";
@@ -45,6 +45,13 @@ export default async function LeavesPage({
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <Link
+            href={"/hr/leaves/setup" as Route}
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+          >
+            <Settings2 className="h-4 w-4" />
+            Setup
+          </Link>
           <Link
             href={"/hr/leaves/admin" as Route}
             className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"

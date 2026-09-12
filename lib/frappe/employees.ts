@@ -68,6 +68,11 @@ export type EmployeeFull = {
   shiftRequestApprover: string | null;
   holidayList: string | null;
   defaultShift: string | null;
+  /** Biometric / RFID identifier the on-site sync tool sends with each
+   *  punch. Frappe HR's Auto Attendance uses this to match device logs
+   *  to the right Employee. Optional — only tenants running biometric
+   *  hardware fill it in. */
+  attendanceDeviceId: string | null;
   bio: string | null;
   employmentType: string | null;
   grade: string | null;
@@ -344,6 +349,7 @@ type RawEmployeeDoc = RawEmployeeRow & {
   shift_request_approver: string | null;
   holiday_list: string | null;
   default_shift: string | null;
+  attendance_device_id: string | null;
   bio: string | null;
   employment_type: string | null;
   grade: string | null;
@@ -449,6 +455,7 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     shiftRequestApprover: d.shift_request_approver,
     holidayList: d.holiday_list,
     defaultShift: d.default_shift,
+    attendanceDeviceId: d.attendance_device_id,
     bio: d.bio,
     employmentType: d.employment_type,
     grade: d.grade,

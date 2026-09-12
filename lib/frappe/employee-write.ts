@@ -444,6 +444,7 @@ export type EmployeeFormInput = {
   // other
   holiday_list?: string;
   default_shift?: string;
+  attendance_device_id?: string;
   bio?: string;
 
   // compliance

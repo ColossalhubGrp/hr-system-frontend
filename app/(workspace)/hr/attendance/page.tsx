@@ -11,6 +11,7 @@ import {
   LogOut,
   ClipboardList,
   Smartphone,
+  Upload,
   Plus,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
@@ -51,6 +52,7 @@ type SP = {
   tab?: string;
   employee?: string;
   status?: string;
+  flag?: string;
   log?: string;
   reason?: string;
   from?: string;
@@ -77,7 +79,25 @@ export default async function AttendancePage({
         crumb="HR · Attendance"
         title="Attendance"
         subtitle="Marked records, raw check-ins, and pending requests."
-        actions={<NewButton tab={tab} />}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={"/hr/attendance/bulk" as Route}
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Bulk mark
+            </Link>
+            <Link
+              href={"/hr/attendance/upload" as Route}
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            >
+              <Upload className="h-4 w-4" />
+              Upload CSV
+            </Link>
+            <NewButton tab={tab} />
+          </div>
+        }
       />
 
       <SubTabs
@@ -126,11 +146,17 @@ async function Records({
   searchParams: SP;
   page: number;
 }) {
+  const flag = ((): "late_entry" | "early_exit" | undefined => {
+    const f = searchParams.flag;
+    return f === "late_entry" || f === "early_exit" ? f : undefined;
+  })();
+
   const result = await listAttendance({
     employee: searchParams.employee || undefined,
     status: searchParams.status || undefined,
     from: searchParams.from || undefined,
     to: searchParams.to || undefined,
+    flag,
     page,
     pageSize: 25,
   });
@@ -174,6 +200,11 @@ async function Records({
         search={{ key: "employee", placeholder: "Filter by employee ID" }}
         selects={[
           { key: "status", label: "Status", options: [...ATTENDANCE_STATUSES] },
+          {
+            key: "flag",
+            label: "Flag",
+            options: ["late_entry", "early_exit"],
+          },
         ]}
       />
 
@@ -206,6 +237,35 @@ async function Records({
             header: "Shift",
             className: "hidden md:table-cell text-ash-700",
             cell: (r) => r.shift ?? "—",
+          },
+          {
+            header: "Flags",
+            className: "hidden lg:table-cell",
+            cell: (r) => {
+              if (!r.lateEntry && !r.earlyExit) {
+                return <span className="text-ash-400">—</span>;
+              }
+              return (
+                <span className="inline-flex flex-wrap items-center gap-1">
+                  {r.lateEntry && (
+                    <span
+                      className="rounded-chip border border-amber-500/30 bg-amber-500/[0.08] px-2 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-300"
+                      title="Checked in after the shift's late-entry grace"
+                    >
+                      Late entry
+                    </span>
+                  )}
+                  {r.earlyExit && (
+                    <span
+                      className="rounded-chip border border-fall/30 bg-fall/[0.08] px-2 py-0.5 text-[10px] font-medium text-fall"
+                      title="Checked out before the shift's early-exit cutoff"
+                    >
+                      Early exit
+                    </span>
+                  )}
+                </span>
+              );
+            },
           },
         ]}
       />

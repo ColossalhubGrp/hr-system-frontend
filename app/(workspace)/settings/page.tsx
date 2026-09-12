@@ -16,6 +16,7 @@ import {
   RefreshCcw,
   BadgeCheck,
   Database,
+  Fingerprint,
   Star,
   ClipboardList,
   Wallet,
@@ -131,6 +132,13 @@ const HR_CARDS: SettingCardSpec[] = [
     icon: <ClipboardList className="h-4 w-4" />,
     title: "Appraisal templates",
     desc: "Rating criteria + weightages a cycle uses to open appraisals. Set once — every new appraisal and its feedback forms inherit them.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/biometric",
+    icon: <Fingerprint className="h-4 w-4" />,
+    title: "Biometric devices",
+    desc: "How to wire on-site fingerprint / face / RFID readers so punches flow into Attendance automatically. Step-by-step setup + API keys.",
     show: (a) => a.isHrAdmin,
   },
   {

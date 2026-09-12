@@ -99,7 +99,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "person_to_be_contacted",
     "emergency_phone_number",
   ],
-  attendance: ["holiday_list", "default_shift"],
+  attendance: ["holiday_list", "default_shift", "attendance_device_id"],
   approvers: [
     "reports_to",
     "leave_approver",
@@ -336,6 +336,7 @@ export function EmployeeForm({
     shift_request_approver: initialShiftApprover,
     holiday_list: initial?.holidayList ?? "",
     default_shift: initial?.defaultShift ?? "",
+    attendance_device_id: initial?.attendanceDeviceId ?? "",
     bio: initial?.bio ?? "",
     relieving_date: initial?.relievingDate ?? "",
   } satisfies Partial<Record<string, string>>;
@@ -910,6 +911,18 @@ export function EmployeeForm({
               defaultValue={v.default_shift}
               options={options.shifts}
               placeholder="—"
+            />
+          </Field>
+          <Field
+            label="Biometric device ID"
+            htmlFor="attendance_device_id"
+            hint="Optional. The employee's identifier on the on-site biometric / RFID reader. Leave blank unless you run a device that syncs punches to Colossal HR."
+          >
+            <TextInput
+              id="attendance_device_id"
+              name="attendance_device_id"
+              defaultValue={v.attendance_device_id}
+              placeholder="e.g. 1042"
             />
           </Field>
         </Grid>

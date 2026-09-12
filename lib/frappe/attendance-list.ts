@@ -8,6 +8,12 @@ export type AttendanceRow = {
   attendanceDate: string;
   status: string;
   shift: string | null;
+  /** True when the day's IN check-in was past the shift's
+   *  `late_entry_grace_period`. Auto-Attendance sets it. */
+  lateEntry: boolean;
+  /** True when the day's OUT check-in was before the shift's
+   *  `early_exit_grace_period` cutoff. Auto-Attendance sets it. */
+  earlyExit: boolean;
   docstatus: 0 | 1 | 2;
 };
 
@@ -32,17 +38,21 @@ export async function listAttendance(opts: {
   status?: string;
   from?: string;
   to?: string;
+  /** Extra "only Late Entry" / "only Early Exit" chips. */
+  flag?: "late_entry" | "early_exit";
   page?: number;
   pageSize?: number;
 }): Promise<AttendanceListResult> {
   const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(100, Math.max(10, opts.pageSize ?? 25));
 
-  const filters: Array<[string, string, string | string[]]> = [];
+  const filters: Array<[string, string, string | string[] | number]> = [];
   if (opts.employee) filters.push(["employee", "=", opts.employee]);
   if (opts.status) filters.push(["status", "=", opts.status]);
   if (opts.from) filters.push(["attendance_date", ">=", opts.from]);
   if (opts.to) filters.push(["attendance_date", "<=", opts.to]);
+  if (opts.flag === "late_entry") filters.push(["late_entry", "=", 1]);
+  if (opts.flag === "early_exit") filters.push(["early_exit", "=", 1]);
 
   type Row = {
     name: string;
@@ -51,6 +61,8 @@ export async function listAttendance(opts: {
     attendance_date: string;
     status: string;
     shift: string | null;
+    late_entry: 0 | 1 | boolean | null;
+    early_exit: 0 | 1 | boolean | null;
     docstatus: 0 | 1 | 2;
   };
 
@@ -66,6 +78,8 @@ export async function listAttendance(opts: {
           "attendance_date",
           "status",
           "shift",
+          "late_entry",
+          "early_exit",
           "docstatus",
         ],
         filters: JSON.stringify(filters),
@@ -106,6 +120,8 @@ export async function listAttendance(opts: {
       attendanceDate: r.attendance_date,
       status: r.status,
       shift: r.shift,
+      lateEntry: Boolean(r.late_entry),
+      earlyExit: Boolean(r.early_exit),
       docstatus: r.docstatus,
     })),
     total: Number(totalRaw ?? 0),

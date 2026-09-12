@@ -67,6 +67,10 @@ const shiftTypeSchema = z.object({
   holiday_list: z.string().trim().optional(),
   working_hours_threshold_for_half_day: z.string().trim().optional(),
   working_hours_threshold_for_absent: z.string().trim().optional(),
+  begin_check_in_before_shift_start_time: z.string().trim().optional(),
+  late_entry_grace_period: z.string().trim().optional(),
+  early_exit_grace_period: z.string().trim().optional(),
+  process_attendance_after: z.string().trim().optional(),
   regular_day_multiplier: z.string().trim().optional(),
   saturday_day_multiplier: z.string().trim().optional(),
   sunday_day_multiplier: z.string().trim().optional(),
@@ -96,6 +100,12 @@ function toInput(
     working_hours_threshold_for_absent: numOrUndef(
       data.working_hours_threshold_for_absent,
     ),
+    begin_check_in_before_shift_start_time: numOrUndef(
+      data.begin_check_in_before_shift_start_time,
+    ),
+    late_entry_grace_period: numOrUndef(data.late_entry_grace_period),
+    early_exit_grace_period: numOrUndef(data.early_exit_grace_period),
+    process_attendance_after: data.process_attendance_after || undefined,
     regular_day_multiplier: numOrUndef(data.regular_day_multiplier),
     saturday_day_multiplier: numOrUndef(data.saturday_day_multiplier),
     sunday_day_multiplier: numOrUndef(data.sunday_day_multiplier),

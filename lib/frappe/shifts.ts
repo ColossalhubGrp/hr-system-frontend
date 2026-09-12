@@ -120,6 +120,21 @@ export type ShiftTypeFull = {
   holidayList: string | null;
   workingHoursThresholdForHalfDay: number | null;
   workingHoursThresholdForAbsent: number | null;
+  /** Minutes before shift start that a check-in still counts as ON-shift.
+   *  Frappe HR's `begin_check_in_before_shift_start_time`. Null = 0. */
+  beginCheckInBeforeShiftStartTime: number | null;
+  /** Minutes after shift start after which a check-in is flagged as
+   *  Late Entry on the resulting Attendance. Frappe HR's
+   *  `late_entry_grace_period`. */
+  lateEntryGracePeriod: number | null;
+  /** Minutes before shift end after which an OUT check-in is flagged as
+   *  Early Exit on the resulting Attendance. Frappe HR's
+   *  `early_exit_grace_period`. */
+  earlyExitGracePeriod: number | null;
+  /** Auto-Attendance won't process any Attendance dated on or before this
+   *  date — lets HR turn on auto processing without back-marking legacy
+   *  data. Frappe HR's `process_attendance_after`. */
+  processAttendanceAfter: string | null;
   // Day-rate policy lives on Custom Fields we add to Shift Type. Each
   // multiplier defaults to a sane value if the field is null.
   regularDayMultiplier: number;
@@ -144,6 +159,10 @@ export async function getShiftType(id: string): Promise<ShiftTypeFull | null> {
       holiday_list: string | null;
       working_hours_threshold_for_half_day: number | null;
       working_hours_threshold_for_absent: number | null;
+      begin_check_in_before_shift_start_time: number | null;
+      late_entry_grace_period: number | null;
+      early_exit_grace_period: number | null;
+      process_attendance_after: string | null;
       // Custom-field additions for the day-rate policy.
       regular_day_multiplier?: number | null;
       saturday_day_multiplier?: number | null;
@@ -169,6 +188,10 @@ export async function getShiftType(id: string): Promise<ShiftTypeFull | null> {
       holidayList: doc.holiday_list,
       workingHoursThresholdForHalfDay: doc.working_hours_threshold_for_half_day,
       workingHoursThresholdForAbsent: doc.working_hours_threshold_for_absent,
+      beginCheckInBeforeShiftStartTime: doc.begin_check_in_before_shift_start_time,
+      lateEntryGracePeriod: doc.late_entry_grace_period,
+      earlyExitGracePeriod: doc.early_exit_grace_period,
+      processAttendanceAfter: doc.process_attendance_after,
       regularDayMultiplier: Number(doc.regular_day_multiplier ?? 1),
       saturdayDayMultiplier: Number(doc.saturday_day_multiplier ?? 1.5),
       sundayDayMultiplier: Number(doc.sunday_day_multiplier ?? 2),
@@ -194,6 +217,10 @@ export type ShiftTypeInput = {
   holiday_list?: string;
   working_hours_threshold_for_half_day?: number;
   working_hours_threshold_for_absent?: number;
+  begin_check_in_before_shift_start_time?: number;
+  late_entry_grace_period?: number;
+  early_exit_grace_period?: number;
+  process_attendance_after?: string;
   regular_day_multiplier?: number;
   saturday_day_multiplier?: number;
   sunday_day_multiplier?: number;
@@ -228,6 +255,11 @@ export async function createShiftType(input: ShiftTypeInput): Promise<string> {
         input.working_hours_threshold_for_half_day,
       working_hours_threshold_for_absent:
         input.working_hours_threshold_for_absent,
+      begin_check_in_before_shift_start_time:
+        input.begin_check_in_before_shift_start_time,
+      late_entry_grace_period: input.late_entry_grace_period,
+      early_exit_grace_period: input.early_exit_grace_period,
+      process_attendance_after: input.process_attendance_after,
       regular_day_multiplier: input.regular_day_multiplier,
       saturday_day_multiplier: input.saturday_day_multiplier,
       sunday_day_multiplier: input.sunday_day_multiplier,
@@ -269,6 +301,11 @@ export async function updateShiftType(
       input.working_hours_threshold_for_half_day,
     working_hours_threshold_for_absent:
       input.working_hours_threshold_for_absent,
+    begin_check_in_before_shift_start_time:
+      input.begin_check_in_before_shift_start_time,
+    late_entry_grace_period: input.late_entry_grace_period,
+    early_exit_grace_period: input.early_exit_grace_period,
+    process_attendance_after: input.process_attendance_after,
     regular_day_multiplier: input.regular_day_multiplier,
     saturday_day_multiplier: input.saturday_day_multiplier,
     sunday_day_multiplier: input.sunday_day_multiplier,

@@ -40,6 +40,10 @@ export function ShiftTypeForm({
     holidayList?: string | null;
     workingHoursThresholdForHalfDay?: number | null;
     workingHoursThresholdForAbsent?: number | null;
+    beginCheckInBeforeShiftStartTime?: number | null;
+    lateEntryGracePeriod?: number | null;
+    earlyExitGracePeriod?: number | null;
+    processAttendanceAfter?: string | null;
     regularDayMultiplier?: number;
     saturdayDayMultiplier?: number;
     sundayDayMultiplier?: number;
@@ -183,6 +187,62 @@ export function ShiftTypeForm({
             defaultValue={
               initial?.workingHoursThresholdForAbsent?.toString() ?? ""
             }
+          />
+        </Field>
+        <Field
+          label="Early check-in window"
+          htmlFor="begin_check_in_before_shift_start_time"
+          hint="Minutes before shift start that a check-in still counts as on-shift. Blank = 0."
+        >
+          <TextInput
+            id="begin_check_in_before_shift_start_time"
+            name="begin_check_in_before_shift_start_time"
+            type="number"
+            step="1"
+            min="0"
+            defaultValue={
+              initial?.beginCheckInBeforeShiftStartTime?.toString() ?? ""
+            }
+          />
+        </Field>
+        <Field
+          label="Late entry grace"
+          htmlFor="late_entry_grace_period"
+          hint="Minutes past shift start after which the day is flagged as Late Entry."
+        >
+          <TextInput
+            id="late_entry_grace_period"
+            name="late_entry_grace_period"
+            type="number"
+            step="1"
+            min="0"
+            defaultValue={initial?.lateEntryGracePeriod?.toString() ?? ""}
+          />
+        </Field>
+        <Field
+          label="Early exit grace"
+          htmlFor="early_exit_grace_period"
+          hint="Minutes before shift end after which leaving is flagged as Early Exit."
+        >
+          <TextInput
+            id="early_exit_grace_period"
+            name="early_exit_grace_period"
+            type="number"
+            step="1"
+            min="0"
+            defaultValue={initial?.earlyExitGracePeriod?.toString() ?? ""}
+          />
+        </Field>
+        <Field
+          label="Process attendance after"
+          htmlFor="process_attendance_after"
+          hint="Auto-attendance won't back-fill anything dated on or before this day. Blank = process everything."
+        >
+          <TextInput
+            id="process_attendance_after"
+            name="process_attendance_after"
+            type="date"
+            defaultValue={initial?.processAttendanceAfter ?? ""}
           />
         </Field>
       </FormSection>

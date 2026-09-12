@@ -94,6 +94,7 @@ const baseSchema = z.object({
 
   holiday_list: z.string().trim().optional(),
   default_shift: z.string().trim().optional(),
+  attendance_device_id: z.string().trim().optional(),
   bio: z.string().trim().optional(),
 
   // compliance — age waiver. Same "0"/"1" wire shape as the ZIMRA

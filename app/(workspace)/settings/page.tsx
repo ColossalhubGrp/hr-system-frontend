@@ -174,6 +174,13 @@ const HR_CARDS: SettingCardSpec[] = [
     show: (a) => a.isHrAdmin,
   },
   {
+    href: "/settings/boarding-templates",
+    icon: <ClipboardList className="h-4 w-4" />,
+    title: "Onboarding + separation templates",
+    desc: "Reusable activity checklists. Pick a template when opening an onboarding or separation record and the tasks auto-fill.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
     href: "/settings/attendance",
     icon: <CalendarCheck className="h-4 w-4" />,
     title: "Attendance & shifts",

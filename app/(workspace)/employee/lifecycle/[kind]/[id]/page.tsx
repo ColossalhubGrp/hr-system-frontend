@@ -35,6 +35,7 @@ import {
   submitTransferAction,
 } from "../../actions";
 import { DeleteRecordButton } from "@/components/lifecycle/delete-record-button";
+import { SeparationDownstreamActions } from "@/components/lifecycle/separation-actions";
 
 const KINDS: LifecycleKind[] = [
   "onboarding",
@@ -194,6 +195,14 @@ export default async function LifecycleDetailPage({
           editable={canEditActivities}
           directory={employeeDirectory}
           roles={assignableRoles}
+        />
+      )}
+
+      {kind === "separation" && (
+        <SeparationDownstreamActions
+          separationId={record.id}
+          employee={record.employee}
+          canManage={canEditActivities}
         />
       )}
 

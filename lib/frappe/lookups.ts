@@ -61,3 +61,6 @@ export async function listTrainingEventNames() {
 export async function listDepartmentNames() {
   return listDoctypeNames("Department");
 }
+export async function listSkills() {
+  return listDoctypeNames("Skill", { limit: 500 });
+}

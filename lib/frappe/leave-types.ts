@@ -51,26 +51,42 @@ function extractFrappeError(err: unknown): string {
  * allow_negative, etc.) stay at the DocType defaults.
  */
 export type LeaveTypeRow = {
-  /** DocType `name` — also the label users see on the leave form. */
   name: string;
-  /** How many days per year the type entitles an employee to. Fed
-   *  into ensure_leave_allocation on the first application. */
   maxLeavesAllowed: number;
-  /** Days that accrue over the year (annual/sick style) rather than
-   *  a lump-sum allocation at the start. */
   isEarnedLeave: boolean;
-  /** Unused days roll into the next year's allocation. */
   isCarryForward: boolean;
-  /** Doesn't count towards paid leave — payroll deducts salary. */
   isLwp: boolean;
-  /** When true, weekends / holidays within a leave window are
-   *  counted as leave days (rare — most tenants leave this off). */
   includeHoliday: boolean;
-  /** Waiting period in days after joining before the leave is
-   *  usable. 0 = available immediately. */
   applicableAfter: number;
-  /** Free-text notes for HR's own reference (not shown to filers). */
   description: string | null;
+  // --- Compensatory ---
+  isCompensatory: boolean;
+  // --- Optional (employee picks from an org-defined pool) ---
+  isOptionalLeave: boolean;
+  // --- Encashment ---
+  allowEncashment: boolean;
+  /** Only balance ABOVE this threshold is encashable. */
+  encashmentThresholdDays: number;
+  /** Salary component the encashment pays out through. */
+  earningComponent: string | null;
+  // --- Balance guards ---
+  allowNegativeBalance: boolean;
+  allowOverAllocation: boolean;
+  maxContinuousDaysAllowed: number;
+  // --- Partially-paid ---
+  isPartiallyPaidLeave: boolean;
+  /** 0.0..1.0. When partially-paid is on, salary is docked by this
+   *  fraction per day (0.5 = half pay). */
+  fractionOfDailySalaryPerLeave: number;
+  // --- Earned-leave accrual knobs ---
+  /** "Date of Joining" | "First Day of Every Month" | "Last Day of Every Month". */
+  allocateOnDay: string | null;
+  /** "Monthly" | "Quarterly" | "Half-Yearly" | "Yearly". */
+  earnedLeaveFrequency: string | null;
+  /** Rounding step for the accrued fraction — usually 0.5 or 1. */
+  rounding: number;
+  // --- Carry-forward extra ---
+  expireCarryForwardedLeavesAfterDays: number;
 };
 
 export type LeaveTypeInput = {
@@ -82,6 +98,20 @@ export type LeaveTypeInput = {
   includeHoliday?: boolean;
   applicableAfter?: number;
   description?: string;
+  isCompensatory?: boolean;
+  isOptionalLeave?: boolean;
+  allowEncashment?: boolean;
+  encashmentThresholdDays?: number;
+  earningComponent?: string;
+  allowNegativeBalance?: boolean;
+  allowOverAllocation?: boolean;
+  maxContinuousDaysAllowed?: number;
+  isPartiallyPaidLeave?: boolean;
+  fractionOfDailySalaryPerLeave?: number;
+  allocateOnDay?: string;
+  earnedLeaveFrequency?: string;
+  rounding?: number;
+  expireCarryForwardedLeavesAfterDays?: number;
 };
 
 type Raw = {
@@ -93,6 +123,20 @@ type Raw = {
   include_holiday: 0 | 1 | null;
   applicable_after: number | null;
   description: string | null;
+  is_compensatory?: 0 | 1 | null;
+  is_optional_leave?: 0 | 1 | null;
+  allow_encashment?: 0 | 1 | null;
+  encashment_threshold_days?: number | null;
+  earning_component?: string | null;
+  allow_negative?: 0 | 1 | null;
+  allow_over_allocation?: 0 | 1 | null;
+  max_continuous_days_allowed?: number | null;
+  is_partially_paid_leave?: 0 | 1 | null;
+  fraction_of_daily_salary_per_leave?: number | null;
+  allocate_on_day?: string | null;
+  earned_leave_frequency?: string | null;
+  rounding?: number | null;
+  expire_carry_forwarded_leaves_after_days?: number | null;
 };
 
 function toRow(r: Raw): LeaveTypeRow {
@@ -105,6 +149,22 @@ function toRow(r: Raw): LeaveTypeRow {
     includeHoliday: Boolean(r.include_holiday),
     applicableAfter: Number(r.applicable_after ?? 0),
     description: r.description,
+    isCompensatory: Boolean(r.is_compensatory),
+    isOptionalLeave: Boolean(r.is_optional_leave),
+    allowEncashment: Boolean(r.allow_encashment),
+    encashmentThresholdDays: Number(r.encashment_threshold_days ?? 0),
+    earningComponent: r.earning_component ?? null,
+    allowNegativeBalance: Boolean(r.allow_negative),
+    allowOverAllocation: Boolean(r.allow_over_allocation),
+    maxContinuousDaysAllowed: Number(r.max_continuous_days_allowed ?? 0),
+    isPartiallyPaidLeave: Boolean(r.is_partially_paid_leave),
+    fractionOfDailySalaryPerLeave: Number(r.fraction_of_daily_salary_per_leave ?? 0),
+    allocateOnDay: r.allocate_on_day ?? null,
+    earnedLeaveFrequency: r.earned_leave_frequency ?? null,
+    rounding: Number(r.rounding ?? 0.5),
+    expireCarryForwardedLeavesAfterDays: Number(
+      r.expire_carry_forwarded_leaves_after_days ?? 0,
+    ),
   };
 }
 
@@ -204,6 +264,24 @@ export async function createLeaveType(input: LeaveTypeInput): Promise<string> {
     is_lwp: input.isLwp ? 1 : 0,
     include_holiday: input.includeHoliday ? 1 : 0,
     applicable_after: input.applicableAfter ?? 0,
+    is_compensatory: input.isCompensatory ? 1 : 0,
+    is_optional_leave: input.isOptionalLeave ? 1 : 0,
+    allow_encashment: input.allowEncashment ? 1 : 0,
+    encashment_threshold_days: input.encashmentThresholdDays ?? 0,
+    ...(input.earningComponent ? { earning_component: input.earningComponent } : {}),
+    allow_negative: input.allowNegativeBalance ? 1 : 0,
+    allow_over_allocation: input.allowOverAllocation ? 1 : 0,
+    max_continuous_days_allowed: input.maxContinuousDaysAllowed ?? 0,
+    is_partially_paid_leave: input.isPartiallyPaidLeave ? 1 : 0,
+    fraction_of_daily_salary_per_leave:
+      input.fractionOfDailySalaryPerLeave ?? 0,
+    ...(input.allocateOnDay ? { allocate_on_day: input.allocateOnDay } : {}),
+    ...(input.earnedLeaveFrequency
+      ? { earned_leave_frequency: input.earnedLeaveFrequency }
+      : {}),
+    rounding: input.rounding ?? 0.5,
+    expire_carry_forwarded_leaves_after_days:
+      input.expireCarryForwardedLeavesAfterDays ?? 0,
     ...(input.description ? { description: input.description } : {}),
   };
   const saved = await frappeCall<{ name: string }>({
@@ -251,6 +329,22 @@ export async function updateLeaveType(
         include_holiday: input.includeHoliday ? 1 : 0,
         applicable_after: input.applicableAfter ?? 0,
         description: input.description ?? "",
+        is_compensatory: input.isCompensatory ? 1 : 0,
+        is_optional_leave: input.isOptionalLeave ? 1 : 0,
+        allow_encashment: input.allowEncashment ? 1 : 0,
+        encashment_threshold_days: input.encashmentThresholdDays ?? 0,
+        earning_component: input.earningComponent ?? "",
+        allow_negative: input.allowNegativeBalance ? 1 : 0,
+        allow_over_allocation: input.allowOverAllocation ? 1 : 0,
+        max_continuous_days_allowed: input.maxContinuousDaysAllowed ?? 0,
+        is_partially_paid_leave: input.isPartiallyPaidLeave ? 1 : 0,
+        fraction_of_daily_salary_per_leave:
+          input.fractionOfDailySalaryPerLeave ?? 0,
+        allocate_on_day: input.allocateOnDay ?? "",
+        earned_leave_frequency: input.earnedLeaveFrequency ?? "",
+        rounding: input.rounding ?? 0.5,
+        expire_carry_forwarded_leaves_after_days:
+          input.expireCarryForwardedLeavesAfterDays ?? 0,
       },
     },
     as: "user",

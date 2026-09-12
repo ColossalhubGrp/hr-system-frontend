@@ -44,13 +44,21 @@ export default async function LeavesPage({
             {result.total.toLocaleString()} total in view.
           </p>
         </div>
-        <Link
-          href={"/hr/leaves/new" as Route}
-          className="inline-flex h-10 w-fit items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
-        >
-          <Plus className="h-4 w-4" />
-          New application
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={"/hr/leaves/admin" as Route}
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+          >
+            Leave admin
+          </Link>
+          <Link
+            href={"/hr/leaves/new" as Route}
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+          >
+            <Plus className="h-4 w-4" />
+            New application
+          </Link>
+        </div>
       </header>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

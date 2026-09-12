@@ -37,6 +37,11 @@ const boolCheckbox = z
   .union([z.literal("on"), z.literal("off"), z.literal(""), z.undefined()])
   .transform((v) => v === "on");
 
+const nonNegNumber = z.coerce
+  .number({ invalid_type_error: "Enter a number." })
+  .min(0, "Can't be negative.")
+  .default(0);
+
 const baseFields = {
   name: nameSchema,
   max_leaves_allowed: z.coerce
@@ -53,6 +58,28 @@ const baseFields = {
     .max(3650, "Cap at 3650 days.")
     .default(0),
   description: z.string().trim().optional(),
+  // Extended fields from the Frappe HR docs audit.
+  is_compensatory: boolCheckbox,
+  is_optional_leave: boolCheckbox,
+  allow_encashment: boolCheckbox,
+  encashment_threshold_days: nonNegNumber,
+  earning_component: z.string().trim().optional(),
+  allow_negative: boolCheckbox,
+  allow_over_allocation: boolCheckbox,
+  max_continuous_days_allowed: nonNegNumber,
+  is_partially_paid_leave: boolCheckbox,
+  fraction_of_daily_salary_per_leave: z.coerce
+    .number({ invalid_type_error: "Enter a number." })
+    .min(0, "Can't be negative.")
+    .max(1, "Fraction is between 0 and 1.")
+    .default(0),
+  allocate_on_day: z.string().trim().optional(),
+  earned_leave_frequency: z.string().trim().optional(),
+  rounding: z.coerce
+    .number({ invalid_type_error: "Enter a number." })
+    .min(0, "Can't be negative.")
+    .default(0.5),
+  expire_carry_forwarded_leaves_after_days: nonNegNumber,
 };
 
 const createSchema = z.object(baseFields);
@@ -88,6 +115,20 @@ function toRow(name: string, data: z.infer<typeof createSchema>): LeaveTypeRow {
     includeHoliday: data.include_holiday,
     applicableAfter: data.applicable_after,
     description: data.description || null,
+    isCompensatory: data.is_compensatory,
+    isOptionalLeave: data.is_optional_leave,
+    allowEncashment: data.allow_encashment,
+    encashmentThresholdDays: data.encashment_threshold_days,
+    earningComponent: data.earning_component || null,
+    allowNegativeBalance: data.allow_negative,
+    allowOverAllocation: data.allow_over_allocation,
+    maxContinuousDaysAllowed: data.max_continuous_days_allowed,
+    isPartiallyPaidLeave: data.is_partially_paid_leave,
+    fractionOfDailySalaryPerLeave: data.fraction_of_daily_salary_per_leave,
+    allocateOnDay: data.allocate_on_day || null,
+    earnedLeaveFrequency: data.earned_leave_frequency || null,
+    rounding: data.rounding,
+    expireCarryForwardedLeavesAfterDays: data.expire_carry_forwarded_leaves_after_days,
   };
 }
 
@@ -110,6 +151,20 @@ export async function createLeaveTypeAction(
       includeHoliday: parsed.data.include_holiday,
       applicableAfter: parsed.data.applicable_after,
       description: parsed.data.description || undefined,
+      isCompensatory: parsed.data.is_compensatory,
+      isOptionalLeave: parsed.data.is_optional_leave,
+      allowEncashment: parsed.data.allow_encashment,
+      encashmentThresholdDays: parsed.data.encashment_threshold_days,
+      earningComponent: parsed.data.earning_component || undefined,
+      allowNegativeBalance: parsed.data.allow_negative,
+      allowOverAllocation: parsed.data.allow_over_allocation,
+      maxContinuousDaysAllowed: parsed.data.max_continuous_days_allowed,
+      isPartiallyPaidLeave: parsed.data.is_partially_paid_leave,
+      fractionOfDailySalaryPerLeave: parsed.data.fraction_of_daily_salary_per_leave,
+      allocateOnDay: parsed.data.allocate_on_day || undefined,
+      earnedLeaveFrequency: parsed.data.earned_leave_frequency || undefined,
+      rounding: parsed.data.rounding,
+      expireCarryForwardedLeavesAfterDays: parsed.data.expire_carry_forwarded_leaves_after_days,
     });
   } catch (err) {
     return toFormState(err);
@@ -137,6 +192,20 @@ export async function updateLeaveTypeAction(
       includeHoliday: parsed.data.include_holiday,
       applicableAfter: parsed.data.applicable_after,
       description: parsed.data.description ?? "",
+      isCompensatory: parsed.data.is_compensatory,
+      isOptionalLeave: parsed.data.is_optional_leave,
+      allowEncashment: parsed.data.allow_encashment,
+      encashmentThresholdDays: parsed.data.encashment_threshold_days,
+      earningComponent: parsed.data.earning_component ?? "",
+      allowNegativeBalance: parsed.data.allow_negative,
+      allowOverAllocation: parsed.data.allow_over_allocation,
+      maxContinuousDaysAllowed: parsed.data.max_continuous_days_allowed,
+      isPartiallyPaidLeave: parsed.data.is_partially_paid_leave,
+      fractionOfDailySalaryPerLeave: parsed.data.fraction_of_daily_salary_per_leave,
+      allocateOnDay: parsed.data.allocate_on_day ?? "",
+      earnedLeaveFrequency: parsed.data.earned_leave_frequency ?? "",
+      rounding: parsed.data.rounding,
+      expireCarryForwardedLeavesAfterDays: parsed.data.expire_carry_forwarded_leaves_after_days,
     });
   } catch (err) {
     return toFormState(err);

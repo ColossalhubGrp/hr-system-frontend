@@ -566,8 +566,159 @@ function LeaveTypeFields({
             label="Count holidays"
             hint="Weekends / holidays inside the leave window count as leave days."
           />
+          <Checkbox
+            name="is_compensatory"
+            defaultChecked={initial?.isCompensatory}
+            label="Compensatory"
+            hint="Employee earns this by working on a holiday. Comp-off Request writes to it."
+          />
+          <Checkbox
+            name="is_optional_leave"
+            defaultChecked={initial?.isOptionalLeave}
+            label="Optional"
+            hint="Employee picks from a company-supplied pool (festivals etc.)."
+          />
+          <Checkbox
+            name="allow_encashment"
+            defaultChecked={initial?.allowEncashment}
+            label="Allow encashment"
+            hint="Unused days can be paid out via Leave Encashment."
+          />
+          <Checkbox
+            name="allow_negative"
+            defaultChecked={initial?.allowNegativeBalance}
+            label="Allow negative balance"
+            hint="Employees can apply even if the balance goes below zero."
+          />
+          <Checkbox
+            name="allow_over_allocation"
+            defaultChecked={initial?.allowOverAllocation}
+            label="Allow over-allocation"
+            hint="HR can allocate more than the yearly max."
+          />
+          <Checkbox
+            name="is_partially_paid_leave"
+            defaultChecked={initial?.isPartiallyPaidLeave}
+            label="Partially paid"
+            hint="Payroll docks a fraction of daily salary instead of full pay."
+          />
         </div>
       </div>
+      <Field
+        label="Max continuous days"
+        htmlFor="max_continuous_days_allowed"
+        hint="0 = no cap. Blocks long unbroken applications."
+      >
+        <TextInput
+          id="max_continuous_days_allowed"
+          name="max_continuous_days_allowed"
+          type="number"
+          min={0}
+          defaultValue={initial?.maxContinuousDaysAllowed ?? 0}
+        />
+      </Field>
+      <Field
+        label="Fraction of daily salary per leave"
+        htmlFor="fraction_of_daily_salary_per_leave"
+        hint="Only when partially-paid is on. 0.5 = half pay per day."
+      >
+        <TextInput
+          id="fraction_of_daily_salary_per_leave"
+          name="fraction_of_daily_salary_per_leave"
+          type="number"
+          min={0}
+          max={1}
+          step={0.05}
+          defaultValue={initial?.fractionOfDailySalaryPerLeave ?? 0}
+        />
+      </Field>
+      <Field
+        label="Encashment threshold (days)"
+        htmlFor="encashment_threshold_days"
+        hint="Only the balance above this is encashable."
+      >
+        <TextInput
+          id="encashment_threshold_days"
+          name="encashment_threshold_days"
+          type="number"
+          min={0}
+          defaultValue={initial?.encashmentThresholdDays ?? 0}
+        />
+      </Field>
+      <Field
+        label="Earning component (payroll)"
+        htmlFor="earning_component"
+        hint="Salary component the encashment amount pays out through."
+      >
+        <TextInput
+          id="earning_component"
+          name="earning_component"
+          placeholder="e.g. Leave Encashment"
+          defaultValue={initial?.earningComponent ?? ""}
+        />
+      </Field>
+      <Field
+        label="Earned-leave frequency"
+        htmlFor="earned_leave_frequency"
+        hint="How often accrual runs."
+      >
+        <select
+          id="earned_leave_frequency"
+          name="earned_leave_frequency"
+          defaultValue={initial?.earnedLeaveFrequency ?? ""}
+          className="h-10 w-full rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        >
+          <option value="">—</option>
+          <option value="Monthly">Monthly</option>
+          <option value="Quarterly">Quarterly</option>
+          <option value="Half-Yearly">Half-Yearly</option>
+          <option value="Yearly">Yearly</option>
+        </select>
+      </Field>
+      <Field
+        label="Allocate on"
+        htmlFor="allocate_on_day"
+        hint="Which calendar day inside the frequency window credits the balance."
+      >
+        <select
+          id="allocate_on_day"
+          name="allocate_on_day"
+          defaultValue={initial?.allocateOnDay ?? ""}
+          className="h-10 w-full rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        >
+          <option value="">—</option>
+          <option value="Date of Joining">Date of Joining</option>
+          <option value="First Day">First Day (of month/quarter)</option>
+          <option value="Last Day">Last Day (of month/quarter)</option>
+        </select>
+      </Field>
+      <Field
+        label="Rounding"
+        htmlFor="rounding"
+        hint="0.5 or 1. Rounds fractional accruals to the nearest step."
+      >
+        <TextInput
+          id="rounding"
+          name="rounding"
+          type="number"
+          step={0.5}
+          min={0}
+          defaultValue={initial?.rounding ?? 0.5}
+        />
+      </Field>
+      <Field
+        label="Expire carry-forwarded leaves after (days)"
+        htmlFor="expire_carry_forwarded_leaves_after_days"
+        hint="Only relevant when carry-forward is on. 0 = never expires."
+      >
+        <TextInput
+          id="expire_carry_forwarded_leaves_after_days"
+          name="expire_carry_forwarded_leaves_after_days"
+          type="number"
+          min={0}
+          defaultValue={initial?.expireCarryForwardedLeavesAfterDays ?? 0}
+        />
+      </Field>
       <Field label="Notes" htmlFor="description" wide>
         <TextArea
           id="description"

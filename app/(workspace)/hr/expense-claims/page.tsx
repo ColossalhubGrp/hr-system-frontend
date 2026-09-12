@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
+import { SubTabs } from "@/components/common/sub-tabs";
 import { FilterRow } from "@/components/common/list-shell";
 import { StatusPill } from "@/components/common/status-pill";
 import { DataTable } from "@/components/common/data-table";
@@ -52,6 +53,22 @@ export default async function ExpenseClaimsPage({
             <Plus className="h-4 w-4" />
             New claim
           </Link>
+        }
+      />
+
+      <SubTabs
+        tabs={[
+          { id: "claims", label: "Claims" },
+          { id: "advances", label: "Advances" },
+          { id: "travel", label: "Travel" },
+        ]}
+        active="claims"
+        hrefFor={(id) =>
+          id === "claims"
+            ? "/hr/expense-claims"
+            : id === "advances"
+              ? "/hr/employee-advances"
+              : "/hr/travel"
         }
       />
 

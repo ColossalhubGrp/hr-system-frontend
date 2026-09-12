@@ -105,6 +105,9 @@ export default async function PerformancePage({
     { id: "goals", label: goalsTabLabel(framework) },
     { id: "feedback", label: "Feedback" },
     { id: "pip", label: "PIP" },
+    { id: "overview", label: "Overview" },
+    { id: "exit-interviews", label: "Exit interviews" },
+    { id: "full-and-final", label: "Full & final" },
   ];
 
   return (
@@ -123,7 +126,15 @@ export default async function PerformancePage({
         tabs={tabs}
         active={tab}
         hrefFor={(id) =>
-          id === "appraisals" ? "/hr/performance" : `/hr/performance?tab=${id}`
+          id === "appraisals"
+            ? "/hr/performance"
+            : id === "overview"
+              ? "/hr/performance/overview"
+              : id === "exit-interviews"
+                ? "/hr/exit-interviews"
+                : id === "full-and-final"
+                  ? "/hr/full-and-final"
+                  : `/hr/performance?tab=${id}`
         }
       />
 

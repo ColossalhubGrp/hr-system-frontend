@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { Clock3, Plus, FileText, CheckCircle2 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
+import { SubTabs } from "@/components/common/sub-tabs";
 import { StatusPill } from "@/components/common/status-pill";
 import { DataTable } from "@/components/common/data-table";
 import { EmployeeCell } from "@/components/employee/employee-cell";
@@ -44,6 +45,23 @@ export default async function OvertimeSlipsPage({
             <Plus className="h-4 w-4" />
             New slip
           </Link>
+        }
+      />
+
+      <SubTabs
+        tabs={[
+          { id: "records", label: "Records" },
+          { id: "checkins", label: "Check-ins" },
+          { id: "requests", label: "Requests" },
+          { id: "overtime", label: "Overtime slips" },
+        ]}
+        active="overtime"
+        hrefFor={(id) =>
+          id === "records"
+            ? "/hr/attendance"
+            : id === "overtime"
+              ? "/hr/overtime-slips"
+              : `/hr/attendance?tab=${id}`
         }
       />
 

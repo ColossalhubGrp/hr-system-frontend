@@ -44,6 +44,7 @@ const TABS = [
   { id: "records", label: "Records" },
   { id: "checkins", label: "Check-ins" },
   { id: "requests", label: "Requests" },
+  { id: "overtime", label: "Overtime slips" },
 ];
 
 type Tab = "records" | "checkins" | "requests";
@@ -104,7 +105,11 @@ export default async function AttendancePage({
         tabs={TABS}
         active={tab}
         hrefFor={(id) =>
-          id === "records" ? "/hr/attendance" : `/hr/attendance?tab=${id}`
+          id === "records"
+            ? "/hr/attendance"
+            : id === "overtime"
+              ? "/hr/overtime-slips"
+              : `/hr/attendance?tab=${id}`
         }
       />
 

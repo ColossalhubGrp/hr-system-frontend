@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { Wallet, Plus, FileText, CheckCircle2, Coins } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
+import { SubTabs } from "@/components/common/sub-tabs";
 import { StatusPill } from "@/components/common/status-pill";
 import { DataTable } from "@/components/common/data-table";
 import { EmployeeCell } from "@/components/employee/employee-cell";
@@ -51,6 +52,22 @@ export default async function EmployeeAdvancesPage({
             <Plus className="h-4 w-4" />
             New advance
           </Link>
+        }
+      />
+
+      <SubTabs
+        tabs={[
+          { id: "claims", label: "Claims" },
+          { id: "advances", label: "Advances" },
+          { id: "travel", label: "Travel" },
+        ]}
+        active="advances"
+        hrefFor={(id) =>
+          id === "claims"
+            ? "/hr/expense-claims"
+            : id === "advances"
+              ? "/hr/employee-advances"
+              : "/hr/travel"
         }
       />
 

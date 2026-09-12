@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { Plane, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
+import { SubTabs } from "@/components/common/sub-tabs";
 import { StatusPill } from "@/components/common/status-pill";
 import { DataTable } from "@/components/common/data-table";
 import { EmployeeCell } from "@/components/employee/employee-cell";
@@ -40,6 +41,22 @@ export default async function TravelPage({ searchParams }: { searchParams: SP })
             <Plus className="h-4 w-4" />
             New request
           </Link>
+        }
+      />
+
+      <SubTabs
+        tabs={[
+          { id: "claims", label: "Claims" },
+          { id: "advances", label: "Advances" },
+          { id: "travel", label: "Travel" },
+        ]}
+        active="travel"
+        hrefFor={(id) =>
+          id === "claims"
+            ? "/hr/expense-claims"
+            : id === "advances"
+              ? "/hr/employee-advances"
+              : "/hr/travel"
         }
       />
 

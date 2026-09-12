@@ -2,10 +2,12 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, BarChart3 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { SubTabs } from "@/components/common/sub-tabs";
 import { FilterRow } from "@/components/common/list-shell";
 import { DataTable } from "@/components/common/data-table";
 import { EmployeeCell } from "@/components/employee/employee-cell";
 import { SummaryTile } from "@/components/common/summary-tile";
+import { PERFORMANCE_TABS, performanceHrefFor } from "@/components/performance/nav-tabs";
 import { listAppraisalOverview } from "@/lib/frappe/finance-training";
 import {
   listAppraisalCyclesNames,
@@ -59,6 +61,13 @@ export default async function AppraisalOverviewPage({
         <ChevronLeft className="h-3.5 w-3.5" />
         Back to performance
       </Link>
+
+      <SubTabs
+        tabs={PERFORMANCE_TABS}
+        active="overview"
+        hrefFor={performanceHrefFor}
+      />
+
       <PageHeader
         icon={BarChart3}
         crumb="HR · Performance · Overview"

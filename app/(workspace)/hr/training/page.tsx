@@ -30,6 +30,7 @@ export const metadata = { title: "Training · Colossal HR" };
 const TABS = [
   { id: "events", label: "Events" },
   { id: "programs", label: "Programs" },
+  { id: "skill-assessments", label: "Skill assessments" },
 ];
 
 type Tab = "events" | "programs";
@@ -80,7 +81,11 @@ export default async function TrainingPage({
         tabs={TABS}
         active={tab}
         hrefFor={(id) =>
-          id === "events" ? "/hr/training" : `/hr/training?tab=${id}`
+          id === "events"
+            ? "/hr/training"
+            : id === "skill-assessments"
+              ? "/hr/skill-assessments"
+              : `/hr/training?tab=${id}`
         }
       />
 

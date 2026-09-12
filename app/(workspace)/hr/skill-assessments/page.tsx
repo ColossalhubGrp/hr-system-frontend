@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { Gauge, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { SubTabs } from "@/components/common/sub-tabs";
 import { DataTable } from "@/components/common/data-table";
 import { EmployeeCell } from "@/components/employee/employee-cell";
 import { FilterRow } from "@/components/common/list-shell";
@@ -36,6 +37,22 @@ export default async function SkillAssessmentsPage({
             <Plus className="h-4 w-4" />
             Log assessment
           </Link>
+        }
+      />
+
+      <SubTabs
+        tabs={[
+          { id: "events", label: "Events" },
+          { id: "programs", label: "Programs" },
+          { id: "skill-assessments", label: "Skill assessments" },
+        ]}
+        active="skill-assessments"
+        hrefFor={(id) =>
+          id === "events"
+            ? "/hr/training"
+            : id === "skill-assessments"
+              ? "/hr/skill-assessments"
+              : `/hr/training?tab=${id}`
         }
       />
 

@@ -3,10 +3,12 @@ import type { Route } from "next";
 import { DoorOpen, Plus, Clock, CheckCircle2 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
+import { SubTabs } from "@/components/common/sub-tabs";
 import { StatusPill } from "@/components/common/status-pill";
 import { DataTable } from "@/components/common/data-table";
 import { EmployeeCell } from "@/components/employee/employee-cell";
 import { FilterRow } from "@/components/common/list-shell";
+import { PERFORMANCE_TABS, performanceHrefFor } from "@/components/performance/nav-tabs";
 import { listExitInterviews } from "@/lib/frappe/lifecycle-ext";
 
 export const metadata = { title: "Exit Interviews · Colossal HR" };
@@ -45,6 +47,12 @@ export default async function ExitInterviewsPage({
             Schedule interview
           </Link>
         }
+      />
+
+      <SubTabs
+        tabs={PERFORMANCE_TABS}
+        active="exit-interviews"
+        hrefFor={performanceHrefFor}
       />
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">

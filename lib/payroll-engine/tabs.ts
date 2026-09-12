@@ -24,6 +24,7 @@ export const PAYROLL_TABS: { label: string; href: string }[] = [
   { label: "Overview", href: "/payroll" },
   { label: "People", href: "/payroll/people" },
   { label: "Transactions", href: "/payroll/transactions" },
+  { label: "Adjustments", href: "/payroll/adjustments" },
   { label: "Accounting", href: "/payroll/accounting" },
   { label: "Reports", href: "/payroll/reports" },
   { label: "Docs", href: "/payroll/docs" },

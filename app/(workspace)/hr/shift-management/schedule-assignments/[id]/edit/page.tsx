@@ -67,6 +67,8 @@ export default async function EditScheduleAssignmentPage({
           status: sa.status,
           company: sa.company,
           notes: sa.notes,
+          enabled: sa.enabled,
+          createShiftsAfter: sa.createShiftsAfter,
         }}
       />
     </div>

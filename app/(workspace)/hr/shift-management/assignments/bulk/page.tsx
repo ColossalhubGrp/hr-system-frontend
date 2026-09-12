@@ -6,6 +6,54 @@ import { frappeCall } from "@/lib/frappe/client";
 import { listCompanies, listShiftTypes } from "@/lib/frappe/lookups";
 import { bulkAssignShiftAction } from "../../actions";
 
+type ActiveWindow = { start: string; end: string | null };
+
+/** Pull every Active Shift Assignment that could still overlap a future
+ *  bulk assignment. The client uses these to greylist employees whose
+ *  proposed range collides with a live assignment — mirrors Frappe HR's
+ *  Shift Assignment Tool "auto-filters employees without overlapping
+ *  active shifts" behaviour. */
+async function fetchActiveShiftWindows(): Promise<Record<string, ActiveWindow[]>> {
+  try {
+    type Row = {
+      employee: string;
+      start_date: string;
+      end_date: string | null;
+    };
+    const today = new Date().toISOString().slice(0, 10);
+    const rows = await frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Shift Assignment",
+        fields: ["employee", "start_date", "end_date"],
+        filters: JSON.stringify([
+          ["status", "=", "Active"],
+          ["docstatus", "=", 1],
+          // Open-ended (end_date null) OR ending on/after today.
+          ["end_date", ">=", today],
+        ]),
+        or_filters: JSON.stringify([
+          ["end_date", "is", "not set"],
+          ["end_date", ">=", today],
+        ]),
+        order_by: "start_date asc",
+        limit_page_length: 0,
+      },
+      as: "user",
+    });
+    const map: Record<string, ActiveWindow[]> = {};
+    for (const r of rows) {
+      (map[r.employee] ??= []).push({
+        start: r.start_date,
+        end: r.end_date,
+      });
+    }
+    return map;
+  } catch {
+    return {};
+  }
+}
+
 export const metadata = { title: "Bulk assign shifts · Colossal HR" };
 
 type EmployeeOpt = {
@@ -40,10 +88,11 @@ async function listActiveEmployees(): Promise<
 }
 
 export default async function BulkAssignPage() {
-  const [employees, shiftTypes, companies] = await Promise.all([
+  const [employees, shiftTypes, companies, activeWindows] = await Promise.all([
     listActiveEmployees(),
     listShiftTypes(),
     listCompanies(),
+    fetchActiveShiftWindows(),
   ]);
 
   return (
@@ -75,6 +124,7 @@ export default async function BulkAssignPage() {
         employees={employees}
         shiftTypes={shiftTypes}
         companies={companies}
+        activeWindows={activeWindows}
         cancelHref="/hr/shift-management?tab=assignments"
       />
     </div>

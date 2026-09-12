@@ -135,6 +135,28 @@ export type ShiftTypeFull = {
    *  date — lets HR turn on auto processing without back-marking legacy
    *  data. Frappe HR's `process_attendance_after`. */
   processAttendanceAfter: string | null;
+  /** How Auto-Attendance interprets a stream of check-ins:
+   *   - "Alternating entries as IN and OUT during the same shift" (default)
+   *   - "Strictly based on Log Type in Employee Checkin". */
+  determineCheckInAndCheckOut:
+    | "Alternating entries as IN and OUT during the same shift"
+    | "Strictly based on Log Type in Employee Checkin"
+    | null;
+  /** How working hours roll up:
+   *   - "First Check-in and Last Check-out" (span, includes breaks)
+   *   - "Every Valid Check-in and Check-out" (sum of segments, excludes breaks). */
+  workingHoursCalculationBasedOn:
+    | "First Check-in and Last Check-out"
+    | "Every Valid Check-in and Check-out"
+    | null;
+  /** When true, punches on Holiday-list days still produce an Attendance
+   *  (useful for retail/hospitals/call centres). Off by default. */
+  markAutoAttendanceOnHolidays: boolean;
+  /** Explicit on/off for the Late Entry flag, independent of the grace
+   *  period. HR can zero the flag org-wide without wiping graces. */
+  enableLateEntryMarking: boolean;
+  /** Explicit on/off for the Early Exit flag. Same story. */
+  enableEarlyExitMarking: boolean;
   // Day-rate policy lives on Custom Fields we add to Shift Type. Each
   // multiplier defaults to a sane value if the field is null.
   regularDayMultiplier: number;
@@ -163,6 +185,11 @@ export async function getShiftType(id: string): Promise<ShiftTypeFull | null> {
       late_entry_grace_period: number | null;
       early_exit_grace_period: number | null;
       process_attendance_after: string | null;
+      determine_check_in_and_check_out: string | null;
+      working_hours_calculation_based_on: string | null;
+      mark_auto_attendance_on_holidays: 0 | 1 | boolean | null;
+      enable_late_entry_marking: 0 | 1 | boolean | null;
+      enable_early_exit_marking: 0 | 1 | boolean | null;
       // Custom-field additions for the day-rate policy.
       regular_day_multiplier?: number | null;
       saturday_day_multiplier?: number | null;
@@ -192,6 +219,19 @@ export async function getShiftType(id: string): Promise<ShiftTypeFull | null> {
       lateEntryGracePeriod: doc.late_entry_grace_period,
       earlyExitGracePeriod: doc.early_exit_grace_period,
       processAttendanceAfter: doc.process_attendance_after,
+      determineCheckInAndCheckOut:
+        (doc.determine_check_in_and_check_out as
+          | "Alternating entries as IN and OUT during the same shift"
+          | "Strictly based on Log Type in Employee Checkin"
+          | null) ?? null,
+      workingHoursCalculationBasedOn:
+        (doc.working_hours_calculation_based_on as
+          | "First Check-in and Last Check-out"
+          | "Every Valid Check-in and Check-out"
+          | null) ?? null,
+      markAutoAttendanceOnHolidays: Boolean(doc.mark_auto_attendance_on_holidays),
+      enableLateEntryMarking: Boolean(doc.enable_late_entry_marking),
+      enableEarlyExitMarking: Boolean(doc.enable_early_exit_marking),
       regularDayMultiplier: Number(doc.regular_day_multiplier ?? 1),
       saturdayDayMultiplier: Number(doc.saturday_day_multiplier ?? 1.5),
       sundayDayMultiplier: Number(doc.sunday_day_multiplier ?? 2),
@@ -221,6 +261,11 @@ export type ShiftTypeInput = {
   late_entry_grace_period?: number;
   early_exit_grace_period?: number;
   process_attendance_after?: string;
+  determine_check_in_and_check_out?: string;
+  working_hours_calculation_based_on?: string;
+  mark_auto_attendance_on_holidays?: boolean;
+  enable_late_entry_marking?: boolean;
+  enable_early_exit_marking?: boolean;
   regular_day_multiplier?: number;
   saturday_day_multiplier?: number;
   sunday_day_multiplier?: number;
@@ -260,6 +305,14 @@ export async function createShiftType(input: ShiftTypeInput): Promise<string> {
       late_entry_grace_period: input.late_entry_grace_period,
       early_exit_grace_period: input.early_exit_grace_period,
       process_attendance_after: input.process_attendance_after,
+      determine_check_in_and_check_out: input.determine_check_in_and_check_out,
+      working_hours_calculation_based_on:
+        input.working_hours_calculation_based_on,
+      mark_auto_attendance_on_holidays: input.mark_auto_attendance_on_holidays
+        ? 1
+        : 0,
+      enable_late_entry_marking: input.enable_late_entry_marking ? 1 : 0,
+      enable_early_exit_marking: input.enable_early_exit_marking ? 1 : 0,
       regular_day_multiplier: input.regular_day_multiplier,
       saturday_day_multiplier: input.saturday_day_multiplier,
       sunday_day_multiplier: input.sunday_day_multiplier,
@@ -306,6 +359,27 @@ export async function updateShiftType(
     late_entry_grace_period: input.late_entry_grace_period,
     early_exit_grace_period: input.early_exit_grace_period,
     process_attendance_after: input.process_attendance_after,
+    determine_check_in_and_check_out: input.determine_check_in_and_check_out,
+    working_hours_calculation_based_on:
+      input.working_hours_calculation_based_on,
+    mark_auto_attendance_on_holidays:
+      input.mark_auto_attendance_on_holidays === undefined
+        ? undefined
+        : input.mark_auto_attendance_on_holidays
+          ? 1
+          : 0,
+    enable_late_entry_marking:
+      input.enable_late_entry_marking === undefined
+        ? undefined
+        : input.enable_late_entry_marking
+          ? 1
+          : 0,
+    enable_early_exit_marking:
+      input.enable_early_exit_marking === undefined
+        ? undefined
+        : input.enable_early_exit_marking
+          ? 1
+          : 0,
     regular_day_multiplier: input.regular_day_multiplier,
     saturday_day_multiplier: input.saturday_day_multiplier,
     sunday_day_multiplier: input.sunday_day_multiplier,

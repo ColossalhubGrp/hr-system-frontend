@@ -37,12 +37,17 @@ export function BulkAssignForm({
   employees,
   shiftTypes,
   companies,
+  activeWindows,
   cancelHref,
 }: {
   action: Action;
   employees: EmployeeOption[];
   shiftTypes: string[];
   companies: string[];
+  /** Map of employeeId → currently-active Shift Assignment windows.
+   *  Used to hide employees whose live assignments would overlap the
+   *  proposed date range. */
+  activeWindows: Record<string, Array<{ start: string; end: string | null }>>;
   cancelHref: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -50,6 +55,8 @@ export function BulkAssignForm({
   const [query, setQuery] = useState("");
   const [department, setDepartment] = useState("");
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const departments = useMemo(() => {
     const s = new Set<string>();
@@ -57,16 +64,42 @@ export function BulkAssignForm({
     return Array.from(s).sort();
   }, [employees]);
 
+  /** Set of employee IDs whose current active assignments overlap the
+   *  proposed range. When no start date is picked we don't filter — the
+   *  Save call itself will still surface Frappe's overlap rejection. */
+  const overlapping = useMemo(() => {
+    if (!startDate) return new Set<string>();
+    const proposedStart = startDate;
+    const proposedEnd = endDate || null;
+    const out = new Set<string>();
+    for (const [empId, windows] of Object.entries(activeWindows)) {
+      for (const w of windows) {
+        // Two ranges overlap when start<=otherEnd AND end>=otherStart,
+        // with nulls treated as "open-ended forever."
+        const wStart = w.start;
+        const wEnd = w.end ?? "9999-12-31";
+        const pStart = proposedStart;
+        const pEnd = proposedEnd ?? "9999-12-31";
+        if (pStart <= wEnd && pEnd >= wStart) {
+          out.add(empId);
+          break;
+        }
+      }
+    }
+    return out;
+  }, [startDate, endDate, activeWindows]);
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return employees.filter((e) => {
       if (department && e.department !== department) return false;
+      if (overlapping.has(e.id)) return false;
       if (!q) return true;
       return (
         e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q)
       );
     });
-  }, [employees, query, department]);
+  }, [employees, query, department, overlapping]);
 
   const failureSet = useMemo(
     () => new Set((state.failures ?? []).map((f) => f.employee)),
@@ -151,6 +184,8 @@ export function BulkAssignForm({
             name="start_date"
             type="date"
             invalid={Boolean(fe.start_date)}
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
           />
         </Field>
         <Field
@@ -164,6 +199,8 @@ export function BulkAssignForm({
             name="end_date"
             type="date"
             invalid={Boolean(fe.end_date)}
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
           />
         </Field>
       </FormSection>
@@ -177,8 +214,22 @@ export function BulkAssignForm({
             <Users className="h-3.5 w-3.5" />
             {picked.size} selected · {filtered.length} shown ·{" "}
             {employees.length} total
+            {overlapping.size > 0 && (
+              <span className="ml-2 text-amber-700 dark:text-amber-300">
+                · {overlapping.size} hidden (overlap)
+              </span>
+            )}
           </span>
         </div>
+        {overlapping.size > 0 && (
+          <p className="mb-3 rounded-card border border-amber-500/30 bg-amber-500/[0.06] px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
+            <strong>{overlapping.size}</strong> employee
+            {overlapping.size === 1 ? " is" : "s are"} hidden because their
+            current active Shift Assignment already covers this date range.
+            Change the dates to include them, or edit their existing
+            assignment first.
+          </p>
+        )}
 
         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
           <label className="relative flex-1">

@@ -29,6 +29,7 @@ import {
   SHIFT_REQUEST_STATUSES,
 } from "@/lib/frappe/shifts";
 import { listShiftLocations } from "@/lib/frappe/shift-locations";
+import { frappeCall } from "@/lib/frappe/client";
 import {
   listShiftScheduleAssignments,
   listShiftSchedules,
@@ -73,6 +74,12 @@ type SP = {
   status?: string;
   employee?: string;
   page?: string;
+  // Roster-only filters (mirror the tabs Frappe HR ships).
+  company?: string;
+  department?: string;
+  branch?: string;
+  designation?: string;
+  shift?: string;
 };
 
 export default async function ShiftManagementPage({
@@ -119,7 +126,7 @@ export default async function ShiftManagementPage({
       {tab === "schedule-assignments" && (
         <ScheduleAssignments searchParams={searchParams} page={page} />
       )}
-      {tab === "roster" && <Roster />}
+      {tab === "roster" && <Roster searchParams={searchParams} />}
     </div>
   );
 }
@@ -491,7 +498,7 @@ async function Locations({
  */
 const ROSTER_DAYS = 14;
 
-async function Roster() {
+async function Roster({ searchParams }: { searchParams: SP }) {
   const today = new Date();
   const days = Array.from({ length: ROSTER_DAYS }, (_, i) => {
     const d = new Date(today);
@@ -502,61 +509,107 @@ async function Roster() {
   const firstIso = isoDate(today);
   const lastIso = isoDate(lastDay);
 
-  // Pull all assignments touching the window — Frappe doesn't have a single
-  // overlap operator, so we do: start_date <= lastIso AND (end_date >= firstIso
-  // OR end_date is null).
-  const result = await listShiftAssignments({
-    page: 1,
-    pageSize: 500,
-  });
-  const inWindow = result.rows.filter((a) => {
+  // Fetch every employee matching the roster filters — this becomes the
+  // FULL set of rows in the grid. Any filtered employee without an
+  // assignment in the window still shows up (with empty cells the user
+  // can click to file one).
+  const empFilters: Array<[string, string, string]> = [
+    ["status", "!=", "Left"],
+  ];
+  if (searchParams.company)
+    empFilters.push(["company", "=", searchParams.company]);
+  if (searchParams.department)
+    empFilters.push(["department", "=", searchParams.department]);
+  if (searchParams.branch)
+    empFilters.push(["branch", "=", searchParams.branch]);
+  if (searchParams.designation)
+    empFilters.push(["designation", "=", searchParams.designation]);
+
+  type EmpRow = {
+    name: string;
+    employee_name: string | null;
+    department: string | null;
+  };
+  const [empRowsRaw, assignmentResult, facets] = await Promise.all([
+    frappeCall<EmpRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee",
+        fields: ["name", "employee_name", "department"],
+        filters: JSON.stringify(empFilters),
+        order_by: "employee_name asc",
+        limit_page_length: 500,
+      },
+      as: "user",
+    }).catch(() => [] as EmpRow[]),
+    listShiftAssignments({ page: 1, pageSize: 500 }),
+    fetchRosterFacets(),
+  ]);
+
+  const inWindow = assignmentResult.rows.filter((a) => {
     if (a.startDate > lastIso) return false;
     if (a.endDate && a.endDate < firstIso) return false;
+    if (searchParams.shift && a.shiftType !== searchParams.shift) return false;
     return true;
   });
 
-  // Group rows by employee.
+  // Row per filtered employee; start empty then paint assignments in.
   type Row = {
     employee: string;
     employeeName: string | null;
-    cells: Array<{ shift: string | null; status: string | null }>;
+    cells: Array<{ shift: string | null; status: string | null; assignmentId: string | null }>;
   };
   const byEmp = new Map<string, Row>();
+  for (const e of empRowsRaw) {
+    byEmp.set(e.name, {
+      employee: e.name,
+      employeeName: e.employee_name,
+      cells: days.map(() => ({ shift: null, status: null, assignmentId: null })),
+    });
+  }
   for (const a of inWindow) {
-    let row = byEmp.get(a.employee);
-    if (!row) {
-      row = {
-        employee: a.employee,
-        employeeName: a.employeeName,
-        cells: days.map(() => ({ shift: null, status: null })),
-      };
-      byEmp.set(a.employee, row);
-    }
+    const row = byEmp.get(a.employee);
+    if (!row) continue; // outside the filtered employee set
     days.forEach((d, i) => {
       const iso = isoDate(d);
       if (iso < a.startDate) return;
       if (a.endDate && iso > a.endDate) return;
-      const cur = row!.cells[i]!;
+      const cur = row.cells[i]!;
       // Submitted assignments outrank drafts.
       if (cur.shift && cur.status === "Active") return;
       cur.shift = a.shiftType;
       cur.status = a.status;
+      cur.assignmentId = a.id;
     });
   }
   const rows = Array.from(byEmp.values()).sort((a, b) =>
     (a.employeeName ?? a.employee).localeCompare(b.employeeName ?? b.employee),
   );
 
+  const hasAnyFilter = Boolean(
+    searchParams.company ||
+      searchParams.department ||
+      searchParams.branch ||
+      searchParams.designation ||
+      searchParams.shift,
+  );
+
   if (rows.length === 0) {
     return (
-      <EmptyState>
-        No shift assignments overlap the next {ROSTER_DAYS} days. File one from
-        the Assignments tab or hit “Bulk assign”.
-      </EmptyState>
+      <>
+        <RosterFilters searchParams={searchParams} facets={facets} />
+        <EmptyState>
+          {hasAnyFilter
+            ? "No employees match these roster filters. Clear a chip to widen the view."
+            : `No shift assignments overlap the next ${ROSTER_DAYS} days. File one from the Assignments tab or hit "Bulk assign".`}
+        </EmptyState>
+      </>
     );
   }
 
   return (
+    <>
+      <RosterFilters searchParams={searchParams} facets={facets} />
     <div className="overflow-x-auto rounded-card border border-hairline bg-surface shadow-card">
       <table className="w-full min-w-[900px] text-xs">
         <thead>
@@ -603,24 +656,37 @@ async function Roster() {
               {r.cells.map((c, i) => (
                 <td key={i} className="px-1.5 py-1.5">
                   {c.shift ? (
-                    <div
-                      className={`mx-auto flex h-12 flex-col items-center justify-center rounded-lg px-2 text-center text-[10px] ${
+                    <Link
+                      href={
+                        (c.assignmentId
+                          ? `/hr/shift-management/assignments/${encodeURIComponent(c.assignmentId)}`
+                          : "#") as Route
+                      }
+                      className={`mx-auto flex h-12 flex-col items-center justify-center rounded-lg px-2 text-center text-[10px] transition ${
                         c.status === "Active"
-                          ? "bg-rise/10 text-rise"
-                          : "bg-amber-100 text-amber-800"
+                          ? "bg-rise/10 text-rise hover:bg-rise/20"
+                          : "bg-amber-100 text-amber-800 hover:bg-amber-200"
                       }`}
-                      title={`${c.shift} · ${c.status}`}
+                      title={`${c.shift} · ${c.status} — click to open`}
                     >
                       <p className="line-clamp-2 leading-tight font-medium">
                         {c.shift}
                       </p>
-                    </div>
+                    </Link>
                   ) : (
-                    <div
-                      className={`mx-auto h-12 rounded-lg border border-dashed border-hairline ${
+                    <Link
+                      href={
+                        `/hr/shift-management/assignments/new?employee=${encodeURIComponent(r.employee)}&start_date=${isoDate(days[i]!)}` as Route
+                      }
+                      className={`group mx-auto flex h-12 items-center justify-center rounded-lg border border-dashed border-hairline text-[10px] text-ash-400 transition hover:border-ink-400 hover:bg-canvas hover:text-ink-800 focus-ring ${
                         isWeekend(days[i]!) ? "bg-canvas/60" : ""
                       }`}
-                    />
+                      title={`Assign a shift on ${isoDate(days[i]!)}`}
+                    >
+                      <span className="opacity-0 transition group-hover:opacity-100">
+                        + assign
+                      </span>
+                    </Link>
                   )}
                 </td>
               ))}
@@ -629,6 +695,122 @@ async function Roster() {
         </tbody>
       </table>
     </div>
+    </>
+  );
+}
+
+// --- Roster filters + facets --------------------------------------------
+
+type RosterFacets = {
+  departments: string[];
+  branches: string[];
+  designations: string[];
+  companies: string[];
+  shiftTypes: string[];
+};
+
+async function fetchRosterFacets(): Promise<RosterFacets> {
+  const [depts, branches, designs, comps, shifts] = await Promise.all([
+    frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: { doctype: "Department", fields: ["name"], limit_page_length: 200 },
+      as: "user",
+    }).catch(() => []),
+    frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: { doctype: "Branch", fields: ["name"], limit_page_length: 200 },
+      as: "user",
+    }).catch(() => []),
+    frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Designation",
+        fields: ["name"],
+        limit_page_length: 500,
+      },
+      as: "user",
+    }).catch(() => []),
+    frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: { doctype: "Company", fields: ["name"], limit_page_length: 200 },
+      as: "user",
+    }).catch(() => []),
+    frappeCall<Array<{ name: string }>>({
+      method: "frappe.client.get_list",
+      args: { doctype: "Shift Type", fields: ["name"], limit_page_length: 200 },
+      as: "user",
+    }).catch(() => []),
+  ]);
+  return {
+    departments: depts.map((r) => r.name).sort(),
+    branches: branches.map((r) => r.name).sort(),
+    designations: designs.map((r) => r.name).sort(),
+    companies: comps.map((r) => r.name).sort(),
+    shiftTypes: shifts.map((r) => r.name).sort(),
+  };
+}
+
+function RosterFilters({
+  searchParams,
+  facets,
+}: {
+  searchParams: SP;
+  facets: RosterFacets;
+}) {
+  const chips: Array<{ label: string; key: keyof SP; options: string[] }> = [
+    { label: "Company", key: "company", options: facets.companies },
+    { label: "Department", key: "department", options: facets.departments },
+    { label: "Branch", key: "branch", options: facets.branches },
+    { label: "Designation", key: "designation", options: facets.designations },
+    { label: "Shift", key: "shift", options: facets.shiftTypes },
+  ];
+  const activeCount = chips.reduce(
+    (n, c) => (searchParams[c.key] ? n + 1 : n),
+    0,
+  );
+  return (
+    <form
+      action="/hr/shift-management"
+      method="get"
+      className="mb-3 flex flex-wrap items-center gap-2"
+    >
+      {/* Keep the roster tab active after submit. */}
+      <input type="hidden" name="tab" value="roster" />
+      {chips.map((c) => (
+        <label
+          key={c.key}
+          className="inline-flex items-center gap-1 rounded-chip border border-hairline bg-surface px-2 py-1 text-xs text-ash-700"
+        >
+          <span className="text-ash-500">{c.label}:</span>
+          <select
+            name={String(c.key)}
+            defaultValue={String(searchParams[c.key] ?? "")}
+            className="bg-transparent text-xs text-ink-900 focus-ring outline-none"
+          >
+            <option value="">Any</option>
+            {c.options.map((o) => (
+              <option key={o} value={o}>
+                {o}
+              </option>
+            ))}
+          </select>
+        </label>
+      ))}
+      <button
+        type="submit"
+        className="rounded-chip border border-hairline bg-surface px-2.5 py-1 text-xs font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+      >
+        Apply
+      </button>
+      {activeCount > 0 && (
+        <Link
+          href={"/hr/shift-management?tab=roster" as Route}
+          className="rounded-chip px-2 py-1 text-xs text-ash-500 hover:bg-canvas hover:text-ink-800 focus-ring"
+        >
+          Clear
+        </Link>
+      )}
+    </form>
   );
 }
 

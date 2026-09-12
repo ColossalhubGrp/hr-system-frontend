@@ -71,6 +71,17 @@ const shiftTypeSchema = z.object({
   late_entry_grace_period: z.string().trim().optional(),
   early_exit_grace_period: z.string().trim().optional(),
   process_attendance_after: z.string().trim().optional(),
+  determine_check_in_and_check_out: z.string().trim().optional(),
+  working_hours_calculation_based_on: z.string().trim().optional(),
+  mark_auto_attendance_on_holidays: z
+    .union([z.literal("on"), z.literal("")])
+    .optional(),
+  enable_late_entry_marking: z
+    .union([z.literal("on"), z.literal("")])
+    .optional(),
+  enable_early_exit_marking: z
+    .union([z.literal("on"), z.literal("")])
+    .optional(),
   regular_day_multiplier: z.string().trim().optional(),
   saturday_day_multiplier: z.string().trim().optional(),
   sunday_day_multiplier: z.string().trim().optional(),
@@ -106,6 +117,14 @@ function toInput(
     late_entry_grace_period: numOrUndef(data.late_entry_grace_period),
     early_exit_grace_period: numOrUndef(data.early_exit_grace_period),
     process_attendance_after: data.process_attendance_after || undefined,
+    determine_check_in_and_check_out:
+      data.determine_check_in_and_check_out || undefined,
+    working_hours_calculation_based_on:
+      data.working_hours_calculation_based_on || undefined,
+    mark_auto_attendance_on_holidays:
+      data.mark_auto_attendance_on_holidays === "on",
+    enable_late_entry_marking: data.enable_late_entry_marking === "on",
+    enable_early_exit_marking: data.enable_early_exit_marking === "on",
     regular_day_multiplier: numOrUndef(data.regular_day_multiplier),
     saturday_day_multiplier: numOrUndef(data.saturday_day_multiplier),
     sunday_day_multiplier: numOrUndef(data.sunday_day_multiplier),
@@ -645,6 +664,8 @@ const scheduleAssignmentSchema = z
     status: z.enum(["Active", "Inactive"]).optional(),
     company: z.string().trim().optional(),
     notes: z.string().trim().optional(),
+    enabled: z.union([z.literal("on"), z.literal("")]).optional(),
+    create_shifts_after: z.string().trim().optional(),
   })
   .refine((d) => !d.end_date || d.end_date >= d.start_date, {
     message: "End date must be on or after start date.",
@@ -662,6 +683,8 @@ function toScheduleAssignmentInput(
     status: d.status,
     company: d.company,
     notes: d.notes,
+    enabled: d.enabled === "on",
+    create_shifts_after: d.create_shifts_after || undefined,
   };
 }
 

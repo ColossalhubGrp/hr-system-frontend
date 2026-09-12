@@ -11,7 +11,7 @@ export const metadata = { title: "Assign shift · Colossal HR" };
 export default async function NewShiftAssignmentPage({
   searchParams,
 }: {
-  searchParams: { employee?: string };
+  searchParams: { employee?: string; start_date?: string };
 }) {
   const [shiftTypes, companies, employeeDirectory] = await Promise.all([
     listShiftTypes(),
@@ -44,6 +44,7 @@ export default async function NewShiftAssignmentPage({
         companies={companies}
         employeeDirectory={employeeDirectory}
         defaultEmployee={searchParams.employee}
+        defaultStartDate={searchParams.start_date}
         cancelHref="/hr/shift-management?tab=assignments"
       />
     </div>

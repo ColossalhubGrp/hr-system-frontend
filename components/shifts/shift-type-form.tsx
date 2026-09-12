@@ -44,6 +44,11 @@ export function ShiftTypeForm({
     lateEntryGracePeriod?: number | null;
     earlyExitGracePeriod?: number | null;
     processAttendanceAfter?: string | null;
+    determineCheckInAndCheckOut?: string | null;
+    workingHoursCalculationBasedOn?: string | null;
+    markAutoAttendanceOnHolidays?: boolean;
+    enableLateEntryMarking?: boolean;
+    enableEarlyExitMarking?: boolean;
     regularDayMultiplier?: number;
     saturdayDayMultiplier?: number;
     sundayDayMultiplier?: number;
@@ -156,7 +161,70 @@ export function ShiftTypeForm({
             />
             Allow check-out after the shift ends
           </label>
+          <label className="inline-flex items-center gap-2 text-sm text-ash-800">
+            <input
+              type="checkbox"
+              name="mark_auto_attendance_on_holidays"
+              defaultChecked={initial?.markAutoAttendanceOnHolidays}
+              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            />
+            Mark attendance even on holidays (retail / hospitals / call centres)
+          </label>
+          <label className="inline-flex items-center gap-2 text-sm text-ash-800">
+            <input
+              type="checkbox"
+              name="enable_late_entry_marking"
+              defaultChecked={initial?.enableLateEntryMarking}
+              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            />
+            Flag late entries on the Attendance record
+          </label>
+          <label className="inline-flex items-center gap-2 text-sm text-ash-800">
+            <input
+              type="checkbox"
+              name="enable_early_exit_marking"
+              defaultChecked={initial?.enableEarlyExitMarking}
+              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            />
+            Flag early exits on the Attendance record
+          </label>
         </div>
+        <Field
+          label="Interpret check-in log types as"
+          htmlFor="determine_check_in_and_check_out"
+          hint="How Auto-Attendance reads a stream of check-ins."
+        >
+          <SelectInput
+            id="determine_check_in_and_check_out"
+            name="determine_check_in_and_check_out"
+            options={[
+              "Alternating entries as IN and OUT during the same shift",
+              "Strictly based on Log Type in Employee Checkin",
+            ]}
+            defaultValue={
+              initial?.determineCheckInAndCheckOut ??
+              "Alternating entries as IN and OUT during the same shift"
+            }
+          />
+        </Field>
+        <Field
+          label="Calculate working hours from"
+          htmlFor="working_hours_calculation_based_on"
+          hint="First/last spans the whole day (includes breaks). Every-valid sums each in/out pair (excludes breaks)."
+        >
+          <SelectInput
+            id="working_hours_calculation_based_on"
+            name="working_hours_calculation_based_on"
+            options={[
+              "First Check-in and Last Check-out",
+              "Every Valid Check-in and Check-out",
+            ]}
+            defaultValue={
+              initial?.workingHoursCalculationBasedOn ??
+              "First Check-in and Last Check-out"
+            }
+          />
+        </Field>
         <Field
           label="Half-day if working hours ≤"
           htmlFor="working_hours_threshold_for_half_day"

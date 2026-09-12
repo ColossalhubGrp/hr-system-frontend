@@ -52,3 +52,72 @@ export async function setDefaultPerformanceFramework(
     as: "user",
   });
 }
+
+// --- Shift + attendance org-wide toggles --------------------------------
+
+export type ShiftHrSettings = {
+  /** When on, every employee check-in captures browser latitude/longitude
+   *  and Shift Locations enforce their radius. Off → geofence checks
+   *  are skipped, check-ins still record. Mirrors Frappe HR's
+   *  `allow_geolocation_tracking` in HR Settings. */
+  allowGeolocationTracking: boolean;
+  /** When on, the same employee can have overlapping Active Shift
+   *  Assignments (multi-role staff, rotating pairs, etc.). Off — Frappe's
+   *  default — rejects overlapping saves. Mirrors HR Settings'
+   *  `allow_multiple_shift_assignments`. */
+  allowMultipleShiftAssignments: boolean;
+};
+
+export async function getShiftHrSettings(): Promise<ShiftHrSettings> {
+  try {
+    const resp = await frappeCall<{
+      allow_geolocation_tracking: 0 | 1 | boolean | null;
+      allow_multiple_shift_assignments: 0 | 1 | boolean | null;
+    }>({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "HR Settings",
+        filters: JSON.stringify({}),
+        fieldname: [
+          "allow_geolocation_tracking",
+          "allow_multiple_shift_assignments",
+        ],
+      },
+      as: "user",
+    });
+    return {
+      allowGeolocationTracking: Boolean(resp?.allow_geolocation_tracking),
+      allowMultipleShiftAssignments: Boolean(
+        resp?.allow_multiple_shift_assignments,
+      ),
+    };
+  } catch {
+    return {
+      allowGeolocationTracking: false,
+      allowMultipleShiftAssignments: false,
+    };
+  }
+}
+
+export async function setShiftHrSettings(
+  input: Partial<ShiftHrSettings>,
+): Promise<void> {
+  const payload: Record<string, 0 | 1> = {};
+  if (input.allowGeolocationTracking !== undefined)
+    payload.allow_geolocation_tracking = input.allowGeolocationTracking ? 1 : 0;
+  if (input.allowMultipleShiftAssignments !== undefined)
+    payload.allow_multiple_shift_assignments = input.allowMultipleShiftAssignments
+      ? 1
+      : 0;
+  if (Object.keys(payload).length === 0) return;
+  await frappeCall<unknown>({
+    method: "frappe.client.set_value",
+    verb: "POST",
+    args: {
+      doctype: "HR Settings",
+      name: "HR Settings",
+      fieldname: payload,
+    },
+    as: "user",
+  });
+}

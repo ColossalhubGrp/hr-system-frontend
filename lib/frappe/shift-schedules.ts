@@ -297,6 +297,15 @@ export type ShiftScheduleAssignmentRow = {
   endDate: string | null;
   status: string;
   company: string | null;
+  /** When false, the nightly scheduler skips this row — HR can pause a
+   *  repeating pattern without deleting the record. Mirrors Frappe HR's
+   *  `enabled` toggle on Shift Schedule Assignment. */
+  enabled: boolean;
+  /** The scheduler only generates shifts dated strictly after this day,
+   *  and advances the field to the last generated date on every run.
+   *  Prevents duplicate assignments on re-runs. Frappe HR's
+   *  `create_shifts_after`. */
+  createShiftsAfter: string | null;
 };
 
 export async function listShiftScheduleAssignments(opts: {
@@ -324,6 +333,8 @@ export async function listShiftScheduleAssignments(opts: {
     end_date: string | null;
     status: string;
     company: string | null;
+    enabled: 0 | 1 | boolean | null;
+    create_shifts_after: string | null;
   };
 
   const [rowsRaw, totalRaw] = await Promise.all([
@@ -340,6 +351,8 @@ export async function listShiftScheduleAssignments(opts: {
           "end_date",
           "status",
           "company",
+          "enabled",
+          "create_shifts_after",
         ],
         filters: JSON.stringify(filters),
         order_by: "start_date desc",
@@ -368,6 +381,8 @@ export async function listShiftScheduleAssignments(opts: {
       endDate: r.end_date,
       status: r.status,
       company: r.company,
+      enabled: Boolean(r.enabled),
+      createShiftsAfter: r.create_shifts_after,
     })),
     total: Number(totalRaw ?? 0),
     page,
@@ -393,6 +408,8 @@ export async function getShiftScheduleAssignment(
       status: string;
       company: string | null;
       notes: string | null;
+      enabled: 0 | 1 | boolean | null;
+      create_shifts_after: string | null;
     };
     const doc = await frappeCall<Raw>({
       method: "frappe.client.get",
@@ -409,6 +426,8 @@ export async function getShiftScheduleAssignment(
       status: doc.status,
       company: doc.company,
       notes: doc.notes,
+      enabled: Boolean(doc.enabled),
+      createShiftsAfter: doc.create_shifts_after,
     };
   } catch (err) {
     if (err instanceof FrappeRequestError && err.status === 404) return null;
@@ -424,6 +443,8 @@ export type ShiftScheduleAssignmentInput = {
   status?: "Active" | "Inactive";
   company?: string;
   notes?: string;
+  enabled?: boolean;
+  create_shifts_after?: string;
 };
 
 export async function createShiftScheduleAssignment(
@@ -432,7 +453,10 @@ export async function createShiftScheduleAssignment(
   const doc = {
     doctype: "Shift Schedule Assignment",
     status: "Active",
-    ...compact(input),
+    ...compact({
+      ...input,
+      enabled: input.enabled === undefined ? undefined : input.enabled ? 1 : 0,
+    }),
   };
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
@@ -452,7 +476,11 @@ export async function updateShiftScheduleAssignment(
     args: {
       doctype: "Shift Schedule Assignment",
       name: id,
-      fieldname: compact(input),
+      fieldname: compact({
+        ...input,
+        enabled:
+          input.enabled === undefined ? undefined : input.enabled ? 1 : 0,
+      }),
     },
     verb: "POST",
     as: "user",

@@ -27,6 +27,7 @@ export function ShiftAssignmentForm({
   employeeDirectory,
   cancelHref,
   defaultEmployee,
+  defaultStartDate,
 }: {
   action: Action;
   shiftTypes: string[];
@@ -34,6 +35,7 @@ export function ShiftAssignmentForm({
   employeeDirectory: EmployeeDirectoryEntry[];
   cancelHref: string;
   defaultEmployee?: string;
+  defaultStartDate?: string;
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
@@ -82,6 +84,7 @@ export function ShiftAssignmentForm({
             id="start_date"
             name="start_date"
             type="date"
+            defaultValue={defaultStartDate}
             invalid={Boolean(fe.start_date)}
           />
         </Field>

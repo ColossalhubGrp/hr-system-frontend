@@ -44,6 +44,8 @@ export function ScheduleAssignmentForm({
     status?: string;
     company?: string | null;
     notes?: string | null;
+    enabled?: boolean;
+    createShiftsAfter?: string | null;
   };
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -118,6 +120,34 @@ export function ScheduleAssignmentForm({
             name="status"
             options={["Active", "Inactive"]}
             defaultValue={initial?.status ?? "Active"}
+          />
+        </Field>
+        <Field
+          label="Auto-generate shifts"
+          htmlFor="enabled"
+          hint="When on, the nightly scheduler creates matching Shift Assignments for this pattern. Turn off to pause without deleting."
+        >
+          <label className="inline-flex items-center gap-2 text-sm text-ash-800">
+            <input
+              id="enabled"
+              type="checkbox"
+              name="enabled"
+              defaultChecked={initial?.enabled ?? true}
+              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            />
+            Enabled
+          </label>
+        </Field>
+        <Field
+          label="Create shifts strictly after"
+          htmlFor="create_shifts_after"
+          hint="Scheduler skips this date and earlier. Auto-advances after every run."
+        >
+          <TextInput
+            id="create_shifts_after"
+            name="create_shifts_after"
+            type="date"
+            defaultValue={initial?.createShiftsAfter ?? ""}
           />
         </Field>
         <Field label="Company" htmlFor="company">

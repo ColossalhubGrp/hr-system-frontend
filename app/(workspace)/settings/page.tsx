@@ -9,6 +9,7 @@ import {
   Target,
   Clock,
   Lock,
+  CalendarCheck,
   CalendarDays,
   MapPin,
   MessageSquareWarning,
@@ -132,6 +133,13 @@ const HR_CARDS: SettingCardSpec[] = [
     icon: <ClipboardList className="h-4 w-4" />,
     title: "Appraisal templates",
     desc: "Rating criteria + weightages a cycle uses to open appraisals. Set once — every new appraisal and its feedback forms inherit them.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/attendance",
+    icon: <CalendarCheck className="h-4 w-4" />,
+    title: "Attendance & shifts",
+    desc: "Org-wide switches for geolocation tracking on check-ins and whether the same employee can hold overlapping Shift Assignments.",
     show: (a) => a.isHrAdmin,
   },
   {

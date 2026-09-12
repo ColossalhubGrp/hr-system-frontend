@@ -234,6 +234,18 @@ export async function createLeavePolicyAssignmentAction(
       error: "Manual assignments need both effective-from and effective-to.",
     };
   }
+  if (
+    parsed.data.assignment_based_on === "Joining Date" &&
+    !parsed.data.effective_to
+  ) {
+    return {
+      error:
+        "Pick an effective-to date — Frappe fills effective-from from the employee's DoJ, but still needs an end.",
+      fieldErrors: {
+        effective_to: "Required for joining-date assignments.",
+      },
+    };
+  }
 
   try {
     const name = await createLeavePolicyAssignment({

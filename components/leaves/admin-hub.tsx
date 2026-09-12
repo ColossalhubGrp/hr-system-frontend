@@ -364,10 +364,18 @@ function PolicyAssignmentsTab({
               <DateField name="effective_to" label="Effective to" required />
             </>
           ) : (
-            <p className="text-xs text-ash-500 sm:col-span-2 self-end pb-2">
-              Effective dates auto-derive from the employee&apos;s joining
-              date. Nothing more to pick.
-            </p>
+            <>
+              <DateField
+                name="effective_to"
+                label="Effective to"
+                required
+              />
+              <p className="text-xs text-ash-500 sm:col-span-2 self-end pb-2">
+                &ldquo;Effective from&rdquo; auto-derives from the
+                employee&apos;s joining date; pick when the entitlement
+                should stop (typically year-end).
+              </p>
+            </>
           )}
           <CheckField name="carry_forward" label="Carry forward unused" className="sm:col-span-6" />
           <div className="sm:col-span-6 flex justify-end">

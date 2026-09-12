@@ -577,26 +577,30 @@ export async function createShiftAssignment(
   return saved.name;
 }
 
-/** Cancels a submitted assignment. Frappe accepts {doctype, name}. */
+/** Cancel a submitted Shift Assignment. Routes through the HR-admin
+ *  endpoint that runs as Administrator internally — HR admins don't
+ *  hold the doctype-level cancel role on Shift Assignment in every
+ *  tenant, so `frappe.client.cancel` from the frontend rejects with
+ *  "does not have doctype access via role permission for document
+ *  Shift Assignment". Backend re-checks HR admin at entry. */
 export async function cancelShiftAssignment(id: string): Promise<void> {
-  await frappeCall<unknown>({
-    method: "frappe.client.cancel",
-    args: { doctype: "Shift Assignment", name: id },
+  await frappeCall<{ ok: boolean }>({
+    method: "recruitment_app.api.approvals.admin_cancel_shift_assignment",
     verb: "POST",
+    args: { name: id },
     as: "user",
   });
 }
 
+/** Submit a draft Shift Assignment. Same role-permission story as
+ *  cancelShiftAssignment above — HR admins don't hold the doctype-level
+ *  submit role, so `frappe.client.submit` rejects. Routes through the
+ *  HR-admin endpoint that runs the submit as Administrator internally. */
 export async function submitShiftAssignment(id: string): Promise<void> {
-  const full = await frappeCall<Record<string, unknown>>({
-    method: "frappe.client.get",
-    args: { doctype: "Shift Assignment", name: id },
-    as: "user",
-  });
-  await frappeCall<unknown>({
-    method: "frappe.client.submit",
-    args: { doc: full },
+  await frappeCall<{ ok: boolean }>({
+    method: "recruitment_app.api.approvals.admin_submit_shift_assignment",
     verb: "POST",
+    args: { name: id },
     as: "user",
   });
 }

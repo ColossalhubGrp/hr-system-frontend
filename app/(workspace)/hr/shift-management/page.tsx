@@ -153,6 +153,30 @@ function NewButton({ tab }: { tab: Tab }) {
       label: "Assign schedule",
     },
   };
+  // Assignments tab: show both "Bulk assign" (secondary) + "Assign shift"
+  // (primary) so HR can jump into the bulk flow without hunting through
+  // menus. Every other tab still gets a single primary button.
+  if (tab === "assignments") {
+    const single = config.assignments;
+    return (
+      <div className="flex flex-wrap gap-2">
+        <Link
+          href={"/hr/shift-management/assignments/bulk" as Route}
+          className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+        >
+          <Layers className="h-4 w-4" />
+          Bulk assign
+        </Link>
+        <Link
+          href={single.href as Route}
+          className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+        >
+          <Plus className="h-4 w-4" />
+          {single.label}
+        </Link>
+      </div>
+    );
+  }
   if (tab === "roster") {
     return (
       <Link

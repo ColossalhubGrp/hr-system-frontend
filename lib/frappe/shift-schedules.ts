@@ -333,11 +333,13 @@ export async function listShiftScheduleAssignments(opts: {
     end_date: string | null;
     status: string;
     company: string | null;
-    enabled: 0 | 1 | boolean | null;
-    create_shifts_after: string | null;
   };
 
   const [rowsRaw, totalRaw] = await Promise.all([
+    // NOTE: `enabled` and `create_shifts_after` aren't `in_list_view` on
+    // Shift Schedule Assignment, so projecting them here trips
+    // Frappe v15's "Field not permitted in query" and empties the list.
+    // Fetch those only via frappe.client.get on the detail page.
     frappeCall<Raw[]>({
       method: "frappe.client.get_list",
       args: {
@@ -351,8 +353,6 @@ export async function listShiftScheduleAssignments(opts: {
           "end_date",
           "status",
           "company",
-          "enabled",
-          "create_shifts_after",
         ],
         filters: JSON.stringify(filters),
         order_by: "start_date desc",
@@ -381,8 +381,11 @@ export async function listShiftScheduleAssignments(opts: {
       endDate: r.end_date,
       status: r.status,
       company: r.company,
-      enabled: Boolean(r.enabled),
-      createShiftsAfter: r.create_shifts_after,
+      // enabled + createShiftsAfter aren't projected in the list — the
+      // list DataTable renders them as unknown/false. They land properly
+      // on the detail page via frappe.client.get.
+      enabled: false,
+      createShiftsAfter: null,
     })),
     total: Number(totalRaw ?? 0),
     page,

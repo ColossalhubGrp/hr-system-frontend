@@ -9,6 +9,7 @@ export type OrgEmployee = {
   image: string | null;
   reportsTo: string | null;
   status: string;
+  company: string | null;
 };
 
 /** All active employees + their reporting links. Used to build the org
@@ -32,6 +33,7 @@ export async function listOrgEmployees(opts?: {
       image: string | null;
       reports_to: string | null;
       status: string | null;
+      company: string | null;
     };
     const rows = await frappeCall<Row[]>({
       method: "frappe.client.get_list",
@@ -45,6 +47,7 @@ export async function listOrgEmployees(opts?: {
           "image",
           "reports_to",
           "status",
+          "company",
         ],
         filters: JSON.stringify(filters),
         order_by: "employee_name asc",
@@ -60,6 +63,7 @@ export async function listOrgEmployees(opts?: {
       image: r.image,
       reportsTo: r.reports_to,
       status: r.status ?? "Active",
+      company: r.company,
     }));
   } catch {
     return [];

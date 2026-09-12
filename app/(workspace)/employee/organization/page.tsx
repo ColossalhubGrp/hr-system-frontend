@@ -9,6 +9,11 @@ export const metadata = { title: "Organization chart · Colossal HR" };
 
 export default async function OrganizationChartPage() {
   const employees = await listOrgEmployees();
+  // Pick the most common company across employees — reads better on the
+  // synthetic root card than a generic "Company" label.
+  const companyName =
+    mostCommon(employees.map((e) => e.company).filter((c): c is string => !!c)) ??
+    "Company";
 
   return (
     <div className="flex flex-col gap-5">
@@ -27,7 +32,22 @@ export default async function OrganizationChartPage() {
         subtitle="Reporting lines across the company, built from each employee's 'reports to'. Click a card to open the profile."
       />
 
-      <OrgTree employees={employees} />
+      <OrgTree employees={employees} companyName={companyName} />
     </div>
   );
+}
+
+function mostCommon(values: string[]): string | null {
+  if (values.length === 0) return null;
+  const counts = new Map<string, number>();
+  for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
+  let best: string | null = null;
+  let max = 0;
+  for (const [k, n] of counts) {
+    if (n > max) {
+      best = k;
+      max = n;
+    }
+  }
+  return best;
 }

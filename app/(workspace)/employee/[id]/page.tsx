@@ -226,7 +226,7 @@ function renderTab(
       return (
         <FieldGrid
           fields={[
-            { label: "Reports to", value: emp.reportsTo },
+            { label: "Reports to", value: emp.reportsToLabel ?? emp.reportsTo },
             { label: "Expense approver", value: emp.expenseApprover },
             { label: "Leave approver", value: emp.leaveApprover },
             { label: "Shift request approver", value: emp.shiftRequestApprover },

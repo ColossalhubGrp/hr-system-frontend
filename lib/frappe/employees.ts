@@ -59,6 +59,10 @@ export type EmployeeFull = {
   currentAddress: string | null;
   permanentAddress: string | null;
   reportsTo: string | null;
+  /** Display label for `reportsTo` — "Employee Name (HR-EMP-…)". Null
+   *  when reports_to isn't set. Prevents the Approvers tab from surfacing
+   *  a raw employee ID to the reader. */
+  reportsToLabel: string | null;
   expenseApprover: string | null;
   leaveApprover: string | null;
   shiftRequestApprover: string | null;
@@ -274,10 +278,35 @@ export async function getEmployee(id: string): Promise<EmployeeFull | null> {
       args: { doctype: "Employee", name: id },
       as: "user",
     });
-    return toFull(doc);
+    const full = toFull(doc);
+    // Resolve reports_to to a readable label so the Approvers tab shows
+    // "Jane Doe (HR-EMP-00393)" instead of the bare ID. One extra
+    // round-trip only when reports_to is set.
+    if (full.reportsTo) {
+      full.reportsToLabel = await resolveEmployeeLabel(full.reportsTo);
+    }
+    return full;
   } catch (err) {
     if (isNotFound(err)) return null;
     throw err;
+  }
+}
+
+async function resolveEmployeeLabel(empId: string): Promise<string> {
+  try {
+    const row = await frappeCall<{ employee_name?: string | null }>({
+      method: "frappe.client.get_value",
+      args: {
+        doctype: "Employee",
+        filters: JSON.stringify({ name: empId }),
+        fieldname: JSON.stringify(["employee_name"]),
+      },
+      as: "user",
+    });
+    const name = (row?.employee_name ?? "").trim();
+    return name ? `${name} (${empId})` : empId;
+  } catch {
+    return empId;
   }
 }
 
@@ -414,6 +443,7 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     emergencyContactName: d.person_to_be_contacted,
     emergencyContactNumber: d.emergency_phone_number,
     reportsTo: d.reports_to,
+    reportsToLabel: null, // filled in by getEmployee when set
     expenseApprover: d.expense_approver,
     leaveApprover: d.leave_approver,
     shiftRequestApprover: d.shift_request_approver,

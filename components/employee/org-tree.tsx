@@ -10,9 +10,9 @@ import {
   ChevronDown,
   ChevronUp,
   Search,
-  User,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { EmployeeAvatar } from "@/components/employee/avatar";
 import type { OrgEmployee } from "@/lib/frappe/org-chart";
 
 type Node = (OrgEmployee | SyntheticRoot) & {
@@ -268,7 +268,7 @@ function Card({
       )}
     >
       <div className="flex items-start gap-2">
-        <Avatar name={node.employeeName} image={node.image} />
+        <EmployeeAvatar name={node.employeeName} imageUrl={node.image} size="sm" />
         <div className="flex min-w-0 flex-1 flex-col">
           <Link
             href={`/employee/${encodeURIComponent(node.id)}` as Route}
@@ -316,29 +316,6 @@ function Card({
         </button>
       )}
     </div>
-  );
-}
-
-function Avatar({ name, image }: { name: string; image: string | null }) {
-  if (image) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return (
-      <img
-        src={image}
-        alt={name}
-        className="h-8 w-8 shrink-0 rounded-full object-cover"
-      />
-    );
-  }
-  const initials = name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((s) => s.charAt(0).toUpperCase())
-    .join("");
-  return (
-    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-ink-100 text-[11px] font-semibold text-ink-800">
-      {initials || <User className="h-3.5 w-3.5" />}
-    </span>
   );
 }
 

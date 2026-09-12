@@ -14,6 +14,7 @@ import {
   MessageSquareWarning,
   ChevronRight,
   RefreshCcw,
+  BadgeCheck,
   Database,
   Star,
   ClipboardList,
@@ -116,6 +117,13 @@ const HR_CARDS: SettingCardSpec[] = [
     icon: <Star className="h-4 w-4" />,
     title: "Feedback criteria",
     desc: "Reusable criteria HR picks when scoring appraisal feedback (Communication, Ownership, Technical delivery…). Set them here, feedback forms use them everywhere.",
+    show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/designations",
+    icon: <BadgeCheck className="h-4 w-4" />,
+    title: "Designations",
+    desc: "Job titles employees hold + the skills each role requires. Feeds appraisal skill-maps and interview scoring.",
     show: (a) => a.isHrAdmin,
   },
   {

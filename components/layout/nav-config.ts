@@ -59,6 +59,7 @@ export const NAV: NavItem[] = [
     children: [
       { label: "Master Data", href: "/employee", requires: "HR_ANY" },
       { label: "Lifecycle", href: "/employee/lifecycle", requires: "HR_ANY" },
+      { label: "Organization Chart", href: "/employee/organization", requires: "HR_ANY" },
     ],
   },
 

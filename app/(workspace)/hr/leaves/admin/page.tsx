@@ -11,6 +11,7 @@ import {
   listLeaveAllocations,
   listLeaveEncashments,
   listLeaveLedgerEntries,
+  listLeavePeriods,
   listLeavePolicyAssignments,
 } from "@/lib/frappe/leave-admin";
 import { listLeaveTypes } from "@/lib/frappe/leave-types";
@@ -70,6 +71,7 @@ export default async function LeaveAdminPage({
     ledger,
     leaveTypes,
     leavePolicies,
+    leavePeriods,
     companies,
     employees,
     departments,
@@ -82,6 +84,7 @@ export default async function LeaveAdminPage({
     listLeaveLedgerEntries(),
     listLeaveTypes(),
     listLeavePolicies(),
+    listLeavePeriods(),
     listCompanies(),
     listAttendableEmployees({}),
     listDepartments(),
@@ -130,7 +133,15 @@ export default async function LeaveAdminPage({
           encashableLeaveTypes={leaveTypes
             .filter((t) => t.allowEncashment)
             .map((t) => t.name)}
-          leavePolicies={leavePolicies.map((p) => p.name)}
+          leavePolicies={leavePolicies.map((p) => ({
+            name: p.name,
+            title: p.title || p.name,
+          }))}
+          leavePeriods={leavePeriods.map((p) => ({
+            name: p.name,
+            fromDate: p.fromDate,
+            toDate: p.toDate,
+          }))}
           companies={companies}
           employees={employees}
           departments={departments}

@@ -211,6 +211,30 @@ export async function createLeavePolicyAssignmentAction(
     })
     .safeParse(Object.fromEntries(form));
   if (!parsed.success) return { error: "Fill every required field." };
+
+  // Enforce Frappe HR's own requirements up-front so we return a
+  // friendly message instead of the raw "cannot unpack non-iterable
+  // NoneType" that surfaces when the controller tries to destructure
+  // leave_period.from_date, leave_period.to_date.
+  if (
+    parsed.data.assignment_based_on === "Leave Period" &&
+    !parsed.data.leave_period
+  ) {
+    return {
+      error:
+        "Pick a leave period — Frappe HR derives the effective dates from it.",
+      fieldErrors: { leave_period: "Required for period-based assignments." },
+    };
+  }
+  if (
+    parsed.data.assignment_based_on === "Manual" &&
+    (!parsed.data.effective_from || !parsed.data.effective_to)
+  ) {
+    return {
+      error: "Manual assignments need both effective-from and effective-to.",
+    };
+  }
+
   try {
     const name = await createLeavePolicyAssignment({
       employee: parsed.data.employee,

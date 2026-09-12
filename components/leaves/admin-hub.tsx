@@ -56,7 +56,8 @@ export function LeaveAdminHub(props: {
   leaveTypes: string[];
   compensatoryLeaveTypes: string[];
   encashableLeaveTypes: string[];
-  leavePolicies: string[];
+  leavePolicies: Array<{ name: string; title: string }>;
+  leavePeriods: Array<{ name: string; fromDate: string; toDate: string }>;
   companies: string[];
   employees: AttendableEmployee[];
   departments: string[];
@@ -76,6 +77,7 @@ export function LeaveAdminHub(props: {
         <PolicyAssignmentsTab
           rows={props.policyAssignments}
           policies={props.leavePolicies}
+          periods={props.leavePeriods}
           employees={props.employees}
         />
       );
@@ -273,31 +275,100 @@ function AdjustForm({ name, onClose }: { name: string; onClose: () => void }) {
 function PolicyAssignmentsTab({
   rows,
   policies,
+  periods,
   employees,
 }: {
   rows: LeavePolicyAssignmentRow[];
-  policies: string[];
+  policies: Array<{ name: string; title: string }>;
+  periods: Array<{ name: string; fromDate: string; toDate: string }>;
   employees: AttendableEmployee[];
 }) {
   const [state, dispatch] = useFormState(
     createLeavePolicyAssignmentAction,
     EMPTY,
   );
+  const [basedOn, setBasedOn] = useState<
+    "Leave Period" | "Joining Date" | "Manual"
+  >("Leave Period");
   return (
     <div className="flex flex-col gap-4">
       <Section title="Assign a policy">
         <form action={dispatch} className="grid grid-cols-1 gap-3 sm:grid-cols-6">
           {state.error && <ErrBanner msg={state.error} />}
           <EmpSelect employees={employees} className="sm:col-span-2" />
-          <SelectField name="leave_policy" label="Policy" options={policies} required />
-          <SelectField
-            name="assignment_based_on"
-            label="Based on"
-            options={["Leave Period", "Joining Date", "Manual"]}
-            required
-          />
-          <DateField name="effective_from" label="Effective from" />
-          <DateField name="effective_to" label="Effective to" />
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs text-ash-600">
+              Policy <span className="text-fall">*</span>
+            </span>
+            <select
+              name="leave_policy"
+              required
+              defaultValue=""
+              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+            >
+              <option value="" disabled>
+                —
+              </option>
+              {policies.map((p) => (
+                <option key={p.name} value={p.name}>
+                  {p.title}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-sm">
+            <span className="text-xs text-ash-600">
+              Based on <span className="text-fall">*</span>
+            </span>
+            <select
+              name="assignment_based_on"
+              value={basedOn}
+              onChange={(e) =>
+                setBasedOn(
+                  e.target.value as "Leave Period" | "Joining Date" | "Manual",
+                )
+              }
+              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+            >
+              <option value="Leave Period">Leave Period</option>
+              <option value="Joining Date">Joining Date</option>
+              <option value="Manual">Manual</option>
+            </select>
+          </label>
+          {basedOn === "Leave Period" ? (
+            <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+              <span className="text-xs text-ash-600">
+                Leave period <span className="text-fall">*</span>
+              </span>
+              <select
+                name="leave_period"
+                required
+                defaultValue=""
+                className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+              >
+                <option value="" disabled>
+                  {periods.length === 0
+                    ? "No leave periods defined — set one under Configuration first"
+                    : "Pick a leave period"}
+                </option>
+                {periods.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name} · {p.fromDate} → {p.toDate}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : basedOn === "Manual" ? (
+            <>
+              <DateField name="effective_from" label="Effective from" required />
+              <DateField name="effective_to" label="Effective to" required />
+            </>
+          ) : (
+            <p className="text-xs text-ash-500 sm:col-span-2 self-end pb-2">
+              Effective dates auto-derive from the employee&apos;s joining
+              date. Nothing more to pick.
+            </p>
+          )}
           <CheckField name="carry_forward" label="Carry forward unused" className="sm:col-span-6" />
           <div className="sm:col-span-6 flex justify-end">
             <Submit label="Assign + generate allocations" icon={<Send className="h-3.5 w-3.5" />} />
@@ -307,9 +378,13 @@ function PolicyAssignmentsTab({
       <Section title={`Assignments (${rows.length})`}>
         <SimpleTable
           headers={["Employee", "Policy", "Based on", "From", "To", "Allocated", "Status", ""]}
-          rows={rows.map((r) => [
+          rows={rows.map((r) => {
+            const policyTitle =
+              policies.find((p) => p.name === r.leavePolicy)?.title ??
+              r.leavePolicy;
+            return [
             r.employeeName ?? r.employee,
-            r.leavePolicy,
+            policyTitle,
             r.assignmentBasedOn,
             r.effectiveFrom ?? "—",
             r.effectiveTo ?? "—",
@@ -322,7 +397,8 @@ function PolicyAssignmentsTab({
                 name={r.name}
               />
             ) : null,
-          ])}
+            ];
+          })}
         />
       </Section>
     </div>

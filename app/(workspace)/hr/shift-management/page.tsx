@@ -80,6 +80,8 @@ type SP = {
   branch?: string;
   designation?: string;
   shift?: string;
+  /** Roster anchor date — first column in the grid. Defaults to today. */
+  start?: string;
 };
 
 export default async function ShiftManagementPage({
@@ -523,14 +525,17 @@ async function Locations({
 const ROSTER_DAYS = 14;
 
 async function Roster({ searchParams }: { searchParams: SP }) {
-  const today = new Date();
+  // Anchor date the grid opens on. Defaults to today; HR can jump to any
+  // window via ?start=YYYY-MM-DD (the Prev / Today / Next controls set
+  // this) so the roster isn't stuck on a fixed 14-day slice.
+  const anchor = parseIso(searchParams.start) ?? new Date();
   const days = Array.from({ length: ROSTER_DAYS }, (_, i) => {
-    const d = new Date(today);
+    const d = new Date(anchor);
     d.setDate(d.getDate() + i);
     return d;
   });
   const lastDay = days[days.length - 1]!;
-  const firstIso = isoDate(today);
+  const firstIso = isoDate(anchor);
   const lastIso = isoDate(lastDay);
 
   // Fetch every employee matching the roster filters — this becomes the
@@ -622,10 +627,11 @@ async function Roster({ searchParams }: { searchParams: SP }) {
     return (
       <>
         <RosterFilters searchParams={searchParams} facets={facets} />
+        <RosterDateNav searchParams={searchParams} anchor={anchor} />
         <EmptyState>
           {hasAnyFilter
             ? "No employees match these roster filters. Clear a chip to widen the view."
-            : `No shift assignments overlap the next ${ROSTER_DAYS} days. File one from the Assignments tab or hit "Bulk assign".`}
+            : `No shift assignments overlap ${firstIso} → ${lastIso}. File one from the Assignments tab or hit "Bulk assign".`}
         </EmptyState>
       </>
     );
@@ -634,6 +640,7 @@ async function Roster({ searchParams }: { searchParams: SP }) {
   return (
     <>
       <RosterFilters searchParams={searchParams} facets={facets} />
+      <RosterDateNav searchParams={searchParams} anchor={anchor} />
     <div className="overflow-x-auto rounded-card border border-hairline bg-surface shadow-card">
       <table className="w-full min-w-[900px] text-xs">
         <thead>
@@ -836,6 +843,100 @@ function RosterFilters({
       )}
     </form>
   );
+}
+
+function RosterDateNav({
+  searchParams,
+  anchor,
+}: {
+  searchParams: SP;
+  anchor: Date;
+}) {
+  const hrefWithStart = (start: string) => {
+    const q = new URLSearchParams();
+    q.set("tab", "roster");
+    for (const [k, v] of Object.entries({
+      company: searchParams.company,
+      department: searchParams.department,
+      branch: searchParams.branch,
+      designation: searchParams.designation,
+      shift: searchParams.shift,
+    })) {
+      if (v) q.set(k, v);
+    }
+    if (start) q.set("start", start);
+    return `/hr/shift-management?${q.toString()}` as Route;
+  };
+  const prev = new Date(anchor);
+  prev.setDate(prev.getDate() - ROSTER_DAYS);
+  const next = new Date(anchor);
+  next.setDate(next.getDate() + ROSTER_DAYS);
+  const rangeEnd = new Date(anchor);
+  rangeEnd.setDate(rangeEnd.getDate() + ROSTER_DAYS - 1);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+  return (
+    <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+      <Link
+        href={hrefWithStart(isoDate(prev))}
+        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+        aria-label="Previous window"
+      >
+        ← Prev {ROSTER_DAYS} days
+      </Link>
+      <Link
+        href={hrefWithStart(isoDate(new Date()))}
+        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+      >
+        Today
+      </Link>
+      <Link
+        href={hrefWithStart(isoDate(next))}
+        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+        aria-label="Next window"
+      >
+        Next {ROSTER_DAYS} days →
+      </Link>
+      <span className="mx-1 text-ash-500">
+        Showing <strong className="text-ink-900">{fmt(anchor)}</strong> →{" "}
+        <strong className="text-ink-900">{fmt(rangeEnd)}</strong>
+      </span>
+      {/* Jump-to-date via a GET form so no client JS is needed. */}
+      <form
+        action="/hr/shift-management"
+        method="get"
+        className="inline-flex items-center gap-1"
+      >
+        <input type="hidden" name="tab" value="roster" />
+        {(["company", "department", "branch", "designation", "shift"] as const).map(
+          (k) =>
+            searchParams[k] ? (
+              <input key={k} type="hidden" name={k} value={searchParams[k]} />
+            ) : null,
+        )}
+        <label className="text-ash-500">Jump to:</label>
+        <input
+          type="date"
+          name="start"
+          defaultValue={isoDate(anchor)}
+          className="h-8 rounded-chip border border-hairline bg-surface px-2 text-xs text-ink-900 focus-ring"
+        />
+        <button
+          type="submit"
+          className="h-8 rounded-chip border border-hairline bg-surface px-2 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+        >
+          Go
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function parseIso(s: string | undefined): Date | null {
+  if (!s || !/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(y!, m! - 1, d!);
+  return Number.isNaN(dt.getTime()) ? null : dt;
 }
 
 function isWeekend(d: Date): boolean {

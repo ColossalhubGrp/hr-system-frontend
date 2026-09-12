@@ -4,6 +4,7 @@ import { ChevronLeft, Target } from "lucide-react";
 import { GoalForm } from "@/components/performance/goal-form";
 import { getActiveAppraisalCycleFramework } from "@/lib/frappe/appraisal-framework";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
+import { listGroupGoals } from "@/lib/frappe/performance";
 import { createGoalAction } from "../../actions";
 
 export const metadata = { title: "New goal · Colossal HR" };
@@ -13,9 +14,10 @@ export default async function NewGoalPage() {
   // Goal name) for the form labels. It comes from whichever cycle is
   // currently active — but goals no longer attach to a cycle at creation:
   // they stand alone and are picked into cycles later via the cycle form.
-  const [activeCycle, employeeDirectory] = await Promise.all([
+  const [activeCycle, employeeDirectory, groupGoals] = await Promise.all([
     getActiveAppraisalCycleFramework(),
     listEmployeeDirectory(),
+    listGroupGoals(),
   ]);
   const framework = activeCycle?.framework ?? "KRA & Goals";
   const heading =
@@ -52,6 +54,7 @@ export default async function NewGoalPage() {
         action={createGoalAction}
         framework={framework}
         employeeDirectory={employeeDirectory}
+        groupGoals={groupGoals}
         cancelHref="/hr/performance?tab=goals"
       />
     </div>

@@ -1,7 +1,13 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
-import { ChevronLeft, GraduationCap, Pencil } from "lucide-react";
+import {
+  ChevronLeft,
+  ClipboardCheck,
+  GraduationCap,
+  MessageSquareQuote,
+  Pencil,
+} from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { FieldGrid } from "@/components/employee/field-grid";
@@ -64,17 +70,39 @@ export default async function TrainingEventPage({
           </span>
         }
         actions={
-          canManage ? (
+          <div className="flex items-center gap-2">
             <Link
               href={
-                `/hr/training/${encodeURIComponent(event.id)}/edit` as Route
+                `/hr/training/${encodeURIComponent(event.id)}/feedback` as Route
               }
-              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-4 text-sm font-medium text-ash-800 transition hover:bg-canvas focus-ring"
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-800 transition hover:bg-canvas focus-ring"
             >
-              <Pencil className="h-4 w-4" />
-              Edit event
+              <MessageSquareQuote className="h-4 w-4" />
+              Feedback
             </Link>
-          ) : undefined
+            {canManage && (
+              <>
+                <Link
+                  href={
+                    `/hr/training/${encodeURIComponent(event.id)}/results` as Route
+                  }
+                  className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-800 transition hover:bg-canvas focus-ring"
+                >
+                  <ClipboardCheck className="h-4 w-4" />
+                  Grade attendees
+                </Link>
+                <Link
+                  href={
+                    `/hr/training/${encodeURIComponent(event.id)}/edit` as Route
+                  }
+                  className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-800 transition hover:bg-canvas focus-ring"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Edit event
+                </Link>
+              </>
+            )}
+          </div>
         }
       />
 

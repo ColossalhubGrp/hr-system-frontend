@@ -46,6 +46,7 @@ export function GoalForm({
   initial,
   framework,
   employeeDirectory,
+  groupGoals = [],
 }: {
   mode: "create" | "edit";
   action: Action;
@@ -53,6 +54,8 @@ export function GoalForm({
   /** Drives terminology + whether the BSC Perspective select is shown. */
   framework?: "OKR" | "Balanced Scorecard" | "KRA & Goals" | null;
   employeeDirectory: EmployeeDirectoryEntry[];
+  /** All Group Goals in the tenant — feeds the "Parent goal" picker. */
+  groupGoals?: Array<{ id: string; name: string }>;
   initial?: {
     goalName?: string;
     description?: string | null;
@@ -65,6 +68,8 @@ export function GoalForm({
      *  were still cycle-bound. New goals never set this. */
     appraisalCycle?: string | null;
     perspective?: string | null;
+    parentGoal?: string | null;
+    isGroup?: boolean;
   };
 }) {
   const [state, dispatch] = useFormState(action, EMPTY);
@@ -142,6 +147,31 @@ export function GoalForm({
           directory={employeeDirectory}
           defaultValue={initial?.employee ?? undefined}
         />
+        <Field
+          label="Parent goal"
+          htmlFor="parent_goal"
+          hint="Nest under a group goal to roll progress up the tree."
+        >
+          <SelectInput
+            id="parent_goal"
+            name="parent_goal"
+            options={groupGoals.map((g) => ({ value: g.id, label: g.name }))}
+            defaultValue={initial?.parentGoal ?? ""}
+            placeholder="— top level —"
+          />
+        </Field>
+        <Field label="Group goal" htmlFor="is_group" hint="Container that aggregates child progress. Its own progress is read-only.">
+          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-white px-3 text-sm text-ash-700">
+            <input
+              type="checkbox"
+              id="is_group"
+              name="is_group"
+              defaultChecked={Boolean(initial?.isGroup)}
+              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            />
+            <span>Treat this as a group / parent goal</span>
+          </label>
+        </Field>
         {/* Goals are now created standalone. The appraisal cycle picks them up
             later via the "Select goals" step on cycle creation. For goals
             created under the old flow we still surface the cycle name as a

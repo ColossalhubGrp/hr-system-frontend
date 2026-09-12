@@ -12,7 +12,9 @@ import {
   listCostCenters,
   listModesOfPayment,
   listPayableAccounts,
+  listUnclaimedAdvancesForEmployee,
 } from "@/lib/frappe/expense-claims";
+import { AdvancesPanel } from "@/components/expense/advances-panel";
 import { readSession } from "@/lib/frappe/session";
 import { getMyAccess } from "@/lib/frappe/roles";
 import {
@@ -72,6 +74,9 @@ export default async function ExpenseClaimDetailPage({
           listCashOrBankAccounts(claim.company),
         ])
       : [[], [], [] as string[], []];
+  const availableAdvances = decidable
+    ? await listUnclaimedAdvancesForEmployee(claim.employee)
+    : [];
   // Frappe HR's approver check validates the DOC's expense_approver
   // is a valid designated approver — not the current user. HR admins
   // can always act (DocPerm-based submit right); other users only
@@ -214,6 +219,15 @@ export default async function ExpenseClaimDetailPage({
           ]}
         />
       </section>
+
+      <AdvancesPanel
+        claimId={claim.id}
+        docstatus={claim.docstatus}
+        linked={claim.advances}
+        available={availableAdvances}
+        sanctioned={claim.totalSanctionedAmount || claim.totalClaimedAmount}
+        currency={claim.currency}
+      />
 
       <section className="card p-6">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">

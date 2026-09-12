@@ -351,3 +351,42 @@ export async function saveClaimAccountingAction(
   revalidatePath(`/hr/expense-claims/${encodeURIComponent(id)}`);
   return {};
 }
+
+/** Attach an Employee Advance to a Draft Expense Claim, allocating the
+ *  amount that should offset the sanctioned total. */
+export async function linkAdvanceAction(
+  claimId: string,
+  advance: string,
+  allocated: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const access = await getMyAccess();
+  if (!access.isHrAdmin && !access.isItAdmin) {
+    return { ok: false, error: "Only HR admins can link advances." };
+  }
+  try {
+    const { linkAdvanceToClaim } = await import("@/lib/frappe/expense-claims");
+    await linkAdvanceToClaim(claimId, advance, allocated);
+  } catch (err) {
+    return { ok: false, error: (err as Error).message ?? "Failed to link." };
+  }
+  revalidatePath(`/hr/expense-claims/${encodeURIComponent(claimId)}`);
+  return { ok: true };
+}
+
+export async function unlinkAdvanceAction(
+  claimId: string,
+  advance: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const access = await getMyAccess();
+  if (!access.isHrAdmin && !access.isItAdmin) {
+    return { ok: false, error: "Only HR admins can unlink advances." };
+  }
+  try {
+    const { unlinkAdvanceFromClaim } = await import("@/lib/frappe/expense-claims");
+    await unlinkAdvanceFromClaim(claimId, advance);
+  } catch (err) {
+    return { ok: false, error: (err as Error).message ?? "Failed to unlink." };
+  }
+  revalidatePath(`/hr/expense-claims/${encodeURIComponent(claimId)}`);
+  return { ok: true };
+}

@@ -184,11 +184,13 @@ export type ExpenseClaim = {
   postingDate: string;
   totalClaimedAmount: number;
   totalSanctionedAmount: number;
+  totalAdvanceAmount: number;
   status: string;
   approvalStatus: string;
   expenseApprover: string | null;
   expenseApproverName: string | null;
   company: string | null;
+  currency: string | null;
   remark: string | null;
   // Accounting — required by Frappe to submit. Values may be null on a
   // freshly-created claim if the company defaults aren't set; HR fills
@@ -204,6 +206,13 @@ export type ExpenseClaim = {
     amount: number;
     sanctionedAmount: number;
   }>;
+  advances: Array<{
+    employee_advance: string;
+    posting_date: string | null;
+    advance_paid: number;
+    unclaimed_amount: number;
+    allocated_amount: number;
+  }>;
 };
 
 type RawClaim = {
@@ -214,10 +223,12 @@ type RawClaim = {
   posting_date: string;
   total_claimed_amount: number | null;
   total_sanctioned_amount: number | null;
+  total_advance_amount: number | null;
   status: string;
   approval_status: string;
   expense_approver: string | null;
   company: string | null;
+  currency: string | null;
   remark: string | null;
   payable_account: string | null;
   cost_center: string | null;
@@ -230,6 +241,13 @@ type RawClaim = {
     amount: number | null;
     sanctioned_amount: number | null;
   }>;
+  advances?: Array<{
+    employee_advance: string;
+    posting_date: string | null;
+    advance_paid: number | null;
+    unclaimed_amount: number | null;
+    allocated_amount: number | null;
+  }> | null;
 };
 
 export async function getExpenseClaim(id: string): Promise<ExpenseClaim | null> {
@@ -250,11 +268,13 @@ export async function getExpenseClaim(id: string): Promise<ExpenseClaim | null> 
       postingDate: doc.posting_date,
       totalClaimedAmount: Number(doc.total_claimed_amount ?? 0),
       totalSanctionedAmount: Number(doc.total_sanctioned_amount ?? 0),
+      totalAdvanceAmount: Number(doc.total_advance_amount ?? 0),
       status: doc.status,
       approvalStatus: doc.approval_status,
       expenseApprover: doc.expense_approver,
       expenseApproverName,
       company: doc.company,
+      currency: doc.currency,
       remark: doc.remark,
       payableAccount: doc.payable_account,
       costCenter: doc.cost_center,
@@ -266,6 +286,13 @@ export async function getExpenseClaim(id: string): Promise<ExpenseClaim | null> 
         description: e.description,
         amount: Number(e.amount ?? 0),
         sanctionedAmount: Number(e.sanctioned_amount ?? 0),
+      })),
+      advances: (doc.advances ?? []).map((a) => ({
+        employee_advance: a.employee_advance,
+        posting_date: a.posting_date,
+        advance_paid: Number(a.advance_paid ?? 0),
+        unclaimed_amount: Number(a.unclaimed_amount ?? 0),
+        allocated_amount: Number(a.allocated_amount ?? 0),
       })),
     };
   } catch (err) {
@@ -418,6 +445,91 @@ export async function saveExpenseClaimAccounting(
 }
 
 export const EXPENSE_CLAIM_STATUSES = STATUSES;
+
+/** Submitted Employee Advances for `employee` that still have unclaimed
+ *  balance. Feeds the "Link advance" picker on the Expense Claim detail. */
+export async function listUnclaimedAdvancesForEmployee(
+  employee: string,
+): Promise<Array<{ name: string; unclaimed: number; currency: string | null; postingDate: string; purpose: string | null }>> {
+  try {
+    type R = {
+      name: string;
+      posting_date: string;
+      purpose: string | null;
+      currency: string | null;
+      paid_amount: number | null;
+      claimed_amount: number | null;
+      return_amount: number | null;
+    };
+    const rows = await frappeCall<R[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee Advance",
+        fields: [
+          "name",
+          "posting_date",
+          "purpose",
+          "currency",
+          "paid_amount",
+          "claimed_amount",
+          "return_amount",
+        ],
+        filters: JSON.stringify([
+          ["employee", "=", employee],
+          ["docstatus", "=", 1],
+          ["status", "in", ["Unclaimed", "Partly Claimed"]],
+        ]),
+        order_by: "posting_date desc",
+        limit_page_length: 100,
+      },
+      as: "user",
+    });
+    return rows
+      .map((r) => ({
+        name: r.name,
+        unclaimed: Math.max(
+          0,
+          Number(r.paid_amount ?? 0) -
+            Number(r.claimed_amount ?? 0) -
+            Number(r.return_amount ?? 0),
+        ),
+        currency: r.currency,
+        postingDate: r.posting_date,
+        purpose: r.purpose,
+      }))
+      .filter((r) => r.unclaimed > 0);
+  } catch {
+    return [];
+  }
+}
+
+/** HR-only: append an Employee Advance row on a Draft Expense Claim.
+ *  Frappe re-computes total_advance_amount server-side on save. Rejects
+ *  submitted claims (docstatus > 0) — those can't be edited. */
+export async function linkAdvanceToClaim(
+  claim: string,
+  advance: string,
+  allocatedAmount: number,
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "recruitment_app.api.approvals.link_advance_to_expense_claim",
+    verb: "POST",
+    args: { claim, advance, allocated_amount: allocatedAmount },
+    as: "user",
+  });
+}
+
+export async function unlinkAdvanceFromClaim(
+  claim: string,
+  advance: string,
+): Promise<void> {
+  await frappeCall<unknown>({
+    method: "recruitment_app.api.approvals.unlink_advance_from_expense_claim",
+    verb: "POST",
+    args: { claim, advance },
+    as: "user",
+  });
+}
 
 export async function listExpenseTypes(): Promise<string[]> {
   try {

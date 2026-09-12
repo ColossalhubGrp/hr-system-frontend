@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Target } from "lucide-react";
 import { GoalForm } from "@/components/performance/goal-form";
-import { getGoal } from "@/lib/frappe/performance";
+import { getGoal, listGroupGoals } from "@/lib/frappe/performance";
 import {
   getCycleFramework,
   type EvaluationFramework,
@@ -19,9 +19,10 @@ export default async function EditGoalPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const [g, employeeDirectory] = await Promise.all([
+  const [g, employeeDirectory, groupGoals] = await Promise.all([
     getGoal(id),
     listEmployeeDirectory(),
+    listGroupGoals(),
   ]);
   if (!g) notFound();
   // Framework still drives terminology (Objective / Goal / Scorecard entry).
@@ -58,6 +59,7 @@ export default async function EditGoalPage({
         action={action}
         framework={framework}
         employeeDirectory={employeeDirectory}
+        groupGoals={groupGoals.filter((gg) => gg.id !== id)}
         cancelHref={backHref}
         initial={{
           goalName: g.goalName,
@@ -69,6 +71,8 @@ export default async function EditGoalPage({
           endDate: g.endDate,
           appraisalCycle: g.appraisalCycle,
           perspective: g.perspective,
+          parentGoal: g.parentGoal,
+          isGroup: g.isGroup,
         }}
       />
     </div>

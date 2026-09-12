@@ -8,16 +8,22 @@ import {
   RefreshCcw,
   Target,
   Settings2,
+  Users2,
 } from "lucide-react";
 import {
   getAppraisalCycle,
   listSelectableGoals,
 } from "@/lib/frappe/performance";
 import { listAppraisalTemplates } from "@/lib/frappe/setup-appraisal-templates";
+import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
+import { getCycleAppraisees } from "@/lib/frappe/finance-training";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { ManageCycleGoalsForm } from "@/components/performance/manage-cycle-goals-form";
 import { CycleTemplateEditor } from "@/components/performance/cycle-template-editor";
+import { AppraiseesEditor } from "@/components/appraisal/appraisees-editor";
 import {
+  bulkCreateAppraisalsAction,
+  setCycleAppraiseesAction,
   setCycleSelectedGoalsAction,
   setCycleTemplateAction,
 } from "../../actions";
@@ -30,10 +36,12 @@ export default async function CycleDetailPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const [cycle, access, templates] = await Promise.all([
+  const [cycle, access, templates, appraisees, employeeOptions] = await Promise.all([
     getAppraisalCycle(id),
     getMyAccess(),
     listAppraisalTemplates(),
+    getCycleAppraisees(id),
+    fetchEmployeeFormOptions(),
   ]);
   if (!cycle) notFound();
 
@@ -182,6 +190,28 @@ export default async function CycleDetailPage({
           </ul>
         )}
       </section>
+
+      {(access.isHrAdmin || access.isItAdmin) && (
+        <section className="card flex flex-col gap-3 p-5">
+          <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ash-500">
+            <Users2 className="h-3.5 w-3.5" />
+            Appraisees ({appraisees.length})
+          </h2>
+          <p className="text-sm text-ash-600">
+            The list of employees this cycle appraises. Save changes, then click
+            <b> Create appraisals </b> to open a Draft appraisal for anyone who
+            doesn't already have one under this cycle.
+          </p>
+          <AppraiseesEditor
+            cycleId={cycle.id}
+            initial={appraisees}
+            directory={employeeOptions.employeeDirectory}
+            templates={templates.map((t) => t.name)}
+            saveAction={setCycleAppraiseesAction}
+            createAction={bulkCreateAppraisalsAction}
+          />
+        </section>
+      )}
 
       <section className="card flex flex-col gap-3 p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ash-500">

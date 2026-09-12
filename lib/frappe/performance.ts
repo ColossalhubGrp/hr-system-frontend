@@ -548,6 +548,12 @@ export type GoalFull = {
   kra: string | null;
   /** BSC mode only — which Balanced Scorecard perspective this goal sits in. */
   perspective: BscPerspective | null;
+  /** Parent goal id (null for top-level). Enables Frappe's Goal tree —
+   *  a Group goal aggregates progress from its leaf children. */
+  parentGoal: string | null;
+  /** When true, this goal is a container. Its `progress` is the average
+   *  of its non-group descendants and it can't be scored directly. */
+  isGroup: boolean;
 };
 
 export async function getGoal(id: string): Promise<GoalFull | null> {
@@ -567,6 +573,8 @@ export async function getGoal(id: string): Promise<GoalFull | null> {
       appraisal_cycle: string | null;
       kra: string | null;
       perspective: string | null;
+      parent_goal: string | null;
+      is_group: 0 | 1 | null;
     };
     const doc = await frappeCall<Raw>({
       method: "frappe.client.get",
@@ -586,10 +594,63 @@ export async function getGoal(id: string): Promise<GoalFull | null> {
       appraisalCycle: doc.appraisal_cycle,
       kra: doc.kra,
       perspective: isPerspective(doc.perspective) ? doc.perspective : null,
+      parentGoal: doc.parent_goal,
+      isGroup: Boolean(doc.is_group),
     };
   } catch (err) {
     if (err instanceof FrappeRequestError && err.status === 404) return null;
     throw err;
+  }
+}
+
+/** Return `{parent, children[]}` for a Group Goal, so the detail page
+ *  can render the tree branch. Missing/None `parent_goal` → top level. */
+export async function getGoalChildren(
+  parent: string,
+): Promise<Array<{ id: string; name: string; progress: number; status: string; isGroup: boolean }>> {
+  try {
+    type R = { name: string; goal: string | null; progress: number | null; status: string; is_group: 0 | 1 };
+    const rows = await frappeCall<R[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Goal",
+        fields: ["name", "goal", "progress", "status", "is_group"],
+        filters: JSON.stringify([["parent_goal", "=", parent]]),
+        order_by: "creation asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    return rows.map((r) => ({
+      id: r.name,
+      name: r.goal ?? r.name,
+      progress: Number(r.progress ?? 0),
+      status: r.status,
+      isGroup: Boolean(r.is_group),
+    }));
+  } catch {
+    return [];
+  }
+}
+
+/** Every candidate parent Goal (Group flag on) for a picker. */
+export async function listGroupGoals(): Promise<Array<{ id: string; name: string }>> {
+  try {
+    type R = { name: string; goal: string | null };
+    const rows = await frappeCall<R[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Goal",
+        fields: ["name", "goal"],
+        filters: JSON.stringify([["is_group", "=", 1]]),
+        order_by: "goal asc",
+        limit_page_length: 200,
+      },
+      as: "user",
+    });
+    return rows.map((r) => ({ id: r.name, name: r.goal ?? r.name }));
+  } catch {
+    return [];
   }
 }
 
@@ -618,18 +679,20 @@ export type GoalInput = {
   appraisal_cycle?: string;
   kra?: string;
   perspective?: string;
+  parent_goal?: string;
+  is_group?: boolean;
 };
 
 export async function createGoal(input: GoalInput): Promise<string> {
-  const { goal_name, ...rest } = input;
-  const doc = {
+  const { goal_name, is_group, ...rest } = input;
+  const doc: Record<string, unknown> = {
     doctype: "Goal",
     status: "In Progress",
     progress: 0,
-    // Frappe's required field is `goal` — map our ergonomic `goal_name` onto it.
     goal: goal_name,
     ...compact(rest),
   };
+  if (is_group !== undefined) doc.is_group = is_group ? 1 : 0;
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
     args: { doc },
@@ -643,10 +706,10 @@ export async function updateGoal(
   id: string,
   input: Partial<GoalInput>,
 ): Promise<void> {
-  // Same alias mapping as createGoal — Frappe's required title field is `goal`.
-  const { goal_name, ...rest } = input;
-  const payload = {
+  const { goal_name, is_group, ...rest } = input;
+  const payload: Record<string, unknown> = {
     ...(goal_name !== undefined ? { goal: goal_name } : {}),
+    ...(is_group !== undefined ? { is_group: is_group ? 1 : 0 } : {}),
     ...compact(rest),
   };
   await frappeCall<{ name: string }>({

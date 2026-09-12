@@ -5,7 +5,7 @@ import { ChevronLeft, Pencil, Target } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { FieldGrid } from "@/components/employee/field-grid";
-import { getGoal } from "@/lib/frappe/performance";
+import { getGoal, getGoalChildren } from "@/lib/frappe/performance";
 
 export async function generateMetadata({
   params,
@@ -22,8 +22,12 @@ export default async function GoalDetailPage({
   params: { id: string };
 }) {
   const id = decodeURIComponent(params.id);
-  const g = await getGoal(id);
+  const [g, children] = await Promise.all([getGoal(id), getGoalChildren(id)]);
   if (!g) notFound();
+  const rolledProgress = children.length
+    ? children.reduce((a, c) => a + c.progress, 0) / children.length
+    : g.progress;
+  const displayProgress = g.isGroup ? Math.round(rolledProgress) : g.progress;
 
   const editHref = `/hr/performance/goals/${encodeURIComponent(id)}/edit` as Route;
 
@@ -44,7 +48,12 @@ export default async function GoalDetailPage({
         subtitle={
           <span className="flex items-center gap-2">
             <StatusPill status={g.status} />
-            <span>· {g.progress}% progress</span>
+            <span>· {displayProgress}% progress</span>
+            {g.isGroup && (
+              <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+                Group
+              </span>
+            )}
           </span>
         }
         actions={
@@ -58,7 +67,55 @@ export default async function GoalDetailPage({
         }
       />
 
-      <Progress value={g.progress} />
+      <Progress value={displayProgress} />
+
+      {(g.parentGoal || children.length > 0) && (
+        <section className="card p-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-ash-500">
+            Goal tree
+          </h2>
+          {g.parentGoal && (
+            <p className="mb-3 text-sm text-ash-700">
+              Parent:{" "}
+              <Link
+                href={
+                  `/hr/performance/goals/${encodeURIComponent(g.parentGoal)}` as Route
+                }
+                className="font-medium text-ink-800 hover:underline"
+              >
+                {g.parentGoal}
+              </Link>
+            </p>
+          )}
+          {children.length > 0 && (
+            <ul className="flex flex-col divide-y divide-hairline overflow-hidden rounded-card border border-hairline">
+              {children.map((c) => (
+                <li key={c.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <Link
+                    href={`/hr/performance/goals/${encodeURIComponent(c.id)}` as Route}
+                    className="flex min-w-0 flex-1 flex-col focus-ring rounded-md"
+                  >
+                    <span className="truncate font-medium text-ink-800">
+                      {c.name}
+                      {c.isGroup && (
+                        <span className="ml-2 rounded-chip bg-ink-50 px-1.5 py-0.5 text-[10px] font-medium text-ink-800">
+                          Group
+                        </span>
+                      )}
+                    </span>
+                    <span className="truncate text-xs text-ash-500">
+                      {c.status} · {c.progress}% progress
+                    </span>
+                  </Link>
+                  <div className="h-1.5 w-24 overflow-hidden rounded-full bg-hairline">
+                    <div className="h-full rounded-full bg-ink-700" style={{ width: `${Math.max(0, Math.min(100, c.progress))}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className="card p-6">
         <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">

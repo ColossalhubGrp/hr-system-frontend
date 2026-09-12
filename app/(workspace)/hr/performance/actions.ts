@@ -90,6 +90,10 @@ const goalSchema = z.object({
   perspective: z
     .enum(["", "Financial", "Customer", "Internal Process", "Learning & Growth"])
     .optional(),
+  parent_goal: z.string().trim().optional(),
+  is_group: z
+    .union([z.literal("on"), z.literal("off"), z.literal(""), z.undefined()])
+    .transform((v) => v === "on"),
 });
 
 function toGoalInput(d: z.infer<typeof goalSchema>): GoalInput {
@@ -104,6 +108,8 @@ function toGoalInput(d: z.infer<typeof goalSchema>): GoalInput {
     start_date: d.start_date,
     end_date: d.end_date,
     perspective: d.perspective || undefined,
+    parent_goal: d.parent_goal || undefined,
+    is_group: d.is_group,
   };
 }
 
@@ -549,6 +555,77 @@ export async function createTemplateAction(
     redirect("/hr/performance");
   } catch (err) {
     return toFormState(err);
+  }
+}
+
+// --- Cycle appraisees + bulk-create -------------------------------------
+
+export async function setCycleAppraiseesAction(
+  cycleId: string,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const access = await getMyAccess();
+  if (!access.isHrAdmin && !access.isItAdmin) {
+    return { error: "Only HR admins can change appraisees." };
+  }
+  const raw = String(form.get("appraisees_json") ?? "[]");
+  let rows: Array<{
+    employee: string;
+    department?: string;
+    designation?: string;
+    appraisal_template?: string;
+  }>;
+  try {
+    rows = JSON.parse(raw);
+  } catch {
+    return { error: "Could not read the appraisees list." };
+  }
+  try {
+    const { setCycleAppraisees } = await import(
+      "@/lib/frappe/finance-training"
+    );
+    await setCycleAppraisees(cycleId, rows);
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath(`/hr/performance/cycles/${encodeURIComponent(cycleId)}`);
+  return {};
+}
+
+export type CreateAppraisalsResult =
+  | {
+      ok: true;
+      created: number;
+      skipped: number;
+      errored: number;
+      errors: Array<{ employee: string; reason: string }>;
+    }
+  | { ok: false; error: string };
+
+export async function bulkCreateAppraisalsAction(
+  cycleId: string,
+): Promise<CreateAppraisalsResult> {
+  const access = await getMyAccess();
+  if (!access.isHrAdmin && !access.isItAdmin) {
+    return { ok: false, error: "Only HR admins can bulk-create appraisals." };
+  }
+  try {
+    const { bulkCreateAppraisalsFromCycle } = await import(
+      "@/lib/frappe/finance-training"
+    );
+    const res = await bulkCreateAppraisalsFromCycle(cycleId);
+    revalidatePath(`/hr/performance/cycles/${encodeURIComponent(cycleId)}`);
+    revalidatePath("/hr/performance");
+    return {
+      ok: true,
+      created: res.totals.created,
+      skipped: res.totals.skipped,
+      errored: res.totals.errored,
+      errors: res.errored,
+    };
+  } catch (err) {
+    return { ok: false, error: toFormState(err).error ?? "Failed to bulk-create." };
   }
 }
 

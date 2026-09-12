@@ -49,3 +49,15 @@ export async function listAppraisalTemplates() {
 export async function listKraTemplates() {
   return listDoctypeNames("KRA Template");
 }
+export async function listCurrencies() {
+  return listDoctypeNames("Currency", { limit: 100 });
+}
+export async function listTravelTypes() {
+  return ["Domestic", "International"];
+}
+export async function listTrainingEventNames() {
+  return listDoctypeNames("Training Event", { orderBy: "start_time desc", limit: 100 });
+}
+export async function listDepartmentNames() {
+  return listDoctypeNames("Department");
+}

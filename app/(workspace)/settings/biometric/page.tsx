@@ -158,14 +158,6 @@ devices = [
         </p>
       </Step>
 
-      <section className="rounded-card border border-hairline bg-canvas/40 p-5 text-xs text-ash-600">
-        <p>
-          <strong className="text-ink-800">No device on hand?</strong> You
-          can still simulate a punch by POSTing to the same endpoint from
-          <code className="font-mono"> curl</code> — useful for testing the
-          Auto Attendance rules on a Shift Type before hardware arrives.
-        </p>
-      </section>
     </div>
   );
 }

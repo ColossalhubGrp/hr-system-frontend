@@ -30,9 +30,9 @@ export default async function TravelPage({ searchParams }: { searchParams: SP })
     <div className="flex flex-col gap-5">
       <PageHeader
         icon={Plane}
-        crumb="HR · Travel"
+        crumb="HR · Travel requests"
         title="Travel requests"
-        subtitle={`${rows.length.toLocaleString()} request${rows.length === 1 ? "" : "s"} in view.`}
+        subtitle={`Pre-trip authorisation — employees submit an itinerary and cost estimate for HR to approve before they travel. Reimbursements for trips already taken belong on an Expense Claim (type: Travel). ${rows.length.toLocaleString()} request${rows.length === 1 ? "" : "s"} in view.`}
         actions={
           <Link
             href={"/hr/travel/new" as Route}
@@ -48,7 +48,7 @@ export default async function TravelPage({ searchParams }: { searchParams: SP })
         tabs={[
           { id: "claims", label: "Claims" },
           { id: "advances", label: "Advances" },
-          { id: "travel", label: "Travel" },
+          { id: "travel", label: "Travel requests" },
         ]}
         active="travel"
         hrefFor={(id) =>

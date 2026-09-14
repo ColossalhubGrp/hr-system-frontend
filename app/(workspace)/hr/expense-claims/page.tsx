@@ -60,7 +60,7 @@ export default async function ExpenseClaimsPage({
         tabs={[
           { id: "claims", label: "Claims" },
           { id: "advances", label: "Advances" },
-          { id: "travel", label: "Travel" },
+          { id: "travel", label: "Travel requests" },
         ]}
         active="claims"
         hrefFor={(id) =>

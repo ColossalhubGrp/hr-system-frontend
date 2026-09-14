@@ -59,7 +59,7 @@ export default async function EmployeeAdvancesPage({
         tabs={[
           { id: "claims", label: "Claims" },
           { id: "advances", label: "Advances" },
-          { id: "travel", label: "Travel" },
+          { id: "travel", label: "Travel requests" },
         ]}
         active="advances"
         hrefFor={(id) =>

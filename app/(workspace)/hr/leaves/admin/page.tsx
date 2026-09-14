@@ -16,6 +16,7 @@ import {
 } from "@/lib/frappe/leave-admin";
 import { listLeaveTypes } from "@/lib/frappe/leave-types";
 import { listLeavePolicies } from "@/lib/frappe/leave-policies";
+import { listLeaveBalances } from "@/lib/frappe/leave-balances";
 import { listCompanies } from "@/lib/frappe/lookups";
 import {
   listAttendableEmployees,
@@ -26,7 +27,7 @@ import { LeaveAdminHub } from "@/components/leaves/admin-hub";
 
 export const metadata = { title: "Leave admin · Colossal HR" };
 
-type SP = { tab?: string };
+type SP = { tab?: string; dept?: string; asOf?: string };
 
 type Tab =
   | "allocations"
@@ -34,6 +35,7 @@ type Tab =
   | "encashments"
   | "comp-requests"
   | "control-panel"
+  | "balances"
   | "ledger";
 
 const TABS: Array<{ id: Tab; label: string }> = [
@@ -42,6 +44,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: "encashments", label: "Encashments" },
   { id: "comp-requests", label: "Comp-off Requests" },
   { id: "control-panel", label: "Bulk Allocate" },
+  { id: "balances", label: "Balances" },
   { id: "ledger", label: "Ledger" },
 ];
 
@@ -76,6 +79,7 @@ export default async function LeaveAdminPage({
     employees,
     departments,
     branches,
+    balances,
   ] = await Promise.all([
     listLeaveAllocations(),
     listLeavePolicyAssignments(),
@@ -89,6 +93,14 @@ export default async function LeaveAdminPage({
     listAttendableEmployees({}),
     listDepartments(),
     listBranches(),
+    // Balances tab is expensive (2000-employee scan); only compute when
+    // that tab is active.
+    tab === "balances"
+      ? listLeaveBalances({
+          department: searchParams.dept || undefined,
+          asOf: searchParams.asOf || undefined,
+        })
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -146,6 +158,11 @@ export default async function LeaveAdminPage({
           employees={employees}
           departments={departments}
           branches={branches}
+          balances={balances}
+          balanceFilters={{
+            dept: searchParams.dept ?? "",
+            asOf: searchParams.asOf ?? "",
+          }}
         />
       ) : (
         <EmptyState>

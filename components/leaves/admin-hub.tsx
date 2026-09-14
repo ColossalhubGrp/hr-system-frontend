@@ -25,6 +25,7 @@ import type {
   LeavePolicyAssignmentRow,
 } from "@/lib/frappe/leave-admin";
 import type { AttendableEmployee } from "@/lib/frappe/attendance-bulk";
+import type { LeaveBalancesResult } from "@/lib/frappe/leave-balances";
 import {
   adjustLeaveAllocationAction,
   cancelLeaveDocAction,
@@ -42,6 +43,7 @@ type Tab =
   | "encashments"
   | "comp-requests"
   | "control-panel"
+  | "balances"
   | "ledger";
 
 const EMPTY: StdFormState = {};
@@ -62,6 +64,8 @@ export function LeaveAdminHub(props: {
   employees: AttendableEmployee[];
   departments: string[];
   branches: string[];
+  balances: LeaveBalancesResult | null;
+  balanceFilters: { dept: string; asOf: string };
 }) {
   switch (props.tab) {
     case "allocations":
@@ -104,6 +108,14 @@ export function LeaveAdminHub(props: {
           employees={props.employees}
           departments={props.departments}
           branches={props.branches}
+        />
+      );
+    case "balances":
+      return (
+        <BalancesTab
+          data={props.balances}
+          departments={props.departments}
+          filters={props.balanceFilters}
         />
       );
     case "ledger":
@@ -1045,5 +1057,235 @@ function Submit({
       {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : icon}
       {pending ? "Working…" : label}
     </button>
+  );
+}
+
+// ============================================================================
+// Balances (leave liability tracker)
+// ============================================================================
+
+function BalancesTab({
+  data,
+  departments,
+  filters,
+}: {
+  data: LeaveBalancesResult | null;
+  departments: string[];
+  filters: { dept: string; asOf: string };
+}) {
+  if (!data) {
+    return (
+      <p className="rounded-card border border-dashed border-hairline bg-canvas/40 px-4 py-8 text-center text-sm text-ash-500">
+        Loading balances…
+      </p>
+    );
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const { rows, leaveTypes, totals } = data;
+  const heaviestLiability = rows.reduce(
+    (acc, r) => (r.totalRemaining > acc.totalRemaining ? r : acc),
+    rows[0] ?? { employee: "", totalRemaining: 0 },
+  );
+
+  return (
+    <div className="flex flex-col gap-4">
+      <form method="get" className="flex flex-wrap items-end gap-2 rounded-card border border-hairline bg-canvas/40 p-3 text-xs">
+        <input type="hidden" name="tab" value="balances" />
+        <label className="flex flex-col gap-1">
+          <span className="font-medium text-ash-500 uppercase tracking-wide">
+            Department
+          </span>
+          <select
+            name="dept"
+            defaultValue={filters.dept}
+            className="h-9 min-w-[180px] rounded-chip border border-hairline bg-surface px-2 text-sm"
+          >
+            <option value="">Any</option>
+            {departments.map((d) => (
+              <option key={d} value={d}>
+                {d}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="font-medium text-ash-500 uppercase tracking-wide">
+            As of
+          </span>
+          <input
+            type="date"
+            name="asOf"
+            defaultValue={filters.asOf || today}
+            className="h-9 rounded-chip border border-hairline bg-surface px-2 text-sm"
+          />
+        </label>
+        <button
+          type="submit"
+          className="inline-flex h-9 items-center gap-1.5 rounded-chip bg-ink-800 px-3 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+        >
+          Apply
+        </button>
+      </form>
+
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <StatTile label="Employees in view" value={totals.employees.toLocaleString()} />
+        <StatTile
+          label="Total liability (days)"
+          value={totals.totalLiabilityDays.toLocaleString(undefined, {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 1,
+          })}
+          hint="Sum of remaining across all types + employees"
+        />
+        <StatTile
+          label="Zero-use employees"
+          value={totals.zeroUsedEmployees.toLocaleString()}
+          hint="Haven't taken any leave this period"
+          tone="warn"
+        />
+        <StatTile
+          label="Heaviest single balance"
+          value={`${heaviestLiability.totalRemaining.toFixed(1)}d`}
+          hint={heaviestLiability.employeeName ?? heaviestLiability.employee}
+        />
+      </div>
+
+      <div className="overflow-x-auto rounded-card border border-hairline bg-surface shadow-card">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-hairline bg-canvas/60 text-left text-[11px] font-medium uppercase tracking-wide text-ash-500">
+              <th className="sticky left-0 z-10 bg-canvas/60 px-3 py-2">Employee</th>
+              <th className="px-3 py-2 hidden md:table-cell">Department</th>
+              {leaveTypes.map((t) => (
+                <th key={t} className="px-3 py-2 text-right">
+                  {t}
+                  <div className="text-[9px] font-normal normal-case tracking-normal text-ash-400">
+                    remaining · used / allocated
+                  </div>
+                </th>
+              ))}
+              <th className="px-3 py-2 text-right">Total remaining</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={leaveTypes.length + 3}
+                  className="px-3 py-8 text-center text-sm text-ash-500"
+                >
+                  No employees match the current filters.
+                </td>
+              </tr>
+            ) : (
+              rows.map((r) => (
+                <tr key={r.employee} className="border-b border-hairline last:border-b-0">
+                  <td className="sticky left-0 z-[1] bg-surface px-3 py-2">
+                    <div className="font-medium text-ink-900">
+                      {r.employeeName ?? r.employee}
+                    </div>
+                    <div className="text-xs text-ash-500">{r.employee}</div>
+                  </td>
+                  <td className="px-3 py-2 text-ash-700 hidden md:table-cell">
+                    {r.department ?? "—"}
+                  </td>
+                  {leaveTypes.map((t) => {
+                    const b = r.balances[t];
+                    if (!b || b.allocated === 0) {
+                      return (
+                        <td key={t} className="px-3 py-2 text-right text-ash-400 text-xs">
+                          —
+                        </td>
+                      );
+                    }
+                    const tone = utilisationTone(b.utilisationPct);
+                    return (
+                      <td key={t} className="px-3 py-2 text-right">
+                        <div
+                          className={cn(
+                            "inline-flex flex-col items-end rounded-md px-2 py-1",
+                            tone.bg,
+                          )}
+                        >
+                          <span className={cn("text-sm font-semibold", tone.text)}>
+                            {b.remaining.toFixed(1)}
+                          </span>
+                          <span className="text-[10px] text-ash-500">
+                            {b.used.toFixed(1)} / {b.allocated.toFixed(1)}
+                          </span>
+                        </div>
+                      </td>
+                    );
+                  })}
+                  <td className="px-3 py-2 text-right font-semibold text-ink-900">
+                    {r.totalRemaining.toFixed(1)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+          <tfoot>
+            <tr className="border-t border-hairline bg-canvas/60 text-xs">
+              <td className="sticky left-0 z-10 bg-canvas/60 px-3 py-2 font-semibold text-ash-700">
+                Company totals
+              </td>
+              <td className="px-3 py-2 hidden md:table-cell" />
+              {leaveTypes.map((t) => {
+                const p = totals.perType[t];
+                return (
+                  <td key={t} className="px-3 py-2 text-right font-semibold text-ink-900">
+                    {p ? p.remaining.toFixed(1) : "—"}
+                  </td>
+                );
+              })}
+              <td className="px-3 py-2 text-right font-semibold text-ink-900">
+                {totals.totalLiabilityDays.toFixed(1)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <p className="text-xs text-ash-500">
+        <span className="mr-1 inline-block h-2 w-2 rounded-sm bg-fall/60" /> Under 25% used ·
+        <span className="mx-1 inline-block h-2 w-2 rounded-sm bg-amber-400/60" /> 25–75% ·
+        <span className="mr-1 inline-block h-2 w-2 rounded-sm bg-rise/50" /> Over 75% ·
+        Colour flags employees who haven&apos;t utilised a leave type — the darker the red, the bigger the outstanding liability.
+      </p>
+    </div>
+  );
+}
+
+function utilisationTone(pct: number | null): { bg: string; text: string } {
+  if (pct === null) return { bg: "bg-canvas", text: "text-ash-700" };
+  if (pct >= 0.75) return { bg: "bg-rise/10", text: "text-rise" };
+  if (pct >= 0.25) return { bg: "bg-amber-100", text: "text-amber-700" };
+  return { bg: "bg-fall/10", text: "text-fall" };
+}
+
+function StatTile({
+  label,
+  value,
+  hint,
+  tone,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: "warn";
+}) {
+  return (
+    <div
+      className={cn(
+        "rounded-card border border-hairline bg-surface p-3 shadow-card",
+        tone === "warn" && "border-amber-200 bg-amber-50/60",
+      )}
+    >
+      <p className="text-[10px] font-medium uppercase tracking-wide text-ash-500">
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-semibold text-ink-900">{value}</p>
+      {hint && <p className="mt-0.5 text-[11px] text-ash-500">{hint}</p>}
+    </div>
   );
 }

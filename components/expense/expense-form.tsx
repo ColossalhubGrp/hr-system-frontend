@@ -34,6 +34,7 @@ export type OptionsByCompany = Record<string, AccountOption[]>;
 export function ExpenseClaimForm({
   action,
   companies,
+  defaultCompany,
   expenseTypes,
   employeeDirectory,
   payableAccountsByCompany,
@@ -42,6 +43,12 @@ export function ExpenseClaimForm({
 }: {
   action: Action;
   companies: string[];
+  /** Resolved from the signed-in user's Employee.company (or User default,
+   *  or the global default). Used to pre-fill the Company picker so HR
+   *  doesn't have to pick their own company every time. When there's
+   *  only one company, the picker is hidden and this value is submitted
+   *  via a hidden input. */
+  defaultCompany?: string;
   expenseTypes: string[];
   employeeDirectory: EmployeeDirectoryEntry[];
   payableAccountsByCompany: OptionsByCompany;
@@ -52,9 +59,14 @@ export function ExpenseClaimForm({
   const fe = state.fieldErrors ?? {};
 
   // Company drives which accounts + cost centers appear in the pickers
-  // below. Default to the first company for a smooth first-load — user
-  // can change it and the accounting selects rebuild.
-  const [company, setCompany] = useState<string>(companies[0] ?? "");
+  // below. Start from the user's default (Employee.company etc.) and
+  // fall back to the first company if that isn't available.
+  const initialCompany =
+    (defaultCompany && companies.includes(defaultCompany) && defaultCompany) ||
+    companies[0] ||
+    "";
+  const [company, setCompany] = useState<string>(initialCompany);
+  const hideCompanyPicker = companies.length <= 1;
   const [isPaid, setIsPaid] = useState<boolean>(false);
 
   const payableAccounts = useMemo(
@@ -85,17 +97,21 @@ export function ExpenseClaimForm({
           error={fe.employee}
           directory={employeeDirectory}
         />
-        <Field label="Company" htmlFor="company" required error={fe.company}>
-          <SelectInput
-            id="company"
-            name="company"
-            value={company}
-            onChange={(e) => setCompany(e.target.value)}
-            options={companies}
-            placeholder="Select company"
-            invalid={Boolean(fe.company)}
-          />
-        </Field>
+        {hideCompanyPicker ? (
+          <input type="hidden" name="company" value={company} />
+        ) : (
+          <Field label="Company" htmlFor="company" required error={fe.company}>
+            <SelectInput
+              id="company"
+              name="company"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              options={companies}
+              placeholder="Select company"
+              invalid={Boolean(fe.company)}
+            />
+          </Field>
+        )}
         <Field
           label="Posting date"
           htmlFor="posting_date"

@@ -12,15 +12,17 @@ import {
   listPayableAccounts,
 } from "@/lib/frappe/expense-claims";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
+import { getDefaultCompanyForMe } from "@/lib/frappe/payable-accounts";
 import { createExpenseClaimAction } from "../actions";
 
 export const metadata = { title: "New expense claim · Colossal HR" };
 
 export default async function NewExpenseClaimPage() {
-  const [expenseTypes, options, modesOfPayment] = await Promise.all([
+  const [expenseTypes, options, modesOfPayment, defaultCompany] = await Promise.all([
     listExpenseTypes(),
     fetchEmployeeFormOptions(),
     listModesOfPayment(),
+    getDefaultCompanyForMe(),
   ]);
 
   // Preload accounts + cost centers for every company at page-load. Most
@@ -62,6 +64,11 @@ export default async function NewExpenseClaimPage() {
       <ExpenseClaimForm
         action={createExpenseClaimAction}
         companies={options.companies}
+        defaultCompany={
+          defaultCompany && options.companies.includes(defaultCompany)
+            ? defaultCompany
+            : options.companies[0] ?? ""
+        }
         expenseTypes={expenseTypes}
         employeeDirectory={options.employeeDirectory}
         payableAccountsByCompany={payableAccountsByCompany}

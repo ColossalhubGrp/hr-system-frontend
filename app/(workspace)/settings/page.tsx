@@ -11,6 +11,7 @@ import {
   MapPin,
   ChevronRight,
   Database,
+  Wallet,
 } from "lucide-react";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,6 +85,13 @@ const COMPANY_CARDS: SettingCardSpec[] = [
     title: "Reference data",
     desc: "Master lists that feed dropdowns across the workspace — training modes, competency categories, payroll tax rules and anything else promoted to a shared list.",
     show: (a) => a.isHrAdmin,
+  },
+  {
+    href: "/settings/payable-accounts",
+    icon: <Wallet className="h-4 w-4" />,
+    title: "Payable accounts",
+    desc: "Manage the Liability accounts the Expense Claim form (and any future payables flow) can post against — without opening the ERPNext Accounting UI.",
+    show: (a) => a.isHrAdmin || a.isItAdmin,
   },
 ];
 

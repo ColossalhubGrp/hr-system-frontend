@@ -131,7 +131,8 @@ type Raw = {
   allow_negative?: 0 | 1 | null;
   allow_over_allocation?: 0 | 1 | null;
   max_continuous_days_allowed?: number | null;
-  is_partially_paid_leave?: 0 | 1 | null;
+  // HRMS calls partially-paid `is_ppl`, not is_partially_paid_leave.
+  is_ppl?: 0 | 1 | null;
   fraction_of_daily_salary_per_leave?: number | null;
   allocate_on_day?: string | null;
   earned_leave_frequency?: string | null;
@@ -157,7 +158,7 @@ function toRow(r: Raw): LeaveTypeRow {
     allowNegativeBalance: Boolean(r.allow_negative),
     allowOverAllocation: Boolean(r.allow_over_allocation),
     maxContinuousDaysAllowed: Number(r.max_continuous_days_allowed ?? 0),
-    isPartiallyPaidLeave: Boolean(r.is_partially_paid_leave),
+    isPartiallyPaidLeave: Boolean(r.is_ppl),
     fractionOfDailySalaryPerLeave: Number(r.fraction_of_daily_salary_per_leave ?? 0),
     allocateOnDay: r.allocate_on_day ?? null,
     earnedLeaveFrequency: r.earned_leave_frequency ?? null,
@@ -201,6 +202,20 @@ async function readServiceFallback(): Promise<Raw[]> {
         "include_holiday",
         "applicable_after",
         "description",
+        "is_compensatory",
+        "is_optional_leave",
+        "allow_encashment",
+        "encashment_threshold_days",
+        "earning_component",
+        "allow_negative",
+        "allow_over_allocation",
+        "max_continuous_days_allowed",
+        "is_ppl",
+        "fraction_of_daily_salary_per_leave",
+        "allocate_on_day",
+        "earned_leave_frequency",
+        "rounding",
+        "expire_carry_forwarded_leaves_after_days",
       ],
       order_by: "name asc",
       limit_page_length: 500,
@@ -253,6 +268,16 @@ export async function listLeaveTypes(): Promise<LeaveTypeRow[]> {
   return rows;
 }
 
+/** Map a numeric rounding value to the string Select option Frappe HR
+ *  stores. Silent-rejects when the value is not one of "0.25" | "0.5" |
+ *  "1.0", so we normalise 1 → "1.0" and clamp anything unknown to
+ *  the sensible default. */
+function roundingSelectValue(value: number | undefined): string {
+  if (value === 0.25) return "0.25";
+  if (value === 1 || value === 1.0) return "1.0";
+  return "0.5";
+}
+
 export async function createLeaveType(input: LeaveTypeInput): Promise<string> {
   const doc = {
     doctype: "Leave Type",
@@ -272,14 +297,17 @@ export async function createLeaveType(input: LeaveTypeInput): Promise<string> {
     allow_negative: input.allowNegativeBalance ? 1 : 0,
     allow_over_allocation: input.allowOverAllocation ? 1 : 0,
     max_continuous_days_allowed: input.maxContinuousDaysAllowed ?? 0,
-    is_partially_paid_leave: input.isPartiallyPaidLeave ? 1 : 0,
+    is_ppl: input.isPartiallyPaidLeave ? 1 : 0,
     fraction_of_daily_salary_per_leave:
       input.fractionOfDailySalaryPerLeave ?? 0,
     ...(input.allocateOnDay ? { allocate_on_day: input.allocateOnDay } : {}),
     ...(input.earnedLeaveFrequency
       ? { earned_leave_frequency: input.earnedLeaveFrequency }
       : {}),
-    rounding: input.rounding ?? 0.5,
+    // Frappe stores `rounding` as a Select with string options
+    // "0.25" | "0.5" | "1.0" — send the exact match or Frappe silently
+    // rejects the value and stores null. Coerce 1 back to "1.0".
+    rounding: roundingSelectValue(input.rounding),
     expire_carry_forwarded_leaves_after_days:
       input.expireCarryForwardedLeavesAfterDays ?? 0,
     ...(input.description ? { description: input.description } : {}),
@@ -337,12 +365,15 @@ export async function updateLeaveType(
         allow_negative: input.allowNegativeBalance ? 1 : 0,
         allow_over_allocation: input.allowOverAllocation ? 1 : 0,
         max_continuous_days_allowed: input.maxContinuousDaysAllowed ?? 0,
-        is_partially_paid_leave: input.isPartiallyPaidLeave ? 1 : 0,
+        is_ppl: input.isPartiallyPaidLeave ? 1 : 0,
         fraction_of_daily_salary_per_leave:
           input.fractionOfDailySalaryPerLeave ?? 0,
         allocate_on_day: input.allocateOnDay ?? "",
         earned_leave_frequency: input.earnedLeaveFrequency ?? "",
-        rounding: input.rounding ?? 0.5,
+        // Frappe stores `rounding` as a Select with string options
+    // "0.25" | "0.5" | "1.0" — send the exact match or Frappe silently
+    // rejects the value and stores null. Coerce 1 back to "1.0".
+    rounding: roundingSelectValue(input.rounding),
         expire_carry_forwarded_leaves_after_days:
           input.expireCarryForwardedLeavesAfterDays ?? 0,
       },

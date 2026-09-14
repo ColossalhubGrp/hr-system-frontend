@@ -695,16 +695,22 @@ function LeaveTypeFields({
       <Field
         label="Rounding"
         htmlFor="rounding"
-        hint="0.5 or 1. Rounds fractional accruals to the nearest step."
+        hint="Rounds fractional accruals to the nearest step. Only these steps are supported by Frappe HR."
       >
-        <TextInput
+        <select
           id="rounding"
           name="rounding"
-          type="number"
-          step={0.5}
-          min={0}
-          defaultValue={initial?.rounding ?? 0.5}
-        />
+          defaultValue={
+            initial?.rounding != null && [0.25, 0.5, 1].includes(initial.rounding)
+              ? String(initial.rounding === 1 ? "1.0" : initial.rounding)
+              : "0.5"
+          }
+          className="h-10 w-full rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        >
+          <option value="0.25">0.25</option>
+          <option value="0.5">0.5</option>
+          <option value="1.0">1.0</option>
+        </select>
       </Field>
       <Field
         label="Expire carry-forwarded leaves after (days)"

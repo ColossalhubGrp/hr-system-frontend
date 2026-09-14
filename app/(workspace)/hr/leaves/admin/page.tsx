@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { redirect } from "next/navigation";
-import { ChevronLeft, Plane } from "lucide-react";
+import { ChevronLeft, FileClock, Plane } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SubTabs } from "@/components/common/sub-tabs";
 import { EmptyState } from "@/components/common/list-shell";
@@ -10,7 +10,6 @@ import {
   listCompensatoryLeaveRequests,
   listLeaveAllocations,
   listLeaveEncashments,
-  listLeaveLedgerEntries,
   listLeavePeriods,
   listLeavePolicyAssignments,
 } from "@/lib/frappe/leave-admin";
@@ -35,8 +34,7 @@ type Tab =
   | "encashments"
   | "comp-requests"
   | "control-panel"
-  | "balances"
-  | "ledger";
+  | "balances";
 
 const TABS: Array<{ id: Tab; label: string }> = [
   { id: "allocations", label: "Allocations" },
@@ -45,7 +43,6 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: "comp-requests", label: "Comp-off Requests" },
   { id: "control-panel", label: "Bulk Allocate" },
   { id: "balances", label: "Balances" },
-  { id: "ledger", label: "Ledger" },
 ];
 
 function tabFrom(v: string | undefined): Tab {
@@ -71,7 +68,6 @@ export default async function LeaveAdminPage({
     policyAssignments,
     encashments,
     compRequests,
-    ledger,
     leaveTypes,
     leavePolicies,
     leavePeriods,
@@ -85,7 +81,6 @@ export default async function LeaveAdminPage({
     listLeavePolicyAssignments(),
     listLeaveEncashments(),
     listCompensatoryLeaveRequests(),
-    listLeaveLedgerEntries(),
     listLeaveTypes(),
     listLeavePolicies(),
     listLeavePeriods(),
@@ -117,7 +112,16 @@ export default async function LeaveAdminPage({
         icon={Plane}
         crumb="HR · Leaves · Admin"
         title="Leave admin"
-        subtitle="Allocations, policy assignments, encashments, comp-off requests, bulk allocation, and the immutable Leave Ledger — all in one workspace."
+        subtitle="Allocations, policy assignments, encashments, comp-off requests, bulk allocation, and balances — all in one workspace."
+        actions={
+          <Link
+            href={"/hr/leaves/admin/ledger" as Route}
+            className="inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-xs font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+          >
+            <FileClock className="h-3.5 w-3.5" />
+            Audit ledger
+          </Link>
+        }
       />
 
       <SubTabs
@@ -137,7 +141,6 @@ export default async function LeaveAdminPage({
           policyAssignments={policyAssignments}
           encashments={encashments}
           compRequests={compRequests}
-          ledger={ledger}
           leaveTypes={leaveTypes.map((t) => t.name)}
           compensatoryLeaveTypes={leaveTypes
             .filter((t) => t.isCompensatory)

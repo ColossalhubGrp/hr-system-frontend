@@ -43,8 +43,7 @@ type Tab =
   | "encashments"
   | "comp-requests"
   | "control-panel"
-  | "balances"
-  | "ledger";
+  | "balances";
 
 const EMPTY: StdFormState = {};
 
@@ -54,7 +53,6 @@ export function LeaveAdminHub(props: {
   policyAssignments: LeavePolicyAssignmentRow[];
   encashments: LeaveEncashmentRow[];
   compRequests: CompLeaveRequestRow[];
-  ledger: LeaveLedgerRow[];
   leaveTypes: string[];
   compensatoryLeaveTypes: string[];
   encashableLeaveTypes: string[];
@@ -118,8 +116,6 @@ export function LeaveAdminHub(props: {
           filters={props.balanceFilters}
         />
       );
-    case "ledger":
-      return <LedgerTab rows={props.ledger} />;
   }
 }
 
@@ -696,7 +692,7 @@ function ControlPanelTab({
 // Ledger
 // ============================================================================
 
-function LedgerTab({ rows }: { rows: LeaveLedgerRow[] }) {
+export function LedgerTab({ rows }: { rows: LeaveLedgerRow[] }) {
   return (
     <Section title={`Leave Ledger Entries (${rows.length})`}>
       {rows.length === 0 ? (

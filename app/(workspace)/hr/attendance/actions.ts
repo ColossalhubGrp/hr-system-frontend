@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
+  adminDecideAttendanceRequest,
   cancelAttendance,
   createAttendance,
   createAttendanceRequest,
@@ -21,6 +22,7 @@ import {
   toFormState,
   type StdFormState,
 } from "@/lib/frappe/form-errors";
+import { getMyAccess } from "@/lib/frappe/roles";
 
 export type FormState = StdFormState;
 export type DecisionState = { error?: string };
@@ -180,12 +182,28 @@ export async function createAttendanceRequestAction(
   }
 }
 
+async function decideAttendanceRequestForCaller(
+  id: string,
+  decision: "Approved" | "Rejected",
+): Promise<void> {
+  // HR admins go through the admin-override endpoint that bypasses the
+  // named-approver DocPerm gate. Regular users keep the direct submit
+  // path so Frappe still enforces Employee.attendance_approver for them.
+  const access = await getMyAccess();
+  const useAdmin = Boolean(access?.isHrAdmin || access?.isItAdmin);
+  if (useAdmin) {
+    await adminDecideAttendanceRequest(id, decision);
+  } else {
+    await decideAttendanceRequest(id, decision);
+  }
+}
+
 export async function approveAttendanceRequestAction(
   id: string,
   _prev: DecisionState,
 ): Promise<DecisionState> {
   try {
-    await decideAttendanceRequest(id, "Approved");
+    await decideAttendanceRequestForCaller(id, "Approved");
     revalidatePath("/hr/attendance?tab=requests");
     revalidatePath(`/hr/attendance/requests/${encodeURIComponent(id)}`);
     redirect(`/hr/attendance/requests/${encodeURIComponent(id)}`);
@@ -199,7 +217,7 @@ export async function rejectAttendanceRequestAction(
   _prev: DecisionState,
 ): Promise<DecisionState> {
   try {
-    await decideAttendanceRequest(id, "Rejected");
+    await decideAttendanceRequestForCaller(id, "Rejected");
     revalidatePath("/hr/attendance?tab=requests");
     revalidatePath(`/hr/attendance/requests/${encodeURIComponent(id)}`);
     redirect(`/hr/attendance/requests/${encodeURIComponent(id)}`);

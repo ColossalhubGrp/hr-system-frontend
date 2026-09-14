@@ -630,6 +630,9 @@ export async function createAttendanceRequest(
 /**
  * Frappe doesn't have an explicit "approve" on Attendance Request — the
  * workflow is submit (docstatus 1) = approved, cancel (docstatus 2) = rejected.
+ * Runs as the current session user — the named approver on
+ * Employee.attendance_approver is the only non-admin who Frappe's DocPerm
+ * lets through. HR admins should use adminDecideAttendanceRequest instead.
  */
 export async function decideAttendanceRequest(
   id: string,
@@ -653,6 +656,25 @@ export async function decideAttendanceRequest(
     method: "frappe.client.submit",
     args: { doc: full },
     verb: "POST",
+    as: "user",
+  });
+}
+
+/** HR-admin override that bypasses the named-approver DocPerm gate by
+ *  running the submit / cancel as Administrator on the backend. Server
+ *  re-checks the caller holds an HR admin role. */
+export async function adminDecideAttendanceRequest(
+  id: string,
+  decision: "Approved" | "Rejected",
+): Promise<void> {
+  const method =
+    decision === "Approved"
+      ? "recruitment_app.api.approvals.admin_submit_generic"
+      : "recruitment_app.api.approvals.admin_cancel_generic";
+  await frappeCall<{ ok: boolean }>({
+    method,
+    verb: "POST",
+    args: { doctype: "Attendance Request", name: id },
     as: "user",
   });
 }

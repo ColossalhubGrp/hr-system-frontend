@@ -856,11 +856,14 @@ export function EmployeeForm({
             error={isHighlighted("national_id") ? "Payroll needs this" : undefined}
           >
             <TextInput
+              key={`nid-${initial?.id ?? "new"}`}
               id="national_id"
               name="national_id"
               defaultValue={initial?.nationalId ?? ""}
               placeholder="e.g. 63-1234567 A 63"
               invalid={isHighlighted("national_id")}
+              autoComplete="off"
+              spellCheck={false}
             />
           </Field>
           <Field
@@ -870,11 +873,14 @@ export function EmployeeForm({
             error={isHighlighted("tax_number") ? "Payroll needs this" : undefined}
           >
             <TextInput
+              key={`tax-${initial?.id ?? "new"}`}
               id="tax_number"
               name="tax_number"
               defaultValue={initial?.taxNumber ?? ""}
               placeholder="e.g. 200XXXXXXX"
               invalid={isHighlighted("tax_number")}
+              autoComplete="off"
+              spellCheck={false}
             />
           </Field>
           <Field
@@ -884,11 +890,14 @@ export function EmployeeForm({
             error={isHighlighted("nssa_number") ? "Payroll needs this" : undefined}
           >
             <TextInput
+              key={`nssa-${initial?.id ?? "new"}`}
               id="nssa_number"
               name="nssa_number"
               defaultValue={initial?.nssaNumber ?? ""}
               placeholder="e.g. NSSA-000000"
               invalid={isHighlighted("nssa_number")}
+              autoComplete="off"
+              spellCheck={false}
             />
           </Field>
           <Field
@@ -898,11 +907,14 @@ export function EmployeeForm({
             error={isHighlighted("bank_account") ? "Payroll needs this" : undefined}
           >
             <TextInput
+              key={`bank-${initial?.id ?? "new"}`}
               id="bank_account"
               name="bank_account"
               defaultValue={initial?.bankAccount ?? ""}
               placeholder="Account number"
               invalid={isHighlighted("bank_account")}
+              autoComplete="off"
+              spellCheck={false}
             />
           </Field>
         </Grid>

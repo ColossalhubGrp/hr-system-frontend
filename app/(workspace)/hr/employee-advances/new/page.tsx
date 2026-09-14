@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, Wallet } from "lucide-react";
 import { AdvanceForm } from "@/components/finance/advance-form";
-import { listCurrencies } from "@/lib/frappe/lookups";
+import { listCurrenciesEnsured } from "@/lib/frappe/lookups";
 import { listModesOfPayment } from "@/lib/frappe/expense-claims";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { createEmployeeAdvanceAction } from "../actions";
@@ -11,7 +11,7 @@ export const metadata = { title: "New advance · Colossal HR" };
 
 export default async function NewAdvancePage() {
   const [currencies, modes, options] = await Promise.all([
-    listCurrencies(),
+    listCurrenciesEnsured(),
     listModesOfPayment(),
     fetchEmployeeFormOptions(),
   ]);

@@ -184,6 +184,13 @@ export async function createEmployeeAdvance(input: {
   modeOfPayment?: string;
   advanceAccount?: string;
 }): Promise<string> {
+  // Frappe validates `exchange_rate > 0` on submit and rejects blank
+  // values with "Exchange Rate cannot be zero.". Default to 1 when the
+  // caller doesn't set one — matches the Expense Claim pattern. Users
+  // who need a different rate for a foreign-currency advance set both
+  // fields explicitly.
+  const exchangeRate =
+    input.exchangeRate && input.exchangeRate > 0 ? input.exchangeRate : 1;
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
     verb: "POST",
@@ -194,8 +201,8 @@ export async function createEmployeeAdvance(input: {
         purpose: input.purpose,
         advance_amount: input.advanceAmount,
         posting_date: input.postingDate,
+        exchange_rate: exchangeRate,
         ...(input.currency ? { currency: input.currency } : {}),
-        ...(input.exchangeRate ? { exchange_rate: input.exchangeRate } : {}),
         ...(input.modeOfPayment ? { mode_of_payment: input.modeOfPayment } : {}),
         ...(input.advanceAccount ? { advance_account: input.advanceAccount } : {}),
       },

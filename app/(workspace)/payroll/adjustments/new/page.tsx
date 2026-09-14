@@ -6,7 +6,7 @@ import {
   SimpleWrapperForm,
 } from "@/components/pay-adjustments/additional-salary-form";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
-import { listCompanies, listCurrencies } from "@/lib/frappe/lookups";
+import { listCompanies, listCurrenciesEnsured } from "@/lib/frappe/lookups";
 import { listSalaryComponents } from "@/lib/frappe/pay-adjustments";
 import {
   createAdditionalSalaryAction,
@@ -28,7 +28,7 @@ export default async function NewAdjustmentPage({
   const [options, companies, currencies, earnings] = await Promise.all([
     fetchEmployeeFormOptions(),
     listCompanies(),
-    listCurrencies(),
+    listCurrenciesEnsured(),
     listSalaryComponents({ type: type === "additional" ? undefined : "Earning" }),
   ]);
   const componentNames = earnings.map((c) => c.name);

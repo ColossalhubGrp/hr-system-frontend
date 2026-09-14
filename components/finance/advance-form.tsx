@@ -16,6 +16,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { CurrencyPickerField } from "@/components/common/currency-picker-field";
 import type { FormState } from "@/app/(workspace)/hr/employee-advances/actions";
 
 const EMPTY: FormState = {};
@@ -75,20 +76,17 @@ export function AdvanceForm({
             invalid={Boolean(fe.advance_amount)}
           />
         </Field>
-        <Field label="Currency" htmlFor="currency" hint="Defaults to company currency if blank.">
-          <SelectInput
-            id="currency"
-            name="currency"
-            options={currencies}
-            placeholder="— default —"
-          />
-        </Field>
+        <CurrencyPickerField
+          name="currency"
+          currencies={currencies}
+          hint="Type to search. Leave blank to use the company default."
+        />
         <Field
           label="Exchange rate"
           htmlFor="exchange_rate"
-          hint="Only needed for foreign-currency advances."
+          hint="Only fill this in when the currency above is not the company currency. Leave blank otherwise — 1 is used."
         >
-          <TextInput id="exchange_rate" name="exchange_rate" type="number" step="0.0001" min="0" />
+          <TextInput id="exchange_rate" name="exchange_rate" type="number" step="0.0001" min="0" placeholder="1" />
         </Field>
         <Field
           label="Date"

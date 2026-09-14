@@ -147,17 +147,20 @@ export function TravelForm({
                 onChange={(e) => update(costings, setCostings, i, { amount: Number(e.target.value) })}
                 className="input"
               />
-              <select
+              <input
                 aria-label="Currency"
+                list="travel-currency-list"
                 value={c.currency ?? ""}
-                onChange={(e) => update(costings, setCostings, i, { currency: e.target.value || undefined })}
-                className="input"
-              >
-                <option value="">Company default</option>
-                {currencies.map((cc) => (
-                  <option key={cc} value={cc}>{cc}</option>
-                ))}
-              </select>
+                onChange={(e) =>
+                  update(costings, setCostings, i, {
+                    currency: e.target.value.toUpperCase() || undefined,
+                  })
+                }
+                placeholder="Company default"
+                autoComplete="off"
+                spellCheck={false}
+                className="input uppercase tracking-wider"
+              />
               <input
                 aria-label="Funded amount"
                 placeholder="0.00"
@@ -291,6 +294,12 @@ export function TravelForm({
         </Link>
         <Submit />
       </div>
+
+      <datalist id="travel-currency-list">
+        {currencies.map((cc) => (
+          <option key={cc} value={cc} />
+        ))}
+      </datalist>
 
       <style jsx>{`
         .input {

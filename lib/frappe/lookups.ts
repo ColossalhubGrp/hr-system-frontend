@@ -50,7 +50,26 @@ export async function listKraTemplates() {
   return listDoctypeNames("KRA Template");
 }
 export async function listCurrencies() {
-  return listDoctypeNames("Currency", { limit: 100 });
+  return listDoctypeNames("Currency", { limit: 500 });
+}
+
+/** Insert the curated African + common currency set if any are missing,
+ *  then return the full list. Idempotent — cheap after first call because
+ *  Frappe caches Currency queries. Silently skips if the ensure endpoint
+ *  is missing (e.g. an older backend deploy). */
+export async function listCurrenciesEnsured(): Promise<string[]> {
+  try {
+    await frappeCall<{ added: string[]; existing: string[] }>({
+      method: "recruitment_app.api.approvals.admin_ensure_currencies",
+      verb: "POST",
+      args: {},
+      as: "user",
+    });
+  } catch {
+    // Endpoint not deployed yet, or caller lacks HR admin — fall through
+    // to the plain list; user still sees whatever Frappe has.
+  }
+  return listCurrencies();
 }
 export async function listTravelTypes() {
   return ["Domestic", "International"];

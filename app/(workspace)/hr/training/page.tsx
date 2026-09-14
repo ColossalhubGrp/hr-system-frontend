@@ -9,6 +9,7 @@ import {
   BookOpen,
   Globe,
   Plus,
+  Settings2,
 } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
@@ -57,23 +58,32 @@ export default async function TrainingPage({
         title="Training"
         subtitle="Events that get held; programs that group them."
         actions={
-          tab === "events" ? (
+          <div className="flex flex-wrap gap-2">
             <Link
-              href={"/hr/training/new" as Route}
-              className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+              href={"/hr/training/setup" as Route}
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
             >
-              <Plus className="h-4 w-4" />
-              New event
+              <Settings2 className="h-4 w-4" />
+              Setup
             </Link>
-          ) : (
-            <Link
-              href={"/hr/training/programs/new" as Route}
-              className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
-            >
-              <Plus className="h-4 w-4" />
-              New program
-            </Link>
-          )
+            {tab === "events" ? (
+              <Link
+                href={"/hr/training/new" as Route}
+                className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+              >
+                <Plus className="h-4 w-4" />
+                New event
+              </Link>
+            ) : (
+              <Link
+                href={"/hr/training/programs/new" as Route}
+                className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring"
+              >
+                <Plus className="h-4 w-4" />
+                New program
+              </Link>
+            )}
+          </div>
         }
       />
 

@@ -620,7 +620,10 @@ export async function deleteBoardingTemplate(
 }
 
 // ============================================================================
-// Skill Assessment
+// Skill Assessment — writes go into Employee Skill Map's `employee_skills`
+// child, because Frappe HR's own `Skill Assessment` doctype is a child
+// table (istable=1) and can't be inserted standalone. Reads flatten
+// every row back out for the audit-log view.
 // ============================================================================
 
 export type SkillAssessmentRow = {
@@ -628,9 +631,12 @@ export type SkillAssessmentRow = {
   employee: string;
   employeeName: string | null;
   skill: string;
+  /** 0..5 in the UI. Stored in Frappe as 0..1 Rating; backend converts. */
   proficiency: number;
   assessmentDate: string;
   notes: string | null;
+  /** Every row is effectively "submitted" — Employee Skill Map isn't
+   *  submittable, but the audit-log UI still wants a status column. */
   docstatus: 0 | 1 | 2;
 };
 
@@ -638,49 +644,33 @@ export async function listSkillAssessments(opts?: {
   employee?: string;
   skill?: string;
 }): Promise<SkillAssessmentRow[]> {
-  const filters: Array<[string, string, string]> = [];
-  if (opts?.employee) filters.push(["employee", "=", opts.employee]);
-  if (opts?.skill) filters.push(["skill", "=", opts.skill]);
   try {
     type R = {
       name: string;
-      employee: string;
+      employee: string | null;
       employee_name: string | null;
       skill: string;
-      proficiency: number | null;
+      proficiency: number;
       assessment_date: string;
-      notes: string | null;
-      docstatus: 0 | 1 | 2;
     };
     const rows = await frappeCall<R[]>({
-      method: "frappe.client.get_list",
+      method: "recruitment_app.api.approvals.admin_list_skill_assessments",
       args: {
-        doctype: "Skill Assessment",
-        fields: [
-          "name",
-          "employee",
-          "employee_name",
-          "skill",
-          "proficiency",
-          "assessment_date",
-          "notes",
-          "docstatus",
-        ],
-        filters: JSON.stringify(filters),
-        order_by: "assessment_date desc",
-        limit_page_length: 200,
+        ...(opts?.employee ? { employee: opts.employee } : {}),
+        ...(opts?.skill ? { skill: opts.skill } : {}),
+        limit: 200,
       },
       as: "user",
     });
-    return rows.map((r) => ({
+    return (rows ?? []).map((r) => ({
       name: r.name,
-      employee: r.employee,
+      employee: r.employee ?? "",
       employeeName: r.employee_name,
       skill: r.skill,
       proficiency: Number(r.proficiency ?? 0),
       assessmentDate: r.assessment_date,
-      notes: r.notes,
-      docstatus: r.docstatus,
+      notes: null,
+      docstatus: 1,
     }));
   } catch {
     return [];
@@ -694,20 +684,17 @@ export async function createSkillAssessment(input: {
   assessmentDate: string;
   notes?: string;
 }): Promise<string> {
-  const saved = await frappeCall<{ name: string }>({
-    method: "frappe.client.insert",
+  const res = await frappeCall<{ ok: boolean; map: string }>({
+    method: "recruitment_app.api.approvals.admin_log_skill_assessment",
     verb: "POST",
     args: {
-      doc: {
-        doctype: "Skill Assessment",
-        employee: input.employee,
-        skill: input.skill,
-        proficiency: input.proficiency,
-        assessment_date: input.assessmentDate,
-        ...(input.notes ? { notes: input.notes } : {}),
-      },
+      employee: input.employee,
+      skill: input.skill,
+      proficiency: input.proficiency,
+      assessment_date: input.assessmentDate,
+      ...(input.notes ? { notes: input.notes } : {}),
     },
     as: "user",
   });
-  return saved.name;
+  return res.map;
 }

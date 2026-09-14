@@ -733,20 +733,33 @@ export async function getTrainingFormOptions(): Promise<TrainingFormOptions> {
     meta = null;
   }
 
-  // Suppliers list — cheap and consistent, still via client.get_list
-  // (Supplier is a well-known doctype with permissive perms).
-  const supplierRows = meta?.supplier?.enabled === false
-    ? []
-    : await frappeCall<SupplierRow[]>({
-        method: "frappe.client.get_list",
-        args: {
-          doctype: "Supplier",
-          fields: ["name"],
-          order_by: "name asc",
-          limit_page_length: 500,
-        },
-        as: "service",
-      }).catch(() => [] as SupplierRow[]);
+  // Supplier picker sources from the custom HR Training Supplier
+  // doctype now (no dependency on the ERPNext Buying module). If the
+  // custom doctype hasn't been migrated in yet, fall back to the
+  // legacy ERPNext Supplier list so the field keeps working during
+  // the rollout. Managed under Configuration → Training suppliers.
+  let supplierRows: SupplierRow[] = await frappeCall<SupplierRow[]>({
+    method: "frappe.client.get_list",
+    args: {
+      doctype: "HR Training Supplier",
+      fields: ["name"],
+      order_by: "supplier_name asc",
+      limit_page_length: 500,
+    },
+    as: "user",
+  }).catch(() => [] as SupplierRow[]);
+  if (supplierRows.length === 0 && meta?.supplier?.enabled !== false) {
+    supplierRows = await frappeCall<SupplierRow[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Supplier",
+        fields: ["name"],
+        order_by: "name asc",
+        limit_page_length: 500,
+      },
+      as: "service",
+    }).catch(() => [] as SupplierRow[]);
+  }
 
   let eventTypeOptions: string[] = FALLBACK_TYPES;
   let eventTypeFieldtype: "Select" | "Link" | null = null;

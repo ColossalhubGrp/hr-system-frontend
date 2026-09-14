@@ -55,7 +55,7 @@ export default async function NewExpenseClaimPage() {
           File an expense claim
         </h1>
         <p className="text-sm text-ash-600">
-          Add one expense line for now — multi-line claims arrive in a follow-up.
+          Add every expense on this claim as its own row — date, type and amount are required per row.
         </p>
       </header>
 

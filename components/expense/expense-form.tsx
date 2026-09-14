@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { ChildTableEditor } from "@/components/employee/child-table-editor";
 import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
@@ -118,49 +119,68 @@ export function ExpenseClaimForm({
       </FormSection>
 
       <FormSection
-        title="Expense line"
-        description="One expense for now — extra lines come later."
+        title="Expense lines"
+        description="Add one row per expense. Date, type and amount are required on every row."
       >
-        <Field
-          label="Expense date"
-          htmlFor="expense_date"
-          required
-          error={fe.expense_date}
-        >
-          <TextInput
-            id="expense_date"
-            name="expense_date"
-            type="date"
-            invalid={Boolean(fe.expense_date)}
+        <div className="col-span-full">
+          {fe.expenses && (
+            <p
+              role="alert"
+              className="mb-3 rounded-md border border-fall/30 bg-fall/[0.06] px-3 py-2 text-xs text-fall"
+            >
+              {fe.expenses}
+            </p>
+          )}
+          <ChildTableEditor
+            name="expenses_json"
+            addLabel="Add expense line"
+            emptyLabel="No lines yet — click Add expense line to start."
+            initial={[
+              { expense_date: "", expense_type: "", description: "", amount: null },
+            ]}
+            emptyRow={() => ({
+              expense_date: "",
+              expense_type: "",
+              description: "",
+              amount: null,
+            })}
+            fields={[
+              {
+                key: "expense_date",
+                label: "Date",
+                type: "date",
+                required: true,
+              },
+              {
+                key: "expense_type",
+                label: "Type",
+                type: "select",
+                options: expenseTypes,
+                required: true,
+              },
+              {
+                key: "amount",
+                label: "Amount",
+                type: "number",
+                min: 0,
+                step: 0.01,
+                required: true,
+                placeholder: "0.00",
+              },
+              {
+                key: "description",
+                label: "Description",
+                placeholder: "Optional",
+              },
+            ]}
+            serialize={(r) => ({
+              expense_date: r.expense_date || "",
+              expense_type: r.expense_type || "",
+              description: r.description || "",
+              amount: r.amount == null || r.amount === "" ? 0 : Number(r.amount),
+            })}
           />
-        </Field>
-        <Field
-          label="Expense type"
-          htmlFor="expense_type"
-          required
-          error={fe.expense_type}
-        >
-          <SelectInput
-            id="expense_type"
-            name="expense_type"
-            options={expenseTypes}
-            placeholder="Select expense type"
-            invalid={Boolean(fe.expense_type)}
-          />
-        </Field>
-        <Field label="Amount" htmlFor="amount" required error={fe.amount}>
-          <TextInput
-            id="amount"
-            name="amount"
-            type="number"
-            step="0.01"
-            min="0"
-            invalid={Boolean(fe.amount)}
-          />
-        </Field>
-        <Field label="Description" htmlFor="description" wide>
-          <TextArea id="description" name="description" rows={2} />
-        </Field>
+        </div>
       </FormSection>
 
       <FormSection

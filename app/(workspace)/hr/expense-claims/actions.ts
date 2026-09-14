@@ -27,6 +27,15 @@ export type FormState = {
 
 const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD.");
 
+const expenseLineSchema = z.object({
+  expense_date: isoDate,
+  expense_type: z.string().trim().min(1, "Type is required."),
+  description: z.string().trim().optional(),
+  amount: z.coerce
+    .number({ invalid_type_error: "Amount must be a number." })
+    .positive("Amount must be greater than 0."),
+});
+
 const createSchema = z.object({
   employee: z.string().trim().min(1, "Employee is required."),
   posting_date: isoDate,
@@ -36,15 +45,20 @@ const createSchema = z.object({
   // like Administrator). The action resolves it to a user_id (email)
   // before submitting to Frappe.
   approver: z.string().trim().optional(),
-  // Single line for now — we'll grow this to a child-row UI later.
-  expense_date: isoDate,
-  expense_type: z.string().trim().min(1, "Expense type is required."),
-  description: z.string().trim().optional(),
-  amount: z
+  // Child table — the form submits a JSON blob via ChildTableEditor.
+  // Empty rows (no type + no amount) are dropped before validation.
+  expenses_json: z
     .string()
     .trim()
-    .regex(/^\d+(\.\d+)?$/, "Amount must be a number.")
-    .transform((s) => Number(s)),
+    .default("[]")
+    .transform((s) => {
+      try {
+        return JSON.parse(s);
+      } catch {
+        return [];
+      }
+    })
+    .pipe(z.array(expenseLineSchema).min(1, "Add at least one expense line.")),
   // Accounting — all optional. Blank = leave to Frappe's fetch_from
   // (company defaults) at insert time; HR completes on the detail page
   // before approving if the defaults aren't set.
@@ -131,6 +145,23 @@ export async function createExpenseClaimAction(
 ): Promise<FormState> {
   const raw: Record<string, string> = {};
   for (const [k, v] of form.entries()) if (typeof v === "string") raw[k] = v;
+  // Strip blank rows from the child table before validation so the user
+  // doesn't have to hit Remove on every empty starter row.
+  try {
+    const parsedRows = JSON.parse(raw.expenses_json ?? "[]");
+    if (Array.isArray(parsedRows)) {
+      raw.expenses_json = JSON.stringify(
+        parsedRows.filter(
+          (r) =>
+            (r?.expense_date && String(r.expense_date).trim()) ||
+            (r?.expense_type && String(r.expense_type).trim()) ||
+            (r?.amount !== null && r?.amount !== "" && r?.amount !== undefined),
+        ),
+      );
+    }
+  } catch {
+    /* leave as-is; schema will reject */
+  }
   const parsed = createSchema.safeParse(raw);
   if (!parsed.success) {
     const fieldErrors: FormState["fieldErrors"] = {};
@@ -172,14 +203,12 @@ export async function createExpenseClaimAction(
     cost_center: parsed.data.cost_center || undefined,
     is_paid: Boolean(parsed.data.is_paid),
     mode_of_payment: parsed.data.mode_of_payment || undefined,
-    expenses: [
-      {
-        expense_date: parsed.data.expense_date,
-        expense_type: parsed.data.expense_type,
-        description: parsed.data.description,
-        amount: parsed.data.amount,
-      },
-    ],
+    expenses: parsed.data.expenses_json.map((r) => ({
+      expense_date: r.expense_date,
+      expense_type: r.expense_type,
+      description: r.description,
+      amount: r.amount,
+    })),
   };
 
   let newId: string;

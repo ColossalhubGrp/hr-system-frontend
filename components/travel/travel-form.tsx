@@ -120,16 +120,27 @@ export function TravelForm({
 
       <FormSection title="Costings">
         <div className="col-span-full flex flex-col gap-3">
+          {costings.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 px-1 text-[11px] font-medium uppercase tracking-wide text-ash-500 md:grid-cols-5">
+              <span>Expense type</span>
+              <span>Amount</span>
+              <span>Currency</span>
+              <span>Funded amount</span>
+              <span className="sr-only">Actions</span>
+            </div>
+          )}
           {costings.map((c, i) => (
             <div key={i} className="grid grid-cols-2 gap-2 md:grid-cols-5">
               <input
-                placeholder="Expense type"
+                aria-label="Expense type"
+                placeholder="e.g. Airfare"
                 value={c.expense_type}
                 onChange={(e) => update(costings, setCostings, i, { expense_type: e.target.value })}
                 className="input"
               />
               <input
-                placeholder="Amount"
+                aria-label="Amount"
+                placeholder="0.00"
                 type="number"
                 step="0.01"
                 value={c.amount ?? ""}
@@ -137,17 +148,19 @@ export function TravelForm({
                 className="input"
               />
               <select
+                aria-label="Currency"
                 value={c.currency ?? ""}
                 onChange={(e) => update(costings, setCostings, i, { currency: e.target.value || undefined })}
                 className="input"
               >
-                <option value="">— default —</option>
+                <option value="">Company default</option>
                 {currencies.map((cc) => (
                   <option key={cc} value={cc}>{cc}</option>
                 ))}
               </select>
               <input
-                placeholder="Funded amount"
+                aria-label="Funded amount"
+                placeholder="0.00"
                 type="number"
                 step="0.01"
                 value={c.funded_amount ?? ""}
@@ -183,28 +196,42 @@ export function TravelForm({
 
       <FormSection title="Itinerary">
         <div className="col-span-full flex flex-col gap-3">
+          {legs.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 px-1 text-[11px] font-medium uppercase tracking-wide text-ash-500 md:grid-cols-6">
+              <span>Departure date</span>
+              <span>From</span>
+              <span>To</span>
+              <span>Mode of transport</span>
+              <span>Cost</span>
+              <span className="sr-only">Actions</span>
+            </div>
+          )}
           {legs.map((l, i) => (
             <div key={i} className="grid grid-cols-2 gap-2 md:grid-cols-6">
               <input
+                aria-label="Departure date"
                 type="date"
                 value={l.departure_date}
                 onChange={(e) => update(legs, setLegs, i, { departure_date: e.target.value })}
                 className="input"
               />
               <input
-                placeholder="From"
+                aria-label="From"
+                placeholder="e.g. Harare"
                 value={l.from_location}
                 onChange={(e) => update(legs, setLegs, i, { from_location: e.target.value })}
                 className="input"
               />
               <input
-                placeholder="To"
+                aria-label="To"
+                placeholder="e.g. Bulawayo"
                 value={l.to_location}
                 onChange={(e) => update(legs, setLegs, i, { to_location: e.target.value })}
                 className="input"
               />
               <input
-                placeholder="Mode"
+                aria-label="Mode of transport"
+                placeholder="e.g. Flight, Bus"
                 value={l.mode_of_transport ?? ""}
                 onChange={(e) =>
                   update(legs, setLegs, i, {
@@ -214,7 +241,8 @@ export function TravelForm({
                 className="input"
               />
               <input
-                placeholder="Cost"
+                aria-label="Cost"
+                placeholder="0.00"
                 type="number"
                 step="0.01"
                 value={l.cost ?? ""}

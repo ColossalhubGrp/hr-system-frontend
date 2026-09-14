@@ -66,6 +66,65 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
 
   const serializedRows = rows.map((r) => (serialize ? serialize(r) : r));
 
+  const renderCell = (row: Row, i: number, f: ChildFieldSpec<Row>) => {
+    if (f.type === "select") {
+      return (
+        <select
+          aria-label={f.label}
+          value={String(row[f.key] ?? "")}
+          onChange={(e) => update(i, f.key, e.target.value)}
+          className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+        >
+          <option value="">—</option>
+          {(f.options ?? []).map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      );
+    }
+    if (f.type === "number") {
+      return (
+        <input
+          aria-label={f.label}
+          type="number"
+          value={row[f.key] == null ? "" : String(row[f.key])}
+          onChange={(e) => {
+            const v = e.target.value;
+            update(i, f.key, v === "" ? null : Number(v));
+          }}
+          min={f.min}
+          max={f.max}
+          step={f.step}
+          placeholder={f.placeholder}
+          className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+        />
+      );
+    }
+    if (f.type === "date") {
+      return (
+        <input
+          aria-label={f.label}
+          type="date"
+          value={String(row[f.key] ?? "")}
+          onChange={(e) => update(i, f.key, e.target.value)}
+          className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+        />
+      );
+    }
+    return (
+      <input
+        aria-label={f.label}
+        type="text"
+        value={String(row[f.key] ?? "")}
+        onChange={(e) => update(i, f.key, e.target.value)}
+        placeholder={f.placeholder}
+        className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+      />
+    );
+  };
+
   return (
     <div className="flex flex-col gap-3">
       {rows.length === 0 ? (
@@ -73,78 +132,41 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
           {emptyLabel}
         </p>
       ) : (
-        <div className="flex flex-col gap-3">
-          {rows.map((row, i) => (
-            <div
-              key={i}
-              className="grid grid-cols-1 gap-3 rounded-card border border-hairline bg-white p-3 sm:grid-cols-2 md:grid-cols-3"
-            >
-              {fields.map((f) => (
-                <label
-                  key={f.key}
-                  className={`flex flex-col gap-1 text-sm ${f.wide ? "sm:col-span-2 md:col-span-3" : ""}`}
-                >
-                  <span className="text-xs font-medium text-ash-600">
+        <div className="overflow-x-auto rounded-card border border-hairline bg-white">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-hairline bg-canvas/50 text-left text-[11px] font-medium uppercase tracking-wide text-ash-500">
+                {fields.map((f) => (
+                  <th key={f.key} className="px-3 py-2 font-medium">
                     {f.label}
                     {f.required && <span className="ml-0.5 text-fall">*</span>}
-                  </span>
-                  {f.type === "select" ? (
-                    <select
-                      value={String(row[f.key] ?? "")}
-                      onChange={(e) => update(i, f.key, e.target.value)}
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                  </th>
+                ))}
+                <th className="w-16 px-3 py-2" />
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row, i) => (
+                <tr key={i} className="border-b border-hairline last:border-b-0 align-top">
+                  {fields.map((f) => (
+                    <td key={f.key} className="px-3 py-2">
+                      {renderCell(row, i, f)}
+                    </td>
+                  ))}
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      onClick={() => removeAt(i)}
+                      aria-label="Remove row"
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-chip border border-hairline text-ash-500 transition hover:border-fall/60 hover:text-fall focus-ring"
                     >
-                      <option value="">—</option>
-                      {(f.options ?? []).map((o) => (
-                        <option key={o} value={o}>
-                          {o}
-                        </option>
-                      ))}
-                    </select>
-                  ) : f.type === "number" ? (
-                    <input
-                      type="number"
-                      value={row[f.key] == null ? "" : String(row[f.key])}
-                      onChange={(e) => {
-                        const v = e.target.value;
-                        update(i, f.key, v === "" ? null : Number(v));
-                      }}
-                      min={f.min}
-                      max={f.max}
-                      step={f.step}
-                      placeholder={f.placeholder}
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
-                    />
-                  ) : f.type === "date" ? (
-                    <input
-                      type="date"
-                      value={String(row[f.key] ?? "")}
-                      onChange={(e) => update(i, f.key, e.target.value)}
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
-                    />
-                  ) : (
-                    <input
-                      type="text"
-                      value={String(row[f.key] ?? "")}
-                      onChange={(e) => update(i, f.key, e.target.value)}
-                      placeholder={f.placeholder}
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
-                    />
-                  )}
-                </label>
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </td>
+                </tr>
               ))}
-              <div className="flex items-end justify-end sm:col-span-2 md:col-span-3">
-                <button
-                  type="button"
-                  onClick={() => removeAt(i)}
-                  className="inline-flex items-center gap-1.5 rounded-chip border border-hairline px-3 py-1.5 text-xs text-ash-600 transition hover:border-fall/60 hover:text-fall focus-ring"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  Remove
-                </button>
-              </div>
-            </div>
-          ))}
+            </tbody>
+          </table>
         </div>
       )}
 

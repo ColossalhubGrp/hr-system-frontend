@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   createCompany,
+  deleteCompany,
   updateCompany,
   type CompanyInput,
 } from "@/lib/frappe/companies";
@@ -115,4 +116,18 @@ export async function updateCompanyAction(
   revalidatePath("/settings/company");
   revalidatePath(`/settings/company/${encodeURIComponent(id)}`);
   return {};
+}
+
+export async function deleteCompanyAction(
+  id: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const blocked = await requireWrite();
+  if (blocked) return { ok: false, error: blocked };
+  try {
+    await deleteCompany(id);
+  } catch (err) {
+    return { ok: false, error: toFormState(err).error ?? "Failed to delete." };
+  }
+  revalidatePath("/settings/company");
+  return { ok: true };
 }

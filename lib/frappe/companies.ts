@@ -174,6 +174,18 @@ export async function updateCompany(
   });
 }
 
+/** Delete a Company. Frappe rejects the call if any transactional
+ *  record links to it (Employee, GL Entry, Salary Slip, …); that
+ *  error surfaces unchanged so HR knows why. */
+export async function deleteCompany(id: string): Promise<void> {
+  await frappeCall<unknown>({
+    method: "frappe.client.delete",
+    verb: "POST",
+    args: { doctype: "Company", name: id },
+    as: "user",
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Picker reads — Country / Currency / Holiday List
 // ---------------------------------------------------------------------------

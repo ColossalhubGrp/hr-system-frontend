@@ -22,6 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
+import { CompanyDeleteButton } from "@/components/settings/company-delete-button";
 
 export const metadata = {
   title: "Company profile · Settings · Colossal HR",
@@ -156,14 +157,20 @@ export default async function CompanySettingsPage() {
                     </TableCell>
                     <TableCell className="text-right align-top">
                       {canWrite && (
-                        <Button asChild variant="outline" size="sm">
-                          <Link
-                            href={`/settings/company/${encodeURIComponent(c.id)}` as Route}
-                          >
-                            <Pencil className="h-3 w-3" />
-                            Edit
-                          </Link>
-                        </Button>
+                        <div className="inline-flex items-center gap-1">
+                          <Button asChild variant="outline" size="sm">
+                            <Link
+                              href={`/settings/company/${encodeURIComponent(c.id)}` as Route}
+                            >
+                              <Pencil className="h-3 w-3" />
+                              Edit
+                            </Link>
+                          </Button>
+                          <CompanyDeleteButton
+                            id={c.id}
+                            label={c.companyName ?? c.id}
+                          />
+                        </div>
                       )}
                     </TableCell>
                   </TableRow>

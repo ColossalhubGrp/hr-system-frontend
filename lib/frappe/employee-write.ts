@@ -464,12 +464,41 @@ export type EmployeeFormInput = {
   bank_account?: string;
 };
 
-/** Strip empty strings — Frappe interprets `""` as "set to blank" on save. */
+/** Fields where HR should be able to CLEAR an existing value via the
+ *  edit form. For these, an empty-string submit is sent to Frappe as
+ *  `null` so the field is actively wiped instead of silently kept —
+ *  the default `compact()` path preserves the old behaviour for every
+ *  other field, where a blank submit is treated as "not touched". */
+const CLEARABLE_FIELDS = new Set<string>([
+  "national_id",
+  "tax_number",
+  "nssa_number",
+  "bank_account",
+  "cell_number",
+  "company_email",
+  "personal_email",
+  "current_address",
+  "permanent_address",
+  "person_to_be_contacted",
+  "emergency_phone_number",
+  "bio",
+  "attendance_device_id",
+]);
+
+/** Strip empty strings — Frappe interprets `""` as "set to blank" on save.
+ *  Fields listed in CLEARABLE_FIELDS are exempted: an empty value there is
+ *  converted to `null` so the user can actively clear it, instead of being
+ *  silently dropped and Frappe keeping the stale value. */
 function compact<T extends Record<string, unknown>>(o: T): Partial<T> {
   const out: Partial<T> = {};
   for (const [k, v] of Object.entries(o)) {
     if (v === undefined) continue;
-    if (typeof v === "string" && v.trim() === "") continue;
+    if (typeof v === "string" && v.trim() === "") {
+      if (CLEARABLE_FIELDS.has(k)) {
+        (out as Record<string, unknown>)[k] = null;
+      }
+      continue;
+    }
     (out as Record<string, unknown>)[k] = v;
   }
   return out;

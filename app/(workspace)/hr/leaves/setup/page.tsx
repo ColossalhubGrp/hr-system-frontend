@@ -61,7 +61,7 @@ export default async function LeavesSetupPage() {
         title="Leaves setup"
         subtitle="Master data for the leaves module — types, policies, periods and block lists. Edits here flow into new leave applications immediately."
       />
-      <ModuleSetupGrid cards={CARDS} />
+      <ModuleSetupGrid cards={CARDS} fromPath="/hr/leaves/setup" />
     </div>
   );
 }

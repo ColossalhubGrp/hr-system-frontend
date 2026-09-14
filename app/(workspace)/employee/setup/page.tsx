@@ -55,7 +55,7 @@ export default async function EmployeeSetupPage() {
         title="Employee setup"
         subtitle="Master data for the employee module — designations (with required skills), grievance categories, and onboarding + separation activity templates."
       />
-      <ModuleSetupGrid cards={CARDS} />
+      <ModuleSetupGrid cards={CARDS} fromPath="/employee/setup" />
     </div>
   );
 }

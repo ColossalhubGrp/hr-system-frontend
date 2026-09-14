@@ -10,6 +10,7 @@ import {
   listParentDepartmentOptions,
 } from "@/lib/frappe/departments-admin";
 import { DepartmentsAdmin } from "@/components/settings/departments-admin";
+import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = { title: "Departments · Settings · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -30,13 +31,7 @@ export default async function DepartmentsSettingsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link
-        href={"/settings" as Route}
-        className="inline-flex w-fit items-center gap-1 rounded-chip px-2 py-1 text-xs font-medium text-ash-500 transition hover:bg-canvas focus-ring"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" />
-        Back to settings
-      </Link>
+      <SettingsBackLink />
 
       <header className="flex flex-col gap-1">
         <div className="flex items-center gap-2 text-xs text-ash-500">

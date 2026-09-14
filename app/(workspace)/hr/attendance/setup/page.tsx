@@ -57,7 +57,7 @@ export default async function AttendanceSetupPage() {
         title="Attendance setup"
         subtitle="Master data for attendance, shifts, biometric devices and overtime rules. Changes here flow into the next punch and the next overtime slip."
       />
-      <ModuleSetupGrid cards={CARDS} />
+      <ModuleSetupGrid cards={CARDS} fromPath="/hr/attendance/setup" />
     </div>
   );
 }

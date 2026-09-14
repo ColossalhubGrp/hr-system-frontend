@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { requireGroup } from "@/lib/frappe/require-role";
 import { listOvertimeRules } from "@/lib/frappe/overtime";
+import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
   title: "Overtime rules · Settings · Colossal HR",
@@ -22,13 +23,7 @@ export default async function OvertimeRulesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link
-        href={"/settings" as Route}
-        className="inline-flex w-fit items-center gap-1 rounded-chip px-2 py-1 text-xs font-medium text-ash-500 transition hover:bg-canvas focus-ring"
-      >
-        <ChevronLeft className="h-3.5 w-3.5" />
-        Back to settings
-      </Link>
+      <SettingsBackLink />
 
       <header className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <div>

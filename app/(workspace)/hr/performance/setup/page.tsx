@@ -57,7 +57,7 @@ export default async function PerformanceSetupPage() {
         title="Performance setup"
         subtitle="Framework, feedback criteria and appraisal templates. New cycles and appraisals inherit whatever you configure here."
       />
-      <ModuleSetupGrid cards={CARDS} />
+      <ModuleSetupGrid cards={CARDS} fromPath="/hr/performance/setup" />
     </div>
   );
 }

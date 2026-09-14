@@ -21,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
   title: "Company profile · Settings · Colossal HR",
@@ -60,12 +61,7 @@ export default async function CompanySettingsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Button asChild variant="ghost" size="sm" className="w-fit gap-1 text-xs text-muted-foreground">
-        <Link href={"/settings" as Route}>
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to settings
-        </Link>
-      </Button>
+      <SettingsBackLink />
 
       <header className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">

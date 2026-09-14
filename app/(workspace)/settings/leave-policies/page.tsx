@@ -9,6 +9,7 @@ import { listCompanies } from "@/lib/frappe/lookups";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LeavePoliciesAdmin } from "@/components/settings/leave-policies-admin";
+import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
   title: "Leave policies · Settings · Colossal HR",
@@ -35,17 +36,7 @@ export default async function LeavePoliciesPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Button
-        asChild
-        variant="ghost"
-        size="sm"
-        className="w-fit gap-1 text-xs text-muted-foreground"
-      >
-        <Link href={"/settings" as Route}>
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to settings
-        </Link>
-      </Button>
+      <SettingsBackLink />
 
       <header className="flex flex-col gap-1">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">

@@ -41,7 +41,7 @@ const TABS: Array<{ id: Tab; label: string }> = [
   { id: "policy-assignments", label: "Policy Assignments" },
   { id: "encashments", label: "Encashments" },
   { id: "comp-requests", label: "Comp-off Requests" },
-  { id: "control-panel", label: "Control Panel" },
+  { id: "control-panel", label: "Bulk Allocate" },
   { id: "ledger", label: "Ledger" },
 ];
 

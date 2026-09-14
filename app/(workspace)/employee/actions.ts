@@ -283,6 +283,14 @@ export async function updateEmployeeAction(
   }
   revalidatePath("/employee");
   revalidatePath(`/employee/${encodeURIComponent(id)}`);
+  // When the user arrived via the Payroll "Fix now" flow, hop back to
+  // /payroll on success instead of the employee profile. Origin is
+  // carried in a hidden `_from` field written by the edit page.
+  const from = form.get("_from");
+  if (typeof from === "string" && from === "payroll") {
+    revalidatePath("/payroll");
+    redirect("/payroll");
+  }
   redirect(`/employee/${encodeURIComponent(id)}`);
 }
 

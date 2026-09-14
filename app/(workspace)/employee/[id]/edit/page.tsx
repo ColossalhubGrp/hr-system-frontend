@@ -78,6 +78,7 @@ export default async function EditEmployeePage({
         initial={emp}
         cancelHref={backHref}
         highlightFields={highlightFields}
+        fromOrigin={fromPayroll ? "payroll" : undefined}
       />
     </div>
   );

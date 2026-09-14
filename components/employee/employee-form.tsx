@@ -43,6 +43,11 @@ type Props = {
    *  inputs need to be filled. The form auto-navigates to the tab
    *  that owns the first entry and scrolls it into view. */
   highlightFields?: string[];
+  /** Where the user came from. When set, the value ships to the server
+   *  action via a hidden `_from` input so the action can redirect back
+   *  there on save (e.g. "payroll" jumps to /payroll instead of the
+   *  employee profile). */
+  fromOrigin?: string;
 };
 
 const EMPTY: FormState = {};
@@ -145,6 +150,7 @@ export function EmployeeForm({
   personaRoles,
   canAssignRoles,
   highlightFields,
+  fromOrigin,
 }: Props) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
@@ -413,6 +419,7 @@ export function EmployeeForm({
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
+      {fromOrigin && <input type="hidden" name="_from" value={fromOrigin} />}
       {state.error && (
         <p
           role="alert"

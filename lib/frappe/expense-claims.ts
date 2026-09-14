@@ -680,6 +680,26 @@ export async function setModeOfPaymentDefaultAccount(input: {
   });
 }
 
+/** Trigger ERPNext's setup primitives to seed the default Chart of
+ *  Accounts + a default Cost Center on a Company that hasn't been
+ *  through the setup wizard yet. Backend rejects non-HR callers. */
+export async function setupExpenseAccountsForCompany(
+  company: string,
+): Promise<{ accountsAdded: number; costCentersAdded: number }> {
+  const r = await frappeCall<{
+    ok: boolean;
+    company: string;
+    accounts_added: number;
+    cost_centers_added: number;
+  }>({
+    method: "recruitment_app.api.approvals.admin_setup_expense_accounts_for_company",
+    verb: "POST",
+    args: { company },
+    as: "user",
+  });
+  return { accountsAdded: r.accounts_added, costCentersAdded: r.cost_centers_added };
+}
+
 /** Modes of Payment (Cash / Bank / Cheque / …). Only surface enabled ones. */
 export async function listModesOfPayment(): Promise<string[]> {
   try {

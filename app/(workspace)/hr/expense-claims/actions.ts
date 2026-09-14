@@ -10,6 +10,7 @@ import {
   recordExpenseClaimPayment,
   saveExpenseClaimAccounting,
   setModeOfPaymentDefaultAccount,
+  setupExpenseAccountsForCompany,
   type ExpenseAccountingInput,
   type ExpenseClaimCreateInput,
 } from "@/lib/frappe/expense-claims";
@@ -418,4 +419,31 @@ export async function unlinkAdvanceAction(
   }
   revalidatePath(`/hr/expense-claims/${encodeURIComponent(claimId)}`);
   return { ok: true };
+}
+
+/** One-click seed of ERPNext Chart of Accounts + a default Cost Center
+ *  on a Company that hasn't been through the setup wizard yet. HR-admin
+ *  only. Called from the empty-state hint on the Payable account
+ *  picker when a user picks a company with no accounts. */
+export async function setupExpenseAccountsAction(
+  company: string,
+): Promise<
+  | { ok: true; accountsAdded: number; costCentersAdded: number }
+  | { ok: false; error: string }
+> {
+  const access = await getMyAccess();
+  if (!access.isHrAdmin && !access.isItAdmin) {
+    return { ok: false, error: "Only HR admins can set up company accounts." };
+  }
+  if (!company) return { ok: false, error: "Pick a company first." };
+  try {
+    const r = await setupExpenseAccountsForCompany(company);
+    revalidatePath("/hr/expense-claims/new");
+    return { ok: true, ...r };
+  } catch (err) {
+    return {
+      ok: false,
+      error: toFormState(err).error ?? "Failed to set up accounts.",
+    };
+  }
 }

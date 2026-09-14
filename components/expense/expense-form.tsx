@@ -18,6 +18,7 @@ import {
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
 import { ApproverPickerField } from "@/components/common/approver-picker-field";
+import { SetupExpenseAccountsButton } from "@/components/expense/setup-accounts-button";
 import type { FormState } from "@/app/(workspace)/hr/expense-claims/actions";
 import { cn } from "@/lib/cn";
 
@@ -195,7 +196,7 @@ export function ExpenseClaimForm({
           error={fe.payable_account}
           hint={
             company && payableAccounts.length === 0
-              ? `No payable accounts are set up for ${company} yet. Ask an admin to add one.`
+              ? `${company} has no Chart of Accounts yet — this is a one-off setup step per company.`
               : undefined
           }
         >
@@ -206,6 +207,9 @@ export function ExpenseClaimForm({
             placeholder={payableAccounts.length ? "Use company default" : "—"}
             invalid={Boolean(fe.payable_account)}
           />
+          {company && payableAccounts.length === 0 && (
+            <SetupExpenseAccountsButton company={company} />
+          )}
         </Field>
         <Field
           label="Cost center"

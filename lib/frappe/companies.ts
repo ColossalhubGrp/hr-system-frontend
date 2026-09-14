@@ -174,14 +174,17 @@ export async function updateCompany(
   });
 }
 
-/** Delete a Company. Frappe rejects the call if any transactional
- *  record links to it (Employee, GL Entry, Salary Slip, …); that
- *  error surfaces unchanged so HR knows why. */
+/** Delete a Company through the admin-override endpoint. Runs as
+ *  Administrator on the backend to bypass Frappe's default DocPerm
+ *  gate that refuses HR admins ('User not allowed to delete Company').
+ *  Server still refuses when linked records exist (Employee, GL Entry,
+ *  Salary Slip, Account, Cost Center, …); the error surfaces
+ *  unchanged so HR knows what needs to be unlinked first. */
 export async function deleteCompany(id: string): Promise<void> {
   await frappeCall<unknown>({
-    method: "frappe.client.delete",
+    method: "recruitment_app.api.approvals.admin_delete_company",
     verb: "POST",
-    args: { doctype: "Company", name: id },
+    args: { name: id },
     as: "user",
   });
 }

@@ -22,8 +22,14 @@ export function AdvanceActionsBar({
   const onSubmit = () =>
     start(async () => {
       const r = await submitAdvanceAction(id);
-      if (!r.ok) window.alert(r.error);
-      else router.refresh();
+      if (!r.ok) {
+        window.alert(r.error);
+        return;
+      }
+      // Advance is now submitted — kick the user back to the list where
+      // they can see the new status in context.
+      router.push("/hr/employee-advances");
+      router.refresh();
     });
 
   const onCancel = () =>

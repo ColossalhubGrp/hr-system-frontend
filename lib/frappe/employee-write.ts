@@ -454,6 +454,14 @@ export type EmployeeFormInput = {
   /** Required when `age_waiver_granted` is 1. Free text explaining
    *  the exception (registered apprenticeship, court order, etc.). */
   age_waiver_reason?: string;
+
+  // statutory identifiers — Zimbabwe / Belina payroll requires these
+  // before an employee can be paid. Missing values are flagged on the
+  // Payroll page "Action Required" banner.
+  national_id?: string;
+  tax_number?: string;
+  nssa_number?: string;
+  bank_account?: string;
 };
 
 /** Strip empty strings — Frappe interprets `""` as "set to blank" on save. */

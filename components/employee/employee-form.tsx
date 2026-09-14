@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { Route } from "next";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, ArrowLeft, ArrowRight, Info, Save } from "lucide-react";
 import type { EmployeeFull } from "@/lib/frappe/employees";
@@ -38,6 +38,11 @@ type Props = {
    *  When false, the picker is hidden entirely — non-admin HR still
    *  gets to create the employee, they just don't see the picker. */
   canAssignRoles?: boolean;
+  /** Fieldnames the caller wants visually flagged on mount — set by
+   *  the Payroll "Fix now" banner so the user sees exactly which
+   *  inputs need to be filled. The form auto-navigates to the tab
+   *  that owns the first entry and scrolls it into view. */
+  highlightFields?: string[];
 };
 
 const EMPTY: FormState = {};
@@ -88,7 +93,24 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "company",
     "status",
   ],
-  joining: ["date_of_joining", "employment_type", "pay_grade", "nec_industry", "basic_usd", "basic_zig", "nec_dues_override", "nec_dues_usd", "is_elderly", "is_disabled", "tax_method", "salary_currency_mode"],
+  joining: [
+    "date_of_joining",
+    "employment_type",
+    "pay_grade",
+    "nec_industry",
+    "basic_usd",
+    "basic_zig",
+    "nec_dues_override",
+    "nec_dues_usd",
+    "is_elderly",
+    "is_disabled",
+    "tax_method",
+    "salary_currency_mode",
+    "national_id",
+    "tax_number",
+    "nssa_number",
+    "bank_account",
+  ],
   contact: [
     "cell_number",
     "user_id",
@@ -122,10 +144,37 @@ export function EmployeeForm({
   cancelHref,
   personaRoles,
   canAssignRoles,
+  highlightFields,
 }: Props) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
-  const [tab, setTab] = useState<TabId>("overview");
+  const highlight = useMemo(
+    () => new Set(highlightFields ?? []),
+    [highlightFields],
+  );
+  const isHighlighted = (name: string) => highlight.has(name);
+  // If the caller told us which fields to flag, land on the tab that
+  // owns the first one so the user sees them without hunting.
+  const initialTab: TabId = (() => {
+    if (!highlightFields || highlightFields.length === 0) return "overview";
+    const target = TABS.find((t) =>
+      FIELDS_BY_TAB[t.id].some((f) => highlight.has(String(f))),
+    );
+    return target?.id ?? "overview";
+  })();
+  const [tab, setTab] = useState<TabId>(initialTab);
+  // Scroll the first highlighted input into view once the tab renders.
+  useEffect(() => {
+    if (!highlightFields || highlightFields.length === 0) return;
+    const first = highlightFields[0];
+    if (!first) return;
+    const t = setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[name="${first}"]`);
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      el?.focus();
+    }, 100);
+    return () => clearTimeout(t);
+  }, [highlightFields, tab]);
   // Pay grade + basic salary are controlled so we can apply the NEC-
   // ceiling rule reactively: grades at/below the tenant's ceiling
   // (is_nec_grade=1) inherit the grade's salary and lock the input;
@@ -791,6 +840,62 @@ export function EmployeeForm({
               }
               options={["MIXED", "USD_ONLY", "ZIG_ONLY"]}
               placeholder="MIXED"
+            />
+          </Field>
+          <Field
+            label="National ID"
+            htmlFor="national_id"
+            hint="Zimbabwe National Registration number. Required before payroll can pay this employee."
+            error={isHighlighted("national_id") ? "Payroll needs this" : undefined}
+          >
+            <TextInput
+              id="national_id"
+              name="national_id"
+              defaultValue={initial?.nationalId ?? ""}
+              placeholder="e.g. 63-1234567 A 63"
+              invalid={isHighlighted("national_id")}
+            />
+          </Field>
+          <Field
+            label="ZIMRA tax number"
+            htmlFor="tax_number"
+            hint="Employee's ZIMRA / ITF tax reference."
+            error={isHighlighted("tax_number") ? "Payroll needs this" : undefined}
+          >
+            <TextInput
+              id="tax_number"
+              name="tax_number"
+              defaultValue={initial?.taxNumber ?? ""}
+              placeholder="e.g. 200XXXXXXX"
+              invalid={isHighlighted("tax_number")}
+            />
+          </Field>
+          <Field
+            label="NSSA number"
+            htmlFor="nssa_number"
+            hint="National Social Security Authority membership number."
+            error={isHighlighted("nssa_number") ? "Payroll needs this" : undefined}
+          >
+            <TextInput
+              id="nssa_number"
+              name="nssa_number"
+              defaultValue={initial?.nssaNumber ?? ""}
+              placeholder="e.g. NSSA-000000"
+              invalid={isHighlighted("nssa_number")}
+            />
+          </Field>
+          <Field
+            label="Bank account"
+            htmlFor="bank_account"
+            hint="Bank account number funds are deposited into."
+            error={isHighlighted("bank_account") ? "Payroll needs this" : undefined}
+          >
+            <TextInput
+              id="bank_account"
+              name="bank_account"
+              defaultValue={initial?.bankAccount ?? ""}
+              placeholder="Account number"
+              invalid={isHighlighted("bank_account")}
             />
           </Field>
         </Grid>

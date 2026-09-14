@@ -31,6 +31,11 @@ export type MissingCriticalRow = {
   employee: string;          // Employee.name (HR-EMP-xxx)
   employee_name: string;
   missing: string[];
+  /** Underlying Employee fieldnames matching the labels in `missing`,
+   *  in the same order. The banner passes these to the edit page's
+   *  `?fix=` param so the form can highlight the exact inputs and
+   *  jump to the right tab. */
+  missing_fieldnames: string[];
 };
 
 // ── shared helpers ───────────────────────────────────────────────
@@ -143,16 +148,30 @@ export async function listMissingCriticalInfo(): Promise<MissingCriticalRow[]> {
   return rows
     .map((r) => {
       const missing: string[] = [];
-      if (!r.national_id) missing.push("National ID");
+      const fieldnames: string[] = [];
+      if (!r.national_id) {
+        missing.push("National ID");
+        fieldnames.push("national_id");
+      }
       const tax = String(r.tax_number ?? "").trim();
-      if (!tax || tax === "PENDING") missing.push("ZIMRA tax number");
+      if (!tax || tax === "PENDING") {
+        missing.push("ZIMRA tax number");
+        fieldnames.push("tax_number");
+      }
       const nssa = String(r.nssa_number ?? "").trim();
-      if (!nssa || nssa === "PENDING") missing.push("NSSA number");
-      if (!r.bank_account) missing.push("Bank account");
+      if (!nssa || nssa === "PENDING") {
+        missing.push("NSSA number");
+        fieldnames.push("nssa_number");
+      }
+      if (!r.bank_account) {
+        missing.push("Bank account");
+        fieldnames.push("bank_account");
+      }
       return {
         employee: r.name as string,
         employee_name: (r.employee_name as string) || (r.name as string),
         missing,
+        missing_fieldnames: fieldnames,
       };
     })
     .filter((r) => r.missing.length > 0);

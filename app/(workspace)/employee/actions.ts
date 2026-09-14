@@ -97,6 +97,14 @@ const baseSchema = z.object({
   attendance_device_id: z.string().trim().optional(),
   bio: z.string().trim().optional(),
 
+  // Statutory identifiers Belina / Zimbabwe payroll requires before an
+  // employee can be paid. Missing values are flagged on the Payroll
+  // page's Action Required banner.
+  national_id: z.string().trim().optional(),
+  tax_number: z.string().trim().optional(),
+  nssa_number: z.string().trim().optional(),
+  bank_account: z.string().trim().optional(),
+
   // compliance — age waiver. Same "0"/"1" wire shape as the ZIMRA
   // flags above. Zod validates the reason is present when the flag is
   // set so the frontend gets a targeted field error instead of a

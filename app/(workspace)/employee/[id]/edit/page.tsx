@@ -20,8 +20,10 @@ export async function generateMetadata({
 
 export default async function EditEmployeePage({
   params,
+  searchParams,
 }: {
   params: { id: string };
+  searchParams: { from?: string; fix?: string };
 }) {
   const id = decodeURIComponent(params.id);
   const [emp, options] = await Promise.all([
@@ -30,9 +32,19 @@ export default async function EditEmployeePage({
   ]);
   if (!emp) notFound();
 
-  const backHref = `/employee/${encodeURIComponent(id)}`;
-  // Server Actions can't take extra params via `useFormState` directly, so
-  // bind the id here on the server before handing the action to the form.
+  // When the user landed here from the Payroll "Fix now" banner, we
+  // want Back to return them to /payroll (not to the employee profile
+  // or the master-data directory). ?fix= names the fieldnames the
+  // banner flagged as missing so the form can highlight + jump.
+  const fromPayroll = searchParams.from === "payroll";
+  const backHref = fromPayroll
+    ? "/payroll"
+    : `/employee/${encodeURIComponent(id)}`;
+  const backLabel = fromPayroll ? "Back to payroll" : `Back to ${emp.name}`;
+  const highlightFields = (searchParams.fix ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
   const boundAction = updateEmployeeAction.bind(null, id);
 
   return (
@@ -43,7 +55,7 @@ export default async function EditEmployeePage({
           className="inline-flex w-fit items-center gap-1 rounded-chip px-2 py-1 text-xs font-medium text-ash-500 transition hover:bg-canvas focus-ring"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Back to {emp.name}
+          {backLabel}
         </Link>
         <div className="flex items-center gap-2 text-xs text-ash-500">
           <Pencil className="h-3.5 w-3.5" />
@@ -53,7 +65,9 @@ export default async function EditEmployeePage({
           Edit {emp.name}
         </h1>
         <p className="text-sm text-ash-600">
-          Only fields you change will be updated.
+          {highlightFields.length > 0
+            ? "The highlighted fields are the ones Payroll needs — save when you're done."
+            : "Only fields you change will be updated."}
         </p>
       </header>
 
@@ -63,6 +77,7 @@ export default async function EditEmployeePage({
         options={options}
         initial={emp}
         cancelHref={backHref}
+        highlightFields={highlightFields}
       />
     </div>
   );

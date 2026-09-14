@@ -5,6 +5,10 @@ export type MissingItem = {
   employee: string;
   employee_name: string;
   missing: string[];
+  /** Same order as `missing` — the Employee doctype fieldnames.
+   *  Passed via `?fix=` to the edit page so it can highlight and
+   *  scroll to the right inputs. */
+  missing_fieldnames?: string[];
 };
 
 /**
@@ -25,24 +29,32 @@ export function ActionRequiredBanner({ items }: { items: MissingItem[] }) {
         <strong>excluded</strong> from pay runs until it&apos;s provided.
       </p>
       <div className="mt-3 space-y-1">
-        {items.map((e) => (
-          <div key={e.employee} className="flex items-center gap-2 text-sm">
-            <span className="text-rose-600">●</span>
-            <Link
-              href={`/employee/${encodeURIComponent(e.employee)}` as Route}
-              className="font-semibold text-rose-800 hover:underline"
-            >
-              {e.employee_name}
-            </Link>
-            <span className="text-rose-600">— missing {e.missing.join(", ")}</span>
-            <Link
-              href={`/employee/${encodeURIComponent(e.employee)}` as Route}
-              className="ml-auto text-xs font-semibold text-rose-700 hover:underline"
-            >
-              Fix now →
-            </Link>
-          </div>
-        ))}
+        {items.map((e) => {
+          const fix = (e.missing_fieldnames ?? []).join(",");
+          const editHref =
+            `/employee/${encodeURIComponent(e.employee)}/edit?from=payroll` +
+            (fix ? `&fix=${encodeURIComponent(fix)}` : "");
+          return (
+            <div key={e.employee} className="flex items-center gap-2 text-sm">
+              <span className="text-rose-600">●</span>
+              <Link
+                href={editHref as Route}
+                className="font-semibold text-rose-800 hover:underline"
+              >
+                {e.employee_name}
+              </Link>
+              <span className="text-rose-600">
+                — missing {e.missing.join(", ")}
+              </span>
+              <Link
+                href={editHref as Route}
+                className="ml-auto text-xs font-semibold text-rose-700 hover:underline"
+              >
+                Fix now →
+              </Link>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

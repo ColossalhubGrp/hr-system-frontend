@@ -349,7 +349,6 @@ function ClassStep({
   prevLabel: string | null;
   onPatch: (emp: string, patch: Partial<EmployeeForRun>) => void;
 }) {
-  const [tab, setTab] = useState<"Earnings" | "Deductions" | "Settings">("Earnings");
   const [filter, setFilter] = useState("");
 
   const visible = filter
@@ -407,33 +406,9 @@ function ClassStep({
             Showing {visible.length} of {rows.length}
           </span>
         </div>
-        <div className="flex gap-4 text-sm">
-          {(["Earnings", "Deductions", "Settings"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "-mb-px border-b-2 py-2 font-semibold",
-                tab === t
-                  ? "border-primary text-foreground"
-                  : "border-transparent text-muted-foreground",
-              )}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {tab !== "Earnings" ? (
-        <div className="px-4 py-12 text-center text-sm text-muted-foreground">
-          {tab === "Deductions"
-            ? "Deductions are captured per-employee via the Capture button on the OPEN run detail. This tab is a placeholder."
-            : "Per-employee settings live on the employee profile. This tab is a placeholder."}
-        </div>
-      ) : (
-        <Table>
+      <Table>
           <TableHeader>
             <TableRow>
               <TableHead className="px-4">Employee</TableHead>
@@ -571,7 +546,6 @@ function ClassStep({
             </TableRow>
           </TableFooter>
         </Table>
-      )}
     </Card>
   );
 }

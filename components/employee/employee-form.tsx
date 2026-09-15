@@ -101,6 +101,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
   joining: [
     "date_of_joining",
     "employment_type",
+    "payroll_class",
     "pay_grade",
     "nec_industry",
     "basic_usd",
@@ -372,6 +373,7 @@ export function EmployeeForm({
     designation: initial?.designation ?? "",
     branch: initial?.branch ?? "",
     employment_type: initial?.employmentType ?? "",
+    payroll_class: initial?.payrollClass ?? "SALARIED",
     pay_grade: initial?.payGrade ?? "",
     date_of_joining: initial?.dateOfJoining ?? "",
     cell_number: initial?.mobile ?? "",
@@ -624,6 +626,22 @@ export function EmployeeForm({
               defaultValue={v.employment_type}
               options={options.employmentTypes}
               placeholder="—"
+            />
+          </Field>
+          <Field
+            label="Payroll class"
+            htmlFor="payroll_class"
+            hint="Which typed step of the Payroll wizard this employee appears in."
+          >
+            <SelectInput
+              id="payroll_class"
+              name="payroll_class"
+              defaultValue={v.payroll_class || "SALARIED"}
+              options={[
+                { value: "SALARIED", label: "Salaried" },
+                { value: "HOURLY", label: "Hourly" },
+                { value: "CONTRACTOR", label: "Contractor" },
+              ]}
             />
           </Field>
           <Field

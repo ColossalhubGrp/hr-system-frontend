@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
+import type { Route } from "next";
 import { useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "@/components/ui/sonner";
 import {
-  processPeriod,
   updatePeriod,
   reopenPeriod,
 } from "@/app/(workspace)/payroll/payruns-actions";
@@ -35,15 +36,16 @@ export function PayRunActions({
   }
 
   if (status === "OPEN") {
+    // Process is now driven by the wizard at /payroll/[id]/run — the
+    // wizard collects per-class adjustments + shows a comparison
+    // preview, then hits processPeriod on Approve.
     return (
-      <RunButton
-        id={id}
-        action={processPeriod}
-        label="Process payroll"
-        pendingLabel="Processing…"
-        success="Pay run processed."
-        kind="primary"
-      />
+      <Link
+        href={`/payroll/${encodeURIComponent(id)}/run` as Route}
+        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+      >
+        Run payroll →
+      </Link>
     );
   }
 

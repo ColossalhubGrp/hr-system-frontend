@@ -391,6 +391,10 @@ export type EmployeeFormInput = {
   designation?: string;
   branch?: string;
   employment_type?: string;
+  /** Payroll wizard classification — determines which typed step of
+   *  /payroll/[id]/run the employee shows up in. Backed by a Custom
+   *  Field seeded via `add_payroll_class_to_employee` patch. */
+  payroll_class?: "SALARIED" | "HOURLY" | "CONTRACTOR";
   /** Link → Payroll Pay Grade (Setup → Pay Grades). Replaces the
    *  legacy `grade` field which linked to ERPNext's Employment Grade. */
   pay_grade?: string;

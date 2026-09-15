@@ -186,11 +186,14 @@ export type CapturedTxn = {
   amount: number;
 };
 
+export type PayrollClass = "SALARIED" | "HOURLY" | "CONTRACTOR";
+
 export type EmployeeForRun = {
   employee: string;
   employee_name: string;
   job_title: string | null;
   nec_industry: string | null;
+  payroll_class: PayrollClass;
   basic_usd: number;
   basic_zig: number;
   missing: string[];
@@ -202,6 +205,10 @@ export type EmployeeForRun = {
   captured_earn_zig: number;
   captured_deduct_usd: number;
   captured_deduct_zig: number;
+  /** The single wizard-managed adjustment amount for this employee
+   *  on this run (upserted via admin_upsert_run_adjustment). The
+   *  inline number cell on each wizard step binds to this. */
+  adjustment_usd: number;
 };
 
 export type EmployeeSlip = {
@@ -334,6 +341,9 @@ export async function listEmployeesForRun(
       // Belina Custom Fields (Phase 5 adds them). Until then, all 0/null.
       "basic_usd", "basic_zig",
       "national_id", "tax_number", "nssa_number", "bank_account",
+      // Payroll wizard classification. Custom field seeded by patch;
+      // missing → treated as SALARIED downstream.
+      "payroll_class",
     ],
     filters: { company, status: "Active" },
     orderBy: "employee_name asc",
@@ -382,11 +392,25 @@ export async function listEmployeesForRun(
         else if (t.currency === "ZIG") deductZig += t.amount;
       }
     }
+    const cls: PayrollClass = ((): PayrollClass => {
+      const raw = String(r.payroll_class ?? "SALARIED").toUpperCase();
+      return raw === "HOURLY" || raw === "CONTRACTOR" ? (raw as PayrollClass) : "SALARIED";
+    })();
+    const adjustCode =
+      cls === "HOURLY"
+        ? "HOURLY_PAY"
+        : cls === "CONTRACTOR"
+        ? "CONTRACTOR_PAY"
+        : "SALARY_ADJUSTMENT";
+    const adjustment = captured.find(
+      (t) => t.code === adjustCode && t.currency === "USD",
+    );
     return {
       employee: r.name as string,
       employee_name: (r.employee_name as string) || (r.name as string),
       job_title: (r.job_title as string) || null,
       nec_industry: (r.nec_industry as string) || null,
+      payroll_class: cls,
       basic_usd: Number(r.basic_usd ?? 0),
       basic_zig: Number(r.basic_zig ?? 0),
       missing,
@@ -395,6 +419,7 @@ export async function listEmployeesForRun(
       captured_earn_zig: earnZig,
       captured_deduct_usd: deductUsd,
       captured_deduct_zig: deductZig,
+      adjustment_usd: adjustment ? adjustment.amount : 0,
     };
   });
 }
@@ -447,25 +472,36 @@ export async function listPayslipsForRun(
   }));
 }
 
+export type PrevRunSnapshot = {
+  gross_usd: number;
+  paye_usd: number;
+  nssa_ee_usd: number;
+  net_usd: number;
+};
+
 /**
  * Previous-period payslip snapshot per employee — net + gross (USD) +
- * total net. Net drives the register's "vs previous" delta after
- * processing. Gross powers the OPEN-view delta so HR can eyeball a
- * gross-to-gross change (this run's basic + captured txns vs last
- * run's gross) before hitting Process. "Previous" = most recent run
- * on this company with pay_date < the current run's.
+ * total net + full breakdown. Net drives the register's "vs previous"
+ * delta after processing. Gross powers the OPEN-view delta so HR can
+ * eyeball a gross-to-gross change (this run's basic + captured txns
+ * vs last run's gross) before hitting Process. `snapshotByEmployee`
+ * carries the full breakdown the wizard's Preview step compares
+ * against. "Previous" = most recent run on this company with
+ * pay_date < the current run's.
  */
 export async function listPreviousRunNetMap(
   payrollRun: string,
 ): Promise<{
   byEmployee: Map<string, number>;
   grossByEmployee: Map<string, number>;
+  snapshotByEmployee: Map<string, PrevRunSnapshot>;
   total: number;
   label: string | null;
 }> {
   const empty = {
     byEmployee: new Map<string, number>(),
     grossByEmployee: new Map<string, number>(),
+    snapshotByEmployee: new Map<string, PrevRunSnapshot>(),
     total: 0,
     label: null as string | null,
   };
@@ -495,21 +531,36 @@ export async function listPreviousRunNetMap(
     employee: string;
     net_usd: number;
     gross_usd: number;
+    paye_usd: number;
+    nssa_employee: number;
   }>("Payroll Run Payslip", {
-    fields: ["employee", "net_usd", "gross_usd"],
+    fields: ["employee", "net_usd", "gross_usd", "paye_usd", "nssa_employee"],
     filters: { payroll_run: previous[0].name },
     limit: 5000,
   });
   const byEmployee = new Map<string, number>();
   const grossByEmployee = new Map<string, number>();
+  const snapshotByEmployee = new Map<string, PrevRunSnapshot>();
   let total = 0;
   for (const s of prevSlips) {
     const v = Number(s.net_usd ?? 0);
     byEmployee.set(s.employee, v);
     grossByEmployee.set(s.employee, Number(s.gross_usd ?? 0));
+    snapshotByEmployee.set(s.employee, {
+      gross_usd: Number(s.gross_usd ?? 0),
+      paye_usd: Number(s.paye_usd ?? 0),
+      nssa_ee_usd: Number(s.nssa_employee ?? 0),
+      net_usd: v,
+    });
     total += v;
   }
-  return { byEmployee, grossByEmployee, total, label: previous[0].period_label };
+  return {
+    byEmployee,
+    grossByEmployee,
+    snapshotByEmployee,
+    total,
+    label: previous[0].period_label,
+  };
 }
 
 // ── Payslip detail (printable page) ──────────────────────────────

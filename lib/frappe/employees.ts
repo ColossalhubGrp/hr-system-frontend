@@ -75,6 +75,10 @@ export type EmployeeFull = {
   attendanceDeviceId: string | null;
   bio: string | null;
   employmentType: string | null;
+  /** Payroll wizard classification — SALARIED (default), HOURLY, or
+   *  CONTRACTOR. Drives which typed step of /payroll/[id]/run this
+   *  employee shows up in. */
+  payrollClass: "SALARIED" | "HOURLY" | "CONTRACTOR";
   grade: string | null;
   /** When true, attendance check-ins for this employee bypass geofence
    *  validation. Set by HR/Shift Manager only. */
@@ -352,6 +356,7 @@ type RawEmployeeDoc = RawEmployeeRow & {
   attendance_device_id: string | null;
   bio: string | null;
   employment_type: string | null;
+  payroll_class: string | null;
   grade: string | null;
   geofence_exempt: 0 | 1 | boolean | null;
   // Phase 5 ZW Custom Fields
@@ -458,6 +463,10 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     attendanceDeviceId: d.attendance_device_id,
     bio: d.bio,
     employmentType: d.employment_type,
+    payrollClass: ((): "SALARIED" | "HOURLY" | "CONTRACTOR" => {
+      const raw = String(d.payroll_class ?? "SALARIED").toUpperCase();
+      return raw === "HOURLY" || raw === "CONTRACTOR" ? (raw as "HOURLY" | "CONTRACTOR") : "SALARIED";
+    })(),
     grade: d.grade,
     geofenceExempt: Boolean(d.geofence_exempt),
     nationalId: d.national_id,

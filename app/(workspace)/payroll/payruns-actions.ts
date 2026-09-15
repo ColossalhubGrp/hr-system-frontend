@@ -91,6 +91,30 @@ export async function reopenPeriod(payrollRun: string): Promise<void> {
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}`);
 }
 
+// ── wizard: per-employee adjustment upsert ───────────────────────
+
+export async function upsertRunAdjustment(
+  payrollRun: string,
+  employee: string,
+  amount: number,
+  payrollClass: "SALARIED" | "HOURLY" | "CONTRACTOR",
+): Promise<void> {
+  await ensurePayrollAdmin();
+  await frappeCall({
+    method: "recruitment_app.api.approvals.admin_upsert_run_adjustment",
+    args: {
+      payroll_run: payrollRun,
+      employee,
+      amount,
+      payroll_class: payrollClass,
+    },
+    as: "user",
+    verb: "POST",
+  });
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}`);
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
+}
+
 // ── off-cycle ────────────────────────────────────────────────────
 
 export async function createOffCycleRun(formData: FormData): Promise<void> {

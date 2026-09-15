@@ -284,13 +284,25 @@ export async function updateEmployeeAction(
   }
   revalidatePath("/employee");
   revalidatePath(`/employee/${encodeURIComponent(id)}`);
-  // When the user arrived via the Payroll "Fix now" flow, hop back to
-  // /payroll on success instead of the employee profile. Origin is
-  // carried in a hidden `_from` field written by the edit page.
+  // When the user arrived via a Payroll flow, hop back to that flow
+  // on success rather than the employee profile. Origin is carried
+  // in a hidden `_from` field written by the edit page:
+  //   payroll                    → /payroll (banner Fix-now)
+  //   payroll-wizard:<runId>     → the specific pay run's wizard step
   const from = form.get("_from");
-  if (typeof from === "string" && from === "payroll") {
-    revalidatePath("/payroll");
-    redirect("/payroll");
+  if (typeof from === "string") {
+    if (from === "payroll") {
+      revalidatePath("/payroll");
+      redirect("/payroll");
+    }
+    if (from.startsWith("payroll-wizard:")) {
+      const runId = from.slice("payroll-wizard:".length);
+      if (runId) {
+        const runPath = `/payroll/${encodeURIComponent(runId)}/run`;
+        revalidatePath(runPath);
+        redirect(runPath);
+      }
+    }
   }
   redirect(`/employee/${encodeURIComponent(id)}`);
 }

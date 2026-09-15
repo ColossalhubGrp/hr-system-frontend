@@ -356,7 +356,7 @@ export default async function PayRunDetail({
                         <TableCell className="px-5 align-middle">
                           {e.missing.length ? (
                             <Link
-                              href={`/employee/${encodeURIComponent(e.employee)}/edit?from=payroll&fix=${e.missing.join(",")}` as Route}
+                              href={`/employee/${encodeURIComponent(e.employee)}/edit?from=payroll&fix=${e.missing_fieldnames.join(",")}` as Route}
                               className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700"
                               title={`Missing: ${e.missing.join(", ")}`}
                             >

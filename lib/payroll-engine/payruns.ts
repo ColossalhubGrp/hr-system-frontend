@@ -196,7 +196,14 @@ export type EmployeeForRun = {
   payroll_class: PayrollClass;
   basic_usd: number;
   basic_zig: number;
+  /** Human labels for the missing critical fields — used for display
+   *  ("Excluded — missing 2", tooltip listing what's missing). */
   missing: string[];
+  /** Parallel array of Employee fieldnames, same length + order as
+   *  `missing`. The wizard's Fix-profile link forwards these on the
+   *  URL as `?fix=` so the employee form can highlight + scroll to
+   *  the right inputs. */
+  missing_fieldnames: string[];
   /** Individual transactions captured on this run — HR wants to see
    *  *what* got captured, not just a count, so the OPEN table renders
    *  a chip per row. */
@@ -375,12 +382,25 @@ export async function listEmployeesForRun(
 
   return rows.map((r) => {
     const missing: string[] = [];
-    if (!r.national_id) missing.push("National ID");
+    const missing_fieldnames: string[] = [];
+    if (!r.national_id) {
+      missing.push("National ID");
+      missing_fieldnames.push("national_id");
+    }
     const tax = String(r.tax_number ?? "").trim();
-    if (!tax || tax === "PENDING") missing.push("ZIMRA tax number");
+    if (!tax || tax === "PENDING") {
+      missing.push("ZIMRA tax number");
+      missing_fieldnames.push("tax_number");
+    }
     const nssa = String(r.nssa_number ?? "").trim();
-    if (!nssa || nssa === "PENDING") missing.push("NSSA number");
-    if (!r.bank_account) missing.push("Bank account");
+    if (!nssa || nssa === "PENDING") {
+      missing.push("NSSA number");
+      missing_fieldnames.push("nssa_number");
+    }
+    if (!r.bank_account) {
+      missing.push("Bank account");
+      missing_fieldnames.push("bank_account");
+    }
     const captured = txnsByEmp.get(r.name as string) ?? [];
     let earnUsd = 0, earnZig = 0, deductUsd = 0, deductZig = 0;
     for (const t of captured) {
@@ -414,6 +434,7 @@ export async function listEmployeesForRun(
       basic_usd: Number(r.basic_usd ?? 0),
       basic_zig: Number(r.basic_zig ?? 0),
       missing,
+      missing_fieldnames,
       captured_txns: captured,
       captured_earn_usd: earnUsd,
       captured_earn_zig: earnZig,

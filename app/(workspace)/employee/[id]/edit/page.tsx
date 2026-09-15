@@ -23,7 +23,7 @@ export default async function EditEmployeePage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { from?: string; fix?: string };
+  searchParams: { from?: string; fix?: string; run?: string };
 }) {
   const id = decodeURIComponent(params.id);
   const [emp, options] = await Promise.all([
@@ -32,15 +32,26 @@ export default async function EditEmployeePage({
   ]);
   if (!emp) notFound();
 
-  // When the user landed here from the Payroll "Fix now" banner, we
-  // want Back to return them to /payroll (not to the employee profile
-  // or the master-data directory). ?fix= names the fieldnames the
-  // banner flagged as missing so the form can highlight + jump.
+  // When the user landed here from the Payroll "Fix now" banner or
+  // the Run Payroll wizard, Back needs to return them to where they
+  // came from — the payroll landing or the specific wizard step —
+  // not the employee profile or the master-data directory. `?fix=`
+  // names the fieldnames the caller flagged as missing so the form
+  // can highlight + jump; `?run=` names the pay run when the origin
+  // is the wizard.
   const fromPayroll = searchParams.from === "payroll";
-  const backHref = fromPayroll
+  const fromWizard = searchParams.from === "payroll-wizard";
+  const wizardRun = (searchParams.run ?? "").trim();
+  const backHref = fromWizard && wizardRun
+    ? `/payroll/${encodeURIComponent(wizardRun)}/run`
+    : fromPayroll
     ? "/payroll"
     : `/employee/${encodeURIComponent(id)}`;
-  const backLabel = fromPayroll ? "Back to payroll" : `Back to ${emp.name}`;
+  const backLabel = fromWizard
+    ? "Back to Run payroll"
+    : fromPayroll
+    ? "Back to payroll"
+    : `Back to ${emp.name}`;
   const highlightFields = (searchParams.fix ?? "")
     .split(",")
     .map((s) => s.trim())
@@ -78,7 +89,13 @@ export default async function EditEmployeePage({
         initial={emp}
         cancelHref={backHref}
         highlightFields={highlightFields}
-        fromOrigin={fromPayroll ? "payroll" : undefined}
+        fromOrigin={
+          fromWizard && wizardRun
+            ? `payroll-wizard:${wizardRun}`
+            : fromPayroll
+            ? "payroll"
+            : undefined
+        }
       />
     </div>
   );

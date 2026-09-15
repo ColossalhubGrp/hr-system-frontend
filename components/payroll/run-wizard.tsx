@@ -317,7 +317,7 @@ function MissingStep({ blocked, runId }: { blocked: EmployeeForRun[]; runId: str
               <TableCell className="px-3 text-right">
                 <Link
                   href={
-                    `/employee/${encodeURIComponent(r.employee)}/edit?from=payroll&fix=${r.missing.join(",")}` as Route
+                    `/employee/${encodeURIComponent(r.employee)}/edit?from=payroll-wizard&run=${encodeURIComponent(runId)}&fix=${r.missing_fieldnames.join(",")}` as Route
                   }
                   className="text-sm font-semibold text-primary hover:underline"
                 >

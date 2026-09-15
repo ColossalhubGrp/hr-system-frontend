@@ -67,13 +67,15 @@ export default async function PayRunDetail({
   const isOpen = run.status === "OPEN";
 
   // OPEN view needs the active-employees table + codes (for per-row
-  // Capture); PROCESSED view needs the payslips + previous-run net
-  // map for the DeltaTag.
+  // Capture) — and the previous-run net map so HR can see what each
+  // employee last got paid before deciding whether to adjust this run.
+  // PROCESSED view needs the payslips + the same previous map for the
+  // "vs previous" DeltaTag on the register.
   const [employees, codes, slips, prev] = await Promise.all([
     isOpen ? listEmployeesForRun(id) : Promise.resolve([]),
     isOpen ? listTxnCodes() : Promise.resolve([]),
     isOpen ? Promise.resolve([]) : listPayslipsForRun(id),
-    isOpen ? Promise.resolve({ byEmployee: new Map<string, number>(), total: 0, label: null }) : listPreviousRunNetMap(id),
+    listPreviousRunNetMap(id),
   ]);
 
   // Tax-method lookup for the payslip register's per-row FDS / NON_FDS
@@ -195,6 +197,13 @@ export default async function PayRunDetail({
             earning or deduction for that employee. Then press{" "}
             <strong>Process payroll</strong> to calculate PAYE, AIDS Levy,
             NSSA and net pay for everyone.
+            {prev.label && (
+              <>
+                {" "}The <strong>Previous net</strong> column shows what each
+                employee got paid on {prev.label} — use it to spot rows that
+                need an adjustment before you process.
+              </>
+            )}
           </p>
           <Card className="overflow-x-auto p-0">
             <Table>
@@ -205,6 +214,14 @@ export default async function PayRunDetail({
                   <TableHead className="px-5 text-right">Basic USD</TableHead>
                   <TableHead className="px-5 text-right">Basic ZiG</TableHead>
                   <TableHead className="px-5 text-right">Transactions</TableHead>
+                  <TableHead className="px-5 text-right">
+                    Previous net
+                    {prev.label && (
+                      <div className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
+                        {prev.label}
+                      </div>
+                    )}
+                  </TableHead>
                   <TableHead className="px-5">Status</TableHead>
                   <TableHead className="px-5 text-right">Actions</TableHead>
                 </TableRow>
@@ -212,7 +229,7 @@ export default async function PayRunDetail({
               <TableBody>
                 {employees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
                       No active employees on this company yet.
                     </TableCell>
                   </TableRow>
@@ -251,6 +268,18 @@ export default async function PayRunDetail({
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
+                      </TableCell>
+                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                        {(() => {
+                          const prevNet = prev.byEmployee.get(e.employee);
+                          if (prevNet === undefined || prevNet === null)
+                            return <span className="text-xs">—</span>;
+                          return (
+                            <span className="font-medium text-foreground">
+                              {usd(prevNet)}
+                            </span>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell className="px-5 align-middle">
                         {e.missing.length ? (

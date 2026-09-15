@@ -179,6 +179,13 @@ export async function listMissingCriticalInfo(): Promise<MissingCriticalRow[]> {
 
 // ── per-run reads (detail page) ──────────────────────────────────
 
+export type CapturedTxn = {
+  code: string;
+  kind: "EARNING" | "DEDUCTION";
+  currency: string;
+  amount: number;
+};
+
 export type EmployeeForRun = {
   employee: string;
   employee_name: string;
@@ -187,11 +194,14 @@ export type EmployeeForRun = {
   basic_usd: number;
   basic_zig: number;
   missing: string[];
-  txnCount: number;
-  /** Sum of USD-side EARNING transactions captured on this run.
-   *  Combined with basic_usd, this is the projected gross HR compares
-   *  against the previous run's gross before hitting Process. */
+  /** Individual transactions captured on this run — HR wants to see
+   *  *what* got captured, not just a count, so the OPEN table renders
+   *  a chip per row. */
+  captured_txns: CapturedTxn[];
   captured_earn_usd: number;
+  captured_earn_zig: number;
+  captured_deduct_usd: number;
+  captured_deduct_zig: number;
 };
 
 export type EmployeeSlip = {
@@ -330,25 +340,27 @@ export async function listEmployeesForRun(
     limit: 2000,
   });
 
-  const txnsByEmp = new Map<string, number>();
-  const earnUsdByEmp = new Map<string, number>();
+  const txnsByEmp = new Map<string, CapturedTxn[]>();
   for (const t of await listDocs<{
     employee: string;
     kind: "EARNING" | "DEDUCTION";
+    code: string;
     currency: string;
     amount: number;
   }>("Payroll Transaction", {
-    fields: ["employee", "kind", "currency", "amount"],
+    fields: ["employee", "kind", "code", "currency", "amount"],
     filters: { payroll_run: payrollRun },
+    orderBy: "kind asc, code asc",
     limit: 5000,
   })) {
-    txnsByEmp.set(t.employee, (txnsByEmp.get(t.employee) ?? 0) + 1);
-    if (t.kind === "EARNING" && t.currency === "USD") {
-      earnUsdByEmp.set(
-        t.employee,
-        (earnUsdByEmp.get(t.employee) ?? 0) + Number(t.amount ?? 0),
-      );
-    }
+    const list = txnsByEmp.get(t.employee) ?? [];
+    list.push({
+      code: t.code,
+      kind: t.kind,
+      currency: t.currency,
+      amount: Number(t.amount ?? 0),
+    });
+    txnsByEmp.set(t.employee, list);
   }
 
   return rows.map((r) => {
@@ -359,6 +371,17 @@ export async function listEmployeesForRun(
     const nssa = String(r.nssa_number ?? "").trim();
     if (!nssa || nssa === "PENDING") missing.push("NSSA number");
     if (!r.bank_account) missing.push("Bank account");
+    const captured = txnsByEmp.get(r.name as string) ?? [];
+    let earnUsd = 0, earnZig = 0, deductUsd = 0, deductZig = 0;
+    for (const t of captured) {
+      if (t.kind === "EARNING") {
+        if (t.currency === "USD") earnUsd += t.amount;
+        else if (t.currency === "ZIG") earnZig += t.amount;
+      } else {
+        if (t.currency === "USD") deductUsd += t.amount;
+        else if (t.currency === "ZIG") deductZig += t.amount;
+      }
+    }
     return {
       employee: r.name as string,
       employee_name: (r.employee_name as string) || (r.name as string),
@@ -367,8 +390,11 @@ export async function listEmployeesForRun(
       basic_usd: Number(r.basic_usd ?? 0),
       basic_zig: Number(r.basic_zig ?? 0),
       missing,
-      txnCount: txnsByEmp.get(r.name as string) ?? 0,
-      captured_earn_usd: earnUsdByEmp.get(r.name as string) ?? 0,
+      captured_txns: captured,
+      captured_earn_usd: earnUsd,
+      captured_earn_zig: earnZig,
+      captured_deduct_usd: deductUsd,
+      captured_deduct_zig: deductZig,
     };
   });
 }

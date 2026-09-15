@@ -11,6 +11,7 @@ import {
   listEmployeesForRun,
   listPayslipsForRun,
   listPreviousRunNetMap,
+  type CapturedTxn,
   type PayRunStatus,
 } from "@/lib/payroll-engine/payruns";
 import { FlowSteps } from "@/components/payroll/flow-steps";
@@ -78,10 +79,14 @@ export default async function PayRunDetail({
     listPreviousRunNetMap(id),
   ]);
 
-  // Tax-method lookup for the payslip register's per-row FDS / NON_FDS
-  // pill. One bulk fetch keyed on the employees actually paid on this run.
+  // Tax-method lookup for the FDS / NON_FDS pill. One bulk fetch keyed
+  // on whichever employee list this view is showing (OPEN → active
+  // roster, PROCESSED → paid employees) so the pill appears on both.
   const taxMethodByEmp = new Map<string, "FDS" | "NON_FDS">();
-  if (slips.length > 0) {
+  const empIdsForTaxLookup = isOpen
+    ? employees.map((e) => e.employee)
+    : slips.map((s) => s.employee);
+  if (empIdsForTaxLookup.length > 0) {
     const { frappeCall } = await import("@/lib/frappe/client");
     try {
       const empRows = await frappeCall<Array<{ name: string; tax_method: string | null }>>({
@@ -89,7 +94,7 @@ export default async function PayRunDetail({
         args: {
           doctype: "Employee",
           fields: ["name", "tax_method"],
-          filters: JSON.stringify([["name", "in", slips.map((s) => s.employee)]]),
+          filters: JSON.stringify([["name", "in", empIdsForTaxLookup]]),
           limit_page_length: 5000,
         },
         as: "user",
@@ -107,6 +112,24 @@ export default async function PayRunDetail({
     default_currency: c.default_currency ?? "USD",
     taxable: Boolean(c.taxable),
   }));
+
+  // OPEN-view totals — mirrors the register's footer so HR can see
+  // aggregate pre-processing numbers (roster basic + captured txns +
+  // projected gross) at a glance.
+  const openTot = employees.reduce(
+    (a, e) => ({
+      basicUsd: a.basicUsd + e.basic_usd,
+      basicZig: a.basicZig + e.basic_zig,
+      earnUsd: a.earnUsd + e.captured_earn_usd,
+      earnZig: a.earnZig + e.captured_earn_zig,
+      deductUsd: a.deductUsd + e.captured_deduct_usd,
+      deductZig: a.deductZig + e.captured_deduct_zig,
+      txns: a.txns + e.captured_txns.length,
+    }),
+    { basicUsd: 0, basicZig: 0, earnUsd: 0, earnZig: 0, deductUsd: 0, deductZig: 0, txns: 0 },
+  );
+  const openProjectedGrossUsd = openTot.basicUsd + openTot.earnUsd;
+  const openProjectedGrossZig = openTot.basicZig + openTot.earnZig;
 
   const tot = slips.reduce(
     (a, s) => ({
@@ -212,10 +235,9 @@ export default async function PayRunDetail({
               <TableHeader>
                 <TableRow>
                   <TableHead className="px-5">Employee</TableHead>
-                  <TableHead className="px-5">NEC industry</TableHead>
-                  <TableHead className="px-5 text-right">Basic USD</TableHead>
-                  <TableHead className="px-5 text-right">Basic ZiG</TableHead>
-                  <TableHead className="px-5 text-right">Transactions</TableHead>
+                  <TableHead className="px-5 text-right">Basic</TableHead>
+                  <TableHead className="px-5">Transactions</TableHead>
+                  <TableHead className="px-5 text-right">Projected gross</TableHead>
                   <TableHead className="px-5 text-right">
                     Previous net
                     {prev.label && (
@@ -231,104 +253,189 @@ export default async function PayRunDetail({
               <TableBody>
                 {employees.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-12 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
                       No active employees on this company yet.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  employees.map((e) => (
-                    <TableRow
-                      key={e.employee}
-                      className={cn(e.missing.length > 0 ? "bg-rose-50/40" : undefined)}
-                    >
-                      <TableCell className="px-5 align-middle">
-                        <Link
-                          href={`/employee/${encodeURIComponent(e.employee)}` as Route}
-                          className="font-semibold text-foreground hover:text-primary"
-                        >
-                          {e.employee_name}
-                        </Link>
-                        <div className="text-xs text-muted-foreground">
-                          {e.employee}
-                          {e.job_title ? ` · ${e.job_title}` : ""}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-muted-foreground">
-                        {e.nec_industry || "—"}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
-                        {e.basic_usd ? num(e.basic_usd) : "—"}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
-                        {e.basic_zig ? num(e.basic_zig) : "—"}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
-                        {e.txnCount ? (
-                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                            {e.txnCount} captured
+                  employees.map((e) => {
+                    const prevNet = prev.byEmployee.get(e.employee);
+                    const prevGross = prev.grossByEmployee.get(e.employee);
+                    const projGrossUsd = e.basic_usd + e.captured_earn_usd;
+                    const projGrossZig = e.basic_zig + e.captured_earn_zig;
+                    return (
+                      <TableRow
+                        key={e.employee}
+                        className={cn(e.missing.length > 0 ? "bg-rose-50/40" : undefined)}
+                      >
+                        <TableCell className="px-5 align-middle">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                              {initials(e.employee_name)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <Link
+                                  href={`/employee/${encodeURIComponent(e.employee)}` as Route}
+                                  className="font-semibold text-foreground hover:text-primary"
+                                >
+                                  {e.employee_name}
+                                </Link>
+                                {taxMethodByEmp.has(e.employee) && (
+                                  <span
+                                    className={cn(
+                                      "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                                      taxMethodByEmp.get(e.employee) === "FDS"
+                                        ? "bg-primary/10 text-primary"
+                                        : "bg-amber-100 text-amber-700",
+                                    )}
+                                    title={
+                                      taxMethodByEmp.get(e.employee) === "FDS"
+                                        ? "Final Deduction System — cumulative + tax credits"
+                                        : "Independent monthly calc — no YTD, no credits"
+                                    }
+                                  >
+                                    {taxMethodByEmp.get(e.employee)}
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                {e.employee}
+                                {e.job_title ? ` · ${e.job_title}` : ""}
+                                {e.nec_industry ? ` · ${e.nec_industry}` : ""}
+                              </div>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="px-5 align-middle text-right">
+                          {e.basic_usd ? usd(e.basic_usd) : <span className="text-muted-foreground">—</span>}
+                          {e.basic_zig ? (
+                            <div className="text-xs text-muted-foreground">{zig(e.basic_zig)}</div>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="px-5 align-middle">
+                          <TxnChips txns={e.captured_txns} />
+                        </TableCell>
+                        <TableCell className="px-5 align-middle text-right">
+                          <span className="font-semibold text-foreground">
+                            {usd(projGrossUsd)}
                           </span>
-                        ) : (
-                          <span className="text-muted-foreground">—</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
-                        {(() => {
-                          const prevNet = prev.byEmployee.get(e.employee);
-                          const prevGross = prev.grossByEmployee.get(e.employee);
-                          if (prevNet === undefined || prevNet === null)
-                            return <span className="text-xs">—</span>;
-                          const projectedGross = e.basic_usd + e.captured_earn_usd;
-                          return (
+                          {projGrossZig ? (
+                            <div className="text-xs text-muted-foreground">
+                              {zig(projGrossZig)}
+                            </div>
+                          ) : null}
+                          {e.captured_deduct_usd || e.captured_deduct_zig ? (
+                            <div className="text-[10px] text-rose-600">
+                              less deductions{" "}
+                              {e.captured_deduct_usd ? usd(e.captured_deduct_usd) : ""}
+                              {e.captured_deduct_usd && e.captured_deduct_zig ? " / " : ""}
+                              {e.captured_deduct_zig ? zig(e.captured_deduct_zig) : ""}
+                            </div>
+                          ) : null}
+                        </TableCell>
+                        <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                          {prevNet === undefined || prevNet === null ? (
+                            <span className="text-xs">—</span>
+                          ) : (
                             <div className="flex flex-col items-end gap-0.5">
                               <span className="font-medium text-foreground">
                                 {usd(prevNet)}
                               </span>
                               {prevGross ? (
                                 <DeltaTag
-                                  current={projectedGross}
+                                  current={projGrossUsd}
                                   previous={prevGross}
                                   fmt={usd}
                                   withPercent
                                 />
                               ) : null}
                             </div>
-                          );
-                        })()}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle">
-                        {e.missing.length ? (
-                          <Link
-                            href={`/employee/${encodeURIComponent(e.employee)}` as Route}
-                            className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700"
-                          >
-                            ⚠ Excluded — missing {e.missing.length}
-                          </Link>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                            Ready
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
-                        {e.missing.length ? (
-                          <span className="text-xs text-muted-foreground">
-                            Fix profile first
-                          </span>
-                        ) : (
-                          <CaptureTransactionForm
-                            periodId={run.name}
-                            employees={[]}
-                            codes={codeOptions}
-                            fixedEmployee={{ id: e.employee, name: e.employee_name }}
-                            triggerLabel="+ Capture"
-                            triggerVariant="ghost"
-                          />
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
+                          )}
+                        </TableCell>
+                        <TableCell className="px-5 align-middle">
+                          {e.missing.length ? (
+                            <Link
+                              href={`/employee/${encodeURIComponent(e.employee)}/edit?from=payroll&fix=${e.missing.join(",")}` as Route}
+                              className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700"
+                              title={`Missing: ${e.missing.join(", ")}`}
+                            >
+                              ⚠ Excluded — missing {e.missing.length}
+                            </Link>
+                          ) : (
+                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+                              Ready
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="px-5 align-middle text-right">
+                          {e.missing.length ? (
+                            <span className="text-xs text-muted-foreground">
+                              Fix profile first
+                            </span>
+                          ) : (
+                            <CaptureTransactionForm
+                              periodId={run.name}
+                              employees={[]}
+                              codes={codeOptions}
+                              fixedEmployee={{ id: e.employee, name: e.employee_name }}
+                              triggerLabel="+ Capture"
+                              triggerVariant="ghost"
+                            />
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
+              {employees.length > 0 && (
+                <TableFooter>
+                  <TableRow className="border-t-2 bg-muted/30 font-bold">
+                    <TableCell className="px-5">Totals</TableCell>
+                    <TableCell className="px-5 text-right">
+                      {usd(openTot.basicUsd)}
+                      {openTot.basicZig ? (
+                        <div className="text-xs font-normal text-muted-foreground">
+                          {zig(openTot.basicZig)}
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="px-5 text-xs font-normal text-muted-foreground">
+                      {openTot.txns
+                        ? `${openTot.txns} captured across the roster`
+                        : "None captured yet"}
+                    </TableCell>
+                    <TableCell className="px-5 text-right text-emerald-700">
+                      {usd(openProjectedGrossUsd)}
+                      {openProjectedGrossZig ? (
+                        <div className="text-xs font-normal text-muted-foreground">
+                          {zig(openProjectedGrossZig)}
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="px-5 text-right">
+                      {prev.label ? (
+                        <div className="flex flex-col items-end gap-0.5">
+                          <span>{usd(prev.total)}</span>
+                          {openProjectedGrossUsd ? (
+                            <DeltaTag
+                              current={openProjectedGrossUsd}
+                              previous={prev.total}
+                              fmt={usd}
+                              withPercent
+                            />
+                          ) : null}
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="px-5" />
+                    <TableCell className="px-5" />
+                  </TableRow>
+                </TableFooter>
+              )}
             </Table>
           </Card>
         </>
@@ -515,6 +622,38 @@ export default async function PayRunDetail({
           </Card>
         </>
       )}
+    </div>
+  );
+}
+
+function fmtTxnAmount(currency: string, amount: number): string {
+  if (currency === "USD") return `US$${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  if (currency === "ZIG") return `ZiG ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  return `${currency} ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+}
+
+function TxnChips({ txns }: { txns: CapturedTxn[] }) {
+  if (txns.length === 0) {
+    return <span className="text-xs text-muted-foreground">None yet</span>;
+  }
+  return (
+    <div className="flex flex-wrap gap-1">
+      {txns.map((t, i) => (
+        <span
+          key={`${t.code}-${i}`}
+          className={cn(
+            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+            t.kind === "EARNING"
+              ? "bg-emerald-100 text-emerald-700"
+              : "bg-rose-100 text-rose-700",
+          )}
+          title={`${t.kind === "EARNING" ? "Earning" : "Deduction"} · ${t.code}`}
+        >
+          <span aria-hidden>{t.kind === "EARNING" ? "+" : "−"}</span>
+          <span className="uppercase tracking-wide">{t.code}</span>
+          <span className="font-bold">{fmtTxnAmount(t.currency, t.amount)}</span>
+        </span>
+      ))}
     </div>
   );
 }

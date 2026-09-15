@@ -395,6 +395,10 @@ export type EmployeeFormInput = {
    *  /payroll/[id]/run the employee shows up in. Backed by a Custom
    *  Field seeded via `add_payroll_class_to_employee` patch. */
   payroll_class?: "SALARIED" | "HOURLY" | "CONTRACTOR";
+  /** Hourly rate used by the wizard's Hourly step (× hours + × 1.5 ×
+   *  overtime) when this employee is classified HOURLY. Custom Field
+   *  seeded via `add_hourly_rate_to_employee` patch. */
+  hourly_rate_usd?: number;
   /** Link → Payroll Pay Grade (Setup → Pay Grades). Replaces the
    *  legacy `grade` field which linked to ERPNext's Employment Grade. */
   pay_grade?: string;

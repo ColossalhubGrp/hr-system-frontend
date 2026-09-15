@@ -91,22 +91,35 @@ export async function reopenPeriod(payrollRun: string): Promise<void> {
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}`);
 }
 
-// ── wizard: per-employee adjustment upsert ───────────────────────
+// ── wizard: per-employee entry upsert ────────────────────────────
 
-export async function upsertRunAdjustment(
+/**
+ * Patch shape mirrors Payroll Wizard Entry's field set. Any subset
+ * of these keys may be sent — the backend writes only what you pass.
+ */
+export type WizardEntryPatch = Partial<{
+  payroll_class: "SALARIED" | "HOURLY" | "CONTRACTOR";
+  salary_adjustment_usd: number;
+  hourly_rate_usd: number;
+  hours_worked: number;
+  overtime_hours: number;
+  contractor_flat_usd: number;
+}>;
+
+export async function upsertWizardEntry(
   payrollRun: string,
   employee: string,
-  amount: number,
-  payrollClass: "SALARIED" | "HOURLY" | "CONTRACTOR",
+  patch: WizardEntryPatch,
 ): Promise<void> {
   await ensurePayrollAdmin();
   await frappeCall({
-    method: "recruitment_app.api.approvals.admin_upsert_run_adjustment",
+    method: "recruitment_app.api.approvals.admin_upsert_wizard_entry",
     args: {
       payroll_run: payrollRun,
       employee,
-      amount,
-      payroll_class: payrollClass,
+      // Backend accepts either JSON string or object; JSON is safer
+      // to avoid Frappe silently dropping unknown top-level args.
+      patch: JSON.stringify(patch),
     },
     as: "user",
     verb: "POST",

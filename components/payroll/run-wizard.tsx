@@ -12,10 +12,11 @@ import {
 import { cn } from "@/lib/cn";
 import { toast } from "@/components/ui/sonner";
 import { DeltaTag } from "@/components/payroll/delta-tag";
-import type { EmployeeForRun, PayrollClass } from "@/lib/payroll-engine/payruns";
+import type { EmployeeForRun, PayrollClass, WizardEntry } from "@/lib/payroll-engine/payruns";
 import {
   processPeriod,
-  upsertRunAdjustment,
+  upsertWizardEntry,
+  type WizardEntryPatch,
 } from "@/app/(workspace)/payroll/payruns-actions";
 
 type PrevSnapshot = {
@@ -31,11 +32,22 @@ const CLASS_LABEL: Record<PayrollClass, { plural: string; singular: string }> = 
   CONTRACTOR: { plural: "Contractors", singular: "contractor" },
 };
 
-const INPUT_LABEL: Record<PayrollClass, string> = {
-  SALARIED: "Adjustment (USD)",
-  HOURLY: "Hourly pay (USD)",
-  CONTRACTOR: "1099 payment (USD)",
-};
+/**
+ * Compute the projected gross for this row based on its class + wizard
+ * entry. Salaried = basic + adjustment + captured earnings; hourly =
+ * rate × hours + rate × 1.5 × OT (basic doesn't apply); contractor =
+ * flat 1099 (no basic, no earnings — statutory bypassed at process).
+ */
+function projectedGrossUsd(e: EmployeeForRun): number {
+  const w = e.wiz;
+  if (e.payroll_class === "HOURLY") {
+    return w.hourly_rate_usd * w.hours_worked + w.hourly_rate_usd * 1.5 * w.overtime_hours;
+  }
+  if (e.payroll_class === "CONTRACTOR") {
+    return w.contractor_flat_usd;
+  }
+  return e.basic_usd + w.salary_adjustment_usd + e.captured_earn_usd;
+}
 
 const usd = (n: number) =>
   `US$${n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -358,17 +370,7 @@ function ClassStep({
       )
     : rows;
 
-  const total = visible.reduce(
-    (a, e) => ({
-      basicUsd: a.basicUsd + e.basic_usd,
-      basicZig: a.basicZig + e.basic_zig,
-      adjust: a.adjust + e.adjustment_usd,
-      earnUsd: a.earnUsd + e.captured_earn_usd,
-      deductUsd: a.deductUsd + e.captured_deduct_usd,
-    }),
-    { basicUsd: 0, basicZig: 0, adjust: 0, earnUsd: 0, deductUsd: 0 },
-  );
-  const totalProjectedGross = total.basicUsd + total.earnUsd;
+  const totalProjectedGross = visible.reduce((a, e) => a + projectedGrossUsd(e), 0);
   const totalPrevGross = visible.reduce(
     (a, e) => a + (prevSnapshots[e.employee]?.gross_usd ?? 0),
     0,
@@ -409,169 +411,264 @@ function ClassStep({
       </div>
 
       <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="px-4">Employee</TableHead>
-              <TableHead className="px-4 text-right">
-                {cls === "CONTRACTOR" ? "Base rate" : "Basic"}
-              </TableHead>
-              <TableHead className="px-4 text-right w-40">{INPUT_LABEL[cls]}</TableHead>
-              <TableHead className="px-4 text-right">
-                Projected gross
-              </TableHead>
-              <TableHead className="px-4 text-right">
-                Previous
-                {prevLabel && (
-                  <div className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
-                    {prevLabel}
-                  </div>
-                )}
-              </TableHead>
-              <TableHead className="px-4 text-right">Δ vs prev</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {visible.map((r) => {
-              const prev = prevSnapshots[r.employee];
-              const projGross = r.basic_usd + r.captured_earn_usd;
-              const isMissing = r.missing.length > 0;
-              return (
-                <TableRow
-                  key={r.employee}
-                  className={cn(isMissing ? "bg-rose-50/40" : undefined)}
-                >
-                  <TableCell className="px-4 align-middle">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-                        {initials(r.employee_name)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-foreground">
-                          {r.employee_name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {r.employee}
-                          {r.job_title ? ` · ${r.job_title}` : ""}
-                        </div>
-                        {isMissing && (
-                          <div className="mt-0.5 text-[10px] font-semibold uppercase text-rose-600">
-                            ⚠ Missing {r.missing.join(", ")}
-                          </div>
-                        )}
-                      </div>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="px-4">Employee</TableHead>
+            {cls === "SALARIED" && (
+              <>
+                <TableHead className="px-4 text-right">Basic</TableHead>
+                <TableHead className="px-4 text-right w-40">Adjustment (USD)</TableHead>
+              </>
+            )}
+            {cls === "HOURLY" && (
+              <>
+                <TableHead className="px-4 text-right w-32">Rate (USD/hr)</TableHead>
+                <TableHead className="px-4 text-right w-24">Hours</TableHead>
+                <TableHead className="px-4 text-right w-28">OT hrs (1.5×)</TableHead>
+              </>
+            )}
+            {cls === "CONTRACTOR" && (
+              <TableHead className="px-4 text-right w-40">1099 payment (USD)</TableHead>
+            )}
+            <TableHead className="px-4 text-right">Projected gross</TableHead>
+            <TableHead className="px-4 text-right">
+              Previous
+              {prevLabel && (
+                <div className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
+                  {prevLabel}
+                </div>
+              )}
+            </TableHead>
+            <TableHead className="px-4 text-right">Δ vs prev</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {visible.map((r) => {
+            const prev = prevSnapshots[r.employee];
+            const projGross = projectedGrossUsd(r);
+            const isMissing = r.missing.length > 0;
+            const patchWiz = (patch: WizardEntryPatch, wizPatch: Partial<WizardEntry>) => {
+              onPatch(r.employee, {
+                wiz: { ...r.wiz, ...wizPatch },
+              });
+              // Fire the server upsert; failure toast is inside NumCell.
+              void upsertWizardEntry(runId, r.employee, patch);
+            };
+            return (
+              <TableRow
+                key={r.employee}
+                className={cn(isMissing ? "bg-rose-50/40" : undefined)}
+              >
+                <TableCell className="px-4 align-middle">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+                      {initials(r.employee_name)}
                     </div>
-                  </TableCell>
+                    <div>
+                      <div className="font-semibold text-foreground">
+                        {r.employee_name}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {r.employee}
+                        {r.job_title ? ` · ${r.job_title}` : ""}
+                      </div>
+                      {isMissing && (
+                        <div className="mt-0.5 text-[10px] font-semibold uppercase text-rose-600">
+                          ⚠ Missing {r.missing.join(", ")}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </TableCell>
+
+                {cls === "SALARIED" && (
+                  <>
+                    <TableCell className="px-4 align-middle text-right">
+                      {r.basic_usd ? usd(r.basic_usd) : <span className="text-muted-foreground">—</span>}
+                      {r.basic_zig ? (
+                        <div className="text-xs text-muted-foreground">{zig(r.basic_zig)}</div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="px-4 align-middle text-right">
+                      <NumCell
+                        value={r.wiz.salary_adjustment_usd}
+                        disabled={isMissing}
+                        onCommit={(v) =>
+                          patchWiz({ salary_adjustment_usd: v }, { salary_adjustment_usd: v })
+                        }
+                      />
+                    </TableCell>
+                  </>
+                )}
+
+                {cls === "HOURLY" && (
+                  <>
+                    <TableCell className="px-4 align-middle text-right">
+                      <NumCell
+                        value={r.wiz.hourly_rate_usd}
+                        disabled={isMissing}
+                        step="0.01"
+                        onCommit={(v) =>
+                          patchWiz({ hourly_rate_usd: v }, { hourly_rate_usd: v })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="px-4 align-middle text-right">
+                      <NumCell
+                        value={r.wiz.hours_worked}
+                        disabled={isMissing}
+                        step="0.25"
+                        onCommit={(v) =>
+                          patchWiz({ hours_worked: v }, { hours_worked: v })
+                        }
+                      />
+                    </TableCell>
+                    <TableCell className="px-4 align-middle text-right">
+                      <NumCell
+                        value={r.wiz.overtime_hours}
+                        disabled={isMissing}
+                        step="0.25"
+                        onCommit={(v) =>
+                          patchWiz({ overtime_hours: v }, { overtime_hours: v })
+                        }
+                      />
+                    </TableCell>
+                  </>
+                )}
+
+                {cls === "CONTRACTOR" && (
                   <TableCell className="px-4 align-middle text-right">
-                    {r.basic_usd ? usd(r.basic_usd) : <span className="text-muted-foreground">—</span>}
-                    {r.basic_zig ? (
-                      <div className="text-xs text-muted-foreground">{zig(r.basic_zig)}</div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="px-4 align-middle text-right">
-                    <AdjustmentCell
-                      runId={runId}
-                      employee={r.employee}
-                      cls={cls}
-                      value={r.adjustment_usd}
+                    <NumCell
+                      value={r.wiz.contractor_flat_usd}
                       disabled={isMissing}
-                      onCommit={(newValue, delta) => {
-                        onPatch(r.employee, {
-                          adjustment_usd: newValue,
-                          captured_earn_usd: r.captured_earn_usd + delta,
-                        });
-                      }}
+                      onCommit={(v) =>
+                        patchWiz({ contractor_flat_usd: v }, { contractor_flat_usd: v })
+                      }
                     />
                   </TableCell>
-                  <TableCell className="px-4 align-middle text-right">
-                    <span className="font-semibold text-foreground">
-                      {usd(projGross)}
-                    </span>
-                    {r.captured_deduct_usd ? (
-                      <div className="text-[10px] text-rose-600">
-                        less {usd(r.captured_deduct_usd)}
-                      </div>
-                    ) : null}
-                  </TableCell>
-                  <TableCell className="px-4 align-middle text-right text-muted-foreground">
-                    {prev ? (
-                      <>
-                        <div>{usd(prev.gross_usd)}</div>
-                        <div className="text-[10px]">gross · {usd(prev.net_usd)} net</div>
-                      </>
-                    ) : (
-                      <span className="text-xs">—</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="px-4 align-middle text-right">
-                    {prev?.gross_usd ? (
-                      <DeltaTag
-                        current={projGross}
-                        previous={prev.gross_usd}
-                        fmt={usd}
-                        withPercent
-                      />
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-          <TableFooter>
-            <TableRow className="border-t-2 bg-muted/30 font-bold">
-              <TableCell className="px-4">Totals</TableCell>
-              <TableCell className="px-4 text-right">{usd(total.basicUsd)}</TableCell>
-              <TableCell className="px-4 text-right">
-                {total.adjust ? usd(total.adjust) : "—"}
-              </TableCell>
-              <TableCell className="px-4 text-right text-emerald-700">
-                {usd(totalProjectedGross)}
-              </TableCell>
-              <TableCell className="px-4 text-right">
-                {totalPrevGross ? usd(totalPrevGross) : "—"}
-              </TableCell>
-              <TableCell className="px-4 text-right">
-                {totalPrevGross ? (
-                  <DeltaTag
-                    current={totalProjectedGross}
-                    previous={totalPrevGross}
-                    fmt={usd}
-                    withPercent
-                  />
-                ) : (
-                  "—"
                 )}
+
+                <TableCell className="px-4 align-middle text-right">
+                  <span className="font-semibold text-foreground">{usd(projGross)}</span>
+                  {r.captured_deduct_usd ? (
+                    <div className="text-[10px] text-rose-600">
+                      less {usd(r.captured_deduct_usd)}
+                    </div>
+                  ) : null}
+                </TableCell>
+                <TableCell className="px-4 align-middle text-right text-muted-foreground">
+                  {prev ? (
+                    <>
+                      <div>{usd(prev.gross_usd)}</div>
+                      <div className="text-[10px]">gross · {usd(prev.net_usd)} net</div>
+                    </>
+                  ) : (
+                    <span className="text-xs">—</span>
+                  )}
+                </TableCell>
+                <TableCell className="px-4 align-middle text-right">
+                  {prev?.gross_usd ? (
+                    <DeltaTag
+                      current={projGross}
+                      previous={prev.gross_usd}
+                      fmt={usd}
+                      withPercent
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">—</span>
+                  )}
+                </TableCell>
+              </TableRow>
+            );
+          })}
+        </TableBody>
+        <TableFooter>
+          <TableRow className="border-t-2 bg-muted/30 font-bold">
+            <TableCell className="px-4">Totals</TableCell>
+            {cls === "SALARIED" && (
+              <>
+                <TableCell className="px-4 text-right">
+                  {usd(visible.reduce((a, e) => a + e.basic_usd, 0))}
+                </TableCell>
+                <TableCell className="px-4 text-right">
+                  {(() => {
+                    const t = visible.reduce((a, e) => a + e.wiz.salary_adjustment_usd, 0);
+                    return t ? usd(t) : "—";
+                  })()}
+                </TableCell>
+              </>
+            )}
+            {cls === "HOURLY" && (
+              <>
+                <TableCell className="px-4 text-right text-muted-foreground text-xs">
+                  —
+                </TableCell>
+                <TableCell className="px-4 text-right">
+                  {visible.reduce((a, e) => a + e.wiz.hours_worked, 0).toFixed(2)}
+                </TableCell>
+                <TableCell className="px-4 text-right">
+                  {visible.reduce((a, e) => a + e.wiz.overtime_hours, 0).toFixed(2)}
+                </TableCell>
+              </>
+            )}
+            {cls === "CONTRACTOR" && (
+              <TableCell className="px-4 text-right">
+                {(() => {
+                  const t = visible.reduce((a, e) => a + e.wiz.contractor_flat_usd, 0);
+                  return t ? usd(t) : "—";
+                })()}
               </TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+            )}
+            <TableCell className="px-4 text-right text-emerald-700">
+              {usd(totalProjectedGross)}
+            </TableCell>
+            <TableCell className="px-4 text-right">
+              {totalPrevGross ? usd(totalPrevGross) : "—"}
+            </TableCell>
+            <TableCell className="px-4 text-right">
+              {totalPrevGross ? (
+                <DeltaTag
+                  current={totalProjectedGross}
+                  previous={totalPrevGross}
+                  fmt={usd}
+                  withPercent
+                />
+              ) : (
+                "—"
+              )}
+            </TableCell>
+          </TableRow>
+        </TableFooter>
+      </Table>
     </Card>
   );
 }
 
-// ── Editable adjustment cell ─────────────────────────────────────
+// ── Editable number cell (single generic input) ──────────────────
 
-function AdjustmentCell({
-  runId,
-  employee,
-  cls,
+/**
+ * Local-only number input that commits on blur / Enter. It doesn't
+ * touch the server itself — the parent's `onCommit` is called with
+ * the parsed value and is expected to (1) patch local row state so
+ * projected gross re-renders and (2) fire the server upsert. The
+ * cell shows a spinner while the parent's promise (if returned) is
+ * outstanding.
+ */
+function NumCell({
   value,
   disabled,
+  step = "0.01",
   onCommit,
 }: {
-  runId: string;
-  employee: string;
-  cls: PayrollClass;
   value: number;
   disabled?: boolean;
-  onCommit: (newValue: number, deltaFromOld: number) => void;
+  step?: string;
+  onCommit: (v: number) => void | Promise<void>;
 }) {
   const [local, setLocal] = useState<string>(value ? String(value) : "");
   const [pending, setPending] = useState(false);
   const lastCommittedRef = useRef<number>(value);
 
-  // Reset local if the row's saved value changes underneath us.
   useEffect(() => {
     setLocal(value ? String(value) : "");
     lastCommittedRef.current = value;
@@ -583,9 +680,8 @@ function AdjustmentCell({
     const old = lastCommittedRef.current;
     setPending(true);
     try {
-      await upsertRunAdjustment(runId, employee, parsed, cls);
+      await onCommit(parsed);
       lastCommittedRef.current = parsed;
-      onCommit(parsed, parsed - old);
     } catch (err) {
       const msg = (err as { message?: string })?.message ?? "Save failed.";
       toast.error(msg);
@@ -599,10 +695,10 @@ function AdjustmentCell({
     <div className="inline-flex items-center gap-1">
       <input
         type="number"
-        step="0.01"
+        step={step}
         disabled={disabled || pending}
         value={local}
-        placeholder="0.00"
+        placeholder="0"
         onChange={(e) => setLocal(e.target.value)}
         onBlur={commit}
         onKeyDown={(e) => {
@@ -641,11 +737,13 @@ function PreviewStep({
   // authoritatively at Approve time; here we just show the pre-tax
   // projected gross and captured deductions so HR gets a real-shape
   // preview.
-  const totalGross = payable.reduce(
-    (s, r) => s + r.basic_usd + r.captured_earn_usd,
+  const totalGross = payable.reduce((s, r) => s + projectedGrossUsd(r), 0);
+  const totalDeduct = payable.reduce(
+    // Contractors don't pay statutory — only USD deductions apply.
+    // Salaried/Hourly deductions all count.
+    (s, r) => s + r.captured_deduct_usd,
     0,
   );
-  const totalDeduct = payable.reduce((s, r) => s + r.captured_deduct_usd, 0);
   const projectedNet = totalGross - totalDeduct;
 
   return (
@@ -730,14 +828,28 @@ function PreviewStep({
           </TableHeader>
           <TableBody>
             {payable.map((r) => {
-              const gross = r.basic_usd + r.captured_earn_usd;
+              const gross = projectedGrossUsd(r);
               const net = gross - r.captured_deduct_usd;
               const prev = prevSnapshots[r.employee];
               return (
                 <TableRow key={r.employee}>
                   <TableCell className="px-4 align-middle">
-                    <div className="font-semibold text-foreground">
-                      {r.employee_name}
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-foreground">
+                        {r.employee_name}
+                      </span>
+                      <span
+                        className={cn(
+                          "rounded px-1.5 py-px text-[9px] font-bold uppercase tracking-wide",
+                          r.payroll_class === "SALARIED"
+                            ? "bg-primary/10 text-primary"
+                            : r.payroll_class === "HOURLY"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-purple-100 text-purple-700",
+                        )}
+                      >
+                        {r.payroll_class}
+                      </span>
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {r.employee}

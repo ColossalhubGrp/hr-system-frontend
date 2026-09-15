@@ -41,6 +41,7 @@ const baseSchema = z.object({
   branch: z.string().trim().optional(),
   employment_type: z.string().trim().optional(),
   payroll_class: z.enum(["SALARIED", "HOURLY", "CONTRACTOR"]).optional(),
+  hourly_rate_usd: z.coerce.number().nonnegative().optional(),
   pay_grade: z.string().trim().optional(),
   // FormData delivers strings — coerce. NEC-locked inputs still send
   // their (grade-inherited) values because we use readOnly, not

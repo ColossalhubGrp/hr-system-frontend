@@ -188,6 +188,25 @@ export type CapturedTxn = {
 
 export type PayrollClass = "SALARIED" | "HOURLY" | "CONTRACTOR";
 
+/** Per-employee-per-run wizard state, populated from
+ *  `Payroll Wizard Entry` on the backend. All fields are optional /
+ *  zero-default; the wizard's inline cells read + write these. */
+export type WizardEntry = {
+  salary_adjustment_usd: number;
+  hourly_rate_usd: number;
+  hours_worked: number;
+  overtime_hours: number;
+  contractor_flat_usd: number;
+};
+
+const EMPTY_WIZARD_ENTRY: WizardEntry = {
+  salary_adjustment_usd: 0,
+  hourly_rate_usd: 0,
+  hours_worked: 0,
+  overtime_hours: 0,
+  contractor_flat_usd: 0,
+};
+
 export type EmployeeForRun = {
   employee: string;
   employee_name: string;
@@ -196,6 +215,9 @@ export type EmployeeForRun = {
   payroll_class: PayrollClass;
   basic_usd: number;
   basic_zig: number;
+  /** Employee master's fallback hourly rate. Wizard entry can
+   *  override for a specific run without touching the employee. */
+  hourly_rate_usd: number;
   /** Human labels for the missing critical fields — used for display
    *  ("Excluded — missing 2", tooltip listing what's missing). */
   missing: string[];
@@ -212,10 +234,11 @@ export type EmployeeForRun = {
   captured_earn_zig: number;
   captured_deduct_usd: number;
   captured_deduct_zig: number;
-  /** The single wizard-managed adjustment amount for this employee
-   *  on this run (upserted via admin_upsert_run_adjustment). The
-   *  inline number cell on each wizard step binds to this. */
-  adjustment_usd: number;
+  /** Wizard entry — the class-aware inputs HR keys into the Run
+   *  Payroll wizard. Salaried uses salary_adjustment_usd; hourly
+   *  uses hourly_rate_usd + hours_worked + overtime_hours; contractor
+   *  uses contractor_flat_usd. */
+  wiz: WizardEntry;
 };
 
 export type EmployeeSlip = {
@@ -348,9 +371,10 @@ export async function listEmployeesForRun(
       // Belina Custom Fields (Phase 5 adds them). Until then, all 0/null.
       "basic_usd", "basic_zig",
       "national_id", "tax_number", "nssa_number", "bank_account",
-      // Payroll wizard classification. Custom field seeded by patch;
-      // missing → treated as SALARIED downstream.
-      "payroll_class",
+      // Payroll wizard classification + hourly-rate fallback. Both are
+      // custom fields seeded by patches; missing values treated as
+      // SALARIED/0 downstream.
+      "payroll_class", "hourly_rate_usd",
     ],
     filters: { company, status: "Active" },
     orderBy: "employee_name asc",
@@ -378,6 +402,34 @@ export async function listEmployeesForRun(
       amount: Number(t.amount ?? 0),
     });
     txnsByEmp.set(t.employee, list);
+  }
+
+  // Pull the wizard entries for this run in one shot. Server returns
+  // an empty list if the doctype isn't installed yet (fresh site
+  // before the patch runs) — the wizard falls back to empty per
+  // employee, which shows zeros in the inline cells.
+  const wizByEmp = new Map<string, WizardEntry>();
+  try {
+    const { frappeCall } = await import("@/lib/frappe/client");
+    const res = await frappeCall<{ entries: Array<Record<string, unknown>> } | { message?: { entries: Array<Record<string, unknown>> } }>({
+      method: "recruitment_app.api.approvals.admin_list_wizard_entries",
+      args: { payroll_run: payrollRun },
+      as: "user",
+    });
+    const inner =
+      (res as { message?: { entries: Array<Record<string, unknown>> } }).message ?? res;
+    const entries = (inner as { entries?: Array<Record<string, unknown>> }).entries ?? [];
+    for (const e of entries) {
+      wizByEmp.set(String(e.employee), {
+        salary_adjustment_usd: Number(e.salary_adjustment_usd ?? 0),
+        hourly_rate_usd: Number(e.hourly_rate_usd ?? 0),
+        hours_worked: Number(e.hours_worked ?? 0),
+        overtime_hours: Number(e.overtime_hours ?? 0),
+        contractor_flat_usd: Number(e.contractor_flat_usd ?? 0),
+      });
+    }
+  } catch {
+    /* doctype missing / role-gated — leave map empty */
   }
 
   return rows.map((r) => {
@@ -416,15 +468,16 @@ export async function listEmployeesForRun(
       const raw = String(r.payroll_class ?? "SALARIED").toUpperCase();
       return raw === "HOURLY" || raw === "CONTRACTOR" ? (raw as PayrollClass) : "SALARIED";
     })();
-    const adjustCode =
-      cls === "HOURLY"
-        ? "HOURLY_PAY"
-        : cls === "CONTRACTOR"
-        ? "CONTRACTOR_PAY"
-        : "SALARY_ADJUSTMENT";
-    const adjustment = captured.find(
-      (t) => t.code === adjustCode && t.currency === "USD",
-    );
+    const empHourlyRate = Number(r.hourly_rate_usd ?? 0);
+    const storedWiz = wizByEmp.get(r.name as string);
+    const wiz: WizardEntry = storedWiz
+      ? {
+          ...storedWiz,
+          // Fall back to Employee.hourly_rate_usd when no per-run
+          // override — HR only has to key the rate once per hire.
+          hourly_rate_usd: storedWiz.hourly_rate_usd || empHourlyRate,
+        }
+      : { ...EMPTY_WIZARD_ENTRY, hourly_rate_usd: empHourlyRate };
     return {
       employee: r.name as string,
       employee_name: (r.employee_name as string) || (r.name as string),
@@ -433,6 +486,7 @@ export async function listEmployeesForRun(
       payroll_class: cls,
       basic_usd: Number(r.basic_usd ?? 0),
       basic_zig: Number(r.basic_zig ?? 0),
+      hourly_rate_usd: empHourlyRate,
       missing,
       missing_fieldnames,
       captured_txns: captured,
@@ -440,7 +494,7 @@ export async function listEmployeesForRun(
       captured_earn_zig: earnZig,
       captured_deduct_usd: deductUsd,
       captured_deduct_zig: deductZig,
-      adjustment_usd: adjustment ? adjustment.amount : 0,
+      wiz,
     };
   });
 }

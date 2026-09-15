@@ -102,6 +102,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "date_of_joining",
     "employment_type",
     "payroll_class",
+    "hourly_rate_usd",
     "pay_grade",
     "nec_industry",
     "basic_usd",
@@ -186,6 +187,9 @@ export function EmployeeForm({
   // ceiling rule reactively: grades at/below the tenant's ceiling
   // (is_nec_grade=1) inherit the grade's salary and lock the input;
   // grades above are editable per employee.
+  const [payrollClass, setPayrollClass] = useState<"SALARIED" | "HOURLY" | "CONTRACTOR">(
+    initial?.payrollClass ?? "SALARIED",
+  );
   const [payGrade, setPayGrade] = useState<string>(initial?.payGrade ?? "");
   const [necIndustry, setNecIndustry] = useState<string>(initial?.necIndustry ?? "");
   const [basicUsd, setBasicUsd] = useState<number>(initial?.basicUsd ?? 0);
@@ -374,6 +378,7 @@ export function EmployeeForm({
     branch: initial?.branch ?? "",
     employment_type: initial?.employmentType ?? "",
     payroll_class: initial?.payrollClass ?? "SALARIED",
+    hourly_rate_usd: initial?.hourlyRateUsd ? String(initial.hourlyRateUsd) : "",
     pay_grade: initial?.payGrade ?? "",
     date_of_joining: initial?.dateOfJoining ?? "",
     cell_number: initial?.mobile ?? "",
@@ -631,12 +636,21 @@ export function EmployeeForm({
           <Field
             label="Payroll class"
             htmlFor="payroll_class"
-            hint="Which typed step of the Payroll wizard this employee appears in."
+            hint={
+              payrollClass === "SALARIED"
+                ? "Uses Basic (USD/ZiG) below."
+                : payrollClass === "HOURLY"
+                ? "Uses Hourly rate × hours (+ 1.5× overtime) entered in the Run Payroll wizard."
+                : "Paid a flat 1099 amount per run — no PAYE / AIDS / NSSA."
+            }
           >
             <SelectInput
               id="payroll_class"
               name="payroll_class"
-              defaultValue={v.payroll_class || "SALARIED"}
+              value={payrollClass}
+              onChange={(e) =>
+                setPayrollClass(e.target.value as "SALARIED" | "HOURLY" | "CONTRACTOR")
+              }
               options={[
                 { value: "SALARIED", label: "Salaried" },
                 { value: "HOURLY", label: "Hourly" },
@@ -644,6 +658,33 @@ export function EmployeeForm({
               ]}
             />
           </Field>
+          {payrollClass === "HOURLY" && (
+            <Field
+              label="Hourly rate (USD)"
+              htmlFor="hourly_rate_usd"
+              hint="Applied at rate × hours + rate × 1.5 × overtime in the wizard."
+            >
+              <TextInput
+                id="hourly_rate_usd"
+                name="hourly_rate_usd"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={v.hourly_rate_usd}
+                placeholder="0.00"
+              />
+            </Field>
+          )}
+          {payrollClass !== "HOURLY" && (
+            /* Keep the field in the form so it round-trips as 0 when
+             * the operator flips a HOURLY employee back to something
+             * else — otherwise the stale rate would silently linger. */
+            <input
+              type="hidden"
+              name="hourly_rate_usd"
+              value={payrollClass === "SALARIED" || payrollClass === "CONTRACTOR" ? "0" : v.hourly_rate_usd}
+            />
+          )}
           <Field
             label="Pay grade"
             htmlFor="pay_grade"

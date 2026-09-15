@@ -79,6 +79,10 @@ export type EmployeeFull = {
    *  CONTRACTOR. Drives which typed step of /payroll/[id]/run this
    *  employee shows up in. */
   payrollClass: "SALARIED" | "HOURLY" | "CONTRACTOR";
+  /** Fallback hourly rate for HOURLY employees — the wizard's per-run
+   *  Hours input multiplies by this (or its per-run override) to
+   *  compute pay. Zero for SALARIED / CONTRACTOR. */
+  hourlyRateUsd: number;
   grade: string | null;
   /** When true, attendance check-ins for this employee bypass geofence
    *  validation. Set by HR/Shift Manager only. */
@@ -357,6 +361,7 @@ type RawEmployeeDoc = RawEmployeeRow & {
   bio: string | null;
   employment_type: string | null;
   payroll_class: string | null;
+  hourly_rate_usd: number | null;
   grade: string | null;
   geofence_exempt: 0 | 1 | boolean | null;
   // Phase 5 ZW Custom Fields
@@ -467,6 +472,7 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
       const raw = String(d.payroll_class ?? "SALARIED").toUpperCase();
       return raw === "HOURLY" || raw === "CONTRACTOR" ? (raw as "HOURLY" | "CONTRACTOR") : "SALARIED";
     })(),
+    hourlyRateUsd: Number(d.hourly_rate_usd ?? 0),
     grade: d.grade,
     geofenceExempt: Boolean(d.geofence_exempt),
     nationalId: d.national_id,

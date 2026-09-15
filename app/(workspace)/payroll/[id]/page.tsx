@@ -642,7 +642,7 @@ function TxnChips({ txns }: { txns: CapturedTxn[] }) {
         <span
           key={`${t.code}-${i}`}
           className={cn(
-            "inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[9px] font-medium leading-4",
+            "inline-flex items-center gap-[2px] rounded px-1 py-0 text-[8px] font-medium leading-[13px]",
             t.kind === "EARNING"
               ? "bg-emerald-100 text-emerald-700"
               : "bg-rose-100 text-rose-700",

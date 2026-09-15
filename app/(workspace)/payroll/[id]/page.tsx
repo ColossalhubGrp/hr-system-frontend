@@ -634,15 +634,15 @@ function fmtTxnAmount(currency: string, amount: number): string {
 
 function TxnChips({ txns }: { txns: CapturedTxn[] }) {
   if (txns.length === 0) {
-    return <span className="text-xs text-muted-foreground">None yet</span>;
+    return <span className="text-[11px] text-muted-foreground">None yet</span>;
   }
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-0.5">
       {txns.map((t, i) => (
         <span
           key={`${t.code}-${i}`}
           className={cn(
-            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+            "inline-flex items-center gap-0.5 rounded px-1.5 py-px text-[9px] font-medium leading-4",
             t.kind === "EARNING"
               ? "bg-emerald-100 text-emerald-700"
               : "bg-rose-100 text-rose-700",
@@ -651,7 +651,7 @@ function TxnChips({ txns }: { txns: CapturedTxn[] }) {
         >
           <span aria-hidden>{t.kind === "EARNING" ? "+" : "−"}</span>
           <span className="uppercase tracking-wide">{t.code}</span>
-          <span className="font-bold">{fmtTxnAmount(t.currency, t.amount)}</span>
+          <span className="font-semibold">{fmtTxnAmount(t.currency, t.amount)}</span>
         </span>
       ))}
     </div>

@@ -200,8 +200,10 @@ export default async function PayRunDetail({
             {prev.label && (
               <>
                 {" "}The <strong>Previous net</strong> column shows what each
-                employee got paid on {prev.label} — use it to spot rows that
-                need an adjustment before you process.
+                employee got paid on {prev.label}, with a ▲/▼ chip comparing
+                this run&apos;s <em>projected gross</em> (basic + captured
+                USD earnings) against {prev.label}&apos;s gross — use it to
+                spot rows that need an adjustment before you process.
               </>
             )}
           </p>
@@ -272,12 +274,24 @@ export default async function PayRunDetail({
                       <TableCell className="px-5 align-middle text-right text-muted-foreground">
                         {(() => {
                           const prevNet = prev.byEmployee.get(e.employee);
+                          const prevGross = prev.grossByEmployee.get(e.employee);
                           if (prevNet === undefined || prevNet === null)
                             return <span className="text-xs">—</span>;
+                          const projectedGross = e.basic_usd + e.captured_earn_usd;
                           return (
-                            <span className="font-medium text-foreground">
-                              {usd(prevNet)}
-                            </span>
+                            <div className="flex flex-col items-end gap-0.5">
+                              <span className="font-medium text-foreground">
+                                {usd(prevNet)}
+                              </span>
+                              {prevGross ? (
+                                <DeltaTag
+                                  current={projectedGross}
+                                  previous={prevGross}
+                                  fmt={usd}
+                                  withPercent
+                                />
+                              ) : null}
+                            </div>
                           );
                         })()}
                       </TableCell>

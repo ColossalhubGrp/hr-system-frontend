@@ -188,6 +188,10 @@ export type EmployeeForRun = {
   basic_zig: number;
   missing: string[];
   txnCount: number;
+  /** Sum of USD-side EARNING transactions captured on this run.
+   *  Combined with basic_usd, this is the projected gross HR compares
+   *  against the previous run's gross before hitting Process. */
+  captured_earn_usd: number;
 };
 
 export type EmployeeSlip = {
@@ -327,12 +331,24 @@ export async function listEmployeesForRun(
   });
 
   const txnsByEmp = new Map<string, number>();
-  for (const t of await listDocs<{ employee: string }>("Payroll Transaction", {
-    fields: ["employee"],
+  const earnUsdByEmp = new Map<string, number>();
+  for (const t of await listDocs<{
+    employee: string;
+    kind: "EARNING" | "DEDUCTION";
+    currency: string;
+    amount: number;
+  }>("Payroll Transaction", {
+    fields: ["employee", "kind", "currency", "amount"],
     filters: { payroll_run: payrollRun },
     limit: 5000,
   })) {
     txnsByEmp.set(t.employee, (txnsByEmp.get(t.employee) ?? 0) + 1);
+    if (t.kind === "EARNING" && t.currency === "USD") {
+      earnUsdByEmp.set(
+        t.employee,
+        (earnUsdByEmp.get(t.employee) ?? 0) + Number(t.amount ?? 0),
+      );
+    }
   }
 
   return rows.map((r) => {
@@ -352,6 +368,7 @@ export async function listEmployeesForRun(
       basic_zig: Number(r.basic_zig ?? 0),
       missing,
       txnCount: txnsByEmp.get(r.name as string) ?? 0,
+      captured_earn_usd: earnUsdByEmp.get(r.name as string) ?? 0,
     };
   });
 }
@@ -405,22 +422,36 @@ export async function listPayslipsForRun(
 }
 
 /**
- * Previous-period payslip net (USD) per employee + total. Used by
- * DeltaTag in the register so HR can see how net pay moved vs the
- * prior pay run. "Previous" = most recent run with pay_date < this run's.
+ * Previous-period payslip snapshot per employee — net + gross (USD) +
+ * total net. Net drives the register's "vs previous" delta after
+ * processing. Gross powers the OPEN-view delta so HR can eyeball a
+ * gross-to-gross change (this run's basic + captured txns vs last
+ * run's gross) before hitting Process. "Previous" = most recent run
+ * on this company with pay_date < the current run's.
  */
 export async function listPreviousRunNetMap(
   payrollRun: string,
-): Promise<{ byEmployee: Map<string, number>; total: number; label: string | null }> {
+): Promise<{
+  byEmployee: Map<string, number>;
+  grossByEmployee: Map<string, number>;
+  total: number;
+  label: string | null;
+}> {
+  const empty = {
+    byEmployee: new Map<string, number>(),
+    grossByEmployee: new Map<string, number>(),
+    total: 0,
+    label: null as string | null,
+  };
   const company = await myCompany();
-  if (!company) return { byEmployee: new Map(), total: 0, label: null };
+  if (!company) return empty;
 
   const cur = await listDocs<{ pay_date: string }>("Payroll Run", {
     fields: ["pay_date"],
     filters: { name: payrollRun },
     limit: 1,
   });
-  if (!cur[0]?.pay_date) return { byEmployee: new Map(), total: 0, label: null };
+  if (!cur[0]?.pay_date) return empty;
 
   const previous = await listDocs<{ name: string; period_label: string }>("Payroll Run", {
     fields: ["name", "period_label"],
@@ -432,24 +463,27 @@ export async function listPreviousRunNetMap(
     orderBy: "pay_date desc",
     limit: 1,
   });
-  if (!previous[0]) return { byEmployee: new Map(), total: 0, label: null };
+  if (!previous[0]) return empty;
 
-  const prevSlips = await listDocs<{ employee: string; net_usd: number }>(
-    "Payroll Run Payslip",
-    {
-      fields: ["employee", "net_usd"],
-      filters: { payroll_run: previous[0].name },
-      limit: 5000,
-    },
-  );
+  const prevSlips = await listDocs<{
+    employee: string;
+    net_usd: number;
+    gross_usd: number;
+  }>("Payroll Run Payslip", {
+    fields: ["employee", "net_usd", "gross_usd"],
+    filters: { payroll_run: previous[0].name },
+    limit: 5000,
+  });
   const byEmployee = new Map<string, number>();
+  const grossByEmployee = new Map<string, number>();
   let total = 0;
   for (const s of prevSlips) {
     const v = Number(s.net_usd ?? 0);
     byEmployee.set(s.employee, v);
+    grossByEmployee.set(s.employee, Number(s.gross_usd ?? 0));
     total += v;
   }
-  return { byEmployee, total, label: previous[0].period_label };
+  return { byEmployee, grossByEmployee, total, label: previous[0].period_label };
 }
 
 // ── Payslip detail (printable page) ──────────────────────────────

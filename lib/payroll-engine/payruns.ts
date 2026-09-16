@@ -25,6 +25,11 @@ export type PayRunRow = {
   run_type: RunType;
   payslipCount: number;
   netUsdTotal: number;
+  /** For TERMINAL off-cycle runs — the single employee being paid
+   *  out. When set, the detail page renders the specialized
+   *  Termination view (§14 preview + Process) instead of the
+   *  whole-roster employees table. */
+  target_employee?: string | null;
 };
 
 export type MissingCriticalRow = {
@@ -881,7 +886,7 @@ export async function getPayRun(name: string): Promise<PayRunRow | null> {
   const rows = await listDocs<Record<string, unknown>>("Payroll Run", {
     fields: [
       "name", "period_label", "pay_date", "exchange_rate",
-      "status", "is_off_cycle", "run_type",
+      "status", "is_off_cycle", "run_type", "target_employee",
     ],
     filters: { name },
     limit: 1,
@@ -904,5 +909,6 @@ export async function getPayRun(name: string): Promise<PayRunRow | null> {
     run_type: ((r.run_type as string) || "MONTHLY") as RunType,
     payslipCount: slips.length,
     netUsdTotal: slips.reduce((a, s) => a + Number(s.net_usd ?? 0), 0),
+    target_employee: (r.target_employee as string) || null,
   };
 }

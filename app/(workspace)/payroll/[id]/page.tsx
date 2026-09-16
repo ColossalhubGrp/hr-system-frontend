@@ -66,6 +66,15 @@ export default async function PayRunDetail({
 
   const meta = STATUS_META[run.status];
   const isOpen = run.status === "OPEN";
+  const isTerminal = run.is_off_cycle && run.run_type === "TERMINAL";
+
+  // TERMINAL runs are single-employee retrenchment payouts. Skip the
+  // regular whole-roster employees table + wizard entirely and render
+  // the specialized §14 view with Process button.
+  if (isOpen && isTerminal) {
+    const { TerminalRunDetail } = await import("@/components/payroll/terminal-run-detail");
+    return <TerminalRunDetail run={run} />;
+  }
 
   // OPEN view needs the active-employees table + codes (for per-row
   // Capture) — and the previous-run net map so HR can see what each

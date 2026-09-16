@@ -302,17 +302,17 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       editableValue: num("default_holiday_multiplier") || 2,
     },
     {
-      key: "exchange_rate",
+      key: "interbank_rate",
       label: "USD → ZiG interbank rate",
-      value: `1 : ${num("exchange_rate").toFixed(2)}`,
-      raw: num("exchange_rate"),
+      value: `1 : ${num("interbank_rate").toFixed(2)}`,
+      raw: num("interbank_rate"),
       hint: "Used to derive ZiG PAYE bands from USD bands. Should track RBZ interbank ± tolerance.",
       lastUpdated: null,
       stale: false,
-      editField: "exchange_rate",
+      editField: "interbank_rate",
       displayFactor: 1,
       step: "0.01",
-      editableValue: num("exchange_rate"),
+      editableValue: num("interbank_rate"),
     },
   ];
 

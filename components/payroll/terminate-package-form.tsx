@@ -91,10 +91,16 @@ export function TerminatePackageForm({
   employees,
   initialEmployee,
   codes,
+  thresholds,
 }: {
   employees: EmployeePick[];
   initialEmployee: string;
   codes: PackageCode[];
+  /** Current ZIMRA §14 knobs from Company Payroll Settings.
+   *  Subtitle interpolates these so HR sees the tenant's live
+   *  values (not statutory defaults) — matches what the engine
+   *  will actually apply at process time. */
+  thresholds: { floor: number; cap: number; fraction: number };
 }) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
@@ -237,9 +243,17 @@ export function TerminatePackageForm({
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
             Itemize the retrenchment / final payout below. ZIMRA §14 exempts a
-            portion of the retrenchment package (defaults 1/3 of the package,
-            floor US$3,200, cap US$15,100 — editable on the ZIMRA compliance
-            panel). Live preview updates as you type.
+            portion of the retrenchment package — currently{" "}
+            <strong>{(thresholds.fraction * 100).toFixed(2)}%</strong> of the
+            package, floor <strong>{usd(thresholds.floor)}</strong>, cap{" "}
+            <strong>{usd(thresholds.cap)}</strong>. Change these on the{" "}
+            <Link
+              href={"/payroll/setup/compliance" as Route}
+              className="font-semibold text-primary hover:underline"
+            >
+              ZIMRA compliance panel
+            </Link>
+            . Live preview updates as you type.
           </p>
         </div>
       </header>

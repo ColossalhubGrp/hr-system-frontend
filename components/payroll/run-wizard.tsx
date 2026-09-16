@@ -41,7 +41,8 @@ const CLASS_LABEL: Record<PayrollClass, { plural: string; singular: string }> = 
 function projectedGrossUsd(e: EmployeeForRun): number {
   const w = e.wiz;
   if (e.payroll_class === "HOURLY") {
-    return w.hourly_rate_usd * w.hours_worked + w.hourly_rate_usd * 1.5 * w.overtime_hours;
+    const otMult = w.overtime_multiplier || 1.5;
+    return w.hourly_rate_usd * w.hours_worked + w.hourly_rate_usd * otMult * w.overtime_hours;
   }
   if (e.payroll_class === "CONTRACTOR") {
     return w.contractor_flat_usd;
@@ -424,7 +425,13 @@ function ClassStep({
               <>
                 <TableHead className="px-4 text-right w-32">Rate (USD/hr)</TableHead>
                 <TableHead className="px-4 text-right w-24">Hours</TableHead>
-                <TableHead className="px-4 text-right w-28">OT hrs (1.5×)</TableHead>
+                <TableHead className="px-4 text-right w-24">OT hrs</TableHead>
+                <TableHead
+                  className="px-4 text-right w-24"
+                  title="Overtime multiplier — Zim weekday default 1.5×, weekends / public holidays commonly 2×. Editable per row."
+                >
+                  OT ×
+                </TableHead>
               </>
             )}
             {cls === "CONTRACTOR" && (
@@ -533,6 +540,19 @@ function ClassStep({
                         }
                       />
                     </TableCell>
+                    <TableCell className="px-4 align-middle text-right">
+                      <NumCell
+                        value={r.wiz.overtime_multiplier || 1.5}
+                        disabled={isMissing}
+                        step="0.1"
+                        onCommit={(v) =>
+                          patchWiz(
+                            { overtime_multiplier: v },
+                            { overtime_multiplier: v },
+                          )
+                        }
+                      />
+                    </TableCell>
                   </>
                 )}
 
@@ -608,6 +628,10 @@ function ClassStep({
                 </TableCell>
                 <TableCell className="px-4 text-right">
                   {visible.reduce((a, e) => a + e.wiz.overtime_hours, 0).toFixed(2)}
+                </TableCell>
+                <TableCell className="px-4 text-right text-muted-foreground text-xs">
+                  {/* Multipliers don't sum meaningfully — leave blank */}
+                  —
                 </TableCell>
               </>
             )}

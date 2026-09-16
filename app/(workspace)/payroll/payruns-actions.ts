@@ -103,6 +103,7 @@ export type WizardEntryPatch = Partial<{
   hourly_rate_usd: number;
   hours_worked: number;
   overtime_hours: number;
+  overtime_multiplier: number;
   contractor_flat_usd: number;
 }>;
 

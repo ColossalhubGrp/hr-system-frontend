@@ -196,14 +196,23 @@ export type WizardEntry = {
   hourly_rate_usd: number;
   hours_worked: number;
   overtime_hours: number;
+  /** How much OT hours pay per hour, as a multiple of the hourly
+   *  rate. Zim weekday default is 1.5; weekend / public holidays
+   *  are commonly 2.0; some NECs publish their own. Editable
+   *  per-row so HR can override for a specific run (e.g. a
+   *  holiday-heavy period). */
+  overtime_multiplier: number;
   contractor_flat_usd: number;
 };
+
+const DEFAULT_OT_MULTIPLIER = 1.5;
 
 const EMPTY_WIZARD_ENTRY: WizardEntry = {
   salary_adjustment_usd: 0,
   hourly_rate_usd: 0,
   hours_worked: 0,
   overtime_hours: 0,
+  overtime_multiplier: DEFAULT_OT_MULTIPLIER,
   contractor_flat_usd: 0,
 };
 
@@ -425,6 +434,7 @@ export async function listEmployeesForRun(
         hourly_rate_usd: Number(e.hourly_rate_usd ?? 0),
         hours_worked: Number(e.hours_worked ?? 0),
         overtime_hours: Number(e.overtime_hours ?? 0),
+        overtime_multiplier: Number(e.overtime_multiplier ?? 0) || DEFAULT_OT_MULTIPLIER,
         contractor_flat_usd: Number(e.contractor_flat_usd ?? 0),
       });
     }

@@ -119,6 +119,7 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
 
   const payeStamp = iso("paye_bands_last_updated");
   const nssaStamp = iso("nssa_ceiling_last_updated");
+  const retrenchStamp = iso("retrench_thresholds_last_updated");
 
   const knobs: ComplianceKnob[] = [
     {
@@ -300,6 +301,51 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       displayFactor: 1,
       step: "0.1",
       editableValue: num("default_holiday_multiplier") || 2,
+    },
+    {
+      key: "retrench_floor_usd",
+      label: "Retrenchment exemption floor",
+      value: fmtUsd(num("retrench_floor_usd") || 3200),
+      raw: num("retrench_floor_usd"),
+      currency: "USD",
+      hint: "ZIMRA §14 minimum exempt amount on a retrenchment package (currently US$3,200).",
+      lastUpdated: retrenchStamp,
+      stale: isStale(retrenchStamp),
+      confirmField: "retrench_thresholds_last_updated",
+      editField: "retrench_floor_usd",
+      displayFactor: 1,
+      step: "100",
+      editableValue: num("retrench_floor_usd") || 3200,
+    },
+    {
+      key: "retrench_cap_usd",
+      label: "Retrenchment exemption cap",
+      value: fmtUsd(num("retrench_cap_usd") || 15100),
+      raw: num("retrench_cap_usd"),
+      currency: "USD",
+      hint: "ZIMRA §14 absolute cap on the exempt portion (currently US$15,100).",
+      lastUpdated: retrenchStamp,
+      stale: isStale(retrenchStamp),
+      editField: "retrench_cap_usd",
+      displayFactor: 1,
+      step: "100",
+      editableValue: num("retrench_cap_usd") || 15100,
+    },
+    {
+      key: "retrench_exempt_fraction",
+      label: "Retrenchment exempt fraction",
+      value: (() => {
+        const f = num("retrench_exempt_fraction") || 1 / 3;
+        return `${(f * 100).toFixed(2)}% (≈ 1/${Math.round(1 / f)})`;
+      })(),
+      raw: num("retrench_exempt_fraction"),
+      hint: "Fraction of the retrenchment package that's exempt subject to floor + cap. Zim norm 1/3.",
+      lastUpdated: retrenchStamp,
+      stale: isStale(retrenchStamp),
+      editField: "retrench_exempt_fraction",
+      displayFactor: 1,
+      step: "0.01",
+      editableValue: num("retrench_exempt_fraction") || 1 / 3,
     },
     {
       key: "interbank_rate",

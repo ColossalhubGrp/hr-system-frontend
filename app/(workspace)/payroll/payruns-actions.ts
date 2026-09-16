@@ -131,6 +131,73 @@ export async function upsertWizardEntry(
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
 }
 
+// ── terminal / retrenchment ──────────────────────────────────────
+
+export type TerminalItem = {
+  code: string;
+  amount: number;
+  package_class:
+    | "regular"
+    | "retrenchment_eligible"
+    | "cash_in_lieu"
+    | "exempt_passage";
+};
+
+export type TerminalPreview = {
+  package_eligible: number;
+  cash_in_lieu: number;
+  exempt_passage: number;
+  exempt: number;
+  taxable_base: number;
+  gross: number;
+  floor: number;
+  cap: number;
+  fraction: number;
+};
+
+/** Live preview of ZIMRA §14 breakdown for the given items. Called
+ *  from the Termination Package form on every input change. */
+export async function previewTerminalPackage(
+  items: TerminalItem[],
+): Promise<TerminalPreview> {
+  await ensurePayrollAdmin();
+  const raw = await frappeCall<TerminalPreview | { message?: TerminalPreview }>({
+    method: "recruitment_app.api.approvals.admin_preview_terminal_package",
+    args: { items: JSON.stringify(items) },
+    as: "user",
+  });
+  return unwrap(raw);
+}
+
+/** Create a TERMINAL off-cycle Payroll Run for one employee with
+ *  itemized package amounts. On success returns the payroll_run id
+ *  so the caller can navigate to it (and hit Process). */
+export async function createTerminalRun(
+  employee: string,
+  items: TerminalItem[],
+  payDate: string,
+  notes?: string,
+): Promise<{ payroll_run: string; period_label: string }> {
+  await ensurePayrollAdmin();
+  const raw = await frappeCall<
+    | { payroll_run: string; period_label: string }
+    | { message?: { payroll_run: string; period_label: string } }
+  >({
+    method: "recruitment_app.api.approvals.admin_create_terminal_run",
+    args: {
+      employee,
+      items: JSON.stringify(items),
+      pay_date: payDate,
+      ...(notes ? { notes } : {}),
+    },
+    as: "user",
+    verb: "POST",
+  });
+  const result = unwrap(raw);
+  revalidatePath("/payroll");
+  return result;
+}
+
 // ── compliance ───────────────────────────────────────────────────
 
 /**

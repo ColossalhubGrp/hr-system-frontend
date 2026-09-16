@@ -59,6 +59,13 @@ export default async function PayRunsPage() {
           >
             Create an off-cycle pay run
           </Link>
+          <Link
+            href={"/payroll/terminate" as Route}
+            className="inline-flex items-center justify-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+            title="Retrenchment / final payout with ZIMRA §14 exemption"
+          >
+            Terminate employee
+          </Link>
         </div>
       </header>
 

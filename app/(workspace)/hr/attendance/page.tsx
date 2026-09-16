@@ -15,6 +15,7 @@ import {
   Plus,
   Settings2,
 } from "lucide-react";
+import { TimesheetExportButton } from "@/components/payroll/timesheet-export-button";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
 import { FilterRow } from "@/components/common/list-shell";
@@ -103,6 +104,7 @@ export default async function AttendancePage({
               <Upload className="h-4 w-4" />
               Upload CSV
             </Link>
+            <TimesheetExportButton />
             <NewButton tab={tab} />
           </div>
         }

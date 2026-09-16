@@ -248,6 +248,19 @@ export type EmployeeForRun = {
    *  uses hourly_rate_usd + hours_worked + overtime_hours; contractor
    *  uses contractor_flat_usd. */
   wiz: WizardEntry;
+  /** Approved-timesheet snapshot from /payroll/[id]/timesheets, if
+   *  any. When present, Hourly wizard cells lock and read from
+   *  here; salaried gets an auto-OT hint computed from
+   *  overtime_hours. `null` = no approved timesheet yet (wizard
+   *  falls back to manual entry). */
+  timesheet: {
+    regular_hours: number;
+    overtime_hours: number;
+    weekend_hours: number;
+    holiday_hours: number;
+    expected_hours: number;
+    source: string;
+  } | null;
 };
 
 export type EmployeeSlip = {
@@ -442,6 +455,40 @@ export async function listEmployeesForRun(
     /* doctype missing / role-gated — leave map empty */
   }
 
+  // Approved timesheets — same treatment. Only approved rows flow
+  // into the wizard (matches what the engine reads at process time).
+  const tsByEmp = new Map<
+    string,
+    EmployeeForRun["timesheet"]
+  >();
+  try {
+    const { frappeCall } = await import("@/lib/frappe/client");
+    const res = await frappeCall<
+      | { rows: Array<Record<string, unknown>> }
+      | { message?: { rows: Array<Record<string, unknown>> } }
+    >({
+      method: "recruitment_app.api.approvals.admin_list_timesheets",
+      args: { payroll_run: payrollRun },
+      as: "user",
+    });
+    const inner =
+      (res as { message?: { rows: Array<Record<string, unknown>> } }).message ?? res;
+    const tsRows = (inner as { rows?: Array<Record<string, unknown>> }).rows ?? [];
+    for (const t of tsRows) {
+      if (!t.approved) continue;
+      tsByEmp.set(String(t.employee), {
+        regular_hours: Number(t.regular_hours ?? 0),
+        overtime_hours: Number(t.overtime_hours ?? 0),
+        weekend_hours: Number(t.weekend_hours ?? 0),
+        holiday_hours: Number(t.holiday_hours ?? 0),
+        expected_hours: Number(t.expected_hours ?? 0),
+        source: String(t.source ?? "MANUAL"),
+      });
+    }
+  } catch {
+    /* doctype missing / role-gated — leave map empty */
+  }
+
   return rows.map((r) => {
     const missing: string[] = [];
     const missing_fieldnames: string[] = [];
@@ -505,6 +552,7 @@ export async function listEmployeesForRun(
       captured_deduct_usd: deductUsd,
       captured_deduct_zig: deductZig,
       wiz,
+      timesheet: tsByEmp.get(r.name as string) ?? null,
     };
   });
 }

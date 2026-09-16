@@ -129,6 +129,95 @@ export async function upsertWizardEntry(
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
 }
 
+// ── timesheets ───────────────────────────────────────────────────
+
+export async function importTimesheetsFromAttendance(
+  payrollRun: string,
+): Promise<{ imported: number; period_from: string; period_to: string }> {
+  await ensurePayrollAdmin();
+  const raw = await frappeCall<
+    | { imported: number; period_from: string; period_to: string }
+    | { message?: { imported: number; period_from: string; period_to: string } }
+  >({
+    method: "recruitment_app.api.approvals.admin_import_timesheets_from_attendance",
+    args: { payroll_run: payrollRun },
+    as: "user",
+    verb: "POST",
+  });
+  const result = unwrap(raw);
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/timesheets`);
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
+  return result;
+}
+
+export async function uploadTimesheetCsv(
+  payrollRun: string,
+  csvText: string,
+): Promise<{ accepted: number; rejected: string[] }> {
+  await ensurePayrollAdmin();
+  const raw = await frappeCall<
+    { accepted: number; rejected: string[] } | { message?: { accepted: number; rejected: string[] } }
+  >({
+    method: "recruitment_app.api.approvals.admin_upload_timesheet_csv",
+    args: { payroll_run: payrollRun, csv_text: csvText },
+    as: "user",
+    verb: "POST",
+  });
+  const result = unwrap(raw);
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/timesheets`);
+  return result;
+}
+
+export type TimesheetPatch = Partial<{
+  regular_hours: number;
+  overtime_hours: number;
+  weekend_hours: number;
+  holiday_hours: number;
+  approved: 0 | 1;
+  notes: string | null;
+}>;
+
+export async function upsertTimesheet(
+  payrollRun: string,
+  employee: string,
+  patch: TimesheetPatch,
+): Promise<void> {
+  await ensurePayrollAdmin();
+  await frappeCall({
+    method: "recruitment_app.api.approvals.admin_upsert_timesheet",
+    args: {
+      payroll_run: payrollRun,
+      employee,
+      patch: JSON.stringify(patch),
+    },
+    as: "user",
+    verb: "POST",
+  });
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/timesheets`);
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
+}
+
+export async function approveAllTimesheets(
+  payrollRun: string,
+  employees?: string[],
+): Promise<{ approved: number }> {
+  await ensurePayrollAdmin();
+  const raw = await frappeCall<
+    { approved: number } | { message?: { approved: number } }
+  >({
+    method: "recruitment_app.api.approvals.admin_approve_timesheets",
+    args: {
+      payroll_run: payrollRun,
+      ...(employees ? { employees: JSON.stringify(employees) } : {}),
+    },
+    as: "user",
+    verb: "POST",
+  });
+  const result = unwrap(raw);
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/timesheets`);
+  return result;
+}
+
 // ── off-cycle ────────────────────────────────────────────────────
 
 export async function createOffCycleRun(formData: FormData): Promise<void> {

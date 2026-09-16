@@ -42,12 +42,23 @@ function projectedGrossUsd(e: EmployeeForRun): number {
   const w = e.wiz;
   if (e.payroll_class === "HOURLY") {
     const otMult = w.overtime_multiplier || 1.5;
-    return w.hourly_rate_usd * w.hours_worked + w.hourly_rate_usd * otMult * w.overtime_hours;
+    // Approved timesheet wins over manual wizard cells.
+    const hours = e.timesheet ? e.timesheet.regular_hours : w.hours_worked;
+    const ot = e.timesheet ? e.timesheet.overtime_hours : w.overtime_hours;
+    return w.hourly_rate_usd * hours + w.hourly_rate_usd * otMult * ot;
   }
   if (e.payroll_class === "CONTRACTOR") {
     return w.contractor_flat_usd;
   }
-  return e.basic_usd + w.salary_adjustment_usd + e.captured_earn_usd;
+  // Salaried: basic + adjustment + captured earnings + timesheet-driven
+  // OT (computed as basic/expected_hours × OT × multiplier).
+  let salariedOt = 0;
+  if (e.timesheet && e.timesheet.overtime_hours > 0 && e.basic_usd > 0) {
+    const expected = e.timesheet.expected_hours || 176;
+    const hourly = e.basic_usd / expected;
+    salariedOt = hourly * (w.overtime_multiplier || 1.5) * e.timesheet.overtime_hours;
+  }
+  return e.basic_usd + w.salary_adjustment_usd + e.captured_earn_usd + salariedOt;
 }
 
 const usd = (n: number) =>
@@ -143,12 +154,20 @@ export function RunWizard({
             {steps[stepIdx]?.title}
           </span>
         </div>
-        <Link
-          href={`/payroll/${encodeURIComponent(runId)}` as Route}
-          className="text-sm font-semibold text-muted-foreground hover:text-foreground"
-        >
-          ⤓ Save and exit
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href={`/payroll/${encodeURIComponent(runId)}/timesheets` as Route}
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            Timesheets →
+          </Link>
+          <Link
+            href={`/payroll/${encodeURIComponent(runId)}` as Route}
+            className="text-sm font-semibold text-muted-foreground hover:text-foreground"
+          >
+            ⤓ Save and exit
+          </Link>
+        </div>
       </div>
 
       {/* Step chips */}
@@ -495,6 +514,11 @@ function ClassStep({
                       {r.basic_zig ? (
                         <div className="text-xs text-muted-foreground">{zig(r.basic_zig)}</div>
                       ) : null}
+                      {r.timesheet && r.timesheet.overtime_hours > 0 && r.basic_usd > 0 ? (
+                        <div className="mt-0.5 text-[10px] font-semibold text-amber-700">
+                          +{r.timesheet.overtime_hours.toFixed(1)} OT hrs → auto-earning on process
+                        </div>
+                      ) : null}
                     </TableCell>
                     <TableCell className="px-4 align-middle text-right">
                       <NumCell
@@ -521,24 +545,38 @@ function ClassStep({
                       />
                     </TableCell>
                     <TableCell className="px-4 align-middle text-right">
-                      <NumCell
-                        value={r.wiz.hours_worked}
-                        disabled={isMissing}
-                        step="0.25"
-                        onCommit={(v) =>
-                          patchWiz({ hours_worked: v }, { hours_worked: v })
-                        }
-                      />
+                      {r.timesheet ? (
+                        <ReadOnlyHours
+                          value={r.timesheet.regular_hours}
+                          source={r.timesheet.source}
+                        />
+                      ) : (
+                        <NumCell
+                          value={r.wiz.hours_worked}
+                          disabled={isMissing}
+                          step="0.25"
+                          onCommit={(v) =>
+                            patchWiz({ hours_worked: v }, { hours_worked: v })
+                          }
+                        />
+                      )}
                     </TableCell>
                     <TableCell className="px-4 align-middle text-right">
-                      <NumCell
-                        value={r.wiz.overtime_hours}
-                        disabled={isMissing}
-                        step="0.25"
-                        onCommit={(v) =>
-                          patchWiz({ overtime_hours: v }, { overtime_hours: v })
-                        }
-                      />
+                      {r.timesheet ? (
+                        <ReadOnlyHours
+                          value={r.timesheet.overtime_hours}
+                          source={r.timesheet.source}
+                        />
+                      ) : (
+                        <NumCell
+                          value={r.wiz.overtime_hours}
+                          disabled={isMissing}
+                          step="0.25"
+                          onCommit={(v) =>
+                            patchWiz({ overtime_hours: v }, { overtime_hours: v })
+                          }
+                        />
+                      )}
                     </TableCell>
                     <TableCell className="px-4 align-middle text-right">
                       <NumCell
@@ -665,6 +703,40 @@ function ClassStep({
         </TableFooter>
       </Table>
     </Card>
+  );
+}
+
+// ── Timesheet-driven read-only hours cell ────────────────────────
+
+/**
+ * When an approved Payroll Timesheet exists, the hourly cells lock
+ * — the timesheet is source-of-truth. A small chip labels where the
+ * value came from. HR can Correct via the Timesheets page (which
+ * flips the row to MANUAL and unlocks re-entry).
+ */
+function ReadOnlyHours({
+  value, source,
+}: {
+  value: number;
+  source: string;
+}) {
+  return (
+    <div className="inline-flex flex-col items-end">
+      <span className="font-semibold text-foreground">{value.toFixed(2)}</span>
+      <span
+        className={cn(
+          "mt-0.5 rounded px-1 text-[9px] font-bold uppercase tracking-wide",
+          source === "ATTENDANCE"
+            ? "bg-emerald-100 text-emerald-700"
+            : source === "UPLOAD"
+            ? "bg-purple-100 text-purple-700"
+            : "bg-slate-100 text-slate-700",
+        )}
+        title="Value from approved timesheet — edit on the Timesheets page"
+      >
+        {source === "ATTENDANCE" ? "attendance" : source === "UPLOAD" ? "csv" : "timesheet"}
+      </span>
+    </div>
   );
 }
 

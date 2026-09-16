@@ -285,11 +285,20 @@ export type TxnCodeRow = {
   kind: "EARNING" | "DEDUCTION";
   default_currency?: string;
   taxable: 0 | 1 | boolean;
+  /** ZIMRA §14 classification — drives which bucket the terminal
+   *  engine puts amounts under this code into. Empty / missing
+   *  treated as "regular" downstream. */
+  package_class?:
+    | "regular"
+    | "retrenchment_eligible"
+    | "cash_in_lieu"
+    | "exempt_passage"
+    | null;
 };
 
 export async function listTxnCodes(): Promise<TxnCodeRow[]> {
   return listDocs<TxnCodeRow>("Payroll Transaction Code", {
-    fields: ["name", "code", "kind", "default_currency", "taxable"],
+    fields: ["name", "code", "kind", "default_currency", "taxable", "package_class"],
     orderBy: "kind asc, code asc",
   });
 }

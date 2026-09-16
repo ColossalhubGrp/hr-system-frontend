@@ -28,33 +28,35 @@ type EmployeePick = { id: string; name: string };
 
 type PackageClass = TerminalItem["package_class"];
 
+type PackageCode = { code: string; package_class: PackageClass };
+
 const CLASS_META: Record<
   PackageClass,
-  { label: string; hint: string; chip: string; defaultCode: string }
+  { label: string; hint: string; chip: string; fallbackCode: string }
 > = {
   retrenchment_eligible: {
     label: "Retrenchment package",
     hint: "Loss-of-employment comp, notice pay. §14 exemption applies.",
     chip: "bg-emerald-100 text-emerald-700",
-    defaultCode: "RETRENCH_COMP",
+    fallbackCode: "RETRENCH_COMP",
   },
   cash_in_lieu: {
     label: "Cash in lieu of leave",
     hint: "Accrued leave paid out. Fully taxable — no §14.",
     chip: "bg-amber-100 text-amber-700",
-    defaultCode: "LEAVE_PAYOUT",
+    fallbackCode: "LEAVE_PAYOUT",
   },
   exempt_passage: {
     label: "Relocation / passage",
     hint: "Fully exempt per ZIMRA.",
     chip: "bg-blue-100 text-blue-700",
-    defaultCode: "RELOCATION",
+    fallbackCode: "RELOCATION",
   },
   regular: {
     label: "Other taxable earning",
     hint: "Rarely used on terminal runs. Fully taxable.",
     chip: "bg-slate-100 text-slate-700",
-    defaultCode: "OTHER_PAY",
+    fallbackCode: "OTHER_PAY",
   },
 };
 
@@ -66,9 +68,21 @@ const nextRowId = () => `row-${++rowIdSeed}`;
 
 type Row = TerminalItem & { rid: string };
 
-const defaultRow = (cls: PackageClass): Row => ({
+/** First code for the given class, or the fallback constant if the
+ *  operator hasn't classified any yet. Used when adding a new row
+ *  or switching a row's class — Code shouldn't be a free-text field
+ *  since the engine keys off package_class from the code record. */
+function firstCodeForClass(
+  cls: PackageClass,
+  codes: PackageCode[],
+): string {
+  const match = codes.find((c) => c.package_class === cls);
+  return match?.code ?? CLASS_META[cls].fallbackCode;
+}
+
+const defaultRow = (cls: PackageClass, codes: PackageCode[]): Row => ({
   rid: nextRowId(),
-  code: CLASS_META[cls].defaultCode,
+  code: firstCodeForClass(cls, codes),
   amount: 0,
   package_class: cls,
 });
@@ -76,9 +90,11 @@ const defaultRow = (cls: PackageClass): Row => ({
 export function TerminatePackageForm({
   employees,
   initialEmployee,
+  codes,
 }: {
   employees: EmployeePick[];
   initialEmployee: string;
+  codes: PackageCode[];
 }) {
   const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
@@ -86,11 +102,36 @@ export function TerminatePackageForm({
   const [employee, setEmployee] = useState<string>(initialEmployee);
   const [payDate, setPayDate] = useState<string>(today);
   const [notes, setNotes] = useState<string>("");
-  const [rows, setRows] = useState<Row[]>([
-    defaultRow("retrenchment_eligible"),
-    { ...defaultRow("retrenchment_eligible"), code: "NOTICE_PAY" },
-    defaultRow("cash_in_lieu"),
-  ]);
+  // Group codes by class once for O(1) lookups when rendering
+  // each row's Code dropdown.
+  const codesByClass = useMemo(() => {
+    const map: Record<PackageClass, string[]> = {
+      retrenchment_eligible: [],
+      cash_in_lieu: [],
+      exempt_passage: [],
+      regular: [],
+    };
+    for (const c of codes) map[c.package_class].push(c.code);
+    return map;
+  }, [codes]);
+
+  const [rows, setRows] = useState<Row[]>(() => {
+    // Seed with the first code of retrenchment_eligible (usually
+    // RETRENCH_COMP + NOTICE_PAY) + one cash-in-lieu line.
+    const retrenchCodes = codes.filter((c) => c.package_class === "retrenchment_eligible");
+    const initial: Row[] = [];
+    for (const c of retrenchCodes.slice(0, 2)) {
+      initial.push({
+        rid: nextRowId(),
+        code: c.code,
+        amount: 0,
+        package_class: "retrenchment_eligible",
+      });
+    }
+    if (initial.length === 0) initial.push(defaultRow("retrenchment_eligible", codes));
+    initial.push(defaultRow("cash_in_lieu", codes));
+    return initial;
+  });
   const [preview, setPreview] = useState<TerminalPreview | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [creating, startCreate] = useTransition();
@@ -130,10 +171,25 @@ export function TerminatePackageForm({
   const empName = employees.find((e) => e.id === employee)?.name ?? "";
 
   function addRow(cls: PackageClass) {
-    setRows((rs) => [...rs, defaultRow(cls)]);
+    setRows((rs) => [...rs, defaultRow(cls, codes)]);
   }
   function updateRow(rid: string, patch: Partial<Row>) {
-    setRows((rs) => rs.map((r) => (r.rid === rid ? { ...r, ...patch } : r)));
+    setRows((rs) =>
+      rs.map((r) => {
+        if (r.rid !== rid) return r;
+        const next = { ...r, ...patch };
+        // Snap the Code back to a valid one for the new class when
+        // the class changes — a "Relocation / passage" row can't
+        // legitimately carry NOTICE_PAY (which is retrenchment_eligible).
+        if (patch.package_class && patch.package_class !== r.package_class) {
+          const valid = codesByClass[patch.package_class];
+          if (!valid.includes(next.code)) {
+            next.code = firstCodeForClass(patch.package_class, codes);
+          }
+        }
+        return next;
+      }),
+    );
   }
   function removeRow(rid: string) {
     setRows((rs) => rs.filter((r) => r.rid !== rid));
@@ -285,12 +341,35 @@ export function TerminatePackageForm({
                     </div>
                   </TableCell>
                   <TableCell className="px-4 align-middle">
-                    <input
-                      value={r.code}
-                      onChange={(e) => updateRow(r.rid, { code: e.target.value.toUpperCase() })}
-                      className="w-40 rounded-md border px-2 py-1 text-sm uppercase"
-                      placeholder="CODE"
-                    />
+                    {(() => {
+                      const validCodes = codesByClass[r.package_class];
+                      if (validCodes.length === 0) {
+                        // Fallback: no coded codes for this class,
+                        // let HR type one. This only happens on a
+                        // fresh site pre-seed.
+                        return (
+                          <input
+                            value={r.code}
+                            onChange={(e) =>
+                              updateRow(r.rid, { code: e.target.value.toUpperCase() })
+                            }
+                            className="w-40 rounded-md border px-2 py-1 text-sm uppercase"
+                            placeholder="CODE"
+                          />
+                        );
+                      }
+                      return (
+                        <select
+                          value={r.code}
+                          onChange={(e) => updateRow(r.rid, { code: e.target.value })}
+                          className="w-40 rounded-md border bg-white px-2 py-1 text-sm"
+                        >
+                          {validCodes.map((c) => (
+                            <option key={c} value={c}>{c}</option>
+                          ))}
+                        </select>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell className="px-4 align-middle text-right">
                     <input

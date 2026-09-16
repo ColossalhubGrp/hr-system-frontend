@@ -442,25 +442,54 @@ export function TerminatePackageForm({
         </div>
         {preview ? (
           <>
-            <dl className="mt-4 grid grid-cols-1 gap-2 text-sm md:grid-cols-2">
-              <Row label="Retrenchment-eligible package" v={usd(preview.package_eligible)} />
-              <Row label="Cash in lieu of leave" v={usd(preview.cash_in_lieu)} />
-              <Row label="Exempt passage / relocation" v={usd(preview.exempt_passage)} muted />
-              <Row
-                label={`§14 exempt (max of ${(preview.fraction * 100).toFixed(1)}% × package or ${usd(preview.floor)}, capped at ${usd(preview.cap)})`}
+            {/* Group 1 — package composition */}
+            <dl className="mt-4 space-y-1.5 text-sm">
+              <LedgerRow label="Retrenchment-eligible package" v={usd(preview.package_eligible)} />
+              <LedgerRow label="Cash in lieu of leave" v={usd(preview.cash_in_lieu)} />
+              <LedgerRow
+                label="Exempt passage / relocation"
+                v={usd(preview.exempt_passage)}
+                muted
+              />
+              <div className="border-t pt-1.5">
+                <LedgerRow
+                  label="Total gross package"
+                  v={usd(preview.gross)}
+                  bold
+                />
+              </div>
+            </dl>
+
+            {/* Group 2 — §14 calc + taxable base */}
+            <dl className="mt-4 space-y-1.5 text-sm">
+              <LedgerRow
+                label={
+                  <>
+                    §14 exempt
+                    <span className="ml-1 text-xs font-normal text-muted-foreground">
+                      (max of {(preview.fraction * 100).toFixed(2)}% × package or{" "}
+                      {usd(preview.floor)}, capped at {usd(preview.cap)})
+                    </span>
+                  </>
+                }
                 v={`− ${usd(preview.exempt)}`}
                 muted
               />
-              <div className="border-t pt-2 md:col-span-2">
-                <Row label="Taxable base (feeds PAYE)" v={usd(preview.taxable_base)} bold />
-                <Row label="Total gross package" v={usd(preview.gross)} bold />
+              <div className="border-t pt-1.5">
+                <LedgerRow
+                  label="Taxable base (feeds PAYE)"
+                  v={usd(preview.taxable_base)}
+                  bold
+                  emphasis
+                />
               </div>
             </dl>
-            <p className="mt-3 text-xs text-muted-foreground">
-              PAYE is computed on the taxable base using ZIMRA's independent
-              monthly bands (no FDS cumulative — retrenchment is a one-off).
-              AIDS Levy applies to PAYE. NSSA and ZIMDEF are not levied on
-              termination payments.
+
+            <p className="mt-4 text-xs text-muted-foreground">
+              PAYE is computed on the taxable base using ZIMRA&apos;s
+              independent monthly bands (no FDS cumulative — retrenchment
+              is a one-off). AIDS Levy applies to PAYE. NSSA and ZIMDEF are
+              not levied on termination payments.
             </p>
           </>
         ) : (
@@ -497,25 +526,37 @@ export function TerminatePackageForm({
   );
 }
 
-function Row({
-  label, v, bold, muted,
+function LedgerRow({
+  label, v, bold, muted, emphasis,
 }: {
-  label: string;
+  label: React.ReactNode;
   v: string;
   bold?: boolean;
   muted?: boolean;
+  /** Extra visual weight for the important bottom-line row
+   *  (Taxable base). Colours it emerald so it stands out from
+   *  the plain-bold "Total gross package". */
+  emphasis?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <dt className={bold ? "font-bold text-foreground" : "text-muted-foreground"}>
+    <div className="flex items-baseline gap-4">
+      <dt
+        className={cn(
+          "flex-1 min-w-0 leading-snug",
+          bold ? "font-bold text-foreground" : "text-muted-foreground",
+        )}
+      >
         {label}
       </dt>
       <dd
         className={cn(
+          "flex-none tabular-nums whitespace-nowrap text-right",
           bold
-            ? "text-base font-extrabold text-foreground"
+            ? emphasis
+              ? "text-base font-extrabold text-emerald-700"
+              : "text-base font-extrabold text-foreground"
             : muted
-            ? "text-emerald-700"
+            ? "text-emerald-700 font-semibold"
             : "font-semibold text-foreground",
         )}
       >

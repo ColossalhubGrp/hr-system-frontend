@@ -26,6 +26,23 @@ export type ComplianceKnob = {
    *  by hitting the stamp endpoint against this field. Points to
    *  the Company Payroll Settings fieldname. */
   confirmField?: string;
+  /** Fieldname on Company Payroll Settings the panel writes to when
+   *  the row is edited inline. Undefined = not editable inline
+   *  (e.g. PAYE bands live in their own table). */
+  editField?: string;
+  /** Storage-to-display factor. 100 means the stored value is a
+   *  decimal (0.045) shown as a percentage (4.5); 1 means the stored
+   *  value is shown as-is (10 for 10%, 2.0 for 2× multiplier). The
+   *  inline cell divides by this before saving. */
+  displayFactor?: number;
+  /** step attribute for the inline number input. */
+  step?: string;
+  /** Route the user to a separate editor when inline editing doesn't
+   *  fit (e.g. PAYE bands are a whole table, not a single number). */
+  editHref?: string;
+  /** Numeric raw value hydrated for the inline editor (falls back
+   *  to 0 when the field is empty/null). */
+  editableValue?: number;
 };
 
 export type ComplianceSnapshot = {
@@ -113,16 +130,22 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       lastUpdated: payeStamp,
       stale: isStale(payeStamp),
       confirmField: "paye_bands_last_updated",
+      editHref: "/payroll/setup/settings",
     },
     {
       key: "nssa_ceiling_usd",
       label: "NSSA insurable ceiling",
       value: fmtUsd(num("nssa_ceiling_usd")),
       raw: num("nssa_ceiling_usd"),
+      currency: "USD",
       hint: "Monthly USD cap on NSSA-insurable earnings. Bumped periodically by NSSA.",
       lastUpdated: nssaStamp,
       stale: isStale(nssaStamp),
       confirmField: "nssa_ceiling_last_updated",
+      editField: "nssa_ceiling_usd",
+      displayFactor: 1,
+      step: "1",
+      editableValue: num("nssa_ceiling_usd"),
     },
     {
       key: "nssa_pct",
@@ -133,6 +156,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Employee + employer POBS rate. Zim norm 4.5% each side.",
       lastUpdated: nssaStamp,
       stale: isStale(nssaStamp),
+      editField: "nssa_pct",
+      displayFactor: 100,
+      step: "0.1",
+      editableValue: num("nssa_pct") * 100,
     },
     {
       key: "nssa_apf_pct",
@@ -143,6 +170,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Accident Prevention Fund employer side, split from POBS for the return. 0 = not applicable.",
       lastUpdated: nssaStamp,
       stale: isStale(nssaStamp),
+      editField: "nssa_apf_pct",
+      displayFactor: 1,
+      step: "0.1",
+      editableValue: num("nssa_apf_pct"),
     },
     {
       key: "aids_levy_pct",
@@ -153,6 +184,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Applied to PAYE after credits. Stable at 3% for years.",
       lastUpdated: null,
       stale: false,
+      editField: "aids_levy_pct",
+      displayFactor: 100,
+      step: "0.1",
+      editableValue: num("aids_levy_pct") * 100,
     },
     {
       key: "zimdef_pct",
@@ -163,6 +198,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "1% employer-only standards-development levy.",
       lastUpdated: null,
       stale: false,
+      editField: "zimdef_pct",
+      displayFactor: 100,
+      step: "0.1",
+      editableValue: num("zimdef_pct") * 100,
     },
     {
       key: "elderly_credit_monthly_usd",
@@ -173,6 +212,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Monthly USD credit for employees aged 55+. FDS-only. Bumped occasionally by ZIMRA.",
       lastUpdated: payeStamp,
       stale: isStale(payeStamp),
+      editField: "elderly_credit_monthly_usd",
+      displayFactor: 1,
+      step: "1",
+      editableValue: num("elderly_credit_monthly_usd"),
     },
     {
       key: "disabled_credit_monthly_usd",
@@ -183,6 +226,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Monthly USD credit for employees flagged disabled. FDS-only.",
       lastUpdated: payeStamp,
       stale: isStale(payeStamp),
+      editField: "disabled_credit_monthly_usd",
+      displayFactor: 1,
+      step: "1",
+      editableValue: num("disabled_credit_monthly_usd"),
     },
     {
       key: "medical_credit_pct",
@@ -193,6 +240,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "% of the employee's medical-aid premium refunded as a credit. ZIMRA norm 50%.",
       lastUpdated: payeStamp,
       stale: isStale(payeStamp),
+      editField: "medical_credit_pct",
+      displayFactor: 100,
+      step: "0.5",
+      editableValue: num("medical_credit_pct") * 100,
     },
     {
       key: "bonus_tax_free_usd",
@@ -203,6 +254,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Portion of an annual bonus that isn't PAYE-taxable. Was USD 700 (2024), USD 800 (2025).",
       lastUpdated: payeStamp,
       stale: isStale(payeStamp),
+      editField: "bonus_tax_free_usd",
+      displayFactor: 1,
+      step: "50",
+      editableValue: num("bonus_tax_free_usd"),
     },
     {
       key: "contractor_wht_pct",
@@ -213,6 +268,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Withheld on contractor 1099 payments when they can't produce ITF263. ZIMRA §80 default 10%.",
       lastUpdated: null,
       stale: false,
+      editField: "contractor_wht_pct",
+      displayFactor: 1,
+      step: "0.5",
+      editableValue: num("contractor_wht_pct") || 10,
     },
     {
       key: "default_weekend_multiplier",
@@ -223,6 +282,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Rate for Saturday / Sunday hours. Zim default 2×; overridable per Wizard Entry.",
       lastUpdated: null,
       stale: false,
+      editField: "default_weekend_multiplier",
+      displayFactor: 1,
+      step: "0.1",
+      editableValue: num("default_weekend_multiplier") || 2,
     },
     {
       key: "default_holiday_multiplier",
@@ -233,6 +296,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Rate for gazetted public-holiday hours (from each employee's Holiday List). Default 2×.",
       lastUpdated: null,
       stale: false,
+      editField: "default_holiday_multiplier",
+      displayFactor: 1,
+      step: "0.1",
+      editableValue: num("default_holiday_multiplier") || 2,
     },
     {
       key: "exchange_rate",
@@ -242,6 +309,10 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       hint: "Used to derive ZiG PAYE bands from USD bands. Should track RBZ interbank ± tolerance.",
       lastUpdated: null,
       stale: false,
+      editField: "exchange_rate",
+      displayFactor: 1,
+      step: "0.01",
+      editableValue: num("exchange_rate"),
     },
   ];
 

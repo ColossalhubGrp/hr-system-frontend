@@ -56,14 +56,35 @@ export default async function SettingsPage({
           <T name="zimdefNo" label="ZIMDEF / Manpower no." v={s.zimdef_no ?? ""} />
         </Section>
 
-        <Section title="Statutory rates">
-          <N name="exchangeRate" label="Interbank rate (ZiG per US$1)" v={s.interbank_rate} />
-          <N name="aidsLevyPct" label="AIDS Levy % (of PAYE)" v={s.aids_levy_pct * 100} />
-          <N name="nssaPct" label="NSSA % (each side)" v={s.nssa_pct * 100} />
-          <N name="nssaCeilingUsd" label="NSSA insurable ceiling (US$)" v={s.nssa_ceiling_usd} />
-          <N name="zimdefPct" label="ZIMDEF % (of gross)" v={s.zimdef_pct * 100} />
-          <N name="bonusTaxFreeUsd" label="Bonus tax-free (US$)" v={s.bonus_tax_free_usd} />
-        </Section>
+        {/*
+         * Statutory rates moved to /payroll/setup/compliance so every
+         * ZIMRA knob lives on one screen with staleness tracking.
+         * These hidden inputs preserve the current values on submit
+         * so a PAYE-bands / Platform-extras save doesn't nullify
+         * them here — the compliance panel is the authoritative
+         * editor now.
+         */}
+        <input type="hidden" name="exchangeRate" value={s.interbank_rate} />
+        <input type="hidden" name="aidsLevyPct" value={s.aids_levy_pct * 100} />
+        <input type="hidden" name="nssaPct" value={s.nssa_pct * 100} />
+        <input type="hidden" name="nssaCeilingUsd" value={s.nssa_ceiling_usd} />
+        <input type="hidden" name="zimdefPct" value={s.zimdef_pct * 100} />
+        <input type="hidden" name="bonusTaxFreeUsd" value={s.bonus_tax_free_usd} />
+        <Card className="border-blue-200 bg-blue-50 p-4 text-sm text-blue-900">
+          <div className="font-semibold">Statutory rates moved</div>
+          <p className="mt-1 text-xs">
+            AIDS Levy, NSSA, ZIMDEF, bonus tax-free, exchange rate and
+            all ZIMRA-related knobs now live on{" "}
+            <a
+              href="/payroll/setup/compliance"
+              className="font-semibold text-primary hover:underline"
+            >
+              ZIMRA compliance →
+            </a>{" "}
+            where each value carries a last-confirmed timestamp and
+            edits save on blur.
+          </p>
+        </Card>
 
         {/*
          * Platform extras — not part of Belina's Settings page but kept

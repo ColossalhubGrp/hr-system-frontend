@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import type { Route } from "next";
+import Link from "next/link";
 import { AlertTriangle, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -12,7 +14,10 @@ import type {
   ComplianceKnob,
   ComplianceSnapshot,
 } from "@/lib/frappe/payroll-compliance";
-import { confirmComplianceField } from "@/app/(workspace)/payroll/payruns-actions";
+import {
+  confirmComplianceField,
+  updateComplianceKnob,
+} from "@/app/(workspace)/payroll/payruns-actions";
 
 function fmtDate(iso: string | null): string {
   if (!iso) return "Never";
@@ -130,8 +135,22 @@ function KnobRow({ knob: k }: { knob: ComplianceKnob }) {
         <div className="font-semibold text-foreground">{k.label}</div>
         <div className="text-xs text-muted-foreground">{k.hint}</div>
       </TableCell>
-      <TableCell className="px-4 align-middle text-right font-mono text-sm">
-        {k.value}
+      <TableCell className="px-4 align-middle text-right">
+        {k.editField ? (
+          <KnobEditor knob={k} />
+        ) : k.editHref ? (
+          <div className="flex items-center justify-end gap-2">
+            <span className="font-mono text-sm text-foreground">{k.value}</span>
+            <Link
+              href={k.editHref as Route}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              Edit →
+            </Link>
+          </div>
+        ) : (
+          <span className="font-mono text-sm">{k.value}</span>
+        )}
       </TableCell>
       <TableCell className="px-4 align-middle">
         <div>{fmtDate(lastUpdated)}</div>
@@ -174,5 +193,80 @@ function KnobRow({ knob: k }: { knob: ComplianceKnob }) {
         )}
       </TableCell>
     </TableRow>
+  );
+}
+
+/**
+ * Inline editor for a Compliance knob. Saves on blur; converts
+ * display → stored via `displayFactor` (100 for decimal-stored
+ * percentages like nssa_pct = 0.045, 1 for direct-stored values).
+ * Suffix hint matches the currency so HR reads the right unit.
+ */
+function KnobEditor({ knob }: { knob: ComplianceKnob }) {
+  const factor = knob.displayFactor ?? 1;
+  const initial = knob.editableValue ?? 0;
+  const [local, setLocal] = useState<string>(
+    initial ? String(initial) : "",
+  );
+  const [pending, setPending] = useState(false);
+  const lastCommittedRef = useRef<number>(initial);
+
+  useEffect(() => {
+    setLocal(initial ? String(initial) : "");
+    lastCommittedRef.current = initial;
+  }, [initial]);
+
+  const suffix =
+    knob.currency === "PCT" ? "%"
+    : knob.currency === "USD" ? "US$"
+    : knob.currency === "MULT" ? "×"
+    : "";
+
+  async function commit() {
+    const parsed = parseFloat(local || "0");
+    if (!Number.isFinite(parsed)) return;
+    if (parsed === lastCommittedRef.current) return;
+    const old = lastCommittedRef.current;
+    setPending(true);
+    try {
+      const stored = parsed / factor;
+      await updateComplianceKnob(knob.editField!, stored);
+      lastCommittedRef.current = parsed;
+      toast.success(`Saved ${knob.label}.`);
+    } catch (err) {
+      toast.error((err as { message?: string })?.message ?? "Save failed.");
+      setLocal(old ? String(old) : "");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="inline-flex items-center gap-1">
+      {suffix && knob.currency === "USD" ? (
+        <span className="text-xs text-muted-foreground">{suffix}</span>
+      ) : null}
+      <input
+        type="number"
+        step={knob.step ?? "0.01"}
+        min="0"
+        value={local}
+        disabled={pending}
+        onChange={(e) => setLocal(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            (e.target as HTMLInputElement).blur();
+          }
+        }}
+        className="w-28 rounded-md border px-2 py-1 text-right text-sm disabled:bg-muted disabled:text-muted-foreground"
+        placeholder="0"
+      />
+      {suffix && knob.currency !== "USD" ? (
+        <span className="text-xs text-muted-foreground">{suffix}</span>
+      ) : null}
+      {pending ? <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" /> : null}
+    </div>
   );
 }

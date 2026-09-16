@@ -158,6 +158,36 @@ export async function confirmComplianceField(field: string): Promise<void> {
   revalidatePath("/payroll/setup/compliance");
 }
 
+/**
+ * Write a single Company Payroll Settings field. Called by the
+ * inline number cells on the ZIMRA compliance panel; each knob
+ * saves on blur. `value` is the raw storage value the field
+ * expects (e.g. `nssa_pct` is stored as 0.045 for 4.5% — the
+ * panel does the × 100 dance before calling).
+ */
+export async function updateComplianceKnob(
+  field: string,
+  value: number,
+): Promise<void> {
+  await ensurePayrollAdmin();
+  const { myCompany } = await import("@/lib/references/server");
+  const company = await myCompany();
+  if (!company) throw new Error("No company on session.");
+  await frappeCall({
+    method: "frappe.client.set_value",
+    args: {
+      doctype: "Company Payroll Settings",
+      name: company,
+      fieldname: field,
+      value,
+    },
+    as: "user",
+    verb: "POST",
+  });
+  revalidatePath("/payroll/setup/compliance");
+  revalidatePath("/payroll/setup/settings");
+}
+
 // ── timesheets ───────────────────────────────────────────────────
 
 /**

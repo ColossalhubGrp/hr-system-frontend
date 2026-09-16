@@ -768,7 +768,10 @@ function PreviewStep({
     (s, r) => s + r.captured_deduct_usd,
     0,
   );
-  const projectedNet = totalGross - totalDeduct;
+  const prevTotalGross = payable.reduce(
+    (s, r) => s + (prevSnapshots[r.employee]?.gross_usd ?? 0),
+    0,
+  );
 
   return (
     <div className="space-y-6">
@@ -776,21 +779,19 @@ function PreviewStep({
       <Card className="p-6">
         <h3 className="mb-4 font-bold text-foreground">Debit Summary</h3>
         <dl className="space-y-2 text-sm">
-          <Line label="Projected direct deposits (gross − captured deductions)" value={usd(projectedNet)} />
-          <Line label="+ Captured deductions" value={usd(totalDeduct)} muted />
+          <Line label="Total projected gross" value={usd(totalGross)} bold />
+          <Line label="Captured deductions" value={usd(totalDeduct)} muted />
           <Line
             label="Statutory (PAYE / AIDS Levy / NSSA / ZIMDEF)"
             value="Computed on Approve"
             muted
           />
-          <div className="border-t pt-2">
-            <Line label="Total projected gross" value={usd(totalGross)} bold />
-          </div>
         </dl>
         <p className="mt-3 text-xs text-muted-foreground">
-          Approve to process the run. PAYE, AIDS Levy, NSSA and ZIMDEF are
-          computed authoritatively by the payroll engine at that point, and the
-          final Debit Summary appears on the run detail page.
+          Actual net (after all statutory deductions) is computed
+          authoritatively by the payroll engine when you Approve. The final
+          Debit Summary — with true net-vs-previous-net deltas — appears on
+          the run detail page.
         </p>
       </Card>
 
@@ -846,14 +847,11 @@ function PreviewStep({
               <TableHead className="px-4">Employee</TableHead>
               <TableHead className="px-4 text-right">Projected gross</TableHead>
               <TableHead className="px-4 text-right">Captured deductions</TableHead>
-              <TableHead className="px-4 text-right">Projected net (pre-tax)</TableHead>
-              <TableHead className="px-4 text-right">vs prev net</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {payable.map((r) => {
               const gross = projectedGrossUsd(r);
-              const net = gross - r.captured_deduct_usd;
               const prev = prevSnapshots[r.employee];
               return (
                 <TableRow key={r.employee}>
@@ -884,35 +882,39 @@ function PreviewStep({
                   <TableCell className="px-4 align-middle text-right text-rose-600">
                     {r.captured_deduct_usd ? usd(r.captured_deduct_usd) : "—"}
                   </TableCell>
-                  <TableCell className="px-4 align-middle text-right font-semibold">
-                    {usd(net)}
-                  </TableCell>
-                  <DeltaCell current={net} previous={prev?.net_usd} bold />
                 </TableRow>
               );
             })}
           </TableBody>
-          {payable.length > 0 && prevLabel && (
+          {payable.length > 0 && (
             <TableFooter>
               <TableRow className="border-t-2 bg-muted/30 font-bold">
                 <TableCell className="px-4">Totals</TableCell>
-                <TableCell className="px-4 text-right">{usd(totalGross)}</TableCell>
+                <TableCell className="px-4 text-right">
+                  <div>{usd(totalGross)}</div>
+                  {prevLabel && prevTotalGross ? (
+                    <div className="text-[11px] font-normal">
+                      <DeltaTag
+                        current={totalGross}
+                        previous={prevTotalGross}
+                        fmt={usd}
+                        withPercent
+                      />
+                    </div>
+                  ) : null}
+                </TableCell>
                 <TableCell className="px-4 text-right text-rose-600">
                   {totalDeduct ? usd(totalDeduct) : "—"}
-                </TableCell>
-                <TableCell className="px-4 text-right">{usd(projectedNet)}</TableCell>
-                <TableCell className="px-4 text-right">
-                  <DeltaTag
-                    current={projectedNet}
-                    previous={prevTotalNet}
-                    fmt={usd}
-                    withPercent
-                  />
                 </TableCell>
               </TableRow>
             </TableFooter>
           )}
         </Table>
+        <p className="border-t px-4 py-2 text-[11px] text-muted-foreground">
+          Actual net (after PAYE, AIDS Levy, NSSA, ZIMDEF, pension, NEC dues,
+          medical aid) is computed by the payroll engine at Approve. It appears
+          on the run detail page with a true net-vs-previous-net delta.
+        </p>
       </Card>
     </div>
   );

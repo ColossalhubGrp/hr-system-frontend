@@ -3,7 +3,6 @@
 import { useMemo, useState, useTransition } from "react";
 import type { Route } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ChevronLeft,
   Download,
@@ -25,6 +24,7 @@ import type {
 } from "@/lib/frappe/payroll-timesheets";
 import {
   importTimesheetsFromAttendance,
+  listTimesheetsAction,
   uploadTimesheetCsv,
   upsertTimesheet,
   approveAllTimesheets,
@@ -95,7 +95,6 @@ export function TimesheetsPage({
   payDate: string;
   initial: Initial;
 }) {
-  const router = useRouter();
   const [rows, setRows] = useState<PayrollTimesheetRow[]>(initial.rows);
   const [filter, setFilter] = useState<"all" | "flagged" | "unapproved">("all");
   const [importing, startImport] = useTransition();
@@ -114,6 +113,20 @@ export function TimesheetsPage({
   const patchRow = (name: string, patch: Partial<PayrollTimesheetRow>) =>
     setRows((rs) => rs.map((r) => (r.name === name ? { ...r, ...patch } : r)));
 
+  /** Pull the fresh rows from the server and reset local state.
+   *  router.refresh() re-runs the server component but leaves the
+   *  client-held useState untouched, so mutations that add new
+   *  rows (import + upload) also need an explicit re-hydrate. */
+  async function refetch() {
+    try {
+      const res = await listTimesheetsAction(runId);
+      setRows(res.rows);
+    } catch {
+      // Silent — a re-hydrate failure just means HR sees stale local
+      // state; a manual refresh recovers.
+    }
+  }
+
   async function runImport() {
     startImport(async () => {
       try {
@@ -121,7 +134,7 @@ export function TimesheetsPage({
         toast.success(
           `Imported ${res.imported} timesheets from ${res.period_from} → ${res.period_to}.`,
         );
-        router.refresh();
+        await refetch();
       } catch (err) {
         toast.error((err as { message?: string })?.message ?? "Import failed.");
       }
@@ -142,7 +155,7 @@ export function TimesheetsPage({
       } else {
         toast.success(`Uploaded ${res.accepted} timesheet rows.`);
       }
-      router.refresh();
+      await refetch();
     } catch (err) {
       toast.error((err as { message?: string })?.message ?? "Upload failed.");
     } finally {

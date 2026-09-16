@@ -131,6 +131,20 @@ export async function upsertWizardEntry(
 
 // ── timesheets ───────────────────────────────────────────────────
 
+/**
+ * Server-side refetch of the timesheet list for a run — used by
+ * the /timesheets client page to sync its local state after an
+ * import / upload / approve mutation, since router.refresh()
+ * re-runs the server component but doesn't reset the client's
+ * useState-held rows.
+ */
+export async function listTimesheetsAction(payrollRun: string) {
+  await ensurePayrollAdmin();
+  // Lazy import — listTimesheetsForRun is server-only.
+  const { listTimesheetsForRun } = await import("@/lib/frappe/payroll-timesheets");
+  return listTimesheetsForRun(payrollRun);
+}
+
 export async function importTimesheetsFromAttendance(
   payrollRun: string,
 ): Promise<{ imported: number; period_from: string; period_to: string }> {

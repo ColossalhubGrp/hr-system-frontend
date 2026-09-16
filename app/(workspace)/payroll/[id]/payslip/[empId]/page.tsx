@@ -77,14 +77,16 @@ export default async function PayslipPage({
       </div>
 
       <Card id="payslip-card" className="overflow-hidden p-0">
-        {/* Company header */}
-        <div className="flex items-start justify-between gap-4 border-b bg-emerald-600 p-6 text-white">
+        {/* Company header — uses the system primary token so the
+            payslip matches the brand palette (deep ink-purple) instead
+            of an off-brand emerald. */}
+        <div className="flex items-start justify-between gap-4 border-b bg-primary p-6 text-primary-foreground">
           <div>
             <div className="text-xl font-extrabold">{companyDisplay}</div>
             {company.address && (
-              <div className="mt-1 text-xs text-emerald-50">{company.address}</div>
+              <div className="mt-1 text-xs text-primary-foreground/80">{company.address}</div>
             )}
-            <div className="text-xs text-emerald-50">
+            <div className="text-xs text-primary-foreground/80">
               {company.bp_number && <>ZIMRA BP: {company.bp_number}</>}
               {company.bp_number && company.nssa_employer_no ? " · " : ""}
               {company.nssa_employer_no && <>NSSA: {company.nssa_employer_no}</>}
@@ -92,11 +94,11 @@ export default async function PayslipPage({
           </div>
           <div className="text-right">
             <div className="text-sm font-bold uppercase tracking-wide">Payslip</div>
-            <div className="text-xs text-emerald-50">{run.period_label}</div>
-            <div className="text-xs text-emerald-50">
+            <div className="text-xs text-primary-foreground/80">{run.period_label}</div>
+            <div className="text-xs text-primary-foreground/80">
               Pay date {fmtDate(run.pay_date)}
             </div>
-            <div className="text-xs text-emerald-50">
+            <div className="text-xs text-primary-foreground/80">
               Rate ZiG {run.exchange_rate.toFixed(2)}
             </div>
           </div>
@@ -146,7 +148,7 @@ export default async function PayslipPage({
         {/* Earnings + Deductions */}
         <div className="grid gap-px bg-border sm:grid-cols-2">
           <div className="bg-card p-6">
-            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-emerald-700">
+            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">
               Earnings
             </h3>
             <Line
@@ -166,12 +168,12 @@ export default async function PayslipPage({
           </div>
 
           <div className="bg-card p-6">
-            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-emerald-700">
+            <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">
               Deductions
             </h3>
             <Line label="PAYE" u={slip.paye_usd} z={slip.paye_zig} />
             {slip.tax_credits_usd > 0 && (
-              <div className="flex items-center justify-between py-1 text-sm text-emerald-700">
+              <div className="flex items-center justify-between py-1 text-sm text-primary">
                 <span>Tax credits applied</span>
                 <span className="text-right">−{usd(slip.tax_credits_usd)}</span>
               </div>
@@ -206,9 +208,9 @@ export default async function PayslipPage({
         </div>
 
         {/* Net pay */}
-        <div className="flex items-center justify-between border-t bg-emerald-50 p-6">
+        <div className="flex items-center justify-between border-t bg-primary/10 p-6">
           <div>
-            <div className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+            <div className="text-xs font-semibold uppercase tracking-wide text-primary">
               Net pay
             </div>
             <div className="text-xs text-muted-foreground">
@@ -217,8 +219,8 @@ export default async function PayslipPage({
             </div>
           </div>
           <div className="text-right">
-            <div className="text-2xl font-extrabold text-emerald-700">{usd(slip.net_usd)}</div>
-            <div className="text-lg font-bold text-emerald-700">{zig(slip.net_zig)}</div>
+            <div className="text-2xl font-extrabold text-primary">{usd(slip.net_usd)}</div>
+            <div className="text-lg font-bold text-primary">{zig(slip.net_zig)}</div>
           </div>
         </div>
 

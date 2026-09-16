@@ -104,6 +104,8 @@ export type WizardEntryPatch = Partial<{
   hours_worked: number;
   overtime_hours: number;
   overtime_multiplier: number;
+  weekend_multiplier: number;
+  holiday_multiplier: number;
   contractor_flat_usd: number;
 }>;
 
@@ -127,6 +129,33 @@ export async function upsertWizardEntry(
   });
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}`);
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
+}
+
+// ── compliance ───────────────────────────────────────────────────
+
+/**
+ * Stamp a Company Payroll Settings "last confirmed" field to today.
+ * Used by the ZIMRA compliance panel — HR clicks Confirm after
+ * cross-checking a knob against ZIMRA's schedule.
+ */
+export async function confirmComplianceField(field: string): Promise<void> {
+  await ensurePayrollAdmin();
+  const { myCompany } = await import("@/lib/references/server");
+  const company = await myCompany();
+  if (!company) throw new Error("No company on session.");
+  const today = new Date().toISOString().slice(0, 10);
+  await frappeCall({
+    method: "frappe.client.set_value",
+    args: {
+      doctype: "Company Payroll Settings",
+      name: company,
+      fieldname: field,
+      value: today,
+    },
+    as: "user",
+    verb: "POST",
+  });
+  revalidatePath("/payroll/setup/compliance");
 }
 
 // ── timesheets ───────────────────────────────────────────────────

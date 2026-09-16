@@ -83,6 +83,9 @@ export type EmployeeFull = {
    *  Hours input multiplies by this (or its per-run override) to
    *  compute pay. Zero for SALARIED / CONTRACTOR. */
   hourlyRateUsd: number;
+  /** Contractors only. When false, the engine withholds 10% WHT
+   *  on their 1099 payment per ZIMRA §80. */
+  hasTaxClearance: boolean;
   grade: string | null;
   /** When true, attendance check-ins for this employee bypass geofence
    *  validation. Set by HR/Shift Manager only. */
@@ -362,6 +365,7 @@ type RawEmployeeDoc = RawEmployeeRow & {
   employment_type: string | null;
   payroll_class: string | null;
   hourly_rate_usd: number | null;
+  has_tax_clearance: 0 | 1 | boolean | null;
   grade: string | null;
   geofence_exempt: 0 | 1 | boolean | null;
   // Phase 5 ZW Custom Fields
@@ -473,6 +477,7 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
       return raw === "HOURLY" || raw === "CONTRACTOR" ? (raw as "HOURLY" | "CONTRACTOR") : "SALARIED";
     })(),
     hourlyRateUsd: Number(d.hourly_rate_usd ?? 0),
+    hasTaxClearance: Boolean(d.has_tax_clearance),
     grade: d.grade,
     geofenceExempt: Boolean(d.geofence_exempt),
     nationalId: d.national_id,

@@ -40,25 +40,39 @@ const CLASS_LABEL: Record<PayrollClass, { plural: string; singular: string }> = 
  */
 function projectedGrossUsd(e: EmployeeForRun): number {
   const w = e.wiz;
+  const otMult = w.overtime_multiplier || 1.5;
+  const weMult = w.weekend_multiplier || 2.0;
+  const holMult = w.holiday_multiplier || 2.0;
+
   if (e.payroll_class === "HOURLY") {
-    const otMult = w.overtime_multiplier || 1.5;
     // Approved timesheet wins over manual wizard cells.
     const hours = e.timesheet ? e.timesheet.regular_hours : w.hours_worked;
     const ot = e.timesheet ? e.timesheet.overtime_hours : w.overtime_hours;
-    return w.hourly_rate_usd * hours + w.hourly_rate_usd * otMult * ot;
+    const we = e.timesheet ? e.timesheet.weekend_hours : 0;
+    const hol = e.timesheet ? e.timesheet.holiday_hours : 0;
+    return (
+      w.hourly_rate_usd * hours +
+      w.hourly_rate_usd * otMult * ot +
+      w.hourly_rate_usd * weMult * we +
+      w.hourly_rate_usd * holMult * hol
+    );
   }
   if (e.payroll_class === "CONTRACTOR") {
     return w.contractor_flat_usd;
   }
   // Salaried: basic + adjustment + captured earnings + timesheet-driven
-  // OT (computed as basic/expected_hours × OT × multiplier).
-  let salariedOt = 0;
-  if (e.timesheet && e.timesheet.overtime_hours > 0 && e.basic_usd > 0) {
+  // OT / weekend / holiday earnings (each = basic/expected_hours ×
+  // its own multiplier × hours in that category).
+  let salariedExtras = 0;
+  if (e.timesheet && e.basic_usd > 0) {
     const expected = e.timesheet.expected_hours || 176;
     const hourly = e.basic_usd / expected;
-    salariedOt = hourly * (w.overtime_multiplier || 1.5) * e.timesheet.overtime_hours;
+    salariedExtras =
+      hourly * otMult * e.timesheet.overtime_hours +
+      hourly * weMult * e.timesheet.weekend_hours +
+      hourly * holMult * e.timesheet.holiday_hours;
   }
-  return e.basic_usd + w.salary_adjustment_usd + e.captured_earn_usd + salariedOt;
+  return e.basic_usd + w.salary_adjustment_usd + e.captured_earn_usd + salariedExtras;
 }
 
 const usd = (n: number) =>
@@ -514,9 +528,22 @@ function ClassStep({
                       {r.basic_zig ? (
                         <div className="text-xs text-muted-foreground">{zig(r.basic_zig)}</div>
                       ) : null}
-                      {r.timesheet && r.timesheet.overtime_hours > 0 && r.basic_usd > 0 ? (
+                      {r.timesheet && r.basic_usd > 0 && (
+                        r.timesheet.overtime_hours > 0
+                        || r.timesheet.weekend_hours > 0
+                        || r.timesheet.holiday_hours > 0
+                      ) ? (
                         <div className="mt-0.5 text-[10px] font-semibold text-amber-700">
-                          +{r.timesheet.overtime_hours.toFixed(1)} OT hrs → auto-earning on process
+                          {r.timesheet.overtime_hours > 0
+                            ? `+${r.timesheet.overtime_hours.toFixed(1)} OT `
+                            : ""}
+                          {r.timesheet.weekend_hours > 0
+                            ? `+${r.timesheet.weekend_hours.toFixed(1)} wknd `
+                            : ""}
+                          {r.timesheet.holiday_hours > 0
+                            ? `+${r.timesheet.holiday_hours.toFixed(1)} hol `
+                            : ""}
+                          hrs → auto-earnings on process
                         </div>
                       ) : null}
                     </TableCell>
@@ -563,10 +590,23 @@ function ClassStep({
                     </TableCell>
                     <TableCell className="px-4 align-middle text-right">
                       {r.timesheet ? (
-                        <ReadOnlyHours
-                          value={r.timesheet.overtime_hours}
-                          source={r.timesheet.source}
-                        />
+                        <>
+                          <ReadOnlyHours
+                            value={r.timesheet.overtime_hours}
+                            source={r.timesheet.source}
+                          />
+                          {(r.timesheet.weekend_hours > 0
+                            || r.timesheet.holiday_hours > 0) ? (
+                            <div className="mt-0.5 text-[9px] font-semibold text-amber-700">
+                              {r.timesheet.weekend_hours > 0
+                                ? `wknd ${r.timesheet.weekend_hours.toFixed(1)}h `
+                                : ""}
+                              {r.timesheet.holiday_hours > 0
+                                ? `hol ${r.timesheet.holiday_hours.toFixed(1)}h`
+                                : ""}
+                            </div>
+                          ) : null}
+                        </>
                       ) : (
                         <NumCell
                           value={r.wiz.overtime_hours}
@@ -603,6 +643,13 @@ function ClassStep({
                         patchWiz({ contractor_flat_usd: v }, { contractor_flat_usd: v })
                       }
                     />
+                    {!r.has_tax_clearance && r.wiz.contractor_flat_usd > 0 ? (
+                      <div className="mt-0.5 flex items-center justify-end gap-1 text-[10px] font-semibold text-rose-600">
+                        <span title="No ITF263 on file — engine withholds 10% WHT per ZIMRA §80.">
+                          ⚠ 10% WHT ≈ {usd(r.wiz.contractor_flat_usd * 0.1)}
+                        </span>
+                      </div>
+                    ) : null}
                   </TableCell>
                 )}
 

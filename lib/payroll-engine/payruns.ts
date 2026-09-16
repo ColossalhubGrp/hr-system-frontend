@@ -202,10 +202,17 @@ export type WizardEntry = {
    *  per-row so HR can override for a specific run (e.g. a
    *  holiday-heavy period). */
   overtime_multiplier: number;
+  /** Multiplier for weekend hours (Sat/Sun work). Zim default 2×;
+   *  per-row overridable, falls back to company setting. */
+  weekend_multiplier: number;
+  /** Multiplier for gazetted public-holiday hours. Default 2×. */
+  holiday_multiplier: number;
   contractor_flat_usd: number;
 };
 
 const DEFAULT_OT_MULTIPLIER = 1.5;
+const DEFAULT_WEEKEND_MULTIPLIER = 2.0;
+const DEFAULT_HOLIDAY_MULTIPLIER = 2.0;
 
 const EMPTY_WIZARD_ENTRY: WizardEntry = {
   salary_adjustment_usd: 0,
@@ -213,6 +220,8 @@ const EMPTY_WIZARD_ENTRY: WizardEntry = {
   hours_worked: 0,
   overtime_hours: 0,
   overtime_multiplier: DEFAULT_OT_MULTIPLIER,
+  weekend_multiplier: DEFAULT_WEEKEND_MULTIPLIER,
+  holiday_multiplier: DEFAULT_HOLIDAY_MULTIPLIER,
   contractor_flat_usd: 0,
 };
 
@@ -227,6 +236,11 @@ export type EmployeeForRun = {
   /** Employee master's fallback hourly rate. Wizard entry can
    *  override for a specific run without touching the employee. */
   hourly_rate_usd: number;
+  /** Contractors only. When false and payroll_class = CONTRACTOR,
+   *  the engine withholds 10% WHT on their flat 1099 per ZIMRA §80.
+   *  Wizard surfaces a red "⚠ WHT 10%" chip so HR sees the deduction
+   *  before Approve. */
+  has_tax_clearance: boolean;
   /** Human labels for the missing critical fields — used for display
    *  ("Excluded — missing 2", tooltip listing what's missing). */
   missing: string[];
@@ -396,7 +410,7 @@ export async function listEmployeesForRun(
       // Payroll wizard classification + hourly-rate fallback. Both are
       // custom fields seeded by patches; missing values treated as
       // SALARIED/0 downstream.
-      "payroll_class", "hourly_rate_usd",
+      "payroll_class", "hourly_rate_usd", "has_tax_clearance",
     ],
     filters: { company, status: "Active" },
     orderBy: "employee_name asc",
@@ -448,6 +462,8 @@ export async function listEmployeesForRun(
         hours_worked: Number(e.hours_worked ?? 0),
         overtime_hours: Number(e.overtime_hours ?? 0),
         overtime_multiplier: Number(e.overtime_multiplier ?? 0) || DEFAULT_OT_MULTIPLIER,
+        weekend_multiplier: Number(e.weekend_multiplier ?? 0) || DEFAULT_WEEKEND_MULTIPLIER,
+        holiday_multiplier: Number(e.holiday_multiplier ?? 0) || DEFAULT_HOLIDAY_MULTIPLIER,
         contractor_flat_usd: Number(e.contractor_flat_usd ?? 0),
       });
     }
@@ -544,6 +560,7 @@ export async function listEmployeesForRun(
       basic_usd: Number(r.basic_usd ?? 0),
       basic_zig: Number(r.basic_zig ?? 0),
       hourly_rate_usd: empHourlyRate,
+      has_tax_clearance: Boolean(r.has_tax_clearance),
       missing,
       missing_fieldnames,
       captured_txns: captured,

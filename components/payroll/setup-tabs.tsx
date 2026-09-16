@@ -13,6 +13,7 @@ const SETUP_TABS: { label: string; href: string }[] = [
   { label: "NEC / industry", href: "/payroll/setup/nec" },
   { label: "Earnings & deductions", href: "/payroll/setup/codes" },
   { label: "Settings", href: "/payroll/setup/settings" },
+  { label: "ZIMRA compliance", href: "/payroll/setup/compliance" },
 ];
 
 export function SetupTabs() {

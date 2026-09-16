@@ -399,6 +399,10 @@ export type EmployeeFormInput = {
    *  overtime) when this employee is classified HOURLY. Custom Field
    *  seeded via `add_hourly_rate_to_employee` patch. */
   hourly_rate_usd?: number;
+  /** ITF263 tax clearance on file. Contractors without this get 10%
+   *  WHT withheld per ZIMRA §80. Custom Field seeded via
+   *  `add_has_tax_clearance_to_employee` patch. */
+  has_tax_clearance?: 0 | 1;
   /** Link → Payroll Pay Grade (Setup → Pay Grades). Replaces the
    *  legacy `grade` field which linked to ERPNext's Employment Grade. */
   pay_grade?: string;

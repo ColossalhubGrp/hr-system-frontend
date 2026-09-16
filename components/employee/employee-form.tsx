@@ -103,6 +103,7 @@ const FIELDS_BY_TAB: Record<TabId, ReadonlyArray<keyof EmployeeFormInput>> = {
     "employment_type",
     "payroll_class",
     "hourly_rate_usd",
+    "has_tax_clearance",
     "pay_grade",
     "nec_industry",
     "basic_usd",
@@ -379,6 +380,7 @@ export function EmployeeForm({
     employment_type: initial?.employmentType ?? "",
     payroll_class: initial?.payrollClass ?? "SALARIED",
     hourly_rate_usd: initial?.hourlyRateUsd ? String(initial.hourlyRateUsd) : "",
+    has_tax_clearance: initial?.hasTaxClearance ? "1" : "0",
     pay_grade: initial?.payGrade ?? "",
     date_of_joining: initial?.dateOfJoining ?? "",
     cell_number: initial?.mobile ?? "",
@@ -684,6 +686,32 @@ export function EmployeeForm({
               name="hourly_rate_usd"
               value={payrollClass === "SALARIED" || payrollClass === "CONTRACTOR" ? "0" : v.hourly_rate_usd}
             />
+          )}
+          {payrollClass === "CONTRACTOR" && (
+            <Field
+              label="ITF263 tax clearance on file"
+              htmlFor="has_tax_clearance"
+              hint="Untick if the contractor has no valid ITF263 — engine will withhold 10% WHT per ZIMRA §80."
+            >
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="has_tax_clearance"
+                  name="has_tax_clearance"
+                  value="1"
+                  defaultChecked={v.has_tax_clearance === "1"}
+                  className="h-4 w-4 rounded border-slate-300"
+                />
+                <span className="text-xs text-ash-500">
+                  When checked, no WHT is withheld on 1099 payments.
+                </span>
+              </div>
+            </Field>
+          )}
+          {payrollClass !== "CONTRACTOR" && (
+            /* Same reset behaviour as hourly_rate — flipping OUT of
+             * CONTRACTOR shouldn't leave a stale tax-clearance flag. */
+            <input type="hidden" name="has_tax_clearance" value="0" />
           )}
           <Field
             label="Pay grade"

@@ -141,6 +141,32 @@ export function RunWizard({
   const [rows, setRows] = useState<EmployeeForRun[]>(employees);
   const [approving, startApprove] = useTransition();
 
+  // Diagnostic — dump what the server actually returned for wizard
+  // entries on load so we can compare against what the engine reads
+  // in preview_period. When Net keeps landing as "est. pre-tax" on
+  // an hourly row that shows non-zero hours in the input, the ground
+  // truth is what the DB actually persisted; this line surfaces it
+  // once per mount so it's a browser-console lookup, not a bench call.
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log(
+      "[wiz-entries loaded]",
+      employees.map((e) => ({
+        emp: e.employee,
+        name: e.employee_name,
+        cls: e.payroll_class,
+        wiz_rate: e.wiz.hourly_rate_usd,
+        wiz_hours: e.wiz.hours_worked,
+        wiz_ot_hours: e.wiz.overtime_hours,
+        wiz_ot_mult: e.wiz.overtime_multiplier,
+        wiz_adj: e.wiz.salary_adjustment_usd,
+        wiz_contractor: e.wiz.contractor_flat_usd,
+        emp_basic_usd: e.basic_usd,
+        emp_hourly_rate: e.hourly_rate_usd,
+      })),
+    );
+  }, [employees]);
+
   /** Real post-tax preview from the engine. Keyed by employee.
    *  The Net column reads from here (via ClassStep) so HR sees
    *  authoritative PAYE / AIDS / NSSA / etc. subtracted, not a
@@ -992,7 +1018,15 @@ function ClassStep({
                 try {
                   await upsertWizardEntry(runId, r.employee, patch);
                 } catch (err) {
+                  const msg = (err as { message?: string })?.message ?? "Save failed";
                   console.error("[wiz-upsert] failed:", err);
+                  // Surface silent failures — HR was reading an optimistic
+                  // number while the DB still held the old one, and only
+                  // saw it when the engine returned nonsense at process
+                  // time. A toast is annoying but honest.
+                  toast.error(
+                    `Couldn't save ${r.employee_name} — ${msg}. The engine will read the old value.`,
+                  );
                 }
                 bumpPreview();
               })();

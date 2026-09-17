@@ -874,14 +874,6 @@ function ClassStep({
               </TableHead>
             ))}
             <TableHead className="px-4 text-right">Net</TableHead>
-            <TableHead className="px-4 text-right">
-              Previous
-              {prevLabel && (
-                <div className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
-                  {prevLabel}
-                </div>
-              )}
-            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1238,8 +1230,18 @@ function ClassStep({
                   </>
                 )}
 
-                {/* Gross — value + inline %change vs prev gross */}
-                <TableCell className="px-4 align-middle text-right">
+                {/* Gross — value + inline %change vs prev gross.
+                    Hover shows the exact previous gross so HR can
+                    sanity-check the delta without a dedicated
+                    Previous column. */}
+                <TableCell
+                  className="px-4 align-middle text-right"
+                  title={
+                    prev?.gross_usd
+                      ? `Previous ${prevLabel ?? ""}: ${usd(prev.gross_usd)}`.trim()
+                      : undefined
+                  }
+                >
                   <div className="font-semibold text-foreground tabular-nums">
                     {usd(projGross)}
                   </div>
@@ -1300,8 +1302,18 @@ function ClassStep({
                     when the preview hasn't landed yet (first paint
                     / debounce window). The delta compares against
                     last run's actual post-tax net so the % is
-                    apples-to-apples once the preview is live. */}
-                <TableCell className="px-4 align-middle text-right">
+                    apples-to-apples once the preview is live.
+                    Hover shows the exact previous net so HR can
+                    sanity-check the delta without a dedicated
+                    Previous column. */}
+                <TableCell
+                  className="px-4 align-middle text-right"
+                  title={
+                    prev?.net_usd
+                      ? `Previous ${prevLabel ?? ""}: ${usd(prev.net_usd)}`.trim()
+                      : undefined
+                  }
+                >
                   {(() => {
                     const p = previews.get(r.employee);
                     const netReal = p?.net_usd;
@@ -1315,11 +1327,6 @@ function ClassStep({
                             "font-semibold tabular-nums",
                             stale ? "text-muted-foreground italic" : "text-foreground",
                           )}
-                          title={
-                            stale
-                              ? "Pre-tax estimate — engine preview is loading"
-                              : "Post-tax net (PAYE / AIDS / NSSA / pension / medical / NEC dues applied)"
-                          }
                         >
                           {usd(netShown)}
                           {stale && previewing ? (
@@ -1342,10 +1349,6 @@ function ClassStep({
                   })()}
                 </TableCell>
 
-                {/* Previous — prev gross only (net moved to its own col) */}
-                <TableCell className="px-4 align-middle text-right text-muted-foreground tabular-nums">
-                  {prev ? usd(prev.gross_usd) : <span className="text-xs">—</span>}
-                </TableCell>
               </TableRow>
             );
           })}
@@ -1526,11 +1529,6 @@ function ClassStep({
                   </>
                 );
               })()}
-            </TableCell>
-
-            {/* Previous — prev gross total only */}
-            <TableCell className="px-4 text-right text-muted-foreground">
-              {totalPrevGross ? usd(totalPrevGross) : "—"}
             </TableCell>
           </TableRow>
         </TableFooter>

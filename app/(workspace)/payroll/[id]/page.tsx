@@ -227,15 +227,20 @@ export default async function PayRunDetail({
           <p className="-mt-3 text-sm text-muted-foreground">
             Click <strong>+ Capture</strong> on any row to add a variable
             earning or deduction for that employee. Then press{" "}
-            <strong>Process payroll</strong> to calculate PAYE, AIDS Levy,
+            <strong>Run payroll</strong> to open the wizard, key in hourly
+            hours and contractor amounts, and process PAYE, AIDS Levy,
             NSSA and net pay for everyone.
+            {" "}Salaried employees show their monthly basic here; hourly
+            show their rate per hour (hours are set in the wizard);
+            contractors show <em>—</em> until you key the 1099 amount in
+            the wizard.
             {prev.label && (
               <>
                 {" "}The <strong>Previous net</strong> column shows what each
                 employee got paid on {prev.label}, with a ▲/▼ chip comparing
-                this run&apos;s <em>projected gross</em> (basic + captured
-                USD earnings) against {prev.label}&apos;s gross — use it to
-                spot rows that need an adjustment before you process.
+                the salaried basic + captured USD earnings against that
+                run&apos;s gross — hourly / 1099 rows fill in once the
+                wizard&apos;s numbers land.
               </>
             )}
           </p>
@@ -246,7 +251,9 @@ export default async function PayRunDetail({
                   <TableHead className="px-5 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                     Employee
                   </TableHead>
-                  <TableHead className="px-5 text-right">Basic</TableHead>
+                  <TableHead className="px-5 text-right" title="Salaried: monthly basic. Hourly: rate per hour. Contractor: flat 1099 amount.">
+                    Pay basis
+                  </TableHead>
                   <TableHead className="px-5">Transactions</TableHead>
                   <TableHead className="px-5 text-right">Projected gross</TableHead>
                   <TableHead className="px-5 text-right">
@@ -272,8 +279,22 @@ export default async function PayRunDetail({
                   employees.map((e) => {
                     const prevNet = prev.byEmployee.get(e.employee);
                     const prevGross = prev.grossByEmployee.get(e.employee);
-                    const projGrossUsd = e.basic_usd + e.captured_earn_usd;
-                    const projGrossZig = e.basic_zig + e.captured_earn_zig;
+                    // Class-aware projected gross:
+                    //  SALARIED   basic (+ ZiG) + captured USD earnings
+                    //  HOURLY     rate is only meaningful once hours land in
+                    //             the wizard, so we show only what HR has
+                    //             already captured; a "set in wizard" hint
+                    //             renders in the cell when nothing is captured
+                    //  CONTRACTOR captured earnings only (flat 1099 amount
+                    //             is keyed on the wizard's Contractors step)
+                    const projGrossUsd =
+                      e.payroll_class === "HOURLY" || e.payroll_class === "CONTRACTOR"
+                        ? e.captured_earn_usd
+                        : e.basic_usd + e.captured_earn_usd;
+                    const projGrossZig =
+                      e.payroll_class === "SALARIED"
+                        ? e.basic_zig + e.captured_earn_zig
+                        : e.captured_earn_zig;
                     return (
                       <TableRow
                         key={e.employee}
@@ -314,6 +335,33 @@ export default async function PayRunDetail({
                                     {taxMethodByEmp.get(e.employee)}
                                   </span>
                                 )}
+                                {/* Payroll class chip — HR can see at a
+                                    glance which step of the wizard this
+                                    employee belongs to (Salaried grid,
+                                    Hourly grid, Contractor 1099 grid). */}
+                                <span
+                                  className={cn(
+                                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                                    e.payroll_class === "SALARIED"
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : e.payroll_class === "HOURLY"
+                                        ? "bg-sky-100 text-sky-700"
+                                        : "bg-purple-100 text-purple-700",
+                                  )}
+                                  title={
+                                    e.payroll_class === "SALARIED"
+                                      ? "Salaried — paid a monthly basic"
+                                      : e.payroll_class === "HOURLY"
+                                        ? "Hourly — paid rate × hours (+ 1.5× OT)"
+                                        : "Contractor — flat 1099, no PAYE/NSSA"
+                                  }
+                                >
+                                  {e.payroll_class === "SALARIED"
+                                    ? "Salaried"
+                                    : e.payroll_class === "HOURLY"
+                                      ? "Hourly"
+                                      : "1099"}
+                                </span>
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {e.employee}
@@ -324,31 +372,69 @@ export default async function PayRunDetail({
                           </div>
                         </TableCell>
                         <TableCell className="px-5 align-middle text-right">
-                          {e.basic_usd ? usd(e.basic_usd) : <span className="text-muted-foreground">—</span>}
-                          {e.basic_zig ? (
-                            <div className="text-xs text-muted-foreground">{zig(e.basic_zig)}</div>
-                          ) : null}
+                          {e.payroll_class === "HOURLY" ? (
+                            e.hourly_rate_usd ? (
+                              <>
+                                <div>{usd(e.hourly_rate_usd)}<span className="text-xs font-normal text-muted-foreground">/hr</span></div>
+                                <div className="text-[10px] text-muted-foreground">
+                                  hours set in wizard
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-muted-foreground">—</span>
+                                <div className="text-[10px] text-amber-700">
+                                  set hourly rate on Employee
+                                </div>
+                              </>
+                            )
+                          ) : e.payroll_class === "CONTRACTOR" ? (
+                            <>
+                              <span className="text-muted-foreground">—</span>
+                              <div className="text-[10px] text-muted-foreground">
+                                1099 amount set in wizard
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {e.basic_usd ? usd(e.basic_usd) : <span className="text-muted-foreground">—</span>}
+                              {e.basic_zig ? (
+                                <div className="text-xs text-muted-foreground">{zig(e.basic_zig)}</div>
+                              ) : null}
+                            </>
+                          )}
                         </TableCell>
                         <TableCell className="px-5 align-middle">
                           <TxnChips txns={e.captured_txns} />
                         </TableCell>
                         <TableCell className="px-5 align-middle text-right">
-                          <span className="font-semibold text-foreground">
-                            {usd(projGrossUsd)}
-                          </span>
-                          {projGrossZig ? (
-                            <div className="text-xs text-muted-foreground">
-                              {zig(projGrossZig)}
-                            </div>
-                          ) : null}
-                          {e.captured_deduct_usd || e.captured_deduct_zig ? (
-                            <div className="text-[10px] text-rose-600">
-                              less deductions{" "}
-                              {e.captured_deduct_usd ? usd(e.captured_deduct_usd) : ""}
-                              {e.captured_deduct_usd && e.captured_deduct_zig ? " / " : ""}
-                              {e.captured_deduct_zig ? zig(e.captured_deduct_zig) : ""}
-                            </div>
-                          ) : null}
+                          {projGrossUsd === 0 && projGrossZig === 0 && e.payroll_class !== "SALARIED" ? (
+                            <>
+                              <span className="text-muted-foreground">—</span>
+                              <div className="text-[10px] text-muted-foreground">
+                                calculated when the wizard runs
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <span className="font-semibold text-foreground">
+                                {usd(projGrossUsd)}
+                              </span>
+                              {projGrossZig ? (
+                                <div className="text-xs text-muted-foreground">
+                                  {zig(projGrossZig)}
+                                </div>
+                              ) : null}
+                              {e.captured_deduct_usd || e.captured_deduct_zig ? (
+                                <div className="text-[10px] text-rose-600">
+                                  less deductions{" "}
+                                  {e.captured_deduct_usd ? usd(e.captured_deduct_usd) : ""}
+                                  {e.captured_deduct_usd && e.captured_deduct_zig ? " / " : ""}
+                                  {e.captured_deduct_zig ? zig(e.captured_deduct_zig) : ""}
+                                </div>
+                              ) : null}
+                            </>
+                          )}
                         </TableCell>
                         <TableCell className="px-5 align-middle text-right text-muted-foreground">
                           {prevNet === undefined || prevNet === null ? (

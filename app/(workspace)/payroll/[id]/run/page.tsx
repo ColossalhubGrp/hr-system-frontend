@@ -44,14 +44,20 @@ export default async function RunPayrollWizardPage({
     prevSnapshots[emp] = s;
   }
 
-  // Every USD-earning code the tenant has defined. Wizard pre-
-  // populates one column per code on the Salaried grid — HR always
-  // sees the full catalog (Housing, Transport, Bonus, …) even
-  // before any transaction is captured. Wizard-dedicated codes
-  // (SALARY_ADJUSTMENT etc.) filtered client-side.
-  const catalogEarningCodes = allCodes
+  // Every USD-earning + USD-deduction code the tenant has defined.
+  // Wizard pre-populates one column per code on the Salaried grid —
+  // HR always sees the full catalog (Housing, Transport, Bonus,
+  // Pension loan, …) even before any transaction is captured.
+  // Wizard-dedicated codes (SALARY_ADJUSTMENT etc.) filtered
+  // client-side.
+  const usdCodes = allCodes.filter(
+    (c) => (c.default_currency ?? "USD") === "USD",
+  );
+  const catalogEarningCodes = usdCodes
     .filter((c) => c.kind === "EARNING")
-    .filter((c) => (c.default_currency ?? "USD") === "USD")
+    .map((c) => c.code);
+  const catalogDeductionCodes = usdCodes
+    .filter((c) => c.kind === "DEDUCTION")
     .map((c) => c.code);
 
   return (
@@ -65,6 +71,7 @@ export default async function RunPayrollWizardPage({
       prevSnapshots={prevSnapshots}
       prevTotalNet={prev.total}
       catalogEarningCodes={catalogEarningCodes}
+      catalogDeductionCodes={catalogDeductionCodes}
     />
   );
 }

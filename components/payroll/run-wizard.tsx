@@ -110,6 +110,7 @@ export function RunWizard({
   prevSnapshots,
   prevTotalNet,
   catalogEarningCodes,
+  catalogDeductionCodes,
 }: {
   runId: string;
   runLabel: string;
@@ -124,6 +125,10 @@ export function RunWizard({
    *  even if no txn exists yet, so HR sees Housing / Transport /
    *  Bonus / etc. as first-class columns. */
   catalogEarningCodes: string[];
+  /** Same for USD-deduction codes — one column each on the right
+   *  side of Gross so HR can key per-employee amounts inline
+   *  (pension loan, medical top-up, etc.). */
+  catalogDeductionCodes: string[];
 }) {
   const router = useRouter();
 
@@ -247,6 +252,7 @@ export function RunWizard({
             prevLabel={prevLabel}
             onPatch={patchRow}
             catalogEarningCodes={catalogEarningCodes}
+            catalogDeductionCodes={catalogDeductionCodes}
           />
         )}
 
@@ -259,6 +265,7 @@ export function RunWizard({
             prevLabel={prevLabel}
             onPatch={patchRow}
             catalogEarningCodes={catalogEarningCodes}
+            catalogDeductionCodes={catalogDeductionCodes}
           />
         )}
 
@@ -271,6 +278,7 @@ export function RunWizard({
             prevLabel={prevLabel}
             onPatch={patchRow}
             catalogEarningCodes={catalogEarningCodes}
+            catalogDeductionCodes={catalogDeductionCodes}
           />
         )}
 
@@ -438,6 +446,7 @@ function ClassStep({
   prevLabel,
   onPatch,
   catalogEarningCodes,
+  catalogDeductionCodes,
 }: {
   cls: PayrollClass;
   runId: string;
@@ -446,6 +455,7 @@ function ClassStep({
   prevLabel: string | null;
   onPatch: (emp: string, patch: Partial<EmployeeForRun>) => void;
   catalogEarningCodes: string[];
+  catalogDeductionCodes: string[];
 }) {
   const [filter, setFilter] = useState("");
   const [modalFor, setModalFor] = useState<EmployeeForRun | null>(null);
@@ -509,6 +519,36 @@ function ClassStep({
         if (t.kind === "EARNING"
             && t.currency === "USD"
             && !DEDICATED_CODES.has(t.code)) {
+          sub.set(t.code, (sub.get(t.code) ?? 0) + t.amount);
+        }
+      }
+      m.set(e.employee, sub);
+    }
+    return m;
+  }, [rows]);
+
+  // Same treatment for USD DEDUCTION codes — the wizard mirrors
+  // the earning-side grid on the right of Gross so HR can key
+  // deductions per employee inline (pension loans, medical
+  // top-ups, garnishments, whatever HR set up in Setup).
+  const dynamicDeductionCodes = useMemo(() => {
+    const s = new Set<string>();
+    for (const code of catalogDeductionCodes) s.add(code);
+    for (const e of rows) {
+      for (const t of e.captured_txns) {
+        if (t.kind === "DEDUCTION" && t.currency === "USD") {
+          s.add(t.code);
+        }
+      }
+    }
+    return Array.from(s).sort();
+  }, [rows, catalogDeductionCodes]);
+  const deductionAmounts = useMemo(() => {
+    const m = new Map<string, Map<string, number>>();
+    for (const e of rows) {
+      const sub = new Map<string, number>();
+      for (const t of e.captured_txns) {
+        if (t.kind === "DEDUCTION" && t.currency === "USD") {
           sub.set(t.code, (sub.get(t.code) ?? 0) + t.amount);
         }
       }
@@ -763,6 +803,19 @@ function ClassStep({
               </>
             )}
             <TableHead className="px-4 text-right">Gross</TableHead>
+            {dynamicDeductionCodes.map((c) => (
+              <TableHead
+                key={`ded-hdr-${c}`}
+                className="px-3 text-right w-32 whitespace-nowrap"
+                title={`Deduction · ${c}`}
+              >
+                <span className="text-[10px] font-normal normal-case tracking-normal text-rose-600 block">
+                  DEDUCT
+                </span>
+                {c}
+              </TableHead>
+            ))}
+            <TableHead className="px-4 text-right">Net</TableHead>
             <TableHead className="px-4 text-right">
               Previous
               {prevLabel && (
@@ -771,7 +824,6 @@ function ClassStep({
                 </div>
               )}
             </TableHead>
-            <TableHead className="px-4 text-right">Δ vs prev</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1128,35 +1180,92 @@ function ClassStep({
                   </>
                 )}
 
+                {/* Gross — value + inline %change vs prev gross */}
                 <TableCell className="px-4 align-middle text-right">
-                  <span className="font-semibold text-foreground">{usd(projGross)}</span>
-                  {r.captured_deduct_usd ? (
-                    <div className="text-[10px] text-rose-600">
-                      less {usd(r.captured_deduct_usd)}
+                  <div className="font-semibold text-foreground tabular-nums">
+                    {usd(projGross)}
+                  </div>
+                  {prev?.gross_usd ? (
+                    <div className="mt-0.5 text-[10px]">
+                      <DeltaTag
+                        current={projGross}
+                        previous={prev.gross_usd}
+                        fmt={usd}
+                        withPercent
+                      />
                     </div>
                   ) : null}
                 </TableCell>
-                <TableCell className="px-4 align-middle text-right text-muted-foreground">
-                  {prev ? (
-                    <>
-                      <div>{usd(prev.gross_usd)}</div>
-                      <div className="text-[10px]">gross · {usd(prev.net_usd)} net</div>
-                    </>
-                  ) : (
-                    <span className="text-xs">—</span>
-                  )}
-                </TableCell>
+
+                {/* Dynamic DEDUCTION-code cells (one per catalog code) */}
+                {dynamicDeductionCodes.map((code) => {
+                  const currentAmt =
+                    deductionAmounts.get(r.employee)?.get(code) ?? 0;
+                  return (
+                    <TableCell
+                      key={`ded-${r.employee}-${code}`}
+                      className="px-3 align-middle text-right"
+                    >
+                      <NumCell
+                        value={currentAmt}
+                        disabled={isMissing}
+                        onCommit={async (v) => {
+                          const nextTxns = r.captured_txns.filter(
+                            (t) => !(t.kind === "DEDUCTION"
+                                   && t.currency === "USD"
+                                   && t.code === code),
+                          );
+                          if (v > 0) {
+                            nextTxns.push({
+                              code,
+                              kind: "DEDUCTION",
+                              currency: "USD",
+                              amount: v,
+                            });
+                          }
+                          const oldDed = r.captured_deduct_usd;
+                          onPatch(r.employee, {
+                            captured_txns: nextTxns,
+                            captured_deduct_usd: oldDed - currentAmt + v,
+                          });
+                          await upsertTxnByCode(runId, r.employee, code, v);
+                        }}
+                      />
+                    </TableCell>
+                  );
+                })}
+
+                {/* Net — projected (Gross − captured deductions).
+                    Statutory (PAYE/AIDS/NSSA/etc.) is computed at
+                    Approve, so this is the pre-tax net; the delta
+                    compares against last run's post-tax net which
+                    is directionally useful but not exact. */}
                 <TableCell className="px-4 align-middle text-right">
-                  {prev?.gross_usd ? (
-                    <DeltaTag
-                      current={projGross}
-                      previous={prev.gross_usd}
-                      fmt={usd}
-                      withPercent
-                    />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
+                  {(() => {
+                    const netProj = projGross - r.captured_deduct_usd;
+                    return (
+                      <>
+                        <div className="font-semibold text-foreground tabular-nums">
+                          {usd(netProj)}
+                        </div>
+                        {prev?.net_usd ? (
+                          <div className="mt-0.5 text-[10px]">
+                            <DeltaTag
+                              current={netProj}
+                              previous={prev.net_usd}
+                              fmt={usd}
+                              withPercent
+                            />
+                          </div>
+                        ) : null}
+                      </>
+                    );
+                  })()}
+                </TableCell>
+
+                {/* Previous — prev gross only (net moved to its own col) */}
+                <TableCell className="px-4 align-middle text-right text-muted-foreground tabular-nums">
+                  {prev ? usd(prev.gross_usd) : <span className="text-xs">—</span>}
                 </TableCell>
               </TableRow>
             );
@@ -1264,23 +1373,70 @@ function ClassStep({
                 </TableCell>
               </>
             )}
+            {/* Gross column footer — value + inline % delta */}
             <TableCell className="px-4 text-right text-emerald-700">
-              {usd(totalGross)}
-            </TableCell>
-            <TableCell className="px-4 text-right">
-              {totalPrevGross ? usd(totalPrevGross) : "—"}
-            </TableCell>
-            <TableCell className="px-4 text-right">
+              <div>{usd(totalGross)}</div>
               {totalPrevGross ? (
-                <DeltaTag
-                  current={totalGross}
-                  previous={totalPrevGross}
-                  fmt={usd}
-                  withPercent
-                />
-              ) : (
-                "—"
-              )}
+                <div className="mt-0.5 text-[10px] font-normal">
+                  <DeltaTag
+                    current={totalGross}
+                    previous={totalPrevGross}
+                    fmt={usd}
+                    withPercent
+                  />
+                </div>
+              ) : null}
+            </TableCell>
+
+            {/* Dynamic DEDUCTION column footers — sum per code */}
+            {dynamicDeductionCodes.map((code) => {
+              const t = includedRows.reduce(
+                (a, e) => a + (deductionAmounts.get(e.employee)?.get(code) ?? 0),
+                0,
+              );
+              return (
+                <TableCell
+                  key={`ft-ded-${code}`}
+                  className="px-3 text-right text-rose-600"
+                >
+                  {t ? usd(t) : "—"}
+                </TableCell>
+              );
+            })}
+
+            {/* Net column footer — value + inline % delta vs prev net */}
+            <TableCell className="px-4 text-right">
+              {(() => {
+                const totalDed = includedRows.reduce(
+                  (a, e) => a + e.captured_deduct_usd,
+                  0,
+                );
+                const totalNetProj = totalGross - totalDed;
+                const totalPrevNet = includedRows.reduce(
+                  (a, e) => a + (prevSnapshots[e.employee]?.net_usd ?? 0),
+                  0,
+                );
+                return (
+                  <>
+                    <div>{usd(totalNetProj)}</div>
+                    {totalPrevNet ? (
+                      <div className="mt-0.5 text-[10px] font-normal">
+                        <DeltaTag
+                          current={totalNetProj}
+                          previous={totalPrevNet}
+                          fmt={usd}
+                          withPercent
+                        />
+                      </div>
+                    ) : null}
+                  </>
+                );
+              })()}
+            </TableCell>
+
+            {/* Previous — prev gross total only */}
+            <TableCell className="px-4 text-right text-muted-foreground">
+              {totalPrevGross ? usd(totalPrevGross) : "—"}
             </TableCell>
           </TableRow>
         </TableFooter>

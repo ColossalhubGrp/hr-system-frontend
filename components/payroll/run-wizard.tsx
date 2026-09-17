@@ -518,8 +518,10 @@ function ClassStep({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-8 px-3" />
-            <TableHead className="px-4">Employee</TableHead>
+            <TableHead className="w-8 px-3 sticky left-0 z-20 bg-card" />
+            <TableHead className="px-4 sticky left-8 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+              Employee
+            </TableHead>
             {cls === "SALARIED" && (
               <>
                 <TableHead
@@ -612,8 +614,15 @@ function ClassStep({
               >
                 {/* Include-in-run tick — HR unchecks to skip an
                     employee on this run (Rippling parity). Missing
-                    employees can't be included at all. */}
-                <TableCell className="px-3 align-middle">
+                    employees can't be included at all. Sticky-left
+                    so the tick stays visible during horizontal
+                    scroll through the earning-code columns. */}
+                <TableCell
+                  className={cn(
+                    "px-3 align-middle sticky left-0 z-10",
+                    isMissing ? "bg-rose-50" : "bg-card",
+                  )}
+                >
                   <input
                     type="checkbox"
                     checked={included && !isMissing}
@@ -629,7 +638,12 @@ function ClassStep({
                     className="h-4 w-4 rounded border-slate-300"
                   />
                 </TableCell>
-                <TableCell className="px-4 align-middle">
+                <TableCell
+                  className={cn(
+                    "px-4 align-middle sticky left-8 z-10 border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]",
+                    isMissing ? "bg-rose-50" : "bg-card",
+                  )}
+                >
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
                       {initials(r.employee_name)}
@@ -900,8 +914,10 @@ function ClassStep({
         <TableFooter>
           <TableRow className="border-t-2 bg-muted/30 font-bold">
             {/* Filler for the include-checkbox column */}
-            <TableCell className="px-3" />
-            <TableCell className="px-4">Totals</TableCell>
+            <TableCell className="px-3 sticky left-0 z-10 bg-muted" />
+            <TableCell className="px-4 sticky left-8 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+              Totals
+            </TableCell>
             {cls === "SALARIED" && (
               <>
                 <TableCell className="px-3 text-right">
@@ -1189,7 +1205,9 @@ function PreviewStep({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="px-4">Employee</TableHead>
+              <TableHead className="px-4 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                Employee
+              </TableHead>
               <TableHead className="px-4 text-right">Gross</TableHead>
               <TableHead className="px-4 text-right">Captured deductions</TableHead>
             </TableRow>
@@ -1200,7 +1218,7 @@ function PreviewStep({
               const prev = prevSnapshots[r.employee];
               return (
                 <TableRow key={r.employee}>
-                  <TableCell className="px-4 align-middle">
+                  <TableCell className="px-4 align-middle sticky left-0 z-10 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-foreground">
                         {r.employee_name}
@@ -1234,7 +1252,9 @@ function PreviewStep({
           {payable.length > 0 && (
             <TableFooter>
               <TableRow className="border-t-2 bg-muted/30 font-bold">
-                <TableCell className="px-4">Totals</TableCell>
+                <TableCell className="px-4 sticky left-0 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                  Totals
+                </TableCell>
                 <TableCell className="px-4 text-right">
                   <div>{usd(totalGross)}</div>
                   {prevLabel && prevTotalGross ? (

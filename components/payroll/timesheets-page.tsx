@@ -292,7 +292,9 @@ export function TimesheetsPage({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="px-4">Employee</TableHead>
+                <TableHead className="px-4 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                  Employee
+                </TableHead>
                 <TableHead className="px-4 text-right">Regular</TableHead>
                 <TableHead className="px-4 text-right">OT</TableHead>
                 <TableHead className="px-4 text-right">Weekend</TableHead>
@@ -315,7 +317,9 @@ export function TimesheetsPage({
             </TableBody>
             <TableFooter>
               <TableRow className="border-t-2 bg-muted/30 font-bold">
-                <TableCell className="px-4">Totals</TableCell>
+                <TableCell className="px-4 sticky left-0 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                  Totals
+                </TableCell>
                 <TableCell className="px-4 text-right">
                   {visible.reduce((a, r) => a + r.regular_hours, 0).toFixed(1)}
                 </TableCell>
@@ -380,9 +384,15 @@ function TimesheetRow({
   runId: string;
   onPatch: (name: string, patch: Partial<PayrollTimesheetRow>) => void;
 }) {
+  const rowWarnTint = !row.approved && row.flags.length > 0;
   return (
-    <TableRow className={cn(!row.approved && row.flags.length > 0 ? "bg-amber-50/30" : undefined)}>
-      <TableCell className="px-4 align-middle">
+    <TableRow className={cn(rowWarnTint ? "bg-amber-50/30" : undefined)}>
+      <TableCell
+        className={cn(
+          "px-4 align-middle sticky left-0 z-10 border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]",
+          rowWarnTint ? "bg-amber-50" : "bg-card",
+        )}
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
             {initials(row.employee_name || row.employee)}

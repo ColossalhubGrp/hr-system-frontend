@@ -243,7 +243,9 @@ export default async function PayRunDetail({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-5">Employee</TableHead>
+                  <TableHead className="px-5 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                    Employee
+                  </TableHead>
                   <TableHead className="px-5 text-right">Basic</TableHead>
                   <TableHead className="px-5">Transactions</TableHead>
                   <TableHead className="px-5 text-right">Projected gross</TableHead>
@@ -277,7 +279,12 @@ export default async function PayRunDetail({
                         key={e.employee}
                         className={cn(e.missing.length > 0 ? "bg-rose-50/40" : undefined)}
                       >
-                        <TableCell className="px-5 align-middle">
+                        <TableCell
+                          className={cn(
+                            "px-5 align-middle sticky left-0 z-10 border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]",
+                            e.missing.length > 0 ? "bg-rose-50" : "bg-card",
+                          )}
+                        >
                           <div className="flex items-center gap-3">
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
                               {initials(e.employee_name)}
@@ -401,7 +408,9 @@ export default async function PayRunDetail({
               {employees.length > 0 && (
                 <TableFooter>
                   <TableRow className="border-t-2 bg-muted/30 font-bold">
-                    <TableCell className="px-5">Totals</TableCell>
+                    <TableCell className="px-5 sticky left-0 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                      Totals
+                    </TableCell>
                     <TableCell className="px-5 text-right">
                       {usd(openTot.basicUsd)}
                       {openTot.basicZig ? (
@@ -515,7 +524,9 @@ export default async function PayRunDetail({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="px-5">Employee</TableHead>
+                  <TableHead className="px-5 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                    Employee
+                  </TableHead>
                   <TableHead className="px-5 text-right">Gross</TableHead>
                   <TableHead className="px-5 text-right">PAYE</TableHead>
                   <TableHead className="px-5 text-right">AIDS USD</TableHead>
@@ -536,7 +547,7 @@ export default async function PayRunDetail({
                 ) : (
                   slips.map((s) => (
                     <TableRow key={s.name}>
-                      <TableCell className="px-5 align-middle">
+                      <TableCell className="px-5 align-middle sticky left-0 z-10 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
                             {initials(s.employee_name)}
@@ -609,7 +620,9 @@ export default async function PayRunDetail({
               {slips.length > 0 && (
                 <TableFooter>
                   <TableRow className="border-t-2 bg-muted/30 font-bold">
-                    <TableCell className="px-5">Totals</TableCell>
+                    <TableCell className="px-5 sticky left-0 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                      Totals
+                    </TableCell>
                     <TableCell className="px-5 text-right">{usd(tot.grossUsd)}</TableCell>
                     <TableCell className="px-5 text-right">{usd(tot.paye)}</TableCell>
                     <TableCell className="px-5 text-right">{num(tot.aids)}</TableCell>

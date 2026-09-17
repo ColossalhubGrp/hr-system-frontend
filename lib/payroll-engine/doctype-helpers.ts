@@ -227,13 +227,24 @@ export async function getEmployeePayrollSnapshot(
       ? await fetchSelfSnapshot(employee)
       : await fetchAdminSnapshot(employee);
     if (!r || !r.name) return null;
-    const payType = ((r.payroll_pay_type as string) || "SALARY") as EmployeePayrollSnapshot["payType"];
+    // Canonical class field. Translate SALARIED → SALARY at the edge
+    // so the existing snapshot shape (SALARY | HOURLY | CONTRACTOR)
+    // stays stable.
+    const canonicalClass = String(r.payroll_class ?? "").toUpperCase();
+    const payType: EmployeePayrollSnapshot["payType"] =
+      canonicalClass === "HOURLY"
+        ? "HOURLY"
+        : canonicalClass === "CONTRACTOR"
+          ? "CONTRACTOR"
+          : "SALARY";
     const comp =
       payType === "HOURLY"
-        ? Number(r.payroll_hourly_rate ?? 0)
+        ? Number(r.hourly_rate_usd ?? 0)
         : payType === "CONTRACTOR"
           ? Number(r.payroll_flat_pay ?? 0)
-          : Number(r.payroll_annual_salary ?? 0);
+          : // Salaried monthly basic × 12 → annual figure the
+            // snapshot ships as `comp`.
+            Number(r.basic_usd ?? 0) * 12;
     const missing: string[] = [];
     if (!r.payroll_bank_account_last4) missing.push("Bank account");
     if (!r.payroll_ssn_last4) missing.push("Tax ID / SSN");
@@ -611,6 +622,13 @@ export async function listPayrollEmployees(): Promise<PayrollEmployee[]> {
   // the Job Title doctype). If you port this to a vanilla ERPNext site
   // either swap "job_title" back to "designation" or wire up both with
   // a runtime feature detect.
+  //
+  // Reads the CANONICAL classification fields (payroll_class,
+  // hourly_rate_usd, basic_usd) — the same ones the wizard and the
+  // ZIMRA engine read. The legacy payroll_pay_type / payroll_hourly_rate
+  // pair is kept in sync via the Employee validate hook + backfill
+  // patch, so any lingering reader still gets the same value; new
+  // code should read the canonical names.
   const rows = await listDocs<Record<string, unknown>>("Employee", {
     fields: [
       "name",
@@ -618,9 +636,13 @@ export async function listPayrollEmployees(): Promise<PayrollEmployee[]> {
       "job_title",
       "department",
       "status",
-      "payroll_pay_type",
-      "payroll_annual_salary",
-      "payroll_hourly_rate",
+      // Canonical classification + pay
+      "payroll_class",
+      "hourly_rate_usd",
+      "basic_usd",
+      "basic_zig",
+      // US-legacy fields kept for the missing-info surface + currency;
+      // remove once the last reader migrates.
       "payroll_flat_pay",
       "payroll_state",
       "payroll_work_location",
@@ -636,17 +658,25 @@ export async function listPayrollEmployees(): Promise<PayrollEmployee[]> {
     orderBy: "employee_name asc",
   });
   return rows.map((r) => {
-    const payType =
-      ((r.payroll_pay_type as string) || "SALARY") as PayrollEmployee["payType"];
+    const canonicalClass =
+      String(r.payroll_class ?? "SALARIED").toUpperCase();
+    // Legacy PayrollEmployee.payType is "SALARY | HOURLY | CONTRACTOR"
+    // (SALARY not SALARIED for backward compat with the People UI
+    // that renders it). Translate at the edge.
+    const payType: PayrollEmployee["payType"] =
+      canonicalClass === "HOURLY"
+        ? "HOURLY"
+        : canonicalClass === "CONTRACTOR"
+          ? "CONTRACTOR"
+          : "SALARY";
     const comp =
       payType === "HOURLY"
-        ? Number(r.payroll_hourly_rate ?? 0)
+        ? Number(r.hourly_rate_usd ?? 0)
         : payType === "CONTRACTOR"
           ? Number(r.payroll_flat_pay ?? 0)
-          : Number(r.payroll_annual_salary ?? 0);
-    // Critical info — keep these labels human-readable; the People
-    // page just shows the count, the wizard's missing-details step
-    // shows the full list.
+          : // Salaried monthly basic → annualise for the People page's
+            // "annualSalary" display shape.
+            Number(r.basic_usd ?? 0) * 12;
     const missing: string[] = [];
     if (!r.payroll_bank_account_last4) missing.push("Bank account");
     if (!r.payroll_ssn_last4) missing.push("Tax ID / SSN");

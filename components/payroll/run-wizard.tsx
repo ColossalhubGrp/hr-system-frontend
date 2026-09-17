@@ -202,12 +202,20 @@ export function RunWizard({
   const [stepIdx, setStepIdx] = useState(0);
   const step = steps[stepIdx]?.id ?? "preview";
 
-  const patchRow = (emp: string, patch: Partial<EmployeeForRun>) => {
+  const patchRow = (
+    emp: string,
+    patch: Partial<EmployeeForRun>,
+    opts?: { skipPreview?: boolean },
+  ) => {
     setRows((rs) => rs.map((r) => (r.employee === emp ? { ...r, ...patch } : r)));
     // Nudge the preview effect — HR's edit persisted, engine can
-    // recompute against the fresh row.
-    setPreviewRev((n) => n + 1);
+    // recompute against the fresh row. Callers that need to await
+    // their own server write first pass skipPreview and call
+    // bumpPreview() themselves after the write lands, so preview
+    // never reads stale DB state.
+    if (!opts?.skipPreview) setPreviewRev((n) => n + 1);
   };
+  const bumpPreview = () => setPreviewRev((n) => n + 1);
 
   async function approve() {
     startApprove(async () => {
@@ -298,6 +306,7 @@ export function RunWizard({
             prevSnapshots={prevSnapshots}
             prevLabel={prevLabel}
             onPatch={patchRow}
+            bumpPreview={bumpPreview}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
             previews={previews}
@@ -313,6 +322,7 @@ export function RunWizard({
             prevSnapshots={prevSnapshots}
             prevLabel={prevLabel}
             onPatch={patchRow}
+            bumpPreview={bumpPreview}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
             previews={previews}
@@ -328,6 +338,7 @@ export function RunWizard({
             prevSnapshots={prevSnapshots}
             prevLabel={prevLabel}
             onPatch={patchRow}
+            bumpPreview={bumpPreview}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
             previews={previews}
@@ -498,6 +509,7 @@ function ClassStep({
   prevSnapshots,
   prevLabel,
   onPatch,
+  bumpPreview,
   catalogEarningCodes,
   catalogDeductionCodes,
   previews,
@@ -508,7 +520,18 @@ function ClassStep({
   rows: EmployeeForRun[];
   prevSnapshots: Record<string, PrevSnapshot>;
   prevLabel: string | null;
-  onPatch: (emp: string, patch: Partial<EmployeeForRun>) => void;
+  onPatch: (
+    emp: string,
+    patch: Partial<EmployeeForRun>,
+    opts?: { skipPreview?: boolean },
+  ) => void;
+  /** Called after a server write has committed, to nudge the debounced
+   *  preview to refetch against fresh DB state. Cells that persist
+   *  through a POST should skipPreview on onPatch and call this once
+   *  the request resolves — that prevents preview from racing the
+   *  write and reading stale zeros (which shows up as impossible
+   *  numbers like a negative Net for a fresh hourly row). */
+  bumpPreview: () => void;
   catalogEarningCodes: string[];
   catalogDeductionCodes: string[];
   /** Real post-tax preview keyed by employee. Net column reads
@@ -938,11 +961,26 @@ function ClassStep({
             const projGross = grossUsd(r);
             const isMissing = r.missing.length > 0;
             const patchWiz = (patch: WizardEntryPatch, wizPatch: Partial<WizardEntry>) => {
-              onPatch(r.employee, {
-                wiz: { ...r.wiz, ...wizPatch },
-              });
-              // Fire the server upsert; failure toast is inside NumCell.
-              void upsertWizardEntry(runId, r.employee, patch);
+              // Optimistic local update — skipPreview so we don't fire
+              // the preview refetch against still-stale DB state.
+              onPatch(
+                r.employee,
+                { wiz: { ...r.wiz, ...wizPatch } },
+                { skipPreview: true },
+              );
+              // Persist, THEN nudge the preview so the engine reads the
+              // freshly-committed wizard entry. Without this order, a
+              // fast preview debounce (700ms) can beat the upsert to
+              // the DB — engine reads rate=0, basic=0, and hands back a
+              // negative Net (gross - deducts with gross=0).
+              (async () => {
+                try {
+                  await upsertWizardEntry(runId, r.employee, patch);
+                } catch (err) {
+                  console.error("[wiz-upsert] failed:", err);
+                }
+                bumpPreview();
+              })();
             };
             const included = r.wiz.include_in_run !== false;
             const tsFlags = r.timesheet?.flag_codes ?? [];
@@ -1115,11 +1153,19 @@ function ClassStep({
                               const oldEarnUsd = r.captured_earn_usd;
                               const newEarnUsd =
                                 oldEarnUsd - currentAmt + v;
-                              onPatch(r.employee, {
-                                captured_txns: nextTxns,
-                                captured_earn_usd: newEarnUsd,
-                              });
-                              await upsertTxnByCode(runId, r.employee, code, v);
+                              onPatch(
+                                r.employee,
+                                {
+                                  captured_txns: nextTxns,
+                                  captured_earn_usd: newEarnUsd,
+                                },
+                                { skipPreview: true },
+                              );
+                              try {
+                                await upsertTxnByCode(runId, r.employee, code, v);
+                              } finally {
+                                bumpPreview();
+                              }
                             }}
                           />
                         </TableCell>
@@ -1273,11 +1319,19 @@ function ClassStep({
                                 });
                               }
                               const oldEarn = r.captured_earn_usd;
-                              onPatch(r.employee, {
-                                captured_txns: nextTxns,
-                                captured_earn_usd: oldEarn - currentAmt + v,
-                              });
-                              await upsertTxnByCode(runId, r.employee, REIMB, v);
+                              onPatch(
+                                r.employee,
+                                {
+                                  captured_txns: nextTxns,
+                                  captured_earn_usd: oldEarn - currentAmt + v,
+                                },
+                                { skipPreview: true },
+                              );
+                              try {
+                                await upsertTxnByCode(runId, r.employee, REIMB, v);
+                              } finally {
+                                bumpPreview();
+                              }
                             }}
                           />
                         );
@@ -1387,11 +1441,19 @@ function ClassStep({
                             });
                           }
                           const oldDed = r.captured_deduct_usd;
-                          onPatch(r.employee, {
-                            captured_txns: nextTxns,
-                            captured_deduct_usd: oldDed - currentAmt + v,
-                          });
-                          await upsertTxnByCode(runId, r.employee, code, v);
+                          onPatch(
+                            r.employee,
+                            {
+                              captured_txns: nextTxns,
+                              captured_deduct_usd: oldDed - currentAmt + v,
+                            },
+                            { skipPreview: true },
+                          );
+                          try {
+                            await upsertTxnByCode(runId, r.employee, code, v);
+                          } finally {
+                            bumpPreview();
+                          }
                         }}
                       />
                     </TableCell>
@@ -1408,12 +1470,26 @@ function ClassStep({
                     Hover shows previous figures for both currencies. */}
                 {(() => {
                   const p = previews.get(r.employee);
-                  const netReal = p?.net_usd;
+                  // A negative net_usd from the engine only happens
+                  // when it saw zero gross and non-zero deductions —
+                  // i.e., it read a wizard entry that HR hadn't
+                  // committed yet (fresh hourly row, race with the
+                  // upsert). Treat that as stale and fall back to
+                  // the client-side estimate instead of showing a
+                  // nonsense figure like US$-30.00.
+                  const netRealRaw = p?.net_usd;
+                  const netReal =
+                    netRealRaw !== undefined && netRealRaw < 0
+                      ? undefined
+                      : netRealRaw;
                   const netFallback = projGross - r.captured_deduct_usd;
                   const netUsdShown = netReal ?? netFallback;
                   const usdStale = netReal === undefined;
-                  const netZig = p?.net_zig ?? 0;
-                  const zigStale = p === undefined;
+                  const netZigRaw = p?.net_zig ?? 0;
+                  const netZig = netZigRaw < 0 ? 0 : netZigRaw;
+                  const zigStale =
+                    p === undefined
+                    || (netRealRaw !== undefined && netRealRaw < 0);
                   const titleParts: string[] = [];
                   if (prev?.net_usd) {
                     titleParts.push(
@@ -1661,9 +1737,15 @@ function ClassStep({
                 shows muted italic until the preview lands. */}
             <TableCell className="px-4 text-right">
               {(() => {
-                const havePreviewForAll = includedRows.every(
-                  (e) => previews.get(e.employee)?.net_usd !== undefined,
-                );
+                // Row is considered "have preview" only when it landed
+                // AND net_usd isn't negative (a negative net means the
+                // engine raced the wizard-entry upsert and read zero
+                // gross — we fall back to the client-side estimate for
+                // that row in the row cell, so the total must too).
+                const havePreviewForAll = includedRows.every((e) => {
+                  const n = previews.get(e.employee)?.net_usd;
+                  return n !== undefined && n >= 0;
+                });
                 if (viewCurrency === "ZIG") {
                   const totalNetZig = includedRows.reduce(
                     (a, e) => a + (previews.get(e.employee)?.net_zig ?? 0),

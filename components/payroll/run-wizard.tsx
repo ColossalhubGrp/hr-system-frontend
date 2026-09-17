@@ -12,6 +12,10 @@ import {
 import { cn } from "@/lib/cn";
 import { toast } from "@/components/ui/sonner";
 import { DeltaTag } from "@/components/payroll/delta-tag";
+import {
+  MissingInfoModal,
+  MissingInfoTriggerIcon,
+} from "@/components/payroll/missing-info-modal";
 import type { EmployeeForRun, PayrollClass, WizardEntry } from "@/lib/payroll-engine/payruns";
 import {
   processPeriod,
@@ -337,12 +341,14 @@ function Meta({ label, value }: { label: string; value: React.ReactNode }) {
 // ── Step: Missing details ────────────────────────────────────────
 
 function MissingStep({ blocked, runId }: { blocked: EmployeeForRun[]; runId: string }) {
+  const [modalFor, setModalFor] = useState<EmployeeForRun | null>(null);
   return (
     <Card className="p-6">
       <p className="mb-6 max-w-2xl text-sm text-muted-foreground">
         These employees will <strong>not be included</strong> in this pay run
-        until their missing information is provided. Fix each profile — you can
-        come back to the wizard here after saving.
+        until their missing information is provided. As soon as the missing
+        information is provided you&apos;ll be able to include them in this
+        pay run.
       </p>
       <div className="mb-2 text-sm font-semibold text-foreground">
         Showing {blocked.length} of {blocked.length}
@@ -351,40 +357,73 @@ function MissingStep({ blocked, runId }: { blocked: EmployeeForRun[]; runId: str
         <TableHeader>
           <TableRow>
             <TableHead className="px-3">Employee</TableHead>
-            <TableHead className="px-3">Missing</TableHead>
-            <TableHead className="px-3 text-right">Action</TableHead>
+            <TableHead className="px-3">Status</TableHead>
+            <TableHead className="px-3 text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {blocked.map((r) => (
             <TableRow key={r.employee}>
               <TableCell className="px-3">
-                <div className="font-semibold">{r.employee_name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {r.employee}
-                  {r.job_title ? ` · ${r.job_title}` : ""}
+                <div className="flex items-center gap-2">
+                  <MissingInfoTriggerIcon
+                    onClick={() => setModalFor(r)}
+                    tone="rose"
+                    title="See what's missing"
+                  />
+                  <div>
+                    <div className="font-semibold">{r.employee_name}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {r.employee}
+                      {r.job_title ? ` · ${r.job_title}` : ""}
+                    </div>
+                  </div>
                 </div>
               </TableCell>
               <TableCell className="px-3">
-                <span className="text-rose-600">
+                <button
+                  type="button"
+                  onClick={() => setModalFor(r)}
+                  className="text-left text-rose-600 hover:underline"
+                >
                   ● Missing {r.missing.length} critical detail{r.missing.length === 1 ? "" : "s"}
-                </span>
-                <div className="text-xs text-muted-foreground">{r.missing.join(", ")}</div>
+                </button>
               </TableCell>
               <TableCell className="px-3 text-right">
-                <Link
-                  href={
-                    `/employee/${encodeURIComponent(r.employee)}/edit?from=payroll-wizard&run=${encodeURIComponent(runId)}&fix=${r.missing_fieldnames.join(",")}` as Route
-                  }
-                  className="text-sm font-semibold text-primary hover:underline"
-                >
-                  Fix profile →
-                </Link>
+                <div className="inline-flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setModalFor(r)}
+                    className="inline-flex items-center rounded-md border border-input bg-transparent px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted/40"
+                  >
+                    Request missing info
+                  </button>
+                  <Link
+                    href={
+                      `/employee/${encodeURIComponent(r.employee)}/edit?from=payroll-wizard&run=${encodeURIComponent(runId)}&fix=${r.missing_fieldnames.join(",")}` as Route
+                    }
+                    className="inline-flex items-center rounded-md border border-input bg-transparent px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted/40"
+                  >
+                    Add details
+                  </Link>
+                </div>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {modalFor && (
+        <MissingInfoModal
+          runId={runId}
+          employee={modalFor.employee}
+          employeeName={modalFor.employee_name}
+          missing={modalFor.missing}
+          missingFieldnames={modalFor.missing_fieldnames}
+          open={true}
+          onClose={() => setModalFor(null)}
+        />
+      )}
     </Card>
   );
 }
@@ -409,6 +448,12 @@ function ClassStep({
   catalogEarningCodes: string[];
 }) {
   const [filter, setFilter] = useState("");
+  const [modalFor, setModalFor] = useState<EmployeeForRun | null>(null);
+  /** Rippling parity: Earnings (grid) / Deductions (captured
+   *  summary) / Settings (per-employee config quick-view). */
+  const [tab, setTab] = useState<"Earnings" | "Deductions" | "Settings">(
+    "Earnings",
+  );
 
   const visible = filter
     ? rows.filter((r) =>
@@ -515,6 +560,115 @@ function ClassStep({
         )}
       </div>
 
+      {/* Rippling parity — Earnings / Deductions / Settings tabs. */}
+      <div className="flex gap-5 border-b px-4 text-sm">
+        {(["Earnings", "Deductions", "Settings"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={cn(
+              "-mb-px whitespace-nowrap border-b-2 py-2 font-semibold transition",
+              tab === t
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === "Deductions" ? (
+        <div className="px-4 py-8 text-center text-sm text-muted-foreground">
+          Deductions captured on this run per employee:
+          <div className="mx-auto mt-4 max-w-md rounded-lg border p-4 text-left">
+            {visible.filter((r) => r.captured_deduct_usd > 0).length === 0 ? (
+              <div className="text-center text-xs text-muted-foreground">
+                No deductions captured yet. Add a{" "}
+                <Link
+                  href={"/payroll/setup/codes" as Route}
+                  className="text-primary hover:underline"
+                >
+                  DEDUCTION code
+                </Link>{" "}
+                and capture per-employee amounts on the OPEN pay run.
+              </div>
+            ) : (
+              <ul className="divide-y text-sm">
+                {visible
+                  .filter((r) => r.captured_deduct_usd > 0)
+                  .map((r) => (
+                    <li
+                      key={r.employee}
+                      className="flex items-center justify-between py-2"
+                    >
+                      <span className="font-semibold text-foreground">
+                        {r.employee_name}
+                      </span>
+                      <span className="tabular-nums text-rose-600">
+                        − {usd(r.captured_deduct_usd)}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      ) : tab === "Settings" ? (
+        <div className="px-4 py-6">
+          <p className="mb-3 text-sm text-muted-foreground">
+            Per-employee payroll settings shown here for reference —
+            click an employee to edit on their profile.
+          </p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-4">Employee</TableHead>
+                <TableHead className="px-4">Class</TableHead>
+                <TableHead className="px-4">Include in run</TableHead>
+                <TableHead className="px-4 text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visible.map((r) => (
+                <TableRow key={r.employee}>
+                  <TableCell className="px-4">
+                    <div className="font-semibold text-foreground">
+                      {r.employee_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {r.employee}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4">
+                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+                      {r.payroll_class}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-4 text-sm">
+                    {r.wiz.include_in_run !== false ? (
+                      <span className="text-emerald-700">Included</span>
+                    ) : (
+                      <span className="text-muted-foreground">Excluded</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="px-4 text-right">
+                    <Link
+                      href={
+                        `/employee/${encodeURIComponent(r.employee)}` as Route
+                      }
+                      className="text-sm font-semibold text-primary hover:underline"
+                    >
+                      Edit profile →
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
       <Table>
         <TableHeader>
           <TableRow>
@@ -558,19 +712,55 @@ function ClassStep({
             )}
             {cls === "HOURLY" && (
               <>
-                <TableHead className="px-4 text-right w-32">Rate (USD/hr)</TableHead>
-                <TableHead className="px-4 text-right w-24">Hours</TableHead>
-                <TableHead className="px-4 text-right w-24">OT hrs</TableHead>
                 <TableHead
-                  className="px-4 text-right w-24"
-                  title="Overtime multiplier — Zim weekday default 1.5×, weekends / public holidays commonly 2×. Editable per row."
+                  className="px-3 text-right w-28 whitespace-nowrap"
+                  title="Base pay hourly rate (USD)."
                 >
-                  OT ×
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    BASE PAY
+                  </span>
+                  Rate
+                </TableHead>
+                <TableHead className="px-3 text-right w-24 whitespace-nowrap">
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    BASE PAY
+                  </span>
+                  Hours
+                </TableHead>
+                <TableHead className="px-3 text-right w-28 whitespace-nowrap">
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    BASE PAY
+                  </span>
+                  Amount
+                </TableHead>
+                <TableHead
+                  className="px-3 text-right w-24 whitespace-nowrap"
+                  title="Overtime multiplier — Zim weekday default 1.5×; weekends / public holidays commonly 2×. Editable per row."
+                >
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    OVERTIME
+                  </span>
+                  ×
+                </TableHead>
+                <TableHead className="px-3 text-right w-24 whitespace-nowrap">
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    OVERTIME
+                  </span>
+                  Hours
+                </TableHead>
+                <TableHead className="px-3 text-right w-28 whitespace-nowrap">
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    OVERTIME
+                  </span>
+                  Amount
                 </TableHead>
               </>
             )}
             {cls === "CONTRACTOR" && (
-              <TableHead className="px-4 text-right w-40">1099 payment (USD)</TableHead>
+              <>
+                <TableHead className="px-4 text-right w-40">1099 payment</TableHead>
+                <TableHead className="px-4 text-right w-40">Reimbursements</TableHead>
+              </>
             )}
             <TableHead className="px-4 text-right">Gross</TableHead>
             <TableHead className="px-4 text-right">
@@ -654,18 +844,15 @@ function ClassStep({
                           {r.employee_name}
                         </span>
                         {isMissing ? (
-                          /* Red triangle — clicking deep-links straight
-                              to the employee edit page with fix params
-                              (matches Rippling's Sam Sampson pattern). */
-                          <Link
-                            href={
-                              `/employee/${encodeURIComponent(r.employee)}/edit?from=payroll-wizard&run=${encodeURIComponent(runId)}&fix=${r.missing_fieldnames.join(",")}` as Route
-                            }
-                            title={`Missing critical info: ${r.missing.join(", ")}. Click to fix.`}
-                            className="inline-flex items-center gap-0.5 rounded text-rose-600 hover:bg-rose-50"
-                          >
-                            <AlertTriangle className="h-3.5 w-3.5" />
-                          </Link>
+                          /* Red triangle — click opens Rippling-shape
+                              modal listing every missing field with
+                              "Add details" + "Request missing info"
+                              actions. */
+                          <MissingInfoTriggerIcon
+                            onClick={() => setModalFor(r)}
+                            tone="rose"
+                            title={`Missing: ${r.missing.join(", ")}. Click for options.`}
+                          />
                         ) : null}
                         {cls === "HOURLY" && hourlyWarnFlags.length > 0 ? (
                           /* Amber triangle — timesheet flagged a long
@@ -785,7 +972,8 @@ function ClassStep({
 
                 {cls === "HOURLY" && (
                   <>
-                    <TableCell className="px-4 align-middle text-right">
+                    {/* BASE PAY — Rate */}
+                    <TableCell className="px-3 align-middle text-right">
                       <NumCell
                         value={r.wiz.hourly_rate_usd}
                         disabled={isMissing}
@@ -795,7 +983,8 @@ function ClassStep({
                         }
                       />
                     </TableCell>
-                    <TableCell className="px-4 align-middle text-right">
+                    {/* BASE PAY — Hours */}
+                    <TableCell className="px-3 align-middle text-right">
                       {r.timesheet ? (
                         <ReadOnlyHours
                           value={r.timesheet.regular_hours}
@@ -812,7 +1001,32 @@ function ClassStep({
                         />
                       )}
                     </TableCell>
-                    <TableCell className="px-4 align-middle text-right">
+                    {/* BASE PAY — Amount (computed = Rate × Hours) */}
+                    <TableCell className="px-3 align-middle text-right font-medium text-foreground tabular-nums">
+                      {(() => {
+                        const hrs = r.timesheet
+                          ? r.timesheet.regular_hours
+                          : r.wiz.hours_worked;
+                        const amt = r.wiz.hourly_rate_usd * hrs;
+                        return amt ? usd(amt) : "—";
+                      })()}
+                    </TableCell>
+                    {/* OVERTIME — × multiplier */}
+                    <TableCell className="px-3 align-middle text-right">
+                      <NumCell
+                        value={r.wiz.overtime_multiplier || 1.5}
+                        disabled={isMissing}
+                        step="0.1"
+                        onCommit={(v) =>
+                          patchWiz(
+                            { overtime_multiplier: v },
+                            { overtime_multiplier: v },
+                          )
+                        }
+                      />
+                    </TableCell>
+                    {/* OVERTIME — Hours */}
+                    <TableCell className="px-3 align-middle text-right">
                       {r.timesheet ? (
                         <>
                           <ReadOnlyHours
@@ -842,39 +1056,76 @@ function ClassStep({
                         />
                       )}
                     </TableCell>
-                    <TableCell className="px-4 align-middle text-right">
-                      <NumCell
-                        value={r.wiz.overtime_multiplier || 1.5}
-                        disabled={isMissing}
-                        step="0.1"
-                        onCommit={(v) =>
-                          patchWiz(
-                            { overtime_multiplier: v },
-                            { overtime_multiplier: v },
-                          )
-                        }
-                      />
+                    {/* OVERTIME — Amount (= Rate × mult × OT hours) */}
+                    <TableCell className="px-3 align-middle text-right font-medium text-foreground tabular-nums">
+                      {(() => {
+                        const otHrs = r.timesheet
+                          ? r.timesheet.overtime_hours
+                          : r.wiz.overtime_hours;
+                        const mult = r.wiz.overtime_multiplier || 1.5;
+                        const amt = r.wiz.hourly_rate_usd * mult * otHrs;
+                        return amt ? usd(amt) : "—";
+                      })()}
                     </TableCell>
                   </>
                 )}
 
                 {cls === "CONTRACTOR" && (
-                  <TableCell className="px-4 align-middle text-right">
-                    <NumCell
-                      value={r.wiz.contractor_flat_usd}
-                      disabled={isMissing}
-                      onCommit={(v) =>
-                        patchWiz({ contractor_flat_usd: v }, { contractor_flat_usd: v })
-                      }
-                    />
-                    {!r.has_tax_clearance && r.wiz.contractor_flat_usd > 0 ? (
-                      <div className="mt-0.5 flex items-center justify-end gap-1 text-[10px] font-semibold text-rose-600">
-                        <span title="No ITF263 on file — engine withholds 10% WHT per ZIMRA §80.">
-                          ⚠ 10% WHT ≈ {usd(r.wiz.contractor_flat_usd * 0.1)}
-                        </span>
-                      </div>
-                    ) : null}
-                  </TableCell>
+                  <>
+                    <TableCell className="px-4 align-middle text-right">
+                      <ContractorPaymentCell
+                        value={r.wiz.contractor_flat_usd}
+                        disabled={isMissing}
+                        onCommit={(v) =>
+                          patchWiz(
+                            { contractor_flat_usd: v },
+                            { contractor_flat_usd: v },
+                          )
+                        }
+                      />
+                      {!r.has_tax_clearance && r.wiz.contractor_flat_usd > 0 ? (
+                        <div className="mt-0.5 flex items-center justify-end gap-1 text-[10px] font-semibold text-rose-600">
+                          <span title="No ITF263 on file — engine withholds 10% WHT per ZIMRA §80.">
+                            ⚠ 10% WHT ≈ {usd(r.wiz.contractor_flat_usd * 0.1)}
+                          </span>
+                        </div>
+                      ) : null}
+                    </TableCell>
+                    <TableCell className="px-4 align-middle text-right">
+                      {(() => {
+                        const REIMB = "REIMBURSEMENT";
+                        const currentAmt =
+                          codeAmounts.get(r.employee)?.get(REIMB) ?? 0;
+                        return (
+                          <NumCell
+                            value={currentAmt}
+                            disabled={isMissing}
+                            onCommit={async (v) => {
+                              const nextTxns = r.captured_txns.filter(
+                                (t) => !(t.kind === "EARNING"
+                                       && t.currency === "USD"
+                                       && t.code === REIMB),
+                              );
+                              if (v > 0) {
+                                nextTxns.push({
+                                  code: REIMB,
+                                  kind: "EARNING",
+                                  currency: "USD",
+                                  amount: v,
+                                });
+                              }
+                              const oldEarn = r.captured_earn_usd;
+                              onPatch(r.employee, {
+                                captured_txns: nextTxns,
+                                captured_earn_usd: oldEarn - currentAmt + v,
+                              });
+                              await upsertTxnByCode(runId, r.employee, REIMB, v);
+                            }}
+                          />
+                        );
+                      })()}
+                    </TableCell>
+                  </>
                 )}
 
                 <TableCell className="px-4 align-middle text-right">
@@ -947,28 +1198,71 @@ function ClassStep({
             )}
             {cls === "HOURLY" && (
               <>
-                <TableCell className="px-4 text-right text-muted-foreground text-xs">
+                {/* Base Pay: Rate (no sum) | Hours | Amount */}
+                <TableCell className="px-3 text-right text-muted-foreground text-xs">
                   —
                 </TableCell>
-                <TableCell className="px-4 text-right">
-                  {includedRows.reduce((a, e) => a + e.wiz.hours_worked, 0).toFixed(2)}
+                <TableCell className="px-3 text-right">
+                  {includedRows
+                    .reduce(
+                      (a, e) =>
+                        a + (e.timesheet ? e.timesheet.regular_hours : e.wiz.hours_worked),
+                      0,
+                    )
+                    .toFixed(2)}
                 </TableCell>
-                <TableCell className="px-4 text-right">
-                  {includedRows.reduce((a, e) => a + e.wiz.overtime_hours, 0).toFixed(2)}
+                <TableCell className="px-3 text-right">
+                  {(() => {
+                    const t = includedRows.reduce((a, e) => {
+                      const hrs = e.timesheet ? e.timesheet.regular_hours : e.wiz.hours_worked;
+                      return a + e.wiz.hourly_rate_usd * hrs;
+                    }, 0);
+                    return t ? usd(t) : "—";
+                  })()}
                 </TableCell>
-                <TableCell className="px-4 text-right text-muted-foreground text-xs">
-                  {/* Multipliers don't sum meaningfully — leave blank */}
+                {/* OT: × (no sum) | Hours | Amount */}
+                <TableCell className="px-3 text-right text-muted-foreground text-xs">
                   —
+                </TableCell>
+                <TableCell className="px-3 text-right">
+                  {includedRows
+                    .reduce(
+                      (a, e) =>
+                        a + (e.timesheet ? e.timesheet.overtime_hours : e.wiz.overtime_hours),
+                      0,
+                    )
+                    .toFixed(2)}
+                </TableCell>
+                <TableCell className="px-3 text-right">
+                  {(() => {
+                    const t = includedRows.reduce((a, e) => {
+                      const otHrs = e.timesheet ? e.timesheet.overtime_hours : e.wiz.overtime_hours;
+                      const mult = e.wiz.overtime_multiplier || 1.5;
+                      return a + e.wiz.hourly_rate_usd * mult * otHrs;
+                    }, 0);
+                    return t ? usd(t) : "—";
+                  })()}
                 </TableCell>
               </>
             )}
             {cls === "CONTRACTOR" && (
-              <TableCell className="px-4 text-right">
-                {(() => {
-                  const t = includedRows.reduce((a, e) => a + e.wiz.contractor_flat_usd, 0);
-                  return t ? usd(t) : "—";
-                })()}
-              </TableCell>
+              <>
+                <TableCell className="px-4 text-right">
+                  {(() => {
+                    const t = includedRows.reduce((a, e) => a + e.wiz.contractor_flat_usd, 0);
+                    return t ? usd(t) : "—";
+                  })()}
+                </TableCell>
+                <TableCell className="px-4 text-right">
+                  {(() => {
+                    const t = includedRows.reduce(
+                      (a, e) => a + (codeAmounts.get(e.employee)?.get("REIMBURSEMENT") ?? 0),
+                      0,
+                    );
+                    return t ? usd(t) : "—";
+                  })()}
+                </TableCell>
+              </>
             )}
             <TableCell className="px-4 text-right text-emerald-700">
               {usd(totalGross)}
@@ -991,6 +1285,19 @@ function ClassStep({
           </TableRow>
         </TableFooter>
       </Table>
+      )}
+
+      {modalFor && (
+        <MissingInfoModal
+          runId={runId}
+          employee={modalFor.employee}
+          employeeName={modalFor.employee_name}
+          missing={modalFor.missing}
+          missingFieldnames={modalFor.missing_fieldnames}
+          open={true}
+          onClose={() => setModalFor(null)}
+        />
+      )}
     </Card>
   );
 }
@@ -1099,6 +1406,107 @@ function NumCell({
   );
 }
 
+/**
+ * Rippling-shape 1099 payment cell — the amount input opens a
+ * popover with an optional-explanation textarea + GO button.
+ * The note is UI-only for now; persistence lands with a
+ * Payroll Transaction.notes field in the next pass.
+ */
+function ContractorPaymentCell({
+  value,
+  disabled,
+  onCommit,
+}: {
+  value: number;
+  disabled?: boolean;
+  onCommit: (v: number) => void | Promise<void>;
+}) {
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState<string>(value ? String(value) : "");
+  const [note, setNote] = useState<string>("");
+  const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    setAmount(value ? String(value) : "");
+  }, [value]);
+
+  async function go() {
+    const parsed = parseFloat(amount || "0") || 0;
+    setPending(true);
+    try {
+      await onCommit(parsed);
+      setOpen(false);
+      // Note persists in local state so re-opening shows what HR
+      // last typed; the backend note-field lands in a follow-up.
+    } catch (err) {
+      toast.error((err as { message?: string })?.message ?? "Save failed.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="relative inline-flex">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen((o) => !o)}
+        className="w-32 rounded-md border px-2 py-1 text-right text-sm text-foreground hover:border-primary disabled:bg-muted disabled:text-muted-foreground"
+      >
+        {value
+          ? `$ ${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+          : "$"}
+      </button>
+
+      {open && (
+        <div
+          className="absolute right-0 top-full z-30 mt-1 w-64 rounded-lg border bg-white p-3 shadow-xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={amount}
+            placeholder="$ 0.00"
+            onChange={(e) => setAmount(e.target.value)}
+            className="mb-2 w-full rounded-md border px-2 py-1 text-right text-sm"
+            autoFocus
+          />
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Optional explanation (Visible only to payroll admin)"
+            rows={3}
+            className="w-full rounded-md border px-2 py-1 text-xs"
+          />
+          <div className="mt-2 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="rounded-md px-2 py-1 text-xs font-semibold text-muted-foreground hover:bg-muted"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              disabled={pending}
+              onClick={go}
+              className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+            >
+              {pending ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                "GO"
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Step: Preview ────────────────────────────────────────────────
 
 function PreviewStep({
@@ -1116,7 +1524,14 @@ function PreviewStep({
   prevLabel: string | null;
   prevTotalNet: number;
 }) {
-  const payable = rows.filter((r) => r.missing.length === 0);
+  // Only rows HR ticked AND that aren't blocked by missing info.
+  const payable = rows.filter(
+    (r) => r.missing.length === 0 && r.wiz.include_in_run !== false,
+  );
+
+  const [tab, setTab] = useState<"Employees" | "Employee Taxes" | "Employer Taxes">(
+    "Employees",
+  );
 
   // Client-side projected numbers. PAYE/NSSA/AIDS are computed
   // authoritatively at Approve time; here we just show the pre-tax
@@ -1124,8 +1539,6 @@ function PreviewStep({
   // preview.
   const totalGross = payable.reduce((s, r) => s + grossUsd(r), 0);
   const totalDeduct = payable.reduce(
-    // Contractors don't pay statutory — only USD deductions apply.
-    // Salaried/Hourly deductions all count.
     (s, r) => s + r.captured_deduct_usd,
     0,
   );
@@ -1134,39 +1547,36 @@ function PreviewStep({
     0,
   );
 
+  // Rippling parity — split employees into Changed vs Unchanged
+  // relative to previous run. "Unchanged" = projected gross exactly
+  // matches previous run's gross (a bulk-approve confidence signal).
+  const { changed, unchanged } = (() => {
+    const c: EmployeeForRun[] = [];
+    const u: EmployeeForRun[] = [];
+    for (const r of payable) {
+      const prev = prevSnapshots[r.employee]?.gross_usd;
+      if (prev !== undefined && Math.abs(grossUsd(r) - prev) < 0.01) {
+        u.push(r);
+      } else {
+        c.push(r);
+      }
+    }
+    return { changed: c, unchanged: u };
+  })();
+
   return (
     <div className="space-y-6">
-      {/* Debit summary */}
-      <Card className="p-6">
-        <h3 className="mb-4 font-bold text-foreground">Debit Summary</h3>
-        <dl className="space-y-2 text-sm">
-          <Line label="Total projected gross" value={usd(totalGross)} bold />
-          <Line label="Captured deductions" value={usd(totalDeduct)} muted />
-          <Line
-            label="Statutory (PAYE / AIDS Levy / NSSA / ZIMDEF)"
-            value="Computed on Approve"
-            muted
-          />
-        </dl>
-        <p className="mt-3 text-xs text-muted-foreground">
-          Actual net (after all statutory deductions) is computed
-          authoritatively by the payroll engine when you Approve. The final
-          Debit Summary — with true net-vs-previous-net deltas — appears on
-          the run detail page.
-        </p>
-      </Card>
-
-      {/* Missing info warning */}
+      {/* Missing info warning — top, so HR sees it before Debit Summary */}
       {blocked.length > 0 && (
         <Card className="border-amber-200 bg-amber-50 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
               <div className="font-semibold text-amber-900">
-                These people have missing info · {blocked.length} of {rows.length}
+                These people have missing info · Showing {blocked.length} of {rows.length}
               </div>
               <p className="text-sm text-amber-800">
-                Warning only — you can still Approve; these employees will not
-                be paid on this run until fixed.
+                This is just a warning — you can still process this payroll,
+                but these people will not be paid.
               </p>
             </div>
           </div>
@@ -1175,7 +1585,7 @@ function PreviewStep({
               <Link
                 key={b.employee}
                 href={
-                  `/employee/${encodeURIComponent(b.employee)}/edit?from=payroll&fix=${b.missing.join(",")}` as Route
+                  `/employee/${encodeURIComponent(b.employee)}/edit?from=payroll&fix=${b.missing_fieldnames.join(",")}` as Route
                 }
                 className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
               >
@@ -1186,11 +1596,72 @@ function PreviewStep({
         </Card>
       )}
 
-      {/* Payroll changes vs last run */}
+      {/* Debit summary */}
+      <Card className="p-6">
+        <h3 className="mb-4 font-bold text-foreground">Debit Summary</h3>
+        <dl className="space-y-2 text-sm">
+          <Line
+            label="Direct deposits (projected gross − captured deductions)"
+            value={usd(Math.max(0, totalGross - totalDeduct))}
+          />
+          <Line label="+ Captured deductions" value={usd(totalDeduct)} muted />
+          <Line
+            label="+ Statutory (PAYE / AIDS Levy / NSSA / ZIMDEF)"
+            value="Computed on Approve"
+            muted
+          />
+          <div className="border-t pt-2">
+            <Line
+              label="Total projected gross"
+              value={usd(totalGross)}
+              bold
+            />
+          </div>
+        </dl>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Actual net (after all statutory deductions) is computed
+          authoritatively by the payroll engine when you Approve. Final Debit
+          Summary — with true net-vs-previous-net deltas — appears on the
+          run detail page.
+        </p>
+      </Card>
+
+      {/* Employees / Employee Taxes / Employer Taxes tabs */}
+      <div className="flex gap-5 border-b text-sm">
+        {(["Employees", "Employee Taxes", "Employer Taxes"] as const).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={cn(
+              "-mb-px whitespace-nowrap border-b-2 pb-2 pt-1 font-semibold transition",
+              tab === t
+                ? "border-primary text-foreground"
+                : "border-transparent text-muted-foreground hover:text-foreground",
+            )}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {tab === "Employee Taxes" || tab === "Employer Taxes" ? (
+        <Card className="p-6 text-sm text-muted-foreground">
+          <p>
+            {tab === "Employee Taxes"
+              ? "PAYE, AIDS Levy, NSSA (employee side) — computed by the payroll engine when you Approve. The Employee Taxes breakdown appears in the run detail's payslip register once processed."
+              : "NSSA (employer side), ZIMDEF, and (when applicable) NSSA APF — computed by the payroll engine when you Approve. The Employer Taxes total appears in the Debit Summary on the run detail page."}
+          </p>
+        </Card>
+      ) : null}
+
+      {/* Payroll changes vs last run — only shown on Employees tab */}
+      {tab === "Employees" && (
+      <>
       <Card className="overflow-x-auto p-0">
         <div className="flex items-center justify-between border-b px-4 py-3">
           <span className="text-sm font-semibold text-foreground">
-            Payroll changes · {payable.length} employees
+            Payroll changes · Showing {changed.length} of {payable.length}
           </span>
           {prevLabel ? (
             <span className="rounded-md border px-3 py-1 text-xs text-muted-foreground">
@@ -1213,7 +1684,17 @@ function PreviewStep({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payable.map((r) => {
+            {changed.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={3}
+                  className="py-8 text-center text-sm text-muted-foreground"
+                >
+                  No changes — everyone matches {prevLabel ?? "the previous run"}.
+                </TableCell>
+              </TableRow>
+            ) : (
+            changed.map((r) => {
               const gross = grossUsd(r);
               const prev = prevSnapshots[r.employee];
               return (
@@ -1247,7 +1728,8 @@ function PreviewStep({
                   </TableCell>
                 </TableRow>
               );
-            })}
+            })
+            )}
           </TableBody>
           {payable.length > 0 && (
             <TableFooter>
@@ -1281,6 +1763,48 @@ function PreviewStep({
           on the run detail page with a true net-vs-previous-net delta.
         </p>
       </Card>
+
+      {/* Payroll Unchanged — same gross as previous run, no delta. */}
+      {unchanged.length > 0 && (
+        <Card className="overflow-x-auto p-0">
+          <div className="border-b px-4 py-3 text-sm font-semibold text-foreground">
+            Payroll Unchanged · Showing {unchanged.length} of {unchanged.length}
+          </div>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="px-4 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                  Employee
+                </TableHead>
+                <TableHead className="px-4 text-right">Gross</TableHead>
+                <TableHead className="px-4 text-right">Captured deductions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {unchanged.map((r) => (
+                <TableRow key={r.employee}>
+                  <TableCell className="px-4 align-middle sticky left-0 z-10 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                    <span className="font-semibold text-foreground">
+                      {r.employee_name}
+                    </span>
+                    <div className="text-xs text-muted-foreground">
+                      {r.employee}
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 align-middle text-right tabular-nums">
+                    {usd(grossUsd(r))}
+                  </TableCell>
+                  <TableCell className="px-4 align-middle text-right text-rose-600 tabular-nums">
+                    {r.captured_deduct_usd ? usd(r.captured_deduct_usd) : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
+      </>
+      )}
     </div>
   );
 }

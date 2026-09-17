@@ -15,6 +15,7 @@ import { DeltaTag } from "@/components/payroll/delta-tag";
 import type { EmployeeForRun, PayrollClass, WizardEntry } from "@/lib/payroll-engine/payruns";
 import {
   processPeriod,
+  updateEmployeeSalary,
   upsertTxnByCode,
   upsertWizardEntry,
   type WizardEntryPatch,
@@ -39,7 +40,7 @@ const CLASS_LABEL: Record<PayrollClass, { plural: string; singular: string }> = 
  * rate × hours + rate × 1.5 × OT (basic doesn't apply); contractor =
  * flat 1099 (no basic, no earnings — statutory bypassed at process).
  */
-function projectedGrossUsd(e: EmployeeForRun): number {
+function grossUsd(e: EmployeeForRun): number {
   const w = e.wiz;
   const otMult = w.overtime_multiplier || 1.5;
   const weMult = w.weekend_multiplier || 2.0;
@@ -104,6 +105,7 @@ export function RunWizard({
   prevLabel,
   prevSnapshots,
   prevTotalNet,
+  catalogEarningCodes,
 }: {
   runId: string;
   runLabel: string;
@@ -113,6 +115,11 @@ export function RunWizard({
   prevLabel: string | null;
   prevSnapshots: Record<string, PrevSnapshot>;
   prevTotalNet: number;
+  /** Every USD-earning Payroll Transaction Code in the tenant's
+   *  catalog. Wizard's Salaried grid renders one column per code
+   *  even if no txn exists yet, so HR sees Housing / Transport /
+   *  Bonus / etc. as first-class columns. */
+  catalogEarningCodes: string[];
 }) {
   const router = useRouter();
 
@@ -235,6 +242,7 @@ export function RunWizard({
             prevSnapshots={prevSnapshots}
             prevLabel={prevLabel}
             onPatch={patchRow}
+            catalogEarningCodes={catalogEarningCodes}
           />
         )}
 
@@ -246,6 +254,7 @@ export function RunWizard({
             prevSnapshots={prevSnapshots}
             prevLabel={prevLabel}
             onPatch={patchRow}
+            catalogEarningCodes={catalogEarningCodes}
           />
         )}
 
@@ -257,6 +266,7 @@ export function RunWizard({
             prevSnapshots={prevSnapshots}
             prevLabel={prevLabel}
             onPatch={patchRow}
+            catalogEarningCodes={catalogEarningCodes}
           />
         )}
 
@@ -388,6 +398,7 @@ function ClassStep({
   prevSnapshots,
   prevLabel,
   onPatch,
+  catalogEarningCodes,
 }: {
   cls: PayrollClass;
   runId: string;
@@ -395,6 +406,7 @@ function ClassStep({
   prevSnapshots: Record<string, PrevSnapshot>;
   prevLabel: string | null;
   onPatch: (emp: string, patch: Partial<EmployeeForRun>) => void;
+  catalogEarningCodes: string[];
 }) {
   const [filter, setFilter] = useState("");
 
@@ -405,17 +417,23 @@ function ClassStep({
       )
     : rows;
 
-  const totalProjectedGross = visible.reduce((a, e) => a + projectedGrossUsd(e), 0);
-  const totalPrevGross = visible.reduce(
+  /** Employees actually counted in the run — HR unchecked (or the
+   *  row is blocked by missing critical info). Totals + Gross
+   *  summary use this subset so ticking / unticking an employee
+   *  updates footer amounts immediately. */
+  const includedRows = visible.filter(
+    (r) => r.missing.length === 0 && r.wiz.include_in_run !== false,
+  );
+
+  const totalGross = includedRows.reduce((a, e) => a + grossUsd(e), 0);
+  const totalPrevGross = includedRows.reduce(
     (a, e) => a + (prevSnapshots[e.employee]?.gross_usd ?? 0),
     0,
   );
 
-  // Dynamic per-code columns. Each unique USD EARNING code
-  // captured across the roster becomes its own column, so HR sees
-  // Housing / Transport / Bonus etc. as headings with editable
-  // amounts per employee — Rippling-style grid. Excludes the
-  // wizard's dedicated adjustment codes to avoid double-columns.
+  // Dynamic per-code columns. Union of every USD-earning code in
+  // the tenant's catalog (from server) + any captured on the run.
+  // Wizard-dedicated codes filtered so they don't double-render.
   const DEDICATED_CODES = new Set([
     "SALARY_ADJUSTMENT",
     "HOURLY_PAY",
@@ -423,6 +441,9 @@ function ClassStep({
   ]);
   const dynamicCodes = useMemo(() => {
     const s = new Set<string>();
+    for (const code of catalogEarningCodes) {
+      if (!DEDICATED_CODES.has(code)) s.add(code);
+    }
     for (const e of rows) {
       for (const t of e.captured_txns) {
         if (t.kind === "EARNING"
@@ -469,31 +490,6 @@ function ClassStep({
     );
   }
 
-  const addColumn = () => {
-    const raw = window.prompt(
-      "Add earning column — enter a code (e.g. HOUSING, TRANSPORT, BONUS)",
-    );
-    if (!raw) return;
-    const code = raw.trim().toUpperCase();
-    if (!code || dynamicCodes.includes(code)) return;
-    // Seed the code column by upserting a zero on the first
-    // employee — creates the code + triggers a re-fetch/patch so
-    // it appears in dynamicCodes. HR then enters real amounts.
-    const first = rows[0];
-    if (!first) return;
-    void upsertTxnByCode(runId, first.employee, code, 0).catch(() => {
-      /* silent — column just won't seed */
-    });
-    onPatch(first.employee, {
-      captured_txns: [
-        ...first.captured_txns,
-        // Zero-amount marker so dynamicCodes picks it up
-        // immediately without a page reload.
-        { code, kind: "EARNING", currency: "USD", amount: 0 },
-      ],
-    });
-  };
-
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between border-b px-4 py-3">
@@ -509,14 +505,13 @@ function ClassStep({
           </span>
         </div>
         {cls === "SALARIED" && (
-          <button
-            type="button"
-            onClick={addColumn}
+          <Link
+            href={"/payroll/setup/codes" as Route}
             className="inline-flex items-center gap-1 rounded-md border border-input bg-transparent px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted/40"
-            title="Add a new earning-code column to the grid"
+            title="Add new earning / deduction codes in Setup — they appear here as columns automatically."
           >
-            + Add earning column
-          </button>
+            Manage earning codes →
+          </Link>
         )}
       </div>
 
@@ -527,8 +522,24 @@ function ClassStep({
             <TableHead className="px-4">Employee</TableHead>
             {cls === "SALARIED" && (
               <>
-                <TableHead className="px-4 text-right">Basic</TableHead>
-                <TableHead className="px-4 text-right w-40">Adjustment (USD)</TableHead>
+                <TableHead
+                  className="px-3 text-right w-32 whitespace-nowrap"
+                  title="Monthly basic salary in USD. Editing writes to Employee.basic_usd — persists across runs."
+                >
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    USD
+                  </span>
+                  Salary
+                </TableHead>
+                <TableHead
+                  className="px-3 text-right w-32 whitespace-nowrap"
+                  title="Monthly basic salary in ZiG. Editing writes to Employee.basic_zig — persists across runs."
+                >
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    ZiG
+                  </span>
+                  Salary
+                </TableHead>
                 {dynamicCodes.map((c) => (
                   <TableHead
                     key={`hdr-${c}`}
@@ -559,7 +570,7 @@ function ClassStep({
             {cls === "CONTRACTOR" && (
               <TableHead className="px-4 text-right w-40">1099 payment (USD)</TableHead>
             )}
-            <TableHead className="px-4 text-right">Projected gross</TableHead>
+            <TableHead className="px-4 text-right">Gross</TableHead>
             <TableHead className="px-4 text-right">
               Previous
               {prevLabel && (
@@ -574,7 +585,7 @@ function ClassStep({
         <TableBody>
           {visible.map((r) => {
             const prev = prevSnapshots[r.employee];
-            const projGross = projectedGrossUsd(r);
+            const projGross = grossUsd(r);
             const isMissing = r.missing.length > 0;
             const patchWiz = (patch: WizardEntryPatch, wizPatch: Partial<WizardEntry>) => {
               onPatch(r.employee, {
@@ -673,11 +684,27 @@ function ClassStep({
 
                 {cls === "SALARIED" && (
                   <>
-                    <TableCell className="px-4 align-middle text-right">
-                      {r.basic_usd ? usd(r.basic_usd) : <span className="text-muted-foreground">—</span>}
-                      {r.basic_zig ? (
-                        <div className="text-xs text-muted-foreground">{zig(r.basic_zig)}</div>
-                      ) : null}
+                    <TableCell className="px-3 align-middle text-right">
+                      <NumCell
+                        value={r.basic_usd}
+                        disabled={isMissing}
+                        step="1"
+                        onCommit={async (v) => {
+                          onPatch(r.employee, { basic_usd: v });
+                          await updateEmployeeSalary(r.employee, { basic_usd: v });
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell className="px-3 align-middle text-right">
+                      <NumCell
+                        value={r.basic_zig}
+                        disabled={isMissing}
+                        step="1"
+                        onCommit={async (v) => {
+                          onPatch(r.employee, { basic_zig: v });
+                          await updateEmployeeSalary(r.employee, { basic_zig: v });
+                        }}
+                      />
                       {r.timesheet && r.basic_usd > 0 && (
                         r.timesheet.overtime_hours > 0
                         || r.timesheet.weekend_hours > 0
@@ -696,15 +723,6 @@ function ClassStep({
                           hrs → auto-earnings on process
                         </div>
                       ) : null}
-                    </TableCell>
-                    <TableCell className="px-4 align-middle text-right">
-                      <NumCell
-                        value={r.wiz.salary_adjustment_usd}
-                        disabled={isMissing}
-                        onCommit={(v) =>
-                          patchWiz({ salary_adjustment_usd: v }, { salary_adjustment_usd: v })
-                        }
-                      />
                     </TableCell>
                     {dynamicCodes.map((code) => {
                       const currentAmt = codeAmounts.get(r.employee)?.get(code) ?? 0;
@@ -886,17 +904,17 @@ function ClassStep({
             <TableCell className="px-4">Totals</TableCell>
             {cls === "SALARIED" && (
               <>
-                <TableCell className="px-4 text-right">
-                  {usd(visible.reduce((a, e) => a + e.basic_usd, 0))}
+                <TableCell className="px-3 text-right">
+                  {usd(includedRows.reduce((a, e) => a + e.basic_usd, 0))}
                 </TableCell>
-                <TableCell className="px-4 text-right">
+                <TableCell className="px-3 text-right">
                   {(() => {
-                    const t = visible.reduce((a, e) => a + e.wiz.salary_adjustment_usd, 0);
-                    return t ? usd(t) : "—";
+                    const t = includedRows.reduce((a, e) => a + e.basic_zig, 0);
+                    return t ? zig(t) : "—";
                   })()}
                 </TableCell>
                 {dynamicCodes.map((code) => {
-                  const t = visible.reduce(
+                  const t = includedRows.reduce(
                     (a, e) => a + (codeAmounts.get(e.employee)?.get(code) ?? 0),
                     0,
                   );
@@ -917,10 +935,10 @@ function ClassStep({
                   —
                 </TableCell>
                 <TableCell className="px-4 text-right">
-                  {visible.reduce((a, e) => a + e.wiz.hours_worked, 0).toFixed(2)}
+                  {includedRows.reduce((a, e) => a + e.wiz.hours_worked, 0).toFixed(2)}
                 </TableCell>
                 <TableCell className="px-4 text-right">
-                  {visible.reduce((a, e) => a + e.wiz.overtime_hours, 0).toFixed(2)}
+                  {includedRows.reduce((a, e) => a + e.wiz.overtime_hours, 0).toFixed(2)}
                 </TableCell>
                 <TableCell className="px-4 text-right text-muted-foreground text-xs">
                   {/* Multipliers don't sum meaningfully — leave blank */}
@@ -931,13 +949,13 @@ function ClassStep({
             {cls === "CONTRACTOR" && (
               <TableCell className="px-4 text-right">
                 {(() => {
-                  const t = visible.reduce((a, e) => a + e.wiz.contractor_flat_usd, 0);
+                  const t = includedRows.reduce((a, e) => a + e.wiz.contractor_flat_usd, 0);
                   return t ? usd(t) : "—";
                 })()}
               </TableCell>
             )}
             <TableCell className="px-4 text-right text-emerald-700">
-              {usd(totalProjectedGross)}
+              {usd(totalGross)}
             </TableCell>
             <TableCell className="px-4 text-right">
               {totalPrevGross ? usd(totalPrevGross) : "—"}
@@ -945,7 +963,7 @@ function ClassStep({
             <TableCell className="px-4 text-right">
               {totalPrevGross ? (
                 <DeltaTag
-                  current={totalProjectedGross}
+                  current={totalGross}
                   previous={totalPrevGross}
                   fmt={usd}
                   withPercent
@@ -1088,7 +1106,7 @@ function PreviewStep({
   // authoritatively at Approve time; here we just show the pre-tax
   // projected gross and captured deductions so HR gets a real-shape
   // preview.
-  const totalGross = payable.reduce((s, r) => s + projectedGrossUsd(r), 0);
+  const totalGross = payable.reduce((s, r) => s + grossUsd(r), 0);
   const totalDeduct = payable.reduce(
     // Contractors don't pay statutory — only USD deductions apply.
     // Salaried/Hourly deductions all count.
@@ -1172,13 +1190,13 @@ function PreviewStep({
           <TableHeader>
             <TableRow>
               <TableHead className="px-4">Employee</TableHead>
-              <TableHead className="px-4 text-right">Projected gross</TableHead>
+              <TableHead className="px-4 text-right">Gross</TableHead>
               <TableHead className="px-4 text-right">Captured deductions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {payable.map((r) => {
-              const gross = projectedGrossUsd(r);
+              const gross = grossUsd(r);
               const prev = prevSnapshots[r.employee];
               return (
                 <TableRow key={r.employee}>

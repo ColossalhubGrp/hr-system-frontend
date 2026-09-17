@@ -4,6 +4,7 @@ import {
   listEmployeesForRun,
   listPreviousRunNetMap,
 } from "@/lib/payroll-engine/payruns";
+import { listTxnCodes } from "@/lib/payroll-engine/setup";
 import { RunWizard } from "@/components/payroll/run-wizard";
 
 export const metadata = { title: "Run payroll · Colossal HR" };
@@ -27,9 +28,10 @@ export default async function RunPayrollWizardPage({
     redirect(`/payroll/${encodeURIComponent(id)}`);
   }
 
-  const [employees, prev] = await Promise.all([
+  const [employees, prev, allCodes] = await Promise.all([
     listEmployeesForRun(id),
     listPreviousRunNetMap(id),
+    listTxnCodes(),
   ]);
 
   // Serialize Maps to plain records so they cross the server/client
@@ -42,6 +44,16 @@ export default async function RunPayrollWizardPage({
     prevSnapshots[emp] = s;
   }
 
+  // Every USD-earning code the tenant has defined. Wizard pre-
+  // populates one column per code on the Salaried grid — HR always
+  // sees the full catalog (Housing, Transport, Bonus, …) even
+  // before any transaction is captured. Wizard-dedicated codes
+  // (SALARY_ADJUSTMENT etc.) filtered client-side.
+  const catalogEarningCodes = allCodes
+    .filter((c) => c.kind === "EARNING")
+    .filter((c) => (c.default_currency ?? "USD") === "USD")
+    .map((c) => c.code);
+
   return (
     <RunWizard
       runId={run.name}
@@ -52,6 +64,7 @@ export default async function RunPayrollWizardPage({
       prevLabel={prev.label}
       prevSnapshots={prevSnapshots}
       prevTotalNet={prev.total}
+      catalogEarningCodes={catalogEarningCodes}
     />
   );
 }

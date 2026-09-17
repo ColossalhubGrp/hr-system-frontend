@@ -111,6 +111,29 @@ export type WizardEntryPatch = Partial<{
 }>;
 
 /**
+ * Update an Employee's master monthly basic salary — USD and/or ZiG.
+ * Wired to the wizard's inline Salary cells; edits persist to the
+ * Employee record so future runs also read the new base.
+ */
+export async function updateEmployeeSalary(
+  employee: string,
+  patch: { basic_usd?: number; basic_zig?: number },
+): Promise<void> {
+  await ensurePayrollAdmin();
+  await frappeCall({
+    method: "recruitment_app.api.approvals.admin_set_employee_salary",
+    args: {
+      employee,
+      ...(patch.basic_usd !== undefined ? { basic_usd: patch.basic_usd } : {}),
+      ...(patch.basic_zig !== undefined ? { basic_zig: patch.basic_zig } : {}),
+    },
+    as: "user",
+    verb: "POST",
+  });
+  revalidatePath(`/employee/${encodeURIComponent(employee)}`);
+}
+
+/**
  * Upsert a single Payroll Transaction cell (one row per
  * run × employee × code). amount == 0 deletes the row. Used by the
  * wizard's dynamic-column grid so every earning code shows as a

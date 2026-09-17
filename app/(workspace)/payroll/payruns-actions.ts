@@ -51,6 +51,48 @@ export async function createPeriod(formData: FormData): Promise<void> {
 
 // ── process_period ───────────────────────────────────────────────
 
+/**
+ * Per-employee preview of what process_period would produce — runs
+ * the ZIMRA engine without persisting slips or updating YTD. Wizard
+ * calls this on debounce so the Net column shows real post-tax
+ * numbers (PAYE / AIDS / NSSA / pension / medical / NEC dues all
+ * subtracted authoritatively by the engine).
+ */
+export type PreviewSlip = {
+  employee: string;
+  payroll_class: "SALARIED" | "HOURLY" | "CONTRACTOR";
+  gross_usd: number;
+  gross_zig?: number;
+  taxable_usd: number;
+  paye_usd: number;
+  aids_usd: number;
+  nssa_employee: number;
+  nssa_employer?: number;
+  pension_usd: number;
+  medical_aid: number;
+  nec_dues: number;
+  zimdef: number;
+  net_usd: number;
+  net_zig?: number;
+  skipped: boolean;
+  skipped_reason?: string;
+};
+
+export async function previewRunPeriod(
+  payrollRun: string,
+): Promise<PreviewSlip[]> {
+  await ensurePayrollAdmin();
+  const raw = await frappeCall<
+    { employees: PreviewSlip[] } | { message?: { employees: PreviewSlip[] } }
+  >({
+    method: "tenant_manager.payroll_engine.api.belina_run.preview_period",
+    args: { payroll_run: payrollRun },
+    as: "user",
+  });
+  const result = unwrap(raw);
+  return result?.employees ?? [];
+}
+
 export async function processPeriod(payrollRun: string): Promise<void> {
   await ensurePayrollAdmin();
   await frappeCall({

@@ -18,10 +18,12 @@ import {
 } from "@/components/payroll/missing-info-modal";
 import type { EmployeeForRun, PayrollClass, WizardEntry } from "@/lib/payroll-engine/payruns";
 import {
+  previewRunPeriod,
   processPeriod,
   updateEmployeeSalary,
   upsertTxnByCode,
   upsertWizardEntry,
+  type PreviewSlip,
   type WizardEntryPatch,
 } from "@/app/(workspace)/payroll/payruns-actions";
 
@@ -137,6 +139,45 @@ export function RunWizard({
   const [rows, setRows] = useState<EmployeeForRun[]>(employees);
   const [approving, startApprove] = useTransition();
 
+  /** Real post-tax preview from the engine. Keyed by employee.
+   *  The Net column reads from here (via ClassStep) so HR sees
+   *  authoritative PAYE / AIDS / NSSA / etc. subtracted, not a
+   *  misleading pre-tax figure. */
+  const [previews, setPreviews] = useState<Map<string, PreviewSlip>>(new Map());
+  const [previewing, setPreviewing] = useState<boolean>(false);
+  // Bumped each time HR commits a cell edit — triggers a debounced
+  // preview refetch. This is the "any state changed" signal.
+  const [previewRev, setPreviewRev] = useState<number>(0);
+
+  useEffect(() => {
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setPreviewing(true);
+      try {
+        const slips = await previewRunPeriod(runId);
+        if (cancelled) return;
+        const m = new Map<string, PreviewSlip>();
+        for (const s of slips) m.set(s.employee, s);
+        setPreviews(m);
+      } catch (err) {
+        // Silent — Net column just falls back to gross-minus-deductions
+        // signal. Won't spam HR with a toast on transient failures.
+        if (!cancelled) {
+          const msg = (err as { message?: string })?.message;
+          if (msg) console.error("[preview] failed:", msg);
+        }
+      } finally {
+        if (!cancelled) setPreviewing(false);
+      }
+    }, 700);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // previewRev bumps on every patch — triggers refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [runId, previewRev]);
+
   // Classification buckets.
   const salaried = rows.filter((r) => r.payroll_class === "SALARIED");
   const hourly = rows.filter((r) => r.payroll_class === "HOURLY");
@@ -159,8 +200,12 @@ export function RunWizard({
   const [stepIdx, setStepIdx] = useState(0);
   const step = steps[stepIdx]?.id ?? "preview";
 
-  const patchRow = (emp: string, patch: Partial<EmployeeForRun>) =>
+  const patchRow = (emp: string, patch: Partial<EmployeeForRun>) => {
     setRows((rs) => rs.map((r) => (r.employee === emp ? { ...r, ...patch } : r)));
+    // Nudge the preview effect — HR's edit persisted, engine can
+    // recompute against the fresh row.
+    setPreviewRev((n) => n + 1);
+  };
 
   async function approve() {
     startApprove(async () => {
@@ -253,6 +298,8 @@ export function RunWizard({
             onPatch={patchRow}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
+            previews={previews}
+            previewing={previewing}
           />
         )}
 
@@ -266,6 +313,8 @@ export function RunWizard({
             onPatch={patchRow}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
+            previews={previews}
+            previewing={previewing}
           />
         )}
 
@@ -279,6 +328,8 @@ export function RunWizard({
             onPatch={patchRow}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
+            previews={previews}
+            previewing={previewing}
           />
         )}
 
@@ -447,6 +498,8 @@ function ClassStep({
   onPatch,
   catalogEarningCodes,
   catalogDeductionCodes,
+  previews,
+  previewing,
 }: {
   cls: PayrollClass;
   runId: string;
@@ -456,6 +509,11 @@ function ClassStep({
   onPatch: (emp: string, patch: Partial<EmployeeForRun>) => void;
   catalogEarningCodes: string[];
   catalogDeductionCodes: string[];
+  /** Real post-tax preview keyed by employee. Net column reads
+   *  net_usd from here; falls back to gross-minus-captured-
+   *  deductions if the preview is stale / missing. */
+  previews: Map<string, PreviewSlip>;
+  previewing: boolean;
 }) {
   const [filter, setFilter] = useState("");
   const [modalFor, setModalFor] = useState<EmployeeForRun | null>(null);
@@ -1236,23 +1294,42 @@ function ClassStep({
                   );
                 })}
 
-                {/* Net — projected (Gross − captured deductions).
-                    Statutory (PAYE/AIDS/NSSA/etc.) is computed at
-                    Approve, so this is the pre-tax net; the delta
-                    compares against last run's post-tax net which
-                    is directionally useful but not exact. */}
+                {/* Net — real post-tax figure from the engine
+                    preview (previews.get(employee).net_usd). Falls
+                    back to gross-minus-captured-deductions only
+                    when the preview hasn't landed yet (first paint
+                    / debounce window). The delta compares against
+                    last run's actual post-tax net so the % is
+                    apples-to-apples once the preview is live. */}
                 <TableCell className="px-4 align-middle text-right">
                   {(() => {
-                    const netProj = projGross - r.captured_deduct_usd;
+                    const p = previews.get(r.employee);
+                    const netReal = p?.net_usd;
+                    const netFallback = projGross - r.captured_deduct_usd;
+                    const netShown = netReal ?? netFallback;
+                    const stale = netReal === undefined;
                     return (
                       <>
-                        <div className="font-semibold text-foreground tabular-nums">
-                          {usd(netProj)}
+                        <div
+                          className={cn(
+                            "font-semibold tabular-nums",
+                            stale ? "text-muted-foreground italic" : "text-foreground",
+                          )}
+                          title={
+                            stale
+                              ? "Pre-tax estimate — engine preview is loading"
+                              : "Post-tax net (PAYE / AIDS / NSSA / pension / medical / NEC dues applied)"
+                          }
+                        >
+                          {usd(netShown)}
+                          {stale && previewing ? (
+                            <Loader2 className="ml-1 inline h-2.5 w-2.5 animate-spin" />
+                          ) : null}
                         </div>
-                        {prev?.net_usd ? (
+                        {!stale && prev?.net_usd ? (
                           <div className="mt-0.5">
                             <DeltaTag
-                              current={netProj}
+                              current={netShown}
                               previous={prev.net_usd}
                               fmt={usd}
                               withPercent
@@ -1407,25 +1484,38 @@ function ClassStep({
               );
             })}
 
-            {/* Net column footer — value + inline % delta vs prev net */}
+            {/* Net column footer — sums the engine preview for real
+                post-tax net + inline % delta vs prev net. Falls back
+                to gross − captured deductions until preview lands. */}
             <TableCell className="px-4 text-right">
               {(() => {
-                const totalDed = includedRows.reduce(
-                  (a, e) => a + e.captured_deduct_usd,
-                  0,
+                const havePreviewForAll = includedRows.every(
+                  (e) => previews.get(e.employee)?.net_usd !== undefined,
                 );
-                const totalNetProj = totalGross - totalDed;
+                const totalNet = havePreviewForAll
+                  ? includedRows.reduce(
+                      (a, e) => a + (previews.get(e.employee)?.net_usd ?? 0),
+                      0,
+                    )
+                  : totalGross
+                    - includedRows.reduce((a, e) => a + e.captured_deduct_usd, 0);
                 const totalPrevNet = includedRows.reduce(
                   (a, e) => a + (prevSnapshots[e.employee]?.net_usd ?? 0),
                   0,
                 );
                 return (
                   <>
-                    <div>{usd(totalNetProj)}</div>
-                    {totalPrevNet ? (
+                    <div
+                      className={cn(
+                        !havePreviewForAll ? "text-muted-foreground italic" : undefined,
+                      )}
+                    >
+                      {usd(totalNet)}
+                    </div>
+                    {havePreviewForAll && totalPrevNet ? (
                       <div className="mt-0.5 font-normal">
                         <DeltaTag
-                          current={totalNetProj}
+                          current={totalNet}
                           previous={totalPrevNet}
                           fmt={usd}
                           withPercent

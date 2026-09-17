@@ -1031,10 +1031,29 @@ function ClassStep({
               // negative Net (gross - deducts with gross=0).
               (async () => {
                 try {
-                  await upsertWizardEntry(runId, r.employee, patch);
+                  const res = await upsertWizardEntry(runId, r.employee, patch);
+                  // Loud success log — includes the server's action so
+                  // we can distinguish "created" / "updated" / "noop".
+                  // A "noop" means the backend received the call but
+                  // filtered every field out (allowed-list mismatch),
+                  // which explains why the DB wasn't changing while HR
+                  // saw optimistic numbers in the input.
+                  // eslint-disable-next-line no-console
+                  console.log(
+                    "[wiz-upsert]",
+                    r.employee,
+                    Object.keys(patch),
+                    "→",
+                    res,
+                  );
+                  if (res?.action === "noop") {
+                    toast.warning(
+                      `Save for ${r.employee_name} did nothing — the fields aren't allowed by the backend.`,
+                    );
+                  }
                 } catch (err) {
                   const msg = (err as { message?: string })?.message ?? "Save failed";
-                  console.error("[wiz-upsert] failed:", err);
+                  console.error("[wiz-upsert] failed:", r.employee, patch, err);
                   // Surface silent failures — HR was reading an optimistic
                   // number while the DB still held the old one, and only
                   // saw it when the engine returned nonsense at process

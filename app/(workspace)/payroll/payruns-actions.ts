@@ -209,9 +209,12 @@ export async function upsertWizardEntry(
   payrollRun: string,
   employee: string,
   patch: WizardEntryPatch,
-): Promise<void> {
+): Promise<{ action?: string; name?: string }> {
   await ensurePayrollAdmin();
-  await frappeCall({
+  const raw = await frappeCall<
+    | { action?: string; name?: string }
+    | { message?: { action?: string; name?: string } }
+  >({
     method: "recruitment_app.api.approvals.admin_upsert_wizard_entry",
     args: {
       payroll_run: payrollRun,
@@ -225,6 +228,11 @@ export async function upsertWizardEntry(
   });
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}`);
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
+  // Frappe wraps whitelisted returns in { message: ... }; unwrap so
+  // callers can log the actual action ("updated" / "created" / "noop").
+  const inner =
+    (raw as { message?: { action?: string; name?: string } }).message ?? raw;
+  return (inner as { action?: string; name?: string }) ?? {};
 }
 
 // ── terminal / retrenchment ──────────────────────────────────────

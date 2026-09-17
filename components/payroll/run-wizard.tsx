@@ -1186,12 +1186,13 @@ function ClassStep({
                     {usd(projGross)}
                   </div>
                   {prev?.gross_usd ? (
-                    <div className="mt-0.5 text-[10px]">
+                    <div className="mt-0.5">
                       <DeltaTag
                         current={projGross}
                         previous={prev.gross_usd}
                         fmt={usd}
                         withPercent
+                        compact
                       />
                     </div>
                   ) : null}
@@ -1249,12 +1250,13 @@ function ClassStep({
                           {usd(netProj)}
                         </div>
                         {prev?.net_usd ? (
-                          <div className="mt-0.5 text-[10px]">
+                          <div className="mt-0.5">
                             <DeltaTag
                               current={netProj}
                               previous={prev.net_usd}
                               fmt={usd}
                               withPercent
+                              compact
                             />
                           </div>
                         ) : null}
@@ -1377,12 +1379,13 @@ function ClassStep({
             <TableCell className="px-4 text-right text-emerald-700">
               <div>{usd(totalGross)}</div>
               {totalPrevGross ? (
-                <div className="mt-0.5 text-[10px] font-normal">
+                <div className="mt-0.5 font-normal">
                   <DeltaTag
                     current={totalGross}
                     previous={totalPrevGross}
                     fmt={usd}
                     withPercent
+                    compact
                   />
                 </div>
               ) : null}
@@ -1420,12 +1423,13 @@ function ClassStep({
                   <>
                     <div>{usd(totalNetProj)}</div>
                     {totalPrevNet ? (
-                      <div className="mt-0.5 text-[10px] font-normal">
+                      <div className="mt-0.5 font-normal">
                         <DeltaTag
                           current={totalNetProj}
                           previous={totalPrevNet}
                           fmt={usd}
                           withPercent
+                          compact
                         />
                       </div>
                     ) : null}

@@ -38,7 +38,14 @@ export default async function RunPayrollWizardPage({
   // boundary. The wizard reads snapshots by employee id.
   const prevSnapshots: Record<
     string,
-    { gross_usd: number; paye_usd: number; nssa_ee_usd: number; net_usd: number }
+    {
+      gross_usd: number;
+      gross_zig: number;
+      paye_usd: number;
+      nssa_ee_usd: number;
+      net_usd: number;
+      net_zig: number;
+    }
   > = {};
   for (const [emp, s] of prev.snapshotByEmployee) {
     prevSnapshots[emp] = s;

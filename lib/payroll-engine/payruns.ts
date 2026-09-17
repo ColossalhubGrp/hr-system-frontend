@@ -656,9 +656,11 @@ export async function listPayslipsForRun(
 
 export type PrevRunSnapshot = {
   gross_usd: number;
+  gross_zig: number;
   paye_usd: number;
   nssa_ee_usd: number;
   net_usd: number;
+  net_zig: number;
 };
 
 /**
@@ -712,11 +714,16 @@ export async function listPreviousRunNetMap(
   const prevSlips = await listDocs<{
     employee: string;
     net_usd: number;
+    net_zig: number;
     gross_usd: number;
+    gross_zig: number;
     paye_usd: number;
     nssa_employee: number;
   }>("Payroll Run Payslip", {
-    fields: ["employee", "net_usd", "gross_usd", "paye_usd", "nssa_employee"],
+    fields: [
+      "employee", "net_usd", "net_zig", "gross_usd", "gross_zig",
+      "paye_usd", "nssa_employee",
+    ],
     filters: { payroll_run: previous[0].name },
     limit: 5000,
   });
@@ -730,9 +737,11 @@ export async function listPreviousRunNetMap(
     grossByEmployee.set(s.employee, Number(s.gross_usd ?? 0));
     snapshotByEmployee.set(s.employee, {
       gross_usd: Number(s.gross_usd ?? 0),
+      gross_zig: Number(s.gross_zig ?? 0),
       paye_usd: Number(s.paye_usd ?? 0),
       nssa_ee_usd: Number(s.nssa_employee ?? 0),
       net_usd: v,
+      net_zig: Number(s.net_zig ?? 0),
     });
     total += v;
   }

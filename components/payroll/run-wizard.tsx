@@ -637,31 +637,35 @@ function ClassStep({
     "CONTRACTOR_PAY",
   ]);
   const dynamicCodes = useMemo(() => {
-    const s = new Set<string>();
+    // Case-insensitive dedup so catalog "Transport" and legacy
+    // captured "TRANSPORT" collapse into ONE column, not two.
+    const byKey = new Map<string, string>();
     for (const code of catalogEarningCodes) {
-      if (!DEDICATED_CODES.has(code)) s.add(code);
+      const key = code.trim().toUpperCase();
+      if (DEDICATED_CODES.has(code) || DEDICATED_CODES.has(key)) continue;
+      if (!byKey.has(key)) byKey.set(key, code);
     }
     for (const e of rows) {
       for (const t of e.captured_txns) {
-        if (t.kind === "EARNING"
-            && t.currency === "USD"
-            && !DEDICATED_CODES.has(t.code)) {
-          s.add(t.code);
+        if (t.kind === "EARNING" && t.currency === "USD") {
+          const key = t.code.trim().toUpperCase();
+          if (DEDICATED_CODES.has(t.code) || DEDICATED_CODES.has(key)) continue;
+          if (!byKey.has(key)) byKey.set(key, t.code);
         }
       }
     }
-    return Array.from(s).sort();
+    return Array.from(byKey.values()).sort();
   }, [rows]);
-  // Lookup {employee → {code → amount}} for O(1) cell reads.
+  // Lookup {employee → {upperCode → amount}} for O(1) cell reads.
   const codeAmounts = useMemo(() => {
     const m = new Map<string, Map<string, number>>();
     for (const e of rows) {
       const sub = new Map<string, number>();
       for (const t of e.captured_txns) {
-        if (t.kind === "EARNING"
-            && t.currency === "USD"
-            && !DEDICATED_CODES.has(t.code)) {
-          sub.set(t.code, (sub.get(t.code) ?? 0) + t.amount);
+        if (t.kind === "EARNING" && t.currency === "USD") {
+          const key = t.code.trim().toUpperCase();
+          if (DEDICATED_CODES.has(t.code) || DEDICATED_CODES.has(key)) continue;
+          sub.set(key, (sub.get(key) ?? 0) + t.amount);
         }
       }
       m.set(e.employee, sub);
@@ -672,18 +676,26 @@ function ClassStep({
   // Same treatment for USD DEDUCTION codes — the wizard mirrors
   // the earning-side grid on the right of Gross so HR can key
   // deductions per employee inline (pension loans, medical
-  // top-ups, garnishments, whatever HR set up in Setup).
+  // top-ups, garnishments, whatever HR set up in Setup). Dedup is
+  // case-insensitive so a catalog "Funeral Policy" and a legacy
+  // captured "FUNERAL POLICY" collapse into ONE column instead of
+  // rendering as two. The first form we see wins for display; the
+  // canonical uppercase key is what maps + writes go through.
   const dynamicDeductionCodes = useMemo(() => {
-    const s = new Set<string>();
-    for (const code of catalogDeductionCodes) s.add(code);
+    const byKey = new Map<string, string>();  // upper → display
+    for (const code of catalogDeductionCodes) {
+      const key = code.trim().toUpperCase();
+      if (!byKey.has(key)) byKey.set(key, code);
+    }
     for (const e of rows) {
       for (const t of e.captured_txns) {
         if (t.kind === "DEDUCTION" && t.currency === "USD") {
-          s.add(t.code);
+          const key = t.code.trim().toUpperCase();
+          if (!byKey.has(key)) byKey.set(key, t.code);
         }
       }
     }
-    return Array.from(s).sort();
+    return Array.from(byKey.values()).sort();
   }, [rows, catalogDeductionCodes]);
   const deductionAmounts = useMemo(() => {
     const m = new Map<string, Map<string, number>>();
@@ -691,7 +703,10 @@ function ClassStep({
       const sub = new Map<string, number>();
       for (const t of e.captured_txns) {
         if (t.kind === "DEDUCTION" && t.currency === "USD") {
-          sub.set(t.code, (sub.get(t.code) ?? 0) + t.amount);
+          // Sum by the same case-insensitive key so a legacy variant
+          // spelling of the same code lands in one bucket, not two.
+          const key = t.code.trim().toUpperCase();
+          sub.set(key, (sub.get(key) ?? 0) + t.amount);
         }
       }
       m.set(e.employee, sub);
@@ -1171,7 +1186,8 @@ function ClassStep({
                       ) : null}
                     </TableCell>
                     {dynamicCodes.map((code) => {
-                      const currentAmt = codeAmounts.get(r.employee)?.get(code) ?? 0;
+                      const key = code.trim().toUpperCase();
+                      const currentAmt = codeAmounts.get(r.employee)?.get(key) ?? 0;
                       return (
                         <TableCell
                           key={`cell-${r.employee}-${code}`}
@@ -1189,7 +1205,7 @@ function ClassStep({
                               const nextTxns = r.captured_txns.filter(
                                 (t) => !(t.kind === "EARNING"
                                        && t.currency === "USD"
-                                       && t.code === code),
+                                       && t.code.trim().toUpperCase() === key),
                               );
                               if (v > 0) {
                                 nextTxns.push({
@@ -1465,8 +1481,13 @@ function ClassStep({
 
                 {/* Dynamic DEDUCTION-code cells (one per catalog code) */}
                 {dynamicDeductionCodes.map((code) => {
+                  // Amounts are keyed by the canonical uppercase form
+                  // so a case-variant of the same code (e.g. legacy
+                  // "FUNERAL POLICY" alongside catalog "Funeral Policy")
+                  // sums into this one cell, not two.
+                  const key = code.trim().toUpperCase();
                   const currentAmt =
-                    deductionAmounts.get(r.employee)?.get(code) ?? 0;
+                    deductionAmounts.get(r.employee)?.get(key) ?? 0;
                   return (
                     <TableCell
                       key={`ded-${r.employee}-${code}`}
@@ -1479,7 +1500,7 @@ function ClassStep({
                           const nextTxns = r.captured_txns.filter(
                             (t) => !(t.kind === "DEDUCTION"
                                    && t.currency === "USD"
-                                   && t.code === code),
+                                   && t.code.trim().toUpperCase() === key),
                           );
                           if (v > 0) {
                             nextTxns.push({
@@ -1647,8 +1668,9 @@ function ClassStep({
                   })()}
                 </TableCell>
                 {dynamicCodes.map((code) => {
+                  const key = code.trim().toUpperCase();
                   const t = includedRows.reduce(
-                    (a, e) => a + (codeAmounts.get(e.employee)?.get(code) ?? 0),
+                    (a, e) => a + (codeAmounts.get(e.employee)?.get(key) ?? 0),
                     0,
                   );
                   return (
@@ -1781,8 +1803,9 @@ function ClassStep({
 
             {/* Dynamic DEDUCTION column footers — sum per code */}
             {dynamicDeductionCodes.map((code) => {
+              const key = code.trim().toUpperCase();
               const t = includedRows.reduce(
-                (a, e) => a + (deductionAmounts.get(e.employee)?.get(code) ?? 0),
+                (a, e) => a + (deductionAmounts.get(e.employee)?.get(key) ?? 0),
                 0,
               );
               return (

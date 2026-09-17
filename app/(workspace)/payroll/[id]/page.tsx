@@ -11,14 +11,11 @@ import {
   listEmployeesForRun,
   listPayslipsForRun,
   listPreviousRunNetMap,
-  type CapturedTxn,
   type PayRunStatus,
 } from "@/lib/payroll-engine/payruns";
 import { FlowSteps } from "@/components/payroll/flow-steps";
 import { PayRunActions } from "@/components/payroll/pay-run-actions";
 import { DeltaTag } from "@/components/payroll/delta-tag";
-import { CaptureTransactionForm } from "@/components/payroll/capture-transaction-form";
-import { listTxnCodes } from "@/lib/payroll-engine/setup";
 
 export const metadata = { title: "Pay run · Payroll · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -80,10 +77,11 @@ export default async function PayRunDetail({
   // Capture) — and the previous-run net map so HR can see what each
   // employee last got paid before deciding whether to adjust this run.
   // PROCESSED view needs the payslips + the same previous map for the
-  // "vs previous" DeltaTag on the register.
-  const [employees, codes, slips, prev] = await Promise.all([
+  // "vs previous" DeltaTag on the register. OPEN view only needs the
+  // employee roster for the "ready to run" card counts — everything
+  // per-employee is now inside the wizard.
+  const [employees, slips, prev] = await Promise.all([
     isOpen ? listEmployeesForRun(id) : Promise.resolve([]),
-    isOpen ? listTxnCodes() : Promise.resolve([]),
     isOpen ? Promise.resolve([]) : listPayslipsForRun(id),
     listPreviousRunNetMap(id),
   ]);
@@ -115,30 +113,16 @@ export default async function PayRunDetail({
       /* non-fatal — column just won't show a pill */
     }
   }
-  const codeOptions = codes.map((c) => ({
-    code: c.code,
-    kind: c.kind,
-    default_currency: c.default_currency ?? "USD",
-    taxable: Boolean(c.taxable),
-  }));
-
-  // OPEN-view totals — mirrors the register's footer so HR can see
-  // aggregate pre-processing numbers (roster basic + captured txns +
-  // projected gross) at a glance.
-  const openTot = employees.reduce(
-    (a, e) => ({
-      basicUsd: a.basicUsd + e.basic_usd,
-      basicZig: a.basicZig + e.basic_zig,
-      earnUsd: a.earnUsd + e.captured_earn_usd,
-      earnZig: a.earnZig + e.captured_earn_zig,
-      deductUsd: a.deductUsd + e.captured_deduct_usd,
-      deductZig: a.deductZig + e.captured_deduct_zig,
-      txns: a.txns + e.captured_txns.length,
-    }),
-    { basicUsd: 0, basicZig: 0, earnUsd: 0, earnZig: 0, deductUsd: 0, deductZig: 0, txns: 0 },
+  // Roster counts for the compact "ready to run" card on OPEN runs.
+  const rosterCounts = employees.reduce(
+    (a, e) => {
+      if (e.missing.length > 0) return { ...a, blocked: a.blocked + 1 };
+      if (e.payroll_class === "HOURLY") return { ...a, hourly: a.hourly + 1 };
+      if (e.payroll_class === "CONTRACTOR") return { ...a, contractor: a.contractor + 1 };
+      return { ...a, salaried: a.salaried + 1 };
+    },
+    { salaried: 0, hourly: 0, contractor: 0, blocked: 0 },
   );
-  const openProjectedGrossUsd = openTot.basicUsd + openTot.earnUsd;
-  const openProjectedGrossZig = openTot.basicZig + openTot.earnZig;
 
   const tot = slips.reduce(
     (a, s) => ({
@@ -213,334 +197,55 @@ export default async function PayRunDetail({
 
       {isOpen ? (
         <>
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-foreground">
-              Employees to be paid ({employees.length})
-            </h2>
-            <Link
-              href={"/payroll/transactions" as Route}
-              className="text-sm font-semibold text-primary hover:underline"
-            >
-              View all transactions →
-            </Link>
-          </div>
-          <p className="-mt-3 text-sm text-muted-foreground">
-            Click <strong>+ Capture</strong> on any row to add a variable
-            earning or deduction for that employee. Then press{" "}
-            <strong>Run payroll</strong> to open the wizard, key in hourly
-            hours and contractor amounts, and process PAYE, AIDS Levy,
-            NSSA and net pay for everyone.
-            {" "}Salaried employees show their monthly basic here; hourly
-            show their rate per hour (hours are set in the wizard);
-            contractors show <em>—</em> until you key the 1099 amount in
-            the wizard.
-            {prev.label && (
-              <>
-                {" "}The <strong>Previous net</strong> column shows what each
-                employee got paid on {prev.label}, with a ▲/▼ chip comparing
-                the salaried basic + captured USD earnings against that
-                run&apos;s gross — hourly / 1099 rows fill in once the
-                wizard&apos;s numbers land.
-              </>
-            )}
-          </p>
-          <Card className="overflow-x-auto p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-5 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
-                    Employee
-                  </TableHead>
-                  <TableHead className="px-5 text-right" title="Salaried: monthly basic. Hourly: rate per hour. Contractor: flat 1099 amount.">
-                    Pay basis
-                  </TableHead>
-                  <TableHead className="px-5">Transactions</TableHead>
-                  <TableHead className="px-5 text-right">Projected gross</TableHead>
-                  <TableHead className="px-5 text-right">
-                    Previous net
-                    {prev.label && (
-                      <div className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
-                        {prev.label}
-                      </div>
-                    )}
-                  </TableHead>
-                  <TableHead className="px-5">Status</TableHead>
-                  <TableHead className="px-5 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {employees.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={7} className="py-12 text-center text-sm text-muted-foreground">
-                      No active employees on this company yet.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  employees.map((e) => {
-                    const prevNet = prev.byEmployee.get(e.employee);
-                    const prevGross = prev.grossByEmployee.get(e.employee);
-                    // Class-aware projected gross:
-                    //  SALARIED   basic (+ ZiG) + captured USD earnings
-                    //  HOURLY     rate is only meaningful once hours land in
-                    //             the wizard, so we show only what HR has
-                    //             already captured; a "set in wizard" hint
-                    //             renders in the cell when nothing is captured
-                    //  CONTRACTOR captured earnings only (flat 1099 amount
-                    //             is keyed on the wizard's Contractors step)
-                    const projGrossUsd =
-                      e.payroll_class === "HOURLY" || e.payroll_class === "CONTRACTOR"
-                        ? e.captured_earn_usd
-                        : e.basic_usd + e.captured_earn_usd;
-                    const projGrossZig =
-                      e.payroll_class === "SALARIED"
-                        ? e.basic_zig + e.captured_earn_zig
-                        : e.captured_earn_zig;
-                    return (
-                      <TableRow
-                        key={e.employee}
-                        className={cn(e.missing.length > 0 ? "bg-rose-50/40" : undefined)}
-                      >
-                        <TableCell
-                          className={cn(
-                            "px-5 align-middle sticky left-0 z-10 border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]",
-                            e.missing.length > 0 ? "bg-rose-50" : "bg-card",
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
-                              {initials(e.employee_name)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <Link
-                                  href={`/employee/${encodeURIComponent(e.employee)}` as Route}
-                                  className="font-semibold text-foreground hover:text-primary"
-                                >
-                                  {e.employee_name}
-                                </Link>
-                                {taxMethodByEmp.has(e.employee) && (
-                                  <span
-                                    className={cn(
-                                      "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                                      taxMethodByEmp.get(e.employee) === "FDS"
-                                        ? "bg-primary/10 text-primary"
-                                        : "bg-amber-100 text-amber-700",
-                                    )}
-                                    title={
-                                      taxMethodByEmp.get(e.employee) === "FDS"
-                                        ? "Final Deduction System — cumulative + tax credits"
-                                        : "Independent monthly calc — no YTD, no credits"
-                                    }
-                                  >
-                                    {taxMethodByEmp.get(e.employee)}
-                                  </span>
-                                )}
-                                {/* Payroll class chip — HR can see at a
-                                    glance which step of the wizard this
-                                    employee belongs to (Salaried grid,
-                                    Hourly grid, Contractor 1099 grid). */}
-                                <span
-                                  className={cn(
-                                    "inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-                                    e.payroll_class === "SALARIED"
-                                      ? "bg-emerald-100 text-emerald-700"
-                                      : e.payroll_class === "HOURLY"
-                                        ? "bg-sky-100 text-sky-700"
-                                        : "bg-purple-100 text-purple-700",
-                                  )}
-                                  title={
-                                    e.payroll_class === "SALARIED"
-                                      ? "Salaried — paid a monthly basic"
-                                      : e.payroll_class === "HOURLY"
-                                        ? "Hourly — paid rate × hours (+ 1.5× OT)"
-                                        : "Contractor — flat 1099, no PAYE/NSSA"
-                                  }
-                                >
-                                  {e.payroll_class === "SALARIED"
-                                    ? "Salaried"
-                                    : e.payroll_class === "HOURLY"
-                                      ? "Hourly"
-                                      : "1099"}
-                                </span>
-                              </div>
-                              <div className="text-xs text-muted-foreground">
-                                {e.employee}
-                                {e.job_title ? ` · ${e.job_title}` : ""}
-                                {e.nec_industry ? ` · ${e.nec_industry}` : ""}
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="px-5 align-middle text-right">
-                          {e.payroll_class === "HOURLY" ? (
-                            e.hourly_rate_usd ? (
-                              <>
-                                <div>{usd(e.hourly_rate_usd)}<span className="text-xs font-normal text-muted-foreground">/hr</span></div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  hours set in wizard
-                                </div>
-                              </>
-                            ) : (
-                              <>
-                                <span className="text-muted-foreground">—</span>
-                                <div className="text-[10px] text-amber-700">
-                                  set hourly rate on Employee
-                                </div>
-                              </>
-                            )
-                          ) : e.payroll_class === "CONTRACTOR" ? (
-                            <>
-                              <span className="text-muted-foreground">—</span>
-                              <div className="text-[10px] text-muted-foreground">
-                                1099 amount set in wizard
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {e.basic_usd ? usd(e.basic_usd) : <span className="text-muted-foreground">—</span>}
-                              {e.basic_zig ? (
-                                <div className="text-xs text-muted-foreground">{zig(e.basic_zig)}</div>
-                              ) : null}
-                            </>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-5 align-middle">
-                          <TxnChips txns={e.captured_txns} />
-                        </TableCell>
-                        <TableCell className="px-5 align-middle text-right">
-                          {projGrossUsd === 0 && projGrossZig === 0 && e.payroll_class !== "SALARIED" ? (
-                            <>
-                              <span className="text-muted-foreground">—</span>
-                              <div className="text-[10px] text-muted-foreground">
-                                calculated when the wizard runs
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              <span className="font-semibold text-foreground">
-                                {usd(projGrossUsd)}
-                              </span>
-                              {projGrossZig ? (
-                                <div className="text-xs text-muted-foreground">
-                                  {zig(projGrossZig)}
-                                </div>
-                              ) : null}
-                              {e.captured_deduct_usd || e.captured_deduct_zig ? (
-                                <div className="text-[10px] text-rose-600">
-                                  less deductions{" "}
-                                  {e.captured_deduct_usd ? usd(e.captured_deduct_usd) : ""}
-                                  {e.captured_deduct_usd && e.captured_deduct_zig ? " / " : ""}
-                                  {e.captured_deduct_zig ? zig(e.captured_deduct_zig) : ""}
-                                </div>
-                              ) : null}
-                            </>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-5 align-middle text-right text-muted-foreground">
-                          {prevNet === undefined || prevNet === null ? (
-                            <span className="text-xs">—</span>
-                          ) : (
-                            <div className="flex flex-col items-end gap-0.5">
-                              <span className="font-medium text-foreground">
-                                {usd(prevNet)}
-                              </span>
-                              {prevGross ? (
-                                <DeltaTag
-                                  current={projGrossUsd}
-                                  previous={prevGross}
-                                  fmt={usd}
-                                  withPercent
-                                />
-                              ) : null}
-                            </div>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-5 align-middle">
-                          {e.missing.length ? (
-                            <Link
-                              href={`/employee/${encodeURIComponent(e.employee)}/edit?from=payroll&fix=${e.missing_fieldnames.join(",")}` as Route}
-                              className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700"
-                              title={`Missing: ${e.missing.join(", ")}`}
-                            >
-                              ⚠ Excluded — missing {e.missing.length}
-                            </Link>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
-                              Ready
-                            </span>
-                          )}
-                        </TableCell>
-                        <TableCell className="px-5 align-middle text-right">
-                          {e.missing.length ? (
-                            <span className="text-xs text-muted-foreground">
-                              Fix profile first
-                            </span>
-                          ) : (
-                            <CaptureTransactionForm
-                              periodId={run.name}
-                              employees={[]}
-                              codes={codeOptions}
-                              fixedEmployee={{ id: e.employee, name: e.employee_name }}
-                              triggerLabel="+ Capture"
-                              triggerVariant="ghost"
-                            />
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-              {employees.length > 0 && (
-                <TableFooter>
-                  <TableRow className="border-t-2 bg-muted/30 font-bold">
-                    <TableCell className="px-5 sticky left-0 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
-                      Totals
-                    </TableCell>
-                    <TableCell className="px-5 text-right">
-                      {usd(openTot.basicUsd)}
-                      {openTot.basicZig ? (
-                        <div className="text-xs font-normal text-muted-foreground">
-                          {zig(openTot.basicZig)}
-                        </div>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="px-5 text-xs font-normal text-muted-foreground">
-                      {openTot.txns
-                        ? `${openTot.txns} captured across the roster`
-                        : "None captured yet"}
-                    </TableCell>
-                    <TableCell className="px-5 text-right text-emerald-700">
-                      {usd(openProjectedGrossUsd)}
-                      {openProjectedGrossZig ? (
-                        <div className="text-xs font-normal text-muted-foreground">
-                          {zig(openProjectedGrossZig)}
-                        </div>
-                      ) : null}
-                    </TableCell>
-                    <TableCell className="px-5 text-right">
-                      {prev.label ? (
-                        <div className="flex flex-col items-end gap-0.5">
-                          <span>{usd(prev.total)}</span>
-                          {openProjectedGrossUsd ? (
-                            <DeltaTag
-                              current={openProjectedGrossUsd}
-                              previous={prev.total}
-                              fmt={usd}
-                              withPercent
-                            />
-                          ) : null}
-                        </div>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell className="px-5" />
-                    <TableCell className="px-5" />
-                  </TableRow>
-                </TableFooter>
-              )}
-            </Table>
+          {/* Rippling-shape "ready to run" card. The old inline
+              employees table lived here — HR ended up doing all
+              their real editing inside the wizard anyway, so the
+              detail page's job is now: show what's about to run,
+              and hand off. Click Run payroll → and the wizard opens
+              on the Salaried step where the actual per-employee
+              work happens. */}
+          <Card className="p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-foreground">
+                  Roster ready to run
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {rosterCounts.salaried} salaried
+                  {rosterCounts.hourly ? ` · ${rosterCounts.hourly} hourly` : ""}
+                  {rosterCounts.contractor ? ` · ${rosterCounts.contractor} 1099` : ""}
+                  {rosterCounts.blocked ? (
+                    <>
+                      {" · "}
+                      <span className="font-semibold text-rose-700">
+                        {rosterCounts.blocked} blocked
+                      </span>
+                    </>
+                  ) : null}
+                </p>
+                <p className="mt-3 max-w-xl text-sm text-muted-foreground">
+                  Click <strong>Run payroll →</strong> to open the wizard.
+                  You&apos;ll step through Salaried, Hourly, and Contractor
+                  employees; capture earnings and deductions inline; then
+                  preview and process ZIMRA PAYE, AIDS Levy, NSSA and
+                  ZIMDEF for the whole roster.
+                </p>
+              </div>
+              <Link
+                href={`/payroll/${encodeURIComponent(run.name)}/run` as Route}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90"
+              >
+                Run payroll →
+              </Link>
+            </div>
+            {rosterCounts.blocked ? (
+              <div className="mt-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {rosterCounts.blocked} employee
+                {rosterCounts.blocked === 1 ? " is" : "s are"} missing critical
+                info and will be excluded from this run until fixed. Open the
+                wizard to see who and jump straight to their profile.
+              </div>
+            ) : null}
           </Card>
         </>
       ) : (
@@ -730,38 +435,6 @@ export default async function PayRunDetail({
           </Card>
         </>
       )}
-    </div>
-  );
-}
-
-function fmtTxnAmount(currency: string, amount: number): string {
-  if (currency === "USD") return `US$${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-  if (currency === "ZIG") return `ZiG ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-  return `${currency} ${amount.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
-}
-
-function TxnChips({ txns }: { txns: CapturedTxn[] }) {
-  if (txns.length === 0) {
-    return <span className="text-[11px] text-muted-foreground">None yet</span>;
-  }
-  return (
-    <div className="flex flex-wrap gap-0.5">
-      {txns.map((t, i) => (
-        <span
-          key={`${t.code}-${i}`}
-          className={cn(
-            "inline-flex items-center gap-[2px] rounded px-1 py-0 text-[8px] font-medium leading-[13px]",
-            t.kind === "EARNING"
-              ? "bg-emerald-100 text-emerald-700"
-              : "bg-rose-100 text-rose-700",
-          )}
-          title={`${t.kind === "EARNING" ? "Earning" : "Deduction"} · ${t.code}`}
-        >
-          <span aria-hidden>{t.kind === "EARNING" ? "+" : "−"}</span>
-          <span className="uppercase tracking-wide">{t.code}</span>
-          <span className="font-semibold">{fmtTxnAmount(t.currency, t.amount)}</span>
-        </span>
-      ))}
     </div>
   );
 }

@@ -205,15 +205,25 @@ export async function upsertTxnByCode(
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
 }
 
+export type WizardUpsertResult = {
+  action?: "created" | "updated" | "noop" | string;
+  name?: string;
+  applied?: Record<string, unknown>;
+  dropped?: string[];
+  persisted?: Record<string, unknown>;
+  reason?: string;
+  sent?: string[];
+  allowed?: string[];
+};
+
 export async function upsertWizardEntry(
   payrollRun: string,
   employee: string,
   patch: WizardEntryPatch,
-): Promise<{ action?: string; name?: string }> {
+): Promise<WizardUpsertResult> {
   await ensurePayrollAdmin();
   const raw = await frappeCall<
-    | { action?: string; name?: string }
-    | { message?: { action?: string; name?: string } }
+    WizardUpsertResult | { message?: WizardUpsertResult }
   >({
     method: "recruitment_app.api.approvals.admin_upsert_wizard_entry",
     args: {
@@ -229,10 +239,10 @@ export async function upsertWizardEntry(
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}`);
   revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
   // Frappe wraps whitelisted returns in { message: ... }; unwrap so
-  // callers can log the actual action ("updated" / "created" / "noop").
+  // callers can inspect action / applied / persisted / dropped.
   const inner =
-    (raw as { message?: { action?: string; name?: string } }).message ?? raw;
-  return (inner as { action?: string; name?: string }) ?? {};
+    (raw as { message?: WizardUpsertResult }).message ?? raw;
+  return (inner as WizardUpsertResult) ?? {};
 }
 
 // ── terminal / retrenchment ──────────────────────────────────────

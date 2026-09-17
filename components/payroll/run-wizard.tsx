@@ -141,6 +141,24 @@ export function RunWizard({
   const [rows, setRows] = useState<EmployeeForRun[]>(employees);
   const [approving, startApprove] = useTransition();
 
+  // Per-employee upsert queue. Concurrent cell blurs (Rate then Hours
+  // then OT-hours in quick succession) would otherwise all hit the
+  // "no existing → insert" branch of admin_upsert_wizard_entry before
+  // any of them commits, creating duplicate rows for the same
+  // (run, employee). Every subsequent update touches only one of
+  // those rows, and the list endpoint's employee-keyed dedup can
+  // then present zeros to HR while the real data lives on a sibling
+  // row. Serializing per employee makes the first request commit
+  // before the second reads existing, so we always take the update
+  // path. Backend still self-heals if duplicates already exist.
+  const wizChainRef = useRef<Map<string, Promise<unknown>>>(new Map());
+  const enqueueWizWrite = <T,>(emp: string, task: () => Promise<T>): Promise<T> => {
+    const prev = wizChainRef.current.get(emp) ?? Promise.resolve();
+    const next = prev.catch(() => undefined).then(task);
+    wizChainRef.current.set(emp, next);
+    return next;
+  };
+
   // Diagnostic — dump what the server actually returned for wizard
   // entries on load so we can compare against what the engine reads
   // in preview_period. When Net keeps landing as "est. pre-tax" on
@@ -348,6 +366,7 @@ export function RunWizard({
             prevLabel={prevLabel}
             onPatch={patchRow}
             bumpPreview={bumpPreview}
+            enqueueWizWrite={enqueueWizWrite}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
             previews={previews}
@@ -364,6 +383,7 @@ export function RunWizard({
             prevLabel={prevLabel}
             onPatch={patchRow}
             bumpPreview={bumpPreview}
+            enqueueWizWrite={enqueueWizWrite}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
             previews={previews}
@@ -380,6 +400,7 @@ export function RunWizard({
             prevLabel={prevLabel}
             onPatch={patchRow}
             bumpPreview={bumpPreview}
+            enqueueWizWrite={enqueueWizWrite}
             catalogEarningCodes={catalogEarningCodes}
             catalogDeductionCodes={catalogDeductionCodes}
             previews={previews}
@@ -551,6 +572,7 @@ function ClassStep({
   prevLabel,
   onPatch,
   bumpPreview,
+  enqueueWizWrite,
   catalogEarningCodes,
   catalogDeductionCodes,
   previews,
@@ -573,6 +595,11 @@ function ClassStep({
    *  write and reading stale zeros (which shows up as impossible
    *  numbers like a negative Net for a fresh hourly row). */
   bumpPreview: () => void;
+  /** Serializes writes for one employee. Two blurs in quick
+   *  succession must not both hit the "no existing → insert" branch
+   *  of the upsert endpoint — the result is duplicate rows and lost
+   *  data. Wrap each server write in this. */
+  enqueueWizWrite: <T,>(emp: string, task: () => Promise<T>) => Promise<T>;
   catalogEarningCodes: string[];
   catalogDeductionCodes: string[];
   /** Real post-tax preview keyed by employee. Net column reads
@@ -1029,15 +1056,10 @@ function ClassStep({
               // fast preview debounce (700ms) can beat the upsert to
               // the DB — engine reads rate=0, basic=0, and hands back a
               // negative Net (gross - deducts with gross=0).
-              (async () => {
+              // Queued per employee — see enqueueWizWrite above for why.
+              enqueueWizWrite(r.employee, async () => {
                 try {
                   const res = await upsertWizardEntry(runId, r.employee, patch);
-                  // Loud success log — includes the server's action so
-                  // we can distinguish "created" / "updated" / "noop".
-                  // A "noop" means the backend received the call but
-                  // filtered every field out (allowed-list mismatch),
-                  // which explains why the DB wasn't changing while HR
-                  // saw optimistic numbers in the input.
                   // eslint-disable-next-line no-console
                   console.log(
                     "[wiz-upsert]",
@@ -1054,16 +1076,12 @@ function ClassStep({
                 } catch (err) {
                   const msg = (err as { message?: string })?.message ?? "Save failed";
                   console.error("[wiz-upsert] failed:", r.employee, patch, err);
-                  // Surface silent failures — HR was reading an optimistic
-                  // number while the DB still held the old one, and only
-                  // saw it when the engine returned nonsense at process
-                  // time. A toast is annoying but honest.
                   toast.error(
                     `Couldn't save ${r.employee_name} — ${msg}. The engine will read the old value.`,
                   );
                 }
                 bumpPreview();
-              })();
+              });
             };
             const included = r.wiz.include_in_run !== false;
             const tsFlags = r.timesheet?.flag_codes ?? [];
@@ -1245,11 +1263,13 @@ function ClassStep({
                                 },
                                 { skipPreview: true },
                               );
-                              try {
-                                await upsertTxnByCode(runId, r.employee, code, v);
-                              } finally {
-                                bumpPreview();
-                              }
+                              await enqueueWizWrite(r.employee, async () => {
+                                try {
+                                  await upsertTxnByCode(runId, r.employee, code, v);
+                                } finally {
+                                  bumpPreview();
+                                }
+                              });
                             }}
                           />
                         </TableCell>
@@ -1411,11 +1431,13 @@ function ClassStep({
                                 },
                                 { skipPreview: true },
                               );
-                              try {
-                                await upsertTxnByCode(runId, r.employee, REIMB, v);
-                              } finally {
-                                bumpPreview();
-                              }
+                              await enqueueWizWrite(r.employee, async () => {
+                                try {
+                                  await upsertTxnByCode(runId, r.employee, REIMB, v);
+                                } finally {
+                                  bumpPreview();
+                                }
+                              });
                             }}
                           />
                         );
@@ -1538,11 +1560,13 @@ function ClassStep({
                             },
                             { skipPreview: true },
                           );
-                          try {
-                            await upsertTxnByCode(runId, r.employee, code, v);
-                          } finally {
-                            bumpPreview();
-                          }
+                          await enqueueWizWrite(r.employee, async () => {
+                            try {
+                              await upsertTxnByCode(runId, r.employee, code, v);
+                            } finally {
+                              bumpPreview();
+                            }
+                          });
                         }}
                       />
                     </TableCell>

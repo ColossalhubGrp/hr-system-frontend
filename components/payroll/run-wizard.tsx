@@ -524,6 +524,11 @@ function ClassStep({
   const [tab, setTab] = useState<"Earnings" | "Deductions" | "Settings">(
     "Earnings",
   );
+  /** Which currency the Gross / Net columns show. USD is the
+   *  primary — matches the ZIMRA payslip's headline. Toggle only
+   *  renders when the run has any ZiG side (this run's basic_zig,
+   *  the engine preview's gross_zig, or last run's gross_zig). */
+  const [viewCurrency, setViewCurrency] = useState<"USD" | "ZIG">("USD");
 
   const visible = filter
     ? rows.filter((r) =>
@@ -545,6 +550,19 @@ function ClassStep({
     (a, e) => a + (prevSnapshots[e.employee]?.gross_usd ?? 0),
     0,
   );
+
+  /** True when any visible row has ZiG on either side of the compare
+   *  (this run's ZiG salary, the engine preview's ZiG gross/net, or
+   *  last run's ZiG figures). Controls whether the currency toggle
+   *  renders — USD-only tenants never see it. */
+  const hasAnyZig = visible.some((r) => {
+    if (r.basic_zig > 0) return true;
+    const p = previews.get(r.employee);
+    if ((p?.gross_zig ?? 0) > 0 || (p?.net_zig ?? 0) > 0) return true;
+    const s = prevSnapshots[r.employee];
+    if ((s?.gross_zig ?? 0) > 0 || (s?.net_zig ?? 0) > 0) return true;
+    return false;
+  });
 
   // Dynamic per-code columns. Union of every USD-earning code in
   // the tenant's catalog (from server) + any captured on the run.
@@ -638,7 +656,7 @@ function ClassStep({
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between border-b px-4 py-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <input
             placeholder="Employee name"
             value={filter}
@@ -648,6 +666,28 @@ function ClassStep({
           <span className="text-xs text-muted-foreground">
             Showing {visible.length} of {rows.length}
           </span>
+          {hasAnyZig && (
+            <div
+              className="inline-flex overflow-hidden rounded-md border border-input text-[11px] font-semibold"
+              title="Switch the Gross and Net columns between currencies"
+            >
+              {(["USD", "ZIG"] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setViewCurrency(c)}
+                  className={cn(
+                    "px-2 py-0.5 transition",
+                    viewCurrency === c
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-transparent text-muted-foreground hover:bg-muted/40",
+                  )}
+                >
+                  {c === "ZIG" ? "ZiG" : "USD"}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {cls === "SALARIED" && (
           <Link
@@ -862,7 +902,14 @@ function ClassStep({
                 <TableHead className="px-4 text-right w-40">Reimbursements</TableHead>
               </>
             )}
-            <TableHead className="px-4 text-right">Gross</TableHead>
+            <TableHead className="px-4 text-right">
+              Gross
+              {hasAnyZig && (
+                <span className="ml-1 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
+                  ({viewCurrency === "ZIG" ? "ZiG" : "USD"})
+                </span>
+              )}
+            </TableHead>
             {dynamicDeductionCodes.map((c) => (
               <TableHead
                 key={`ded-hdr-${c}`}
@@ -875,7 +922,14 @@ function ClassStep({
                 {c}
               </TableHead>
             ))}
-            <TableHead className="px-4 text-right">Net</TableHead>
+            <TableHead className="px-4 text-right">
+              Net
+              {hasAnyZig && (
+                <span className="ml-1 text-[10px] font-normal normal-case tracking-normal text-muted-foreground">
+                  ({viewCurrency === "ZIG" ? "ZiG" : "USD"})
+                </span>
+              )}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1232,17 +1286,18 @@ function ClassStep({
                   </>
                 )}
 
-                {/* Gross — USD line + inline %change vs prev USD gross,
-                    plus a stacked ZiG line + delta when the row has any
-                    ZiG side (this run's basic_zig or last run's
-                    gross_zig). Hover shows previous figures for both
-                    currencies so HR can sanity-check without a
-                    dedicated Previous column. */}
+                {/* Gross — single value in the currency the top-of-
+                    table toggle has selected. USD reads projGross
+                    (client-side). ZiG reads preview.gross_zig from
+                    the engine (falls back to muted italic + spinner
+                    until the debounced refetch lands). Delta always
+                    compares against the same-currency prev figure so
+                    the % is apples-to-apples. Hover shows previous
+                    figures for both currencies. */}
                 {(() => {
                   const p = previews.get(r.employee);
                   const grossZig = p?.gross_zig ?? 0;
-                  const hasZig = grossZig > 0 || (prev?.gross_zig ?? 0) > 0
-                    || r.basic_zig > 0;
+                  const zigStale = p === undefined;
                   const titleParts: string[] = [];
                   if (prev?.gross_usd) {
                     titleParts.push(
@@ -1252,31 +1307,26 @@ function ClassStep({
                   if (prev?.gross_zig) {
                     titleParts.push(`Previous ZiG gross: ${zig(prev.gross_zig)}`);
                   }
+                  const showZig = viewCurrency === "ZIG";
                   return (
                     <TableCell
                       className="px-4 align-middle text-right"
                       title={titleParts.length ? titleParts.join("\n") : undefined}
                     >
-                      <div className="font-semibold text-foreground tabular-nums">
-                        {usd(projGross)}
-                      </div>
-                      {prev?.gross_usd ? (
-                        <div className="mt-0.5">
-                          <DeltaTag
-                            current={projGross}
-                            previous={prev.gross_usd}
-                            fmt={usd}
-                            withPercent
-                            compact
-                          />
-                        </div>
-                      ) : null}
-                      {hasZig ? (
+                      {showZig ? (
                         <>
-                          <div className="mt-1 text-[11px] font-medium text-muted-foreground tabular-nums">
+                          <div
+                            className={cn(
+                              "font-semibold tabular-nums",
+                              zigStale ? "text-muted-foreground italic" : "text-foreground",
+                            )}
+                          >
                             {zig(grossZig)}
+                            {zigStale && previewing ? (
+                              <Loader2 className="ml-1 inline h-2.5 w-2.5 animate-spin" />
+                            ) : null}
                           </div>
-                          {(prev?.gross_zig ?? 0) > 0 ? (
+                          {!zigStale && (prev?.gross_zig ?? 0) > 0 ? (
                             <div className="mt-0.5">
                               <DeltaTag
                                 current={grossZig}
@@ -1288,7 +1338,24 @@ function ClassStep({
                             </div>
                           ) : null}
                         </>
-                      ) : null}
+                      ) : (
+                        <>
+                          <div className="font-semibold text-foreground tabular-nums">
+                            {usd(projGross)}
+                          </div>
+                          {prev?.gross_usd ? (
+                            <div className="mt-0.5">
+                              <DeltaTag
+                                current={projGross}
+                                previous={prev.gross_usd}
+                                fmt={usd}
+                                withPercent
+                                compact
+                              />
+                            </div>
+                          ) : null}
+                        </>
+                      )}
                     </TableCell>
                   );
                 })()}
@@ -1331,23 +1398,22 @@ function ClassStep({
                   );
                 })}
 
-                {/* Net — USD post-tax from the engine preview
-                    (previews.get(employee).net_usd) + inline % delta
-                    vs last run's USD net. When the preview also
-                    returns a ZiG net (dual-currency employee), stack
-                    a compact ZiG line + delta below. Falls back to
-                    gross-minus-captured-deductions on the USD side
-                    only when the preview hasn't landed yet. Hover
-                    shows previous figures for both currencies. */}
+                {/* Net — single value in the currency the top-of-
+                    table toggle has selected. USD reads the engine
+                    preview's net_usd (falls back to gross − captured
+                    deductions until the preview lands). ZiG reads
+                    net_zig from the preview (muted italic + spinner
+                    while the debounced refetch is in flight). Delta
+                    compares against the same-currency prev figure.
+                    Hover shows previous figures for both currencies. */}
                 {(() => {
                   const p = previews.get(r.employee);
                   const netReal = p?.net_usd;
                   const netFallback = projGross - r.captured_deduct_usd;
-                  const netShown = netReal ?? netFallback;
-                  const stale = netReal === undefined;
+                  const netUsdShown = netReal ?? netFallback;
+                  const usdStale = netReal === undefined;
                   const netZig = p?.net_zig ?? 0;
-                  const hasZig = netZig > 0 || (prev?.net_zig ?? 0) > 0
-                    || r.basic_zig > 0;
+                  const zigStale = p === undefined;
                   const titleParts: string[] = [];
                   if (prev?.net_usd) {
                     titleParts.push(
@@ -1357,39 +1423,26 @@ function ClassStep({
                   if (prev?.net_zig) {
                     titleParts.push(`Previous ZiG net: ${zig(prev.net_zig)}`);
                   }
+                  const showZig = viewCurrency === "ZIG";
                   return (
                     <TableCell
                       className="px-4 align-middle text-right"
                       title={titleParts.length ? titleParts.join("\n") : undefined}
                     >
-                      <div
-                        className={cn(
-                          "font-semibold tabular-nums",
-                          stale ? "text-muted-foreground italic" : "text-foreground",
-                        )}
-                      >
-                        {usd(netShown)}
-                        {stale && previewing ? (
-                          <Loader2 className="ml-1 inline h-2.5 w-2.5 animate-spin" />
-                        ) : null}
-                      </div>
-                      {!stale && prev?.net_usd ? (
-                        <div className="mt-0.5">
-                          <DeltaTag
-                            current={netShown}
-                            previous={prev.net_usd}
-                            fmt={usd}
-                            withPercent
-                            compact
-                          />
-                        </div>
-                      ) : null}
-                      {!stale && hasZig ? (
+                      {showZig ? (
                         <>
-                          <div className="mt-1 text-[11px] font-medium text-muted-foreground tabular-nums">
+                          <div
+                            className={cn(
+                              "font-semibold tabular-nums",
+                              zigStale ? "text-muted-foreground italic" : "text-foreground",
+                            )}
+                          >
                             {zig(netZig)}
+                            {zigStale && previewing ? (
+                              <Loader2 className="ml-1 inline h-2.5 w-2.5 animate-spin" />
+                            ) : null}
                           </div>
-                          {(prev?.net_zig ?? 0) > 0 ? (
+                          {!zigStale && (prev?.net_zig ?? 0) > 0 ? (
                             <div className="mt-0.5">
                               <DeltaTag
                                 current={netZig}
@@ -1401,7 +1454,32 @@ function ClassStep({
                             </div>
                           ) : null}
                         </>
-                      ) : null}
+                      ) : (
+                        <>
+                          <div
+                            className={cn(
+                              "font-semibold tabular-nums",
+                              usdStale ? "text-muted-foreground italic" : "text-foreground",
+                            )}
+                          >
+                            {usd(netUsdShown)}
+                            {usdStale && previewing ? (
+                              <Loader2 className="ml-1 inline h-2.5 w-2.5 animate-spin" />
+                            ) : null}
+                          </div>
+                          {!usdStale && prev?.net_usd ? (
+                            <div className="mt-0.5">
+                              <DeltaTag
+                                current={netUsdShown}
+                                previous={prev.net_usd}
+                                fmt={usd}
+                                withPercent
+                                compact
+                              />
+                            </div>
+                          ) : null}
+                        </>
+                      )}
                     </TableCell>
                   );
                 })()}
@@ -1512,20 +1590,36 @@ function ClassStep({
                 </TableCell>
               </>
             )}
-            {/* Gross column footer — USD total + delta, plus a
-                stacked ZiG total + delta when any included row has a
-                ZiG side. */}
+            {/* Gross footer — mirrors the row cell: shows the total
+                in whichever currency the toggle picked. */}
             <TableCell className="px-4 text-right text-emerald-700">
               {(() => {
-                const totalGrossZig = includedRows.reduce(
-                  (a, e) => a + (previews.get(e.employee)?.gross_zig ?? 0),
-                  0,
-                );
-                const totalPrevGrossZig = includedRows.reduce(
-                  (a, e) => a + (prevSnapshots[e.employee]?.gross_zig ?? 0),
-                  0,
-                );
-                const showZig = totalGrossZig > 0 || totalPrevGrossZig > 0;
+                if (viewCurrency === "ZIG") {
+                  const totalGrossZig = includedRows.reduce(
+                    (a, e) => a + (previews.get(e.employee)?.gross_zig ?? 0),
+                    0,
+                  );
+                  const totalPrevGrossZig = includedRows.reduce(
+                    (a, e) => a + (prevSnapshots[e.employee]?.gross_zig ?? 0),
+                    0,
+                  );
+                  return (
+                    <>
+                      <div>{zig(totalGrossZig)}</div>
+                      {totalPrevGrossZig > 0 ? (
+                        <div className="mt-0.5 font-normal">
+                          <DeltaTag
+                            current={totalGrossZig}
+                            previous={totalPrevGrossZig}
+                            fmt={zig}
+                            withPercent
+                            compact
+                          />
+                        </div>
+                      ) : null}
+                    </>
+                  );
+                }
                 return (
                   <>
                     <div>{usd(totalGross)}</div>
@@ -1539,24 +1633,6 @@ function ClassStep({
                           compact
                         />
                       </div>
-                    ) : null}
-                    {showZig ? (
-                      <>
-                        <div className="mt-1 text-[11px] font-medium text-muted-foreground tabular-nums">
-                          {zig(totalGrossZig)}
-                        </div>
-                        {totalPrevGrossZig > 0 ? (
-                          <div className="mt-0.5 font-normal">
-                            <DeltaTag
-                              current={totalGrossZig}
-                              previous={totalPrevGrossZig}
-                              fmt={zig}
-                              withPercent
-                              compact
-                            />
-                          </div>
-                        ) : null}
-                      </>
                     ) : null}
                   </>
                 );
@@ -1579,16 +1655,47 @@ function ClassStep({
               );
             })}
 
-            {/* Net column footer — sums the engine preview for real
-                post-tax net + inline % delta vs prev net, plus a
-                stacked ZiG total + delta when any included row has a
-                ZiG side. Falls back to gross − captured deductions on
-                the USD side only until the preview lands. */}
+            {/* Net footer — mirrors the row cell in whichever
+                currency the toggle picked. USD falls back to gross −
+                captured deductions until the preview lands; ZiG
+                shows muted italic until the preview lands. */}
             <TableCell className="px-4 text-right">
               {(() => {
                 const havePreviewForAll = includedRows.every(
                   (e) => previews.get(e.employee)?.net_usd !== undefined,
                 );
+                if (viewCurrency === "ZIG") {
+                  const totalNetZig = includedRows.reduce(
+                    (a, e) => a + (previews.get(e.employee)?.net_zig ?? 0),
+                    0,
+                  );
+                  const totalPrevNetZig = includedRows.reduce(
+                    (a, e) => a + (prevSnapshots[e.employee]?.net_zig ?? 0),
+                    0,
+                  );
+                  return (
+                    <>
+                      <div
+                        className={cn(
+                          !havePreviewForAll ? "text-muted-foreground italic" : undefined,
+                        )}
+                      >
+                        {zig(totalNetZig)}
+                      </div>
+                      {havePreviewForAll && totalPrevNetZig > 0 ? (
+                        <div className="mt-0.5 font-normal">
+                          <DeltaTag
+                            current={totalNetZig}
+                            previous={totalPrevNetZig}
+                            fmt={zig}
+                            withPercent
+                            compact
+                          />
+                        </div>
+                      ) : null}
+                    </>
+                  );
+                }
                 const totalNet = havePreviewForAll
                   ? includedRows.reduce(
                       (a, e) => a + (previews.get(e.employee)?.net_usd ?? 0),
@@ -1600,16 +1707,6 @@ function ClassStep({
                   (a, e) => a + (prevSnapshots[e.employee]?.net_usd ?? 0),
                   0,
                 );
-                const totalNetZig = includedRows.reduce(
-                  (a, e) => a + (previews.get(e.employee)?.net_zig ?? 0),
-                  0,
-                );
-                const totalPrevNetZig = includedRows.reduce(
-                  (a, e) => a + (prevSnapshots[e.employee]?.net_zig ?? 0),
-                  0,
-                );
-                const showZig = havePreviewForAll
-                  && (totalNetZig > 0 || totalPrevNetZig > 0);
                 return (
                   <>
                     <div
@@ -1629,24 +1726,6 @@ function ClassStep({
                           compact
                         />
                       </div>
-                    ) : null}
-                    {showZig ? (
-                      <>
-                        <div className="mt-1 text-[11px] font-medium text-muted-foreground tabular-nums">
-                          {zig(totalNetZig)}
-                        </div>
-                        {totalPrevNetZig > 0 ? (
-                          <div className="mt-0.5 font-normal">
-                            <DeltaTag
-                              current={totalNetZig}
-                              previous={totalPrevNetZig}
-                              fmt={zig}
-                              withPercent
-                              compact
-                            />
-                          </div>
-                        ) : null}
-                      </>
                     ) : null}
                   </>
                 );

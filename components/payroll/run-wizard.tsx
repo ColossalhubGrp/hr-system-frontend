@@ -161,12 +161,27 @@ export function RunWizard({
         const m = new Map<string, PreviewSlip>();
         for (const s of slips) m.set(s.employee, s);
         setPreviews(m);
+        // Loud console log so HR / us can see what the engine returned
+        // per employee — helps diagnose "why is Net an estimate" without
+        // guessing. One line per row: employee, class, gross, net, skip.
+        // eslint-disable-next-line no-console
+        console.log(
+          "[payroll preview]",
+          slips.map((s) => ({
+            emp: s.employee,
+            cls: s.payroll_class,
+            gross_usd: s.gross_usd,
+            net_usd: s.net_usd,
+            skipped: s.skipped,
+            reason: s.skipped_reason,
+          })),
+        );
       } catch (err) {
-        // Silent — Net column just falls back to gross-minus-deductions
-        // signal. Won't spam HR with a toast on transient failures.
+        // Silent to HR (no toast for a transient wobble), loud in the
+        // console so we can diagnose why Net stayed on the estimate.
         if (!cancelled) {
           const msg = (err as { message?: string })?.message;
-          if (msg) console.error("[preview] failed:", msg);
+          console.error("[preview] failed:", msg ?? err);
         }
       } finally {
         if (!cancelled) setPreviewing(false);
@@ -1510,12 +1525,17 @@ function ClassStep({
                           <div
                             className={cn(
                               "font-semibold tabular-nums",
-                              zigStale ? "text-muted-foreground italic" : "text-foreground",
+                              zigStale ? "text-amber-700" : "text-foreground",
                             )}
                           >
                             {zig(netZig)}
-                            {zigStale && previewing ? (
-                              <Loader2 className="ml-1 inline h-2.5 w-2.5 animate-spin" />
+                            {zigStale ? (
+                              <span className="ml-1 inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 text-[9px] font-bold uppercase tracking-wide text-amber-800 align-middle">
+                                {previewing ? (
+                                  <Loader2 className="h-2 w-2 animate-spin" />
+                                ) : null}
+                                est. pre-tax
+                              </span>
                             ) : null}
                           </div>
                           {!zigStale && (prev?.net_zig ?? 0) > 0 ? (
@@ -1535,12 +1555,22 @@ function ClassStep({
                           <div
                             className={cn(
                               "font-semibold tabular-nums",
-                              usdStale ? "text-muted-foreground italic" : "text-foreground",
+                              usdStale ? "text-amber-700" : "text-foreground",
                             )}
+                            title={
+                              usdStale
+                                ? "Pre-tax estimate — waiting on the ZIMRA engine. Real net (PAYE / AIDS / NSSA / ZIMDEF / pension applied) lands once preview completes."
+                                : "Post-tax net — PAYE, AIDS levy, NSSA, ZIMDEF, pension and captured deductions all applied."
+                            }
                           >
                             {usd(netUsdShown)}
-                            {usdStale && previewing ? (
-                              <Loader2 className="ml-1 inline h-2.5 w-2.5 animate-spin" />
+                            {usdStale ? (
+                              <span className="ml-1 inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 text-[9px] font-bold uppercase tracking-wide text-amber-800 align-middle">
+                                {previewing ? (
+                                  <Loader2 className="h-2 w-2 animate-spin" />
+                                ) : null}
+                                est. pre-tax
+                              </span>
                             ) : null}
                           </div>
                           {!usdStale && prev?.net_usd ? (
@@ -1757,12 +1787,13 @@ function ClassStep({
                   );
                   return (
                     <>
-                      <div
-                        className={cn(
-                          !havePreviewForAll ? "text-muted-foreground italic" : undefined,
-                        )}
-                      >
+                      <div className={cn(!havePreviewForAll ? "text-amber-700" : undefined)}>
                         {zig(totalNetZig)}
+                        {!havePreviewForAll ? (
+                          <span className="ml-1 inline-flex items-center rounded bg-amber-100 px-1 text-[9px] font-bold uppercase tracking-wide text-amber-800 align-middle">
+                            est. pre-tax
+                          </span>
+                        ) : null}
                       </div>
                       {havePreviewForAll && totalPrevNetZig > 0 ? (
                         <div className="mt-0.5 font-normal">
@@ -1791,12 +1822,13 @@ function ClassStep({
                 );
                 return (
                   <>
-                    <div
-                      className={cn(
-                        !havePreviewForAll ? "text-muted-foreground italic" : undefined,
-                      )}
-                    >
+                    <div className={cn(!havePreviewForAll ? "text-amber-700" : undefined)}>
                       {usd(totalNet)}
+                      {!havePreviewForAll ? (
+                        <span className="ml-1 inline-flex items-center rounded bg-amber-100 px-1 text-[9px] font-bold uppercase tracking-wide text-amber-800 align-middle">
+                          est. pre-tax
+                        </span>
+                      ) : null}
                     </div>
                     {havePreviewForAll && totalPrevNet ? (
                       <div className="mt-0.5 font-normal">

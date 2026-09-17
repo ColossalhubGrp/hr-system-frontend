@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition, useEffect, useRef } from "react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow,
@@ -15,6 +15,7 @@ import { DeltaTag } from "@/components/payroll/delta-tag";
 import type { EmployeeForRun, PayrollClass, WizardEntry } from "@/lib/payroll-engine/payruns";
 import {
   processPeriod,
+  upsertTxnByCode,
   upsertWizardEntry,
   type WizardEntryPatch,
 } from "@/app/(workspace)/payroll/payruns-actions";
@@ -410,6 +411,46 @@ function ClassStep({
     0,
   );
 
+  // Dynamic per-code columns. Each unique USD EARNING code
+  // captured across the roster becomes its own column, so HR sees
+  // Housing / Transport / Bonus etc. as headings with editable
+  // amounts per employee — Rippling-style grid. Excludes the
+  // wizard's dedicated adjustment codes to avoid double-columns.
+  const DEDICATED_CODES = new Set([
+    "SALARY_ADJUSTMENT",
+    "HOURLY_PAY",
+    "CONTRACTOR_PAY",
+  ]);
+  const dynamicCodes = useMemo(() => {
+    const s = new Set<string>();
+    for (const e of rows) {
+      for (const t of e.captured_txns) {
+        if (t.kind === "EARNING"
+            && t.currency === "USD"
+            && !DEDICATED_CODES.has(t.code)) {
+          s.add(t.code);
+        }
+      }
+    }
+    return Array.from(s).sort();
+  }, [rows]);
+  // Lookup {employee → {code → amount}} for O(1) cell reads.
+  const codeAmounts = useMemo(() => {
+    const m = new Map<string, Map<string, number>>();
+    for (const e of rows) {
+      const sub = new Map<string, number>();
+      for (const t of e.captured_txns) {
+        if (t.kind === "EARNING"
+            && t.currency === "USD"
+            && !DEDICATED_CODES.has(t.code)) {
+          sub.set(t.code, (sub.get(t.code) ?? 0) + t.amount);
+        }
+      }
+      m.set(e.employee, sub);
+    }
+    return m;
+  }, [rows]);
+
   if (rows.length === 0) {
     return (
       <Card className="p-10 text-center">
@@ -428,6 +469,31 @@ function ClassStep({
     );
   }
 
+  const addColumn = () => {
+    const raw = window.prompt(
+      "Add earning column — enter a code (e.g. HOUSING, TRANSPORT, BONUS)",
+    );
+    if (!raw) return;
+    const code = raw.trim().toUpperCase();
+    if (!code || dynamicCodes.includes(code)) return;
+    // Seed the code column by upserting a zero on the first
+    // employee — creates the code + triggers a re-fetch/patch so
+    // it appears in dynamicCodes. HR then enters real amounts.
+    const first = rows[0];
+    if (!first) return;
+    void upsertTxnByCode(runId, first.employee, code, 0).catch(() => {
+      /* silent — column just won't seed */
+    });
+    onPatch(first.employee, {
+      captured_txns: [
+        ...first.captured_txns,
+        // Zero-amount marker so dynamicCodes picks it up
+        // immediately without a page reload.
+        { code, kind: "EARNING", currency: "USD", amount: 0 },
+      ],
+    });
+  };
+
   return (
     <Card className="overflow-hidden p-0">
       <div className="flex items-center justify-between border-b px-4 py-3">
@@ -442,16 +508,39 @@ function ClassStep({
             Showing {visible.length} of {rows.length}
           </span>
         </div>
+        {cls === "SALARIED" && (
+          <button
+            type="button"
+            onClick={addColumn}
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-transparent px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted/40"
+            title="Add a new earning-code column to the grid"
+          >
+            + Add earning column
+          </button>
+        )}
       </div>
 
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-8 px-3" />
             <TableHead className="px-4">Employee</TableHead>
             {cls === "SALARIED" && (
               <>
                 <TableHead className="px-4 text-right">Basic</TableHead>
                 <TableHead className="px-4 text-right w-40">Adjustment (USD)</TableHead>
+                {dynamicCodes.map((c) => (
+                  <TableHead
+                    key={`hdr-${c}`}
+                    className="px-3 text-right w-32 whitespace-nowrap"
+                    title={`Payroll Transaction Code · ${c}`}
+                  >
+                    <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                      USD
+                    </span>
+                    {c}
+                  </TableHead>
+                ))}
               </>
             )}
             {cls === "HOURLY" && (
@@ -494,19 +583,80 @@ function ClassStep({
               // Fire the server upsert; failure toast is inside NumCell.
               void upsertWizardEntry(runId, r.employee, patch);
             };
+            const included = r.wiz.include_in_run !== false;
+            const tsFlags = r.timesheet?.flag_codes ?? [];
+            // Amber-triangle-worthy flags — surface on hourly rows.
+            const hourlyWarnFlags = tsFlags.filter((c) =>
+              c === "SHIFT_TOO_LONG"
+              || c === "MISSING_OUT_PUNCH"
+              || c === "HEAVY_OVERTIME"
+            );
             return (
               <TableRow
                 key={r.employee}
-                className={cn(isMissing ? "bg-rose-50/40" : undefined)}
+                className={cn(
+                  isMissing ? "bg-rose-50/40" : undefined,
+                  !included ? "opacity-60" : undefined,
+                )}
               >
+                {/* Include-in-run tick — HR unchecks to skip an
+                    employee on this run (Rippling parity). Missing
+                    employees can't be included at all. */}
+                <TableCell className="px-3 align-middle">
+                  <input
+                    type="checkbox"
+                    checked={included && !isMissing}
+                    disabled={isMissing}
+                    aria-label={`Include ${r.employee_name} in this run`}
+                    onChange={(e) => {
+                      const nextIncluded = e.target.checked;
+                      patchWiz(
+                        { include_in_run: nextIncluded ? 1 : 0 },
+                        { include_in_run: nextIncluded },
+                      );
+                    }}
+                    className="h-4 w-4 rounded border-slate-300"
+                  />
+                </TableCell>
                 <TableCell className="px-4 align-middle">
                   <div className="flex items-center gap-3">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
                       {initials(r.employee_name)}
                     </div>
-                    <div>
-                      <div className="font-semibold text-foreground">
-                        {r.employee_name}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-foreground">
+                          {r.employee_name}
+                        </span>
+                        {isMissing ? (
+                          /* Red triangle — clicking deep-links straight
+                              to the employee edit page with fix params
+                              (matches Rippling's Sam Sampson pattern). */
+                          <Link
+                            href={
+                              `/employee/${encodeURIComponent(r.employee)}/edit?from=payroll-wizard&run=${encodeURIComponent(runId)}&fix=${r.missing_fieldnames.join(",")}` as Route
+                            }
+                            title={`Missing critical info: ${r.missing.join(", ")}. Click to fix.`}
+                            className="inline-flex items-center gap-0.5 rounded text-rose-600 hover:bg-rose-50"
+                          >
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                          </Link>
+                        ) : null}
+                        {cls === "HOURLY" && hourlyWarnFlags.length > 0 ? (
+                          /* Amber triangle — timesheet flagged a long
+                              shift, missing clockout, or heavy overtime.
+                              Click → the run's Timesheets page to
+                              review + correct. */
+                          <Link
+                            href={
+                              `/payroll/${encodeURIComponent(runId)}/timesheets` as Route
+                            }
+                            title={`Timesheet flags: ${hourlyWarnFlags.map((c) => c.replace(/_/g, " ")).join(", ")}. Click to review.`}
+                            className="inline-flex items-center gap-0.5 rounded text-amber-700 hover:bg-amber-50"
+                          >
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                          </Link>
+                        ) : null}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {r.employee}
@@ -514,7 +664,7 @@ function ClassStep({
                       </div>
                       {isMissing && (
                         <div className="mt-0.5 text-[10px] font-semibold uppercase text-rose-600">
-                          ⚠ Missing {r.missing.join(", ")}
+                          Missing {r.missing.join(", ")}
                         </div>
                       )}
                     </div>
@@ -556,6 +706,48 @@ function ClassStep({
                         }
                       />
                     </TableCell>
+                    {dynamicCodes.map((code) => {
+                      const currentAmt = codeAmounts.get(r.employee)?.get(code) ?? 0;
+                      return (
+                        <TableCell
+                          key={`cell-${r.employee}-${code}`}
+                          className="px-3 align-middle text-right"
+                        >
+                          <NumCell
+                            value={currentAmt}
+                            disabled={isMissing}
+                            onCommit={async (v) => {
+                              // Optimistically patch the local
+                              // captured_txns so projected gross
+                              // + totals recompute immediately;
+                              // then persist via the per-cell
+                              // upsert endpoint.
+                              const nextTxns = r.captured_txns.filter(
+                                (t) => !(t.kind === "EARNING"
+                                       && t.currency === "USD"
+                                       && t.code === code),
+                              );
+                              if (v > 0) {
+                                nextTxns.push({
+                                  code,
+                                  kind: "EARNING",
+                                  currency: "USD",
+                                  amount: v,
+                                });
+                              }
+                              const oldEarnUsd = r.captured_earn_usd;
+                              const newEarnUsd =
+                                oldEarnUsd - currentAmt + v;
+                              onPatch(r.employee, {
+                                captured_txns: nextTxns,
+                                captured_earn_usd: newEarnUsd,
+                              });
+                              await upsertTxnByCode(runId, r.employee, code, v);
+                            }}
+                          />
+                        </TableCell>
+                      );
+                    })}
                   </>
                 )}
 
@@ -689,6 +881,8 @@ function ClassStep({
         </TableBody>
         <TableFooter>
           <TableRow className="border-t-2 bg-muted/30 font-bold">
+            {/* Filler for the include-checkbox column */}
+            <TableCell className="px-3" />
             <TableCell className="px-4">Totals</TableCell>
             {cls === "SALARIED" && (
               <>
@@ -701,6 +895,20 @@ function ClassStep({
                     return t ? usd(t) : "—";
                   })()}
                 </TableCell>
+                {dynamicCodes.map((code) => {
+                  const t = visible.reduce(
+                    (a, e) => a + (codeAmounts.get(e.employee)?.get(code) ?? 0),
+                    0,
+                  );
+                  return (
+                    <TableCell
+                      key={`ft-${code}`}
+                      className="px-3 text-right"
+                    >
+                      {t ? usd(t) : "—"}
+                    </TableCell>
+                  );
+                })}
               </>
             )}
             {cls === "HOURLY" && (

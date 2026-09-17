@@ -99,6 +99,7 @@ export async function reopenPeriod(payrollRun: string): Promise<void> {
  */
 export type WizardEntryPatch = Partial<{
   payroll_class: "SALARIED" | "HOURLY" | "CONTRACTOR";
+  include_in_run: 0 | 1;
   salary_adjustment_usd: number;
   hourly_rate_usd: number;
   hours_worked: number;
@@ -108,6 +109,36 @@ export type WizardEntryPatch = Partial<{
   holiday_multiplier: number;
   contractor_flat_usd: number;
 }>;
+
+/**
+ * Upsert a single Payroll Transaction cell (one row per
+ * run × employee × code). amount == 0 deletes the row. Used by the
+ * wizard's dynamic-column grid so every earning code shows as a
+ * column with editable amounts per employee.
+ */
+export async function upsertTxnByCode(
+  payrollRun: string,
+  employee: string,
+  code: string,
+  amount: number,
+  currency: "USD" | "ZIG" = "USD",
+): Promise<void> {
+  await ensurePayrollAdmin();
+  await frappeCall({
+    method: "recruitment_app.api.approvals.admin_upsert_txn_by_code",
+    args: {
+      payroll_run: payrollRun,
+      employee,
+      code,
+      amount,
+      currency,
+    },
+    as: "user",
+    verb: "POST",
+  });
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}`);
+  revalidatePath(`/payroll/${encodeURIComponent(payrollRun)}/run`);
+}
 
 export async function upsertWizardEntry(
   payrollRun: string,

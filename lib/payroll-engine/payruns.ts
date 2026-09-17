@@ -197,6 +197,10 @@ export type PayrollClass = "SALARIED" | "HOURLY" | "CONTRACTOR";
  *  `Payroll Wizard Entry` on the backend. All fields are optional /
  *  zero-default; the wizard's inline cells read + write these. */
 export type WizardEntry = {
+  /** Rippling-style include tick. False = HR unchecked this employee
+   *  from the run and the engine skips them at process time.
+   *  Defaults to true. */
+  include_in_run: boolean;
   salary_adjustment_usd: number;
   hourly_rate_usd: number;
   hours_worked: number;
@@ -220,6 +224,7 @@ const DEFAULT_WEEKEND_MULTIPLIER = 2.0;
 const DEFAULT_HOLIDAY_MULTIPLIER = 2.0;
 
 const EMPTY_WIZARD_ENTRY: WizardEntry = {
+  include_in_run: true,
   salary_adjustment_usd: 0,
   hourly_rate_usd: 0,
   hours_worked: 0,
@@ -279,6 +284,10 @@ export type EmployeeForRun = {
     holiday_hours: number;
     expected_hours: number;
     source: string;
+    /** Suspicious-time flags surfaced from Payroll Timesheet.
+     *  Wizard row shows an amber-triangle warning when non-empty;
+     *  clicking it takes HR to /payroll/[id]/timesheets to review. */
+    flag_codes: string[];
   } | null;
 };
 
@@ -462,6 +471,10 @@ export async function listEmployeesForRun(
     const entries = (inner as { entries?: Array<Record<string, unknown>> }).entries ?? [];
     for (const e of entries) {
       wizByEmp.set(String(e.employee), {
+        // Absent field (fresh site pre-patch) → default included.
+        include_in_run: e.include_in_run === undefined || e.include_in_run === null
+          ? true
+          : Boolean(e.include_in_run),
         salary_adjustment_usd: Number(e.salary_adjustment_usd ?? 0),
         hourly_rate_usd: Number(e.hourly_rate_usd ?? 0),
         hours_worked: Number(e.hours_worked ?? 0),
@@ -497,6 +510,19 @@ export async function listEmployeesForRun(
     const tsRows = (inner as { rows?: Array<Record<string, unknown>> }).rows ?? [];
     for (const t of tsRows) {
       if (!t.approved) continue;
+      let flagCodes: string[] = [];
+      try {
+        const parsed = t.flags_json
+          ? JSON.parse(String(t.flags_json))
+          : [];
+        if (Array.isArray(parsed)) {
+          flagCodes = parsed
+            .map((f) => String((f as { code?: unknown }).code ?? ""))
+            .filter(Boolean);
+        }
+      } catch {
+        /* ignore malformed flags */
+      }
       tsByEmp.set(String(t.employee), {
         regular_hours: Number(t.regular_hours ?? 0),
         overtime_hours: Number(t.overtime_hours ?? 0),
@@ -504,6 +530,7 @@ export async function listEmployeesForRun(
         holiday_hours: Number(t.holiday_hours ?? 0),
         expected_hours: Number(t.expected_hours ?? 0),
         source: String(t.source ?? "MANUAL"),
+        flag_codes: flagCodes,
       });
     }
   } catch {

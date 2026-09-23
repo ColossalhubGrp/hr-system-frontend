@@ -592,15 +592,88 @@ export async function updateEmployee(
 ): Promise<void> {
   const resolved = await resolveApproverFields(input);
   const payload = compact(resolved);
-  await frappeCall<{ name: string }>({
-    method: "frappe.client.set_value",
+
+  // Route through admin_update_employee (recruitment_app) instead of
+  // frappe.client.set_value. Reason: set_value silently drops fields
+  // in a few edge cases (permlevel gates, dict-form dispatch quirks,
+  // controller-hook mutations) — HR was typing a Mobile number, the
+  // save returning 200, and the field coming back empty on next load.
+  // The admin endpoint returns { action, applied, dropped, persisted }
+  // so we can (a) surface silently-dropped fields as a toast and
+  // (b) log every write for post-hoc triage in the browser console.
+  const raw = await frappeCall<
+    | { message?: EmployeeUpdateResult }
+    | EmployeeUpdateResult
+  >({
+    method: "recruitment_app.api.approvals.admin_update_employee",
     args: {
-      doctype: "Employee",
       name: id,
-      fieldname: payload,
+      patch: JSON.stringify(payload),
     },
     verb: "POST",
     as: "user",
   });
+  const res =
+    (raw as { message?: EmployeeUpdateResult }).message ?? (raw as EmployeeUpdateResult) ?? {};
+
+  // Loud console log — same pattern as the wizard-entry saves. Makes
+  // silently-dropped fields obvious without needing bench access.
+  // eslint-disable-next-line no-console
+  console.log(
+    "[employee-update]",
+    id,
+    Object.keys(payload),
+    "→",
+    res,
+  );
+
+  // Detect drift: a field we intended to write that came back with a
+  // different value on disk means a hook / permlevel silently
+  // dropped it. Throw so the form's error toast surfaces it.
+  if (res.applied && res.persisted) {
+    const drift: string[] = [];
+    for (const [k, v] of Object.entries(res.applied)) {
+      const on_disk = (res.persisted as Record<string, unknown>)[k];
+      if (!valuesRoughlyEqual(v, on_disk)) drift.push(k);
+    }
+    if (drift.length > 0) {
+      throw new Error(
+        `The following fields didn't save (a hook or permission dropped them): ${drift.join(", ")}. ` +
+        `See browser console for details.`,
+      );
+    }
+  }
+  if (res.dropped && res.dropped.length > 0) {
+    console.warn(
+      "[employee-update] dropped by allow-list (not supported for edit):",
+      res.dropped,
+    );
+  }
+}
+
+type EmployeeUpdateResult = {
+  action?: string;
+  name?: string;
+  applied?: Record<string, unknown>;
+  dropped?: string[];
+  persisted?: Record<string, unknown>;
+  reason?: string;
+};
+
+function valuesRoughlyEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a == null && b == null) return true;
+  if (a == null || b == null) {
+    // "" vs null / undefined: treat as equal (both empty).
+    return (a === "" || a == null) && (b === "" || b == null);
+  }
+  // Compare numbers loosely — Frappe often serialises Currency as a
+  // string with 2dp; JS side sends a number.
+  const an = Number(a);
+  const bn = Number(b);
+  if (!Number.isNaN(an) && !Number.isNaN(bn)) {
+    return Math.abs(an - bn) < 0.005;
+  }
+  return String(a).trim() === String(b).trim();
 }
 

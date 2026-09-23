@@ -157,6 +157,15 @@ export function EmployeeForm({
 }: Props) {
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
+
+  // Diagnostic: dump every field the form received so we can see if
+  // a specific one (e.g. `mobile`) is null coming in from getEmployee.
+  // Runs once per mount so it doesn't spam.
+  useEffect(() => {
+    // eslint-disable-next-line no-console
+    console.log("[employee-form initial]", initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const highlight = useMemo(
     () => new Set(highlightFields ?? []),
     [highlightFields],

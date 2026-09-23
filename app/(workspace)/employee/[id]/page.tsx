@@ -1,5 +1,10 @@
 import { notFound } from "next/navigation";
 import { EmployeeHeader } from "@/components/employee/employee-header";
+
+// Prevent Next.js from serving a stale SSR render of the profile
+// after a field like cell_number has been updated elsewhere.
+export const dynamic = "force-dynamic";
+
 import {
   EMPLOYEE_TABS,
   EmployeeTabs,

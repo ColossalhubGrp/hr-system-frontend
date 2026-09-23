@@ -7,6 +7,12 @@ import { getEmployee } from "@/lib/frappe/employees";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { updateEmployeeAction } from "../../actions";
 
+// Force a fresh Employee fetch on every request — without this,
+// Next.js can serve a cached SSR render of the form and HR sees
+// stale field values (e.g. an empty Mobile after we've already
+// set cell_number via bench).
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

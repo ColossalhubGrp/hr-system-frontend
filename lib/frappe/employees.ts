@@ -286,12 +286,17 @@ export async function fetchDirectoryFacets(): Promise<DirectoryFacets> {
   };
 }
 
-/** Full employee record for the detail page. */
+/** Full employee record for the detail page.
+ *  Uses admin_get_employee (recruitment_app) instead of
+ *  frappe.client.get — the stock endpoint was silently filtering
+ *  fields out of the response (e.g. cell_number) even when the
+ *  caller has read access. The admin endpoint returns
+ *  doc.as_dict() straight, so every declared field is present. */
 export async function getEmployee(id: string): Promise<EmployeeFull | null> {
   try {
     const doc = await frappeCall<RawEmployeeDoc>({
-      method: "frappe.client.get",
-      args: { doctype: "Employee", name: id },
+      method: "recruitment_app.api.approvals.admin_get_employee",
+      args: { name: id },
       as: "user",
     });
     const full = toFull(doc);
@@ -450,7 +455,10 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
   return {
     ...toRow(d),
     designation: d.designation,
-    mobile: d.cell_number,
+    // Coalesce every optional read to `?? null` so a missing key
+    // in the raw response (undefined) doesn't get silently dropped
+    // during RSC serialisation — null survives the wire.
+    mobile: d.cell_number ?? null,
     email: d.company_email ?? d.personal_email ?? d.user_id,
     branch: d.branch,
     gender: d.gender,

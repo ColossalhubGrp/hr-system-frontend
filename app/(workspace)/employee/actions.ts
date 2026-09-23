@@ -185,6 +185,17 @@ function toFormState(err: unknown): FormState {
     if (typeof detail?.message === "string") return { error: detail.message };
     return { error: err.message };
   }
+  // Surface generic Error messages verbatim (used to swallow to
+  // "Something went wrong" — that hid our drift-detection message
+  // and any resolver / network / typing errors). Also log on the
+  // server so Vercel's function logs carry the full stack.
+  if (err instanceof Error) {
+    // eslint-disable-next-line no-console
+    console.error("[updateEmployeeAction] error:", err.stack || err.message);
+    return { error: err.message || "Save failed." };
+  }
+  // eslint-disable-next-line no-console
+  console.error("[updateEmployeeAction] unknown error:", err);
   return { error: "Something went wrong. Try again." };
 }
 

@@ -125,6 +125,18 @@ export const ROLE_GROUPS = {
     ROLE.SYSTEM_MANAGER,
   ],
 
+  /** Accounting workspace — anyone who books to the general ledger.
+   *  Accounts Manager + Accounts User are the ERPNext-native roles;
+   *  Finance Reviewer + HR Director + System Manager get in through
+   *  their existing bundles. */
+  ACCOUNTING: [
+    ROLE.ACCOUNTS_MANAGER,
+    ROLE.ACCOUNTS_USER,
+    ROLE.FINANCE_REVIEWER,
+    ROLE.HR_DIRECTOR,
+    ROLE.SYSTEM_MANAGER,
+  ],
+
   /** Anyone who can manage shift schedules + location restrictions. */
   SHIFT_ADMIN: [
     ROLE.HR_DIRECTOR,

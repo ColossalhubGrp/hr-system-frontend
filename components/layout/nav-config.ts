@@ -175,6 +175,20 @@ export const NAV: NavItem[] = [
   },
 
   {
+    label: "Accounting",
+    // Landing surface — the module overview lists sub-features
+    // (Journal Entries, Chart of Accounts, Reports, etc.). Only
+    // Journal Entries is real in phase 1; the rest are stubs.
+    href: "/accounting",
+    icon: Landmark,
+    requires: "ACCOUNTING",
+    children: [
+      { label: "Overview", href: "/accounting", requires: "ACCOUNTING" },
+      { label: "Journal Entries", href: "/accounting/journal-entries", requires: "ACCOUNTING" },
+    ],
+  },
+
+  {
     label: "Loans",
     href: "/loans",
     icon: Landmark,

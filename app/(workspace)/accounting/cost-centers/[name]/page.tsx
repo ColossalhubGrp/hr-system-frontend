@@ -1,0 +1,67 @@
+import Link from "next/link";
+import type { Route } from "next";
+import { notFound } from "next/navigation";
+import { Building2, ChevronLeft } from "lucide-react";
+import { PageHeader } from "@/components/common/page-header";
+import { getCostCenter } from "@/lib/frappe/cost-centers";
+
+export const dynamic = "force-dynamic";
+
+export async function generateMetadata({ params }: { params: { name: string } }) {
+  return { title: `${decodeURIComponent(params.name)} · Cost Center · Colossal HR` };
+}
+
+type SP = { company?: string };
+
+export default async function CostCenterDetailPage({
+  params,
+  searchParams,
+}: {
+  params: { name: string };
+  searchParams: SP;
+}) {
+  const name = decodeURIComponent(params.name);
+  const cc = await getCostCenter(name);
+  if (!cc) notFound();
+
+  const back = searchParams.company
+    ? `/accounting/cost-centers?company=${encodeURIComponent(searchParams.company)}`
+    : "/accounting/cost-centers";
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-2 text-sm">
+        <Link href={back as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Back to Chart of Cost Centers
+        </Link>
+      </div>
+
+      <PageHeader
+        icon={Building2}
+        crumb={`Accounting · Cost Centers · ${cc.costCenterName}`}
+        title={cc.costCenterName}
+        subtitle={cc.name}
+      />
+
+      <section className="rounded-2xl border border-border/60 bg-card p-4">
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Details</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Detail label="Company" value={cc.company} />
+          <Detail label="Parent cost center" value={cc.parent ?? "—"} />
+          <Detail label="Is group" value={cc.isGroup ? "Yes" : "No"} />
+          <Detail label="Status" value={cc.disabled ? "Disabled" : "Active"} />
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-sm text-foreground">{value}</div>
+    </div>
+  );
+}

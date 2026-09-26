@@ -106,12 +106,12 @@ const SECTIONS: Section[] = [
     title: "Tax Masters",
     subtitle: "Sales tax, VAT, WHT — the templates all invoices inherit.",
     tiles: [
-      { label: "Sales Taxes and Charges Template", href: "/accounting/tax/sales-templates", icon: Percent, status: "pending" },
-      { label: "Purchase Taxes and Charges Template", href: "/accounting/tax/purchase-templates", icon: Percent, status: "pending" },
-      { label: "Item Tax Template", href: "/accounting/tax/item-templates", icon: Percent, status: "pending" },
-      { label: "Tax Category", href: "/accounting/tax/categories", icon: Layers, status: "pending" },
-      { label: "Tax Rule", href: "/accounting/tax/rules", icon: ClipboardList, status: "pending" },
-      { label: "Tax Withholding Category", href: "/accounting/tax/withholding", icon: BadgeDollarSign, status: "pending" },
+      { label: "Sales Taxes and Charges Template", href: "/accounting/tax/sales-templates", icon: Percent, status: "live" },
+      { label: "Purchase Taxes and Charges Template", href: "/accounting/tax/purchase-templates", icon: Percent, status: "live" },
+      { label: "Item Tax Template", href: "/accounting/tax/item-templates", icon: Percent, status: "live" },
+      { label: "Tax Category", href: "/accounting/tax/categories", icon: Layers, status: "live" },
+      { label: "Tax Rule", href: "/accounting/tax/rules", icon: ClipboardList, status: "live" },
+      { label: "Tax Withholding Category", href: "/accounting/tax/withholding", icon: BadgeDollarSign, status: "live" },
     ],
   },
   {

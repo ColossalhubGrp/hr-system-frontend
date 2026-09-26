@@ -132,9 +132,9 @@ const SECTIONS: Section[] = [
     title: "Multi Currency",
     subtitle: "Currencies, exchange rates, and revaluation.",
     tiles: [
-      { label: "Currency", href: "/accounting/multi-currency/currencies", icon: Coins, status: "pending" },
-      { label: "Currency Exchange", href: "/accounting/multi-currency/exchange-rates", icon: ArrowRightLeft, status: "pending" },
-      { label: "Exchange Rate Revaluation", href: "/accounting/multi-currency/revaluation", icon: RefreshCw, status: "pending" },
+      { label: "Currency", href: "/accounting/multi-currency/currencies", icon: Coins, status: "live" },
+      { label: "Currency Exchange", href: "/accounting/multi-currency/exchange-rates", icon: ArrowRightLeft, status: "live" },
+      { label: "Exchange Rate Revaluation", href: "/accounting/multi-currency/revaluation", icon: RefreshCw, status: "live" },
     ],
   },
   {

@@ -80,7 +80,7 @@ export function OpeningInvoiceForm({
               </div>
               <div className="col-span-6 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Opening account</label>
-                <SelectInput value={r.temporary_opening_account} options={[{ value: "", label: "—" }, ...openingAccounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, temporary_opening_account: e.target.value } : x)))} />
+                <SelectInput value={r.temporary_opening_account} options={[...openingAccounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, temporary_opening_account: e.target.value } : x)))} />
               </div>
               <div className="col-span-6 md:col-span-2">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Posting date</label>

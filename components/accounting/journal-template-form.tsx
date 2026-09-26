@@ -82,7 +82,7 @@ export function JournalTemplateForm({
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account #{idx + 1}</label>
                 <SelectInput
                   value={line.account}
-                  options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]}
+                  options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]}
                   onChange={(e) => setLines((p) => p.map((l, i) => (i === idx ? { ...l, account: e.target.value } : l)))}
                 />
               </div>

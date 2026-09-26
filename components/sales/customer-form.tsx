@@ -68,7 +68,7 @@ export function CustomerForm({
               id="customer_group"
               name="customer_group"
               defaultValue={initial?.customerGroup ?? ""}
-              options={[{ value: "", label: "—" }, ...customerGroups.map((g) => ({ value: g, label: g }))]}
+              options={[...customerGroups.map((g) => ({ value: g, label: g }))]}
             />
           </Field>
           <Field label="Territory" htmlFor="territory">
@@ -76,7 +76,7 @@ export function CustomerForm({
               id="territory"
               name="territory"
               defaultValue={initial?.territory ?? ""}
-              options={[{ value: "", label: "—" }, ...territories.map((t) => ({ value: t, label: t }))]}
+              options={[...territories.map((t) => ({ value: t, label: t }))]}
             />
           </Field>
           <Field label="Industry" htmlFor="industry">
@@ -84,7 +84,7 @@ export function CustomerForm({
               id="industry"
               name="industry"
               defaultValue={initial?.industry ?? ""}
-              options={[{ value: "", label: "—" }, ...industries.map((i) => ({ value: i, label: i }))]}
+              options={[...industries.map((i) => ({ value: i, label: i }))]}
             />
           </Field>
           <Field label="Market segment" htmlFor="market_segment">
@@ -92,7 +92,7 @@ export function CustomerForm({
               id="market_segment"
               name="market_segment"
               defaultValue={initial?.marketSegment ?? ""}
-              options={[{ value: "", label: "—" }, ...marketSegments.map((s) => ({ value: s, label: s }))]}
+              options={[...marketSegments.map((s) => ({ value: s, label: s }))]}
             />
           </Field>
         </div>
@@ -105,7 +105,7 @@ export function CustomerForm({
               id="default_currency"
               name="default_currency"
               defaultValue={initial?.defaultCurrency ?? ""}
-              options={[{ value: "", label: "—" }, ...currencies.map((c) => ({ value: c, label: c }))]}
+              options={[...currencies.map((c) => ({ value: c, label: c }))]}
             />
           </Field>
           <Field label="Default price list" htmlFor="default_price_list">
@@ -113,7 +113,7 @@ export function CustomerForm({
               id="default_price_list"
               name="default_price_list"
               defaultValue={initial?.defaultPriceList ?? ""}
-              options={[{ value: "", label: "—" }, ...priceLists.map((p) => ({ value: p, label: p }))]}
+              options={[...priceLists.map((p) => ({ value: p, label: p }))]}
             />
           </Field>
           <Field label="Tax ID" htmlFor="tax_id">
@@ -124,7 +124,7 @@ export function CustomerForm({
               id="tax_category"
               name="tax_category"
               defaultValue={initial?.taxCategory ?? ""}
-              options={[{ value: "", label: "—" }, ...taxCategories.map((c) => ({ value: c, label: c }))]}
+              options={[...taxCategories.map((c) => ({ value: c, label: c }))]}
             />
           </Field>
           <Field label="Payment terms" htmlFor="payment_terms">
@@ -132,7 +132,7 @@ export function CustomerForm({
               id="payment_terms"
               name="payment_terms"
               defaultValue={initial?.paymentTerms ?? ""}
-              options={[{ value: "", label: "—" }, ...paymentTerms.map((t) => ({ value: t, label: t }))]}
+              options={[...paymentTerms.map((t) => ({ value: t, label: t }))]}
             />
           </Field>
         </div>
@@ -148,7 +148,7 @@ export function CustomerForm({
               id="language"
               name="language"
               defaultValue={initial?.language ?? ""}
-              options={[{ value: "", label: "—" }, ...languages.map((l) => ({ value: l, label: l }))]}
+              options={[...languages.map((l) => ({ value: l, label: l }))]}
             />
           </Field>
         </div>

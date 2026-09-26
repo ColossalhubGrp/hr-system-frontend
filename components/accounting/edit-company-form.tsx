@@ -18,7 +18,7 @@ const EMPTY: FormState = {};
 
 export function EditCompanyForm({ initial, accounts }: { initial: CompanyDetail; accounts: AccountOption[] }) {
   const [state, dispatch] = useFormState(updateCompanyMasterAction.bind(null, initial.name), EMPTY);
-  const acctOptions = [{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))];
+  const acctOptions = [...accounts.map((a) => ({ value: a.name, label: a.name }))];
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">

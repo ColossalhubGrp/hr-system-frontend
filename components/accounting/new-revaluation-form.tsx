@@ -40,7 +40,7 @@ export function NewRevaluationForm({
             <TextInput id="posting_date" name="posting_date" type="date" defaultValue={defaultDate} />
           </Field>
           <Field label="Gain/loss account" htmlFor="gain_loss_account" error={fe.gain_loss_account} required>
-            <SelectInput id="gain_loss_account" name="gain_loss_account" defaultValue="" options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <SelectInput id="gain_loss_account" name="gain_loss_account" defaultValue="" options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
           </Field>
           <Field label="Rounding loss allowance" htmlFor="rounding_loss_allowance">
             <TextInput id="rounding_loss_allowance" name="rounding_loss_allowance" type="number" step="0.01" min="0" defaultValue="0.05" className="tabular-nums" />

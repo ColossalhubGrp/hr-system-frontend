@@ -109,7 +109,6 @@ export function ModeOfPaymentForm({
                 <SelectInput
                   value={row.company}
                   options={[
-                    { value: "", label: "—" },
                     ...companies.map((c) => ({ value: c.name, label: c.name })),
                   ]}
                   onChange={(e) =>
@@ -122,7 +121,6 @@ export function ModeOfPaymentForm({
                 <SelectInput
                   value={row.default_account}
                   options={[
-                    { value: "", label: "—" },
                     ...accounts.map((a) => ({ value: a.name, label: a.name })),
                   ]}
                   onChange={(e) =>

@@ -65,7 +65,7 @@ export function SupplierForm({
               id="supplier_group"
               name="supplier_group"
               defaultValue={initial?.supplierGroup ?? ""}
-              options={[{ value: "", label: "—" }, ...supplierGroups.map((g) => ({ value: g, label: g }))]}
+              options={[...supplierGroups.map((g) => ({ value: g, label: g }))]}
             />
           </Field>
           <Field label="Country" htmlFor="country">
@@ -73,7 +73,7 @@ export function SupplierForm({
               id="country"
               name="country"
               defaultValue={initial?.country ?? ""}
-              options={[{ value: "", label: "—" }, ...countries.map((c) => ({ value: c, label: c }))]}
+              options={[...countries.map((c) => ({ value: c, label: c }))]}
             />
           </Field>
         </div>
@@ -86,7 +86,7 @@ export function SupplierForm({
               id="default_currency"
               name="default_currency"
               defaultValue={initial?.defaultCurrency ?? ""}
-              options={[{ value: "", label: "—" }, ...currencies.map((c) => ({ value: c, label: c }))]}
+              options={[...currencies.map((c) => ({ value: c, label: c }))]}
             />
           </Field>
           <Field label="Default price list" htmlFor="default_price_list">
@@ -94,7 +94,7 @@ export function SupplierForm({
               id="default_price_list"
               name="default_price_list"
               defaultValue={initial?.defaultPriceList ?? ""}
-              options={[{ value: "", label: "—" }, ...priceLists.map((p) => ({ value: p, label: p }))]}
+              options={[...priceLists.map((p) => ({ value: p, label: p }))]}
             />
           </Field>
           <Field label="Tax ID" htmlFor="tax_id">
@@ -105,7 +105,7 @@ export function SupplierForm({
               id="tax_category"
               name="tax_category"
               defaultValue={initial?.taxCategory ?? ""}
-              options={[{ value: "", label: "—" }, ...taxCategories.map((c) => ({ value: c, label: c }))]}
+              options={[...taxCategories.map((c) => ({ value: c, label: c }))]}
             />
           </Field>
           <Field label="Payment terms" htmlFor="payment_terms">
@@ -113,7 +113,7 @@ export function SupplierForm({
               id="payment_terms"
               name="payment_terms"
               defaultValue={initial?.paymentTerms ?? ""}
-              options={[{ value: "", label: "—" }, ...paymentTerms.map((t) => ({ value: t, label: t }))]}
+              options={[...paymentTerms.map((t) => ({ value: t, label: t }))]}
             />
           </Field>
         </div>
@@ -145,7 +145,7 @@ export function SupplierForm({
               id="language"
               name="language"
               defaultValue={initial?.language ?? ""}
-              options={[{ value: "", label: "—" }, ...languages.map((l) => ({ value: l, label: l }))]}
+              options={[...languages.map((l) => ({ value: l, label: l }))]}
             />
           </Field>
         </div>

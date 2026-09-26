@@ -96,10 +96,10 @@ export function ShareTransferForm({
       <FormSection title="Parties" description="Issue leaves From blank, Purchase (buy-back) leaves To blank.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="From shareholder" htmlFor="from_shareholder">
-            <SelectInput id="from_shareholder" name="from_shareholder" defaultValue={initial?.fromShareholder ?? ""} options={[{ value: "", label: "—" }, ...shareholders.map((s) => ({ value: s, label: s }))]} disabled={type === "Issue"} />
+            <SelectInput id="from_shareholder" name="from_shareholder" defaultValue={initial?.fromShareholder ?? ""} options={[...shareholders.map((s) => ({ value: s, label: s }))]} disabled={type === "Issue"} />
           </Field>
           <Field label="To shareholder" htmlFor="to_shareholder">
-            <SelectInput id="to_shareholder" name="to_shareholder" defaultValue={initial?.toShareholder ?? ""} options={[{ value: "", label: "—" }, ...shareholders.map((s) => ({ value: s, label: s }))]} disabled={type === "Purchase"} />
+            <SelectInput id="to_shareholder" name="to_shareholder" defaultValue={initial?.toShareholder ?? ""} options={[...shareholders.map((s) => ({ value: s, label: s }))]} disabled={type === "Purchase"} />
           </Field>
           <Field label="From folio no." htmlFor="from_folio_no">
             <TextInput id="from_folio_no" name="from_folio_no" defaultValue={initial?.fromFolioNo ?? ""} />
@@ -113,10 +113,10 @@ export function ShareTransferForm({
       <FormSection title="Accounts" description="Which accounts the equity movement posts to.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Asset account (cash/bank)" htmlFor="asset_account">
-            <SelectInput id="asset_account" name="asset_account" defaultValue={initial?.assetAccount ?? ""} options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <SelectInput id="asset_account" name="asset_account" defaultValue={initial?.assetAccount ?? ""} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
           </Field>
           <Field label="Equity / liability account" htmlFor="equity_or_liability_account">
-            <SelectInput id="equity_or_liability_account" name="equity_or_liability_account" defaultValue={initial?.equityOrLiabilityAccount ?? ""} options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <SelectInput id="equity_or_liability_account" name="equity_or_liability_account" defaultValue={initial?.equityOrLiabilityAccount ?? ""} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
           </Field>
           <Field label="Remarks" htmlFor="remarks" wide>
             <TextArea id="remarks" name="remarks" rows={2} defaultValue={initial?.remarks ?? ""} />

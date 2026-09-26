@@ -61,7 +61,6 @@ export function AccountsSettingsForm({ initial }: { initial: AccountsSettings })
             name="determine_address_tax_category_from"
             defaultValue={initial.determineAddressTaxCategoryFrom ?? ""}
             options={[
-              { value: "", label: "—" },
               { value: "Billing Address", label: "Billing Address" },
               { value: "Shipping Address", label: "Shipping Address" },
             ]}
@@ -86,7 +85,6 @@ export function AccountsSettingsForm({ initial }: { initial: AccountsSettings })
             name="book_deferred_entries_based_on"
             defaultValue={initial.bookDeferredEntriesBasedOn ?? ""}
             options={[
-              { value: "", label: "—" },
               { value: "Days", label: "Days" },
               { value: "Months", label: "Months" },
             ]}

@@ -43,7 +43,8 @@ export async function createCustomerGroupAction(_prev: FormState, formData: Form
     });
   } catch (err) { return toFormState(err); }
   revalidatePath("/sales/customer-groups");
-  redirect(`/sales/customer-groups/${encodeURIComponent(created.name)}`);
+  // Save = done → back to the list.
+  redirect("/sales/customer-groups");
 }
 
 export async function updateCustomerGroupAction(name: string, _prev: FormState, formData: FormData): Promise<FormState> {
@@ -60,7 +61,7 @@ export async function updateCustomerGroupAction(name: string, _prev: FormState, 
   } catch (err) { return toFormState(err); }
   revalidatePath("/sales/customer-groups");
   revalidatePath(`/sales/customer-groups/${name}`);
-  return {};
+  redirect("/sales/customer-groups");
 }
 
 export async function deleteCustomerGroupAction(name: string): Promise<FormState> {

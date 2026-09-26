@@ -95,7 +95,7 @@ export function SalesTaxTemplateForm({
               </div>
               <div className="col-span-12 md:col-span-4">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account head</label>
-                <SelectInput value={l.account_head} options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: e.target.value } : x)))} />
+                <SelectInput value={l.account_head} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: e.target.value } : x)))} />
               </div>
               <div className="col-span-8 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Description</label>

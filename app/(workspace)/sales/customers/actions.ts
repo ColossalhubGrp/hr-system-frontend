@@ -74,7 +74,9 @@ export async function createCustomerAction(_prev: FormState, formData: FormData)
     return toFormState(err);
   }
   revalidatePath("/sales/customers");
-  redirect(`/sales/customers/${encodeURIComponent(created.name)}`);
+  // Save = done → back to the list, per user preference (matches the
+  // Frappe Desk "Save & Close" behaviour).
+  redirect("/sales/customers");
 }
 
 export async function updateCustomerAction(name: string, _prev: FormState, formData: FormData): Promise<FormState> {
@@ -94,7 +96,7 @@ export async function updateCustomerAction(name: string, _prev: FormState, formD
   }
   revalidatePath("/sales/customers");
   revalidatePath(`/sales/customers/${name}`);
-  return {};
+  redirect("/sales/customers");
 }
 
 export async function deleteCustomerAction(name: string): Promise<FormState> {

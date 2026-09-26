@@ -99,7 +99,7 @@ export function BudgetForm({
             </Field>
           )}
           <Field label="Monthly distribution" htmlFor="monthly_distribution">
-            <SelectInput id="monthly_distribution" name="monthly_distribution" defaultValue={initial?.monthlyDistribution ?? ""} options={[{ value: "", label: "—" }, ...monthlyDistributions.map((m) => ({ value: m, label: m }))]} />
+            <SelectInput id="monthly_distribution" name="monthly_distribution" defaultValue={initial?.monthlyDistribution ?? ""} options={[...monthlyDistributions.map((m) => ({ value: m, label: m }))]} />
           </Field>
         </div>
       </FormSection>
@@ -138,7 +138,7 @@ export function BudgetForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-8">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account #{idx + 1}</label>
-                <SelectInput value={l.account} options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account: e.target.value } : x)))} />
+                <SelectInput value={l.account} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account: e.target.value } : x)))} />
               </div>
               <div className="col-span-11 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Budget amount</label>

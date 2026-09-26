@@ -92,7 +92,6 @@ export function NewPaymentEntryForm({
               name="mode_of_payment"
               defaultValue=""
               options={[
-                { value: "", label: "—" },
                 ...modes.map((m) => ({ value: m.name, label: `${m.name} (${m.type})` })),
               ]}
             />
@@ -130,7 +129,7 @@ export function NewPaymentEntryForm({
               id="paid_from"
               name="paid_from"
               defaultValue=""
-              options={[{ value: "", label: "—" }, ...accountOptions]}
+              options={[...accountOptions]}
             />
           </Field>
           <Field label="Paid To" htmlFor="paid_to" error={fe.paid_to}>
@@ -138,7 +137,7 @@ export function NewPaymentEntryForm({
               id="paid_to"
               name="paid_to"
               defaultValue=""
-              options={[{ value: "", label: "—" }, ...accountOptions]}
+              options={[...accountOptions]}
             />
           </Field>
           <Field label="Paid Amount" htmlFor="paid_amount" error={fe.paid_amount} required>

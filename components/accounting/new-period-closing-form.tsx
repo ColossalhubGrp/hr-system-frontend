@@ -45,7 +45,7 @@ export function NewPeriodClosingForm({
             <TextInput id="posting_date" name="posting_date" type="date" defaultValue={defaultDate} />
           </Field>
           <Field label="Closing account (retained earnings)" htmlFor="closing_account_head" error={fe.closing_account_head} required>
-            <SelectInput id="closing_account_head" name="closing_account_head" defaultValue="" options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <SelectInput id="closing_account_head" name="closing_account_head" defaultValue="" options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
           </Field>
           <Field label="Cost centre" htmlFor="cost_center">
             <TextInput id="cost_center" name="cost_center" />

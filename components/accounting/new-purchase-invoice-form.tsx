@@ -95,7 +95,6 @@ export function NewPurchaseInvoiceForm({
               defaultValue=""
               placeholder="Select a supplier…"
               options={[
-                { value: "", label: "—" },
                 ...suppliers.map((s) => ({ value: s.name, label: s.label })),
               ]}
             />
@@ -138,7 +137,6 @@ export function NewPurchaseInvoiceForm({
                   value={line.item_code}
                   placeholder="Select an item…"
                   options={[
-                    { value: "", label: "—" },
                     ...items.map((it) => ({ value: it.code, label: `${it.name} (${it.code})` })),
                   ]}
                   onChange={(e) => onItemChange(idx, e.target.value)}

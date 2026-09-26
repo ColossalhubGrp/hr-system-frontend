@@ -80,11 +80,11 @@ export function TaxRuleForm({
           </Field>
           {taxType === "Sales" ? (
             <Field label="Sales tax template" htmlFor="sales_tax_template" required>
-              <SelectInput id="sales_tax_template" name="sales_tax_template" defaultValue={initial?.salesTaxTemplate ?? ""} options={[{ value: "", label: "—" }, ...salesTemplates.map((c) => ({ value: c, label: c }))]} />
+              <SelectInput id="sales_tax_template" name="sales_tax_template" defaultValue={initial?.salesTaxTemplate ?? ""} options={[...salesTemplates.map((c) => ({ value: c, label: c }))]} />
             </Field>
           ) : (
             <Field label="Purchase tax template" htmlFor="purchase_tax_template" required>
-              <SelectInput id="purchase_tax_template" name="purchase_tax_template" defaultValue={initial?.purchaseTaxTemplate ?? ""} options={[{ value: "", label: "—" }, ...purchaseTemplates.map((c) => ({ value: c, label: c }))]} />
+              <SelectInput id="purchase_tax_template" name="purchase_tax_template" defaultValue={initial?.purchaseTaxTemplate ?? ""} options={[...purchaseTemplates.map((c) => ({ value: c, label: c }))]} />
             </Field>
           )}
           <Field label="Shopping cart" htmlFor="use_for_shopping_cart">

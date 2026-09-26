@@ -43,7 +43,8 @@ export async function createSupplierGroupAction(_prev: FormState, formData: Form
     });
   } catch (err) { return toFormState(err); }
   revalidatePath("/buying/supplier-groups");
-  redirect(`/buying/supplier-groups/${encodeURIComponent(created.name)}`);
+  // Save = done → back to the list.
+  redirect("/buying/supplier-groups");
 }
 
 export async function updateSupplierGroupAction(name: string, _prev: FormState, formData: FormData): Promise<FormState> {
@@ -60,7 +61,7 @@ export async function updateSupplierGroupAction(name: string, _prev: FormState, 
   } catch (err) { return toFormState(err); }
   revalidatePath("/buying/supplier-groups");
   revalidatePath(`/buying/supplier-groups/${name}`);
-  return {};
+  redirect("/buying/supplier-groups");
 }
 
 export async function deleteSupplierGroupAction(name: string): Promise<FormState> {

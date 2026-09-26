@@ -72,7 +72,7 @@ export function BankAccountForm({
             <TextInput id="account_name" name="account_name" defaultValue={initial?.accountName ?? ""} placeholder="e.g. CBZ Payroll USD" />
           </Field>
           <Field label="Bank" htmlFor="bank" error={fe.bank} required>
-            <SelectInput id="bank" name="bank" defaultValue={initial?.bank ?? banks[0] ?? ""} options={[{ value: "", label: "—" }, ...banks.map((b) => ({ value: b, label: b }))]} />
+            <SelectInput id="bank" name="bank" defaultValue={initial?.bank ?? banks[0] ?? ""} options={[...banks.map((b) => ({ value: b, label: b }))]} />
           </Field>
           <Field label="Account type" htmlFor="account_type">
             <SelectInput id="account_type" name="account_type" defaultValue={initial?.accountType ?? ""} options={ACCOUNT_TYPES} />
@@ -84,7 +84,7 @@ export function BankAccountForm({
             <TextInput id="iban" name="iban" defaultValue={initial?.iban ?? ""} />
           </Field>
           <Field label="Currency" htmlFor="currency">
-            <SelectInput id="currency" name="currency" defaultValue={initial?.currency ?? ""} options={[{ value: "", label: "—" }, ...currencies.map((c) => ({ value: c, label: c }))]} />
+            <SelectInput id="currency" name="currency" defaultValue={initial?.currency ?? ""} options={[...currencies.map((c) => ({ value: c, label: c }))]} />
           </Field>
           <Field label="Kind" htmlFor="is_company_account">
             <div className="flex flex-col gap-2 text-sm">
@@ -109,7 +109,7 @@ export function BankAccountForm({
         <FormSection title="Company link" description="Which company owns it and which ledger account it posts to.">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Company" htmlFor="company"><SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} options={companies.map((c) => c.name)} /></Field>
-            <Field label="Ledger account" htmlFor="account"><SelectInput id="account" name="account" defaultValue={initial?.account ?? ""} options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} /></Field>
+            <Field label="Ledger account" htmlFor="account"><SelectInput id="account" name="account" defaultValue={initial?.account ?? ""} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} /></Field>
           </div>
         </FormSection>
       ) : (

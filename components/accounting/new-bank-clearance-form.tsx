@@ -34,10 +34,10 @@ export function NewBankClearanceForm({
       <FormSection title="Batch" description="Pick the GL account (typically a bank asset) + date range, then load the payments to clear.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="GL account" htmlFor="account" error={fe.account} required>
-            <SelectInput id="account" name="account" defaultValue="" options={[{ value: "", label: "—" }, ...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <SelectInput id="account" name="account" defaultValue="" options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
           </Field>
           <Field label="Bank Account (optional)" htmlFor="bank_account">
-            <SelectInput id="bank_account" name="bank_account" defaultValue="" options={[{ value: "", label: "—" }, ...bankAccounts.map((b) => ({ value: b, label: b }))]} />
+            <SelectInput id="bank_account" name="bank_account" defaultValue="" options={[...bankAccounts.map((b) => ({ value: b, label: b }))]} />
           </Field>
           <Field label="From date" htmlFor="from_date" error={fe.from_date} required>
             <TextInput id="from_date" name="from_date" type="date" defaultValue={defaultDate} />

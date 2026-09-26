@@ -97,7 +97,6 @@ export function NewSalesInvoiceForm({
               defaultValue=""
               placeholder="Select a customer…"
               options={[
-                { value: "", label: "—" },
                 ...customers.map((c) => ({ value: c.name, label: c.label })),
               ]}
             />
@@ -140,7 +139,6 @@ export function NewSalesInvoiceForm({
                   value={line.item_code}
                   placeholder="Select an item…"
                   options={[
-                    { value: "", label: "—" },
                     ...items.map((it) => ({ value: it.code, label: `${it.name} (${it.code})` })),
                   ]}
                   onChange={(e) => onItemChange(idx, e.target.value)}

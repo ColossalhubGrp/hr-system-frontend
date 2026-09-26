@@ -75,7 +75,8 @@ export async function createSupplierAction(_prev: FormState, formData: FormData)
     return toFormState(err);
   }
   revalidatePath("/buying/suppliers");
-  redirect(`/buying/suppliers/${encodeURIComponent(created.name)}`);
+  // Save = done → back to the list.
+  redirect("/buying/suppliers");
 }
 
 export async function updateSupplierAction(name: string, _prev: FormState, formData: FormData): Promise<FormState> {
@@ -95,7 +96,7 @@ export async function updateSupplierAction(name: string, _prev: FormState, formD
   }
   revalidatePath("/buying/suppliers");
   revalidatePath(`/buying/suppliers/${name}`);
-  return {};
+  redirect("/buying/suppliers");
 }
 
 export async function deleteSupplierAction(name: string): Promise<FormState> {

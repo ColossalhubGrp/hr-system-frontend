@@ -101,7 +101,7 @@ export function SubscriptionForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-8">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Plan #{idx + 1}</label>
-                <SelectInput value={r.plan} options={[{ value: "", label: "—" }, ...plans.map((p) => ({ value: p, label: p }))]} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, plan: e.target.value } : x)))} />
+                <SelectInput value={r.plan} options={[...plans.map((p) => ({ value: p, label: p }))]} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, plan: e.target.value } : x)))} />
               </div>
               <div className="col-span-11 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Qty</label>

@@ -36,7 +36,7 @@ export function NewCompanyForm({ currencies, countries }: { currencies: string[]
             <SelectInput id="default_currency" name="default_currency" defaultValue="USD" options={currencies} />
           </Field>
           <Field label="Country" htmlFor="country" error={fe.country} required>
-            <SelectInput id="country" name="country" defaultValue="" options={[{ value: "", label: "—" }, ...countries.map((c) => ({ value: c, label: c }))]} />
+            <SelectInput id="country" name="country" defaultValue="" options={[...countries.map((c) => ({ value: c, label: c }))]} />
           </Field>
           <Field label="Tax ID" htmlFor="tax_id">
             <TextInput id="tax_id" name="tax_id" placeholder="e.g. ZIMRA BP number" />

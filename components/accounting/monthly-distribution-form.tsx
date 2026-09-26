@@ -61,7 +61,7 @@ export function MonthlyDistributionForm({
             </div>
           )}
           <Field label="Fiscal year" htmlFor="fiscal_year" error={fe.fiscal_year}>
-            <SelectInput id="fiscal_year" name="fiscal_year" defaultValue={initial?.fiscalYear ?? ""} options={[{ value: "", label: "—" }, ...fiscalYears.map((y) => ({ value: y, label: y }))]} />
+            <SelectInput id="fiscal_year" name="fiscal_year" defaultValue={initial?.fiscalYear ?? ""} options={[...fiscalYears.map((y) => ({ value: y, label: y }))]} />
           </Field>
         </div>
       </FormSection>

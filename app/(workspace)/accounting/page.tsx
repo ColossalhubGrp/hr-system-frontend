@@ -142,12 +142,12 @@ const SECTIONS: Section[] = [
     title: "Banking",
     subtitle: "Banks, accounts, reconciliation and statements.",
     tiles: [
-      { label: "Bank", href: "/accounting/banking/banks", icon: Banknote, status: "pending" },
-      { label: "Bank Account", href: "/accounting/banking/accounts", icon: Wallet, status: "pending" },
-      { label: "Bank Clearance", href: "/accounting/banking/clearance", icon: ArrowLeftRight, status: "pending" },
-      { label: "Bank Reconciliation Tool", href: "/accounting/banking/reconciliation-tool", icon: ArrowLeftRight, status: "pending" },
-      { label: "Bank Reconciliation Statement", href: "/accounting/banking/reconciliation-statement", icon: FileSpreadsheet, status: "pending" },
-      { label: "Plaid Settings", href: "/accounting/banking/plaid", icon: ScrollText, status: "pending" },
+      { label: "Bank", href: "/accounting/banking/banks", icon: Banknote, status: "live" },
+      { label: "Bank Account", href: "/accounting/banking/accounts", icon: Wallet, status: "live" },
+      { label: "Bank Clearance", href: "/accounting/banking/clearance", icon: ArrowLeftRight, status: "live" },
+      { label: "Bank Reconciliation Tool", href: "/accounting/banking/reconciliation-tool", icon: ArrowLeftRight, status: "live" },
+      { label: "Bank Reconciliation Statement", href: "/accounting/banking/reconciliation-statement", icon: FileSpreadsheet, status: "live" },
+      { label: "Plaid Settings", href: "/accounting/banking/plaid", icon: ScrollText, status: "live" },
     ],
   },
   {

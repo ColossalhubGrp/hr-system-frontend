@@ -149,6 +149,14 @@ export async function accountsReceivable(opts: { company: string; reportDate: st
   });
 }
 
+export async function bankReconciliationStatement(opts: { company: string; account: string; reportDate: string }) {
+  return runReport("Bank Reconciliation Statement", {
+    company: opts.company,
+    account: opts.account,
+    report_date: opts.reportDate,
+  });
+}
+
 export async function budgetVariance(opts: { company: string; fiscalYear: string; period?: string; budgetAgainst?: string }) {
   return runReport("Budget Variance Report", {
     company: opts.company,

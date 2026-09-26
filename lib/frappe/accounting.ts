@@ -356,6 +356,356 @@ export async function listCompanies(): Promise<Array<{ name: string; abbr: strin
   }));
 }
 
+// ── Payment Entry ────────────────────────────────────────────────
+
+export type PaymentType = "Receive" | "Pay" | "Internal Transfer";
+export const PAYMENT_TYPES: PaymentType[] = ["Receive", "Pay", "Internal Transfer"];
+
+export type PartyType = "Customer" | "Supplier" | "Employee" | "Shareholder" | "Student" | "Donor";
+export const PARTY_TYPES: PartyType[] = ["Customer", "Supplier", "Employee", "Shareholder"];
+
+export type PaymentEntryRow = {
+  name: string;
+  paymentType: string;
+  postingDate: string;
+  company: string;
+  partyType: string | null;
+  party: string | null;
+  partyName: string | null;
+  paidFrom: string | null;
+  paidTo: string | null;
+  paidAmount: number;
+  receivedAmount: number;
+  referenceNo: string | null;
+  referenceDate: string | null;
+  modeOfPayment: string | null;
+  docstatus: 0 | 1 | 2;
+};
+
+export type PaymentEntryList = {
+  rows: PaymentEntryRow[];
+  total: number;
+  page: number;
+  pageSize: number;
+  counts: {
+    draft: number;
+    submitted: number;
+    cancelled: number;
+    receivedTotal: number;
+    paidTotal: number;
+  };
+};
+
+export type PaymentEntryDetail = {
+  name: string;
+  paymentType: string;
+  postingDate: string;
+  company: string;
+  partyType: string | null;
+  party: string | null;
+  partyName: string | null;
+  paidFrom: string | null;
+  paidTo: string | null;
+  paidFromCurrency: string | null;
+  paidToCurrency: string | null;
+  paidAmount: number;
+  receivedAmount: number;
+  sourceExchangeRate: number;
+  targetExchangeRate: number;
+  modeOfPayment: string | null;
+  referenceNo: string | null;
+  referenceDate: string | null;
+  remarks: string | null;
+  allocatedAmount: number;
+  unallocatedAmount: number;
+  docstatus: 0 | 1 | 2;
+  references: Array<{
+    idx: number;
+    referenceDoctype: string;
+    referenceName: string;
+    totalAmount: number;
+    outstandingAmount: number;
+    allocatedAmount: number;
+  }>;
+};
+
+export async function listPaymentEntries(opts: {
+  docstatus?: number;
+  company?: string;
+  paymentType?: string;
+  page?: number;
+  pageSize?: number;
+} = {}): Promise<PaymentEntryList> {
+  const page = Math.max(1, opts.page ?? 1);
+  const pageSize = Math.max(1, Math.min(100, opts.pageSize ?? 25));
+
+  const filters: [string, string, unknown][] = [];
+  if (opts.docstatus !== undefined) filters.push(["docstatus", "=", opts.docstatus]);
+  if (opts.company) filters.push(["company", "=", opts.company]);
+  if (opts.paymentType) filters.push(["payment_type", "=", opts.paymentType]);
+
+  const [rowsRaw, totalRaw, counts] = await Promise.all([
+    frappeCall<Array<Record<string, unknown>>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "Payment Entry",
+        fields: [
+          "name",
+          "payment_type",
+          "posting_date",
+          "company",
+          "party_type",
+          "party",
+          "party_name",
+          "paid_from",
+          "paid_to",
+          "paid_amount",
+          "received_amount",
+          "reference_no",
+          "reference_date",
+          "mode_of_payment",
+          "docstatus",
+        ],
+        filters,
+        order_by: "posting_date desc, creation desc",
+        limit_start: (page - 1) * pageSize,
+        limit_page_length: pageSize,
+      },
+    }),
+    frappeCall<{ count?: number } | number>({
+      method: "frappe.client.get_count",
+      as: "user",
+      args: { doctype: "Payment Entry", filters },
+    }),
+    fetchPaymentCounts(opts.company, opts.paymentType),
+  ]);
+
+  const total = typeof totalRaw === "number" ? totalRaw : (totalRaw?.count ?? 0);
+
+  const rows: PaymentEntryRow[] = rowsRaw.map((r) => ({
+    name: String(r.name ?? ""),
+    paymentType: String(r.payment_type ?? "Receive"),
+    postingDate: String(r.posting_date ?? ""),
+    company: String(r.company ?? ""),
+    partyType: (r.party_type as string | null) ?? null,
+    party: (r.party as string | null) ?? null,
+    partyName: (r.party_name as string | null) ?? null,
+    paidFrom: (r.paid_from as string | null) ?? null,
+    paidTo: (r.paid_to as string | null) ?? null,
+    paidAmount: Number(r.paid_amount ?? 0),
+    receivedAmount: Number(r.received_amount ?? 0),
+    referenceNo: (r.reference_no as string | null) ?? null,
+    referenceDate: (r.reference_date as string | null) ?? null,
+    modeOfPayment: (r.mode_of_payment as string | null) ?? null,
+    docstatus: (r.docstatus as 0 | 1 | 2) ?? 0,
+  }));
+
+  return { rows, total, page, pageSize, counts };
+}
+
+async function fetchPaymentCounts(
+  company: string | undefined,
+  paymentType: string | undefined,
+): Promise<PaymentEntryList["counts"]> {
+  const base: [string, string, unknown][] = [];
+  if (company) base.push(["company", "=", company]);
+  if (paymentType) base.push(["payment_type", "=", paymentType]);
+
+  const [draft, submitted, cancelled, recvSum, paidSum] = await Promise.all([
+    countPayments([...base, ["docstatus", "=", 0]]),
+    countPayments([...base, ["docstatus", "=", 1]]),
+    countPayments([...base, ["docstatus", "=", 2]]),
+    sumPaymentField([...base, ["docstatus", "=", 1], ["payment_type", "=", "Receive"]], "received_amount"),
+    sumPaymentField([...base, ["docstatus", "=", 1], ["payment_type", "=", "Pay"]], "paid_amount"),
+  ]);
+  return {
+    draft,
+    submitted,
+    cancelled,
+    receivedTotal: recvSum,
+    paidTotal: paidSum,
+  };
+}
+
+async function countPayments(filters: [string, string, unknown][]): Promise<number> {
+  const raw = await frappeCall<{ count?: number } | number>({
+    method: "frappe.client.get_count",
+    as: "user",
+    args: { doctype: "Payment Entry", filters },
+  });
+  return typeof raw === "number" ? raw : (raw?.count ?? 0);
+}
+
+async function sumPaymentField(
+  filters: [string, string, unknown][],
+  field: "paid_amount" | "received_amount",
+): Promise<number> {
+  try {
+    const rows = await frappeCall<Array<Record<string, unknown>>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "Payment Entry",
+        fields: [field],
+        filters,
+        limit_page_length: 0,
+      },
+    });
+    return rows.reduce((acc, r) => acc + Number(r[field] ?? 0), 0);
+  } catch {
+    return 0;
+  }
+}
+
+export async function getPaymentEntry(name: string): Promise<PaymentEntryDetail | null> {
+  try {
+    const doc = await frappeCall<Record<string, unknown>>({
+      method: "frappe.client.get",
+      as: "user",
+      args: { doctype: "Payment Entry", name },
+    });
+    const refs = (doc.references as Array<Record<string, unknown>>) ?? [];
+    return {
+      name: String(doc.name ?? name),
+      paymentType: String(doc.payment_type ?? "Receive"),
+      postingDate: String(doc.posting_date ?? ""),
+      company: String(doc.company ?? ""),
+      partyType: (doc.party_type as string | null) ?? null,
+      party: (doc.party as string | null) ?? null,
+      partyName: (doc.party_name as string | null) ?? null,
+      paidFrom: (doc.paid_from as string | null) ?? null,
+      paidTo: (doc.paid_to as string | null) ?? null,
+      paidFromCurrency: (doc.paid_from_account_currency as string | null) ?? null,
+      paidToCurrency: (doc.paid_to_account_currency as string | null) ?? null,
+      paidAmount: Number(doc.paid_amount ?? 0),
+      receivedAmount: Number(doc.received_amount ?? 0),
+      sourceExchangeRate: Number(doc.source_exchange_rate ?? 1),
+      targetExchangeRate: Number(doc.target_exchange_rate ?? 1),
+      modeOfPayment: (doc.mode_of_payment as string | null) ?? null,
+      referenceNo: (doc.reference_no as string | null) ?? null,
+      referenceDate: (doc.reference_date as string | null) ?? null,
+      remarks: (doc.remarks as string | null) ?? null,
+      allocatedAmount: Number(doc.total_allocated_amount ?? 0),
+      unallocatedAmount: Number(doc.unallocated_amount ?? 0),
+      docstatus: (doc.docstatus as 0 | 1 | 2) ?? 0,
+      references: refs.map((r, i) => ({
+        idx: Number(r.idx ?? i + 1),
+        referenceDoctype: String(r.reference_doctype ?? ""),
+        referenceName: String(r.reference_name ?? ""),
+        totalAmount: Number(r.total_amount ?? 0),
+        outstandingAmount: Number(r.outstanding_amount ?? 0),
+        allocatedAmount: Number(r.allocated_amount ?? 0),
+      })),
+    };
+  } catch (e) {
+    if (e instanceof FrappeRequestError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+export type PaymentEntryCreateInput = {
+  paymentType: PaymentType;
+  postingDate: string;
+  company: string;
+  partyType?: string;
+  party?: string;
+  paidFrom?: string;
+  paidTo?: string;
+  paidAmount: number;
+  receivedAmount?: number;
+  modeOfPayment?: string;
+  referenceNo?: string;
+  referenceDate?: string;
+  remarks?: string;
+};
+
+export async function createPaymentEntry(input: PaymentEntryCreateInput): Promise<{ name: string }> {
+  const doc: Record<string, unknown> = {
+    doctype: "Payment Entry",
+    payment_type: input.paymentType,
+    posting_date: input.postingDate,
+    company: input.company,
+    paid_amount: Number(input.paidAmount),
+    received_amount: Number(input.receivedAmount ?? input.paidAmount),
+    mode_of_payment: input.modeOfPayment || undefined,
+    reference_no: input.referenceNo || undefined,
+    reference_date: input.referenceDate || undefined,
+    remarks: input.remarks || undefined,
+  };
+  if (input.paymentType !== "Internal Transfer") {
+    if (input.partyType) doc.party_type = input.partyType;
+    if (input.party) doc.party = input.party;
+  }
+  if (input.paidFrom) doc.paid_from = input.paidFrom;
+  if (input.paidTo) doc.paid_to = input.paidTo;
+
+  const created = await frappeCall<{ name: string }>({
+    method: "frappe.client.insert",
+    as: "user",
+    verb: "POST",
+    args: { doc },
+  });
+  return { name: created.name };
+}
+
+export async function submitPaymentEntry(name: string): Promise<void> {
+  await frappeCall({
+    method: "frappe.client.submit",
+    as: "user",
+    verb: "POST",
+    args: { doc: { doctype: "Payment Entry", name } },
+  });
+}
+
+export async function cancelPaymentEntry(name: string): Promise<void> {
+  await frappeCall({
+    method: "frappe.client.cancel",
+    as: "user",
+    verb: "POST",
+    args: { doctype: "Payment Entry", name },
+  });
+}
+
+export async function listModesOfPayment(): Promise<Array<{ name: string; type: string }>> {
+  const rows = await frappeCall<Array<Record<string, unknown>>>({
+    method: "frappe.client.get_list",
+    as: "user",
+    args: {
+      doctype: "Mode of Payment",
+      fields: ["name", "type"],
+      filters: [["enabled", "=", 1]],
+      order_by: "name asc",
+      limit_page_length: 0,
+    },
+  });
+  return rows.map((r) => ({ name: String(r.name ?? ""), type: String(r.type ?? "") }));
+}
+
+export async function listParties(partyType: string, opts: { search?: string; limit?: number } = {}): Promise<Array<{ name: string; label: string }>> {
+  const limit = Math.min(50, opts.limit ?? 20);
+  const filters: [string, string, unknown][] = [];
+  const nameField = partyType === "Employee" ? "employee_name" : partyType === "Customer" ? "customer_name" : partyType === "Supplier" ? "supplier_name" : "name";
+  if (opts.search) filters.push([nameField, "like", `%${opts.search}%`]);
+  const rows = await frappeCall<Array<Record<string, unknown>>>({
+    method: "frappe.client.get_list",
+    as: "user",
+    args: {
+      doctype: partyType,
+      fields: ["name", nameField],
+      filters,
+      order_by: `${nameField} asc`,
+      limit_page_length: limit,
+    },
+  });
+  return rows.map((r) => ({
+    name: String(r.name ?? ""),
+    label: String(r[nameField] ?? r.name ?? ""),
+  }));
+}
+
+// ── Accounts (used by Journal + Payment) ─────────────────────────
+
 export async function listAccounts(company: string, opts: { search?: string; limit?: number } = {}): Promise<AccountOption[]> {
   const limit = Math.min(50, opts.limit ?? 20);
   const filters: [string, string, unknown][] = [

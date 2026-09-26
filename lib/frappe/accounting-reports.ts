@@ -149,6 +149,18 @@ export async function accountsReceivable(opts: { company: string; reportDate: st
   });
 }
 
+export async function budgetVariance(opts: { company: string; fiscalYear: string; period?: string; budgetAgainst?: string }) {
+  return runReport("Budget Variance Report", {
+    company: opts.company,
+    fiscal_year: opts.fiscalYear,
+    period: opts.period ?? "Monthly",
+    budget_against: opts.budgetAgainst ?? "Cost Center",
+    from_fiscal_year: opts.fiscalYear,
+    to_fiscal_year: opts.fiscalYear,
+    filter_based_on: "Fiscal Year",
+  });
+}
+
 export async function accountsPayable(opts: { company: string; reportDate: string }) {
   return runReport("Accounts Payable", {
     company: opts.company,

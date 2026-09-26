@@ -120,11 +120,11 @@ const SECTIONS: Section[] = [
     subtitle: "Slice the P&L by branch, department or project.",
     tiles: [
       { label: "Chart of Cost Centers", href: "/accounting/cost-centers", icon: Building2, status: "live" },
-      { label: "Budget", href: "/accounting/budgets", icon: Calculator, status: "pending" },
+      { label: "Budget", href: "/accounting/budgets", icon: Calculator, status: "live" },
       { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, status: "live" },
-      { label: "Cost Center Allocation", href: "/accounting/cost-centers/allocations", icon: PieChart, status: "pending" },
-      { label: "Budget Variance Report", href: "/accounting/reports/budget-variance", icon: LineChart, status: "pending" },
-      { label: "Monthly Distribution", href: "/accounting/masters/monthly-distribution", icon: BarChart3, status: "pending" },
+      { label: "Cost Center Allocation", href: "/accounting/cost-centers/allocations", icon: PieChart, status: "live" },
+      { label: "Budget Variance Report", href: "/accounting/reports/budget-variance", icon: LineChart, status: "live" },
+      { label: "Monthly Distribution", href: "/accounting/masters/monthly-distribution", icon: BarChart3, status: "live" },
     ],
   },
   {

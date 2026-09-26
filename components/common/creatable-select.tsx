@@ -78,13 +78,38 @@ export function CreatableSelect({
     start(async () => {
       const res = await createLinkMasterAction(kind, cleaned);
       if (!res.ok) {
-        setError(res.error);
+        setError(scrubJargon(res.error));
         return;
       }
       setOpts((prev) => (prev.includes(res.name) ? prev : [...prev, res.name].sort((a, b) => a.localeCompare(b))));
       setValue(res.name);
       setOpen(false);
     });
+  }
+
+  function scrubJargon(msg: string): string {
+    const lowered = msg.toLowerCase();
+    // Permission phrasings from the backend leak "doctype", "role permission",
+    // "document" at users. Translate to plain language + a next step.
+    if (
+      /doctype\s+access/i.test(msg) ||
+      /role\s+permission/i.test(msg) ||
+      /not\s+permitted/i.test(lowered) ||
+      /insufficient\s+permission/i.test(lowered)
+    ) {
+      return `You're not allowed to add a new ${singular} yet. Ask an administrator to grant you access.`;
+    }
+    if (/duplicate|already\s+exists/i.test(lowered)) {
+      return "That name is already taken. Pick something else.";
+    }
+    if (/mandatory|missing\s+field/i.test(lowered)) {
+      return "Something's missing. Try a simpler name and we'll fill the rest in.";
+    }
+    // If the raw message still contains internal terms, replace with a generic fallback.
+    if (/\b(doctype|frappe|erpnext|traceback|exception)\b/i.test(msg)) {
+      return "Couldn't add it. Please try again.";
+    }
+    return msg;
   }
 
   return (

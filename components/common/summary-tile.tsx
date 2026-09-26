@@ -33,19 +33,22 @@ export function SummaryTile({
    *  sits alongside a bigger primary card. */
   compact?: boolean;
 }) {
+  // Sizes deliberately kept tight -- earlier defaults produced too-tall
+  // tiles across every summary row in the system. Compact stays a step
+  // smaller for dense inline rows.
   const inner = (
     <Card className="h-full transition group-hover:border-primary/40">
       <CardContent
         className={cn(
           "flex h-full flex-col",
-          compact ? "gap-1 p-3" : "gap-2 p-4",
+          compact ? "gap-0.5 p-2.5" : "gap-1 p-3",
         )}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <p
             className={cn(
-              "font-medium uppercase tracking-wide text-muted-foreground",
-              compact ? "text-[10px]" : "text-xs",
+              "font-medium uppercase tracking-wide text-muted-foreground leading-none",
+              compact ? "text-[10px]" : "text-[11px]",
             )}
           >
             {label}
@@ -53,24 +56,33 @@ export function SummaryTile({
           {Icon && (
             <span
               className={cn(
-                "grid place-items-center rounded-full",
-                compact ? "h-6 w-6" : "h-7 w-7",
+                "grid place-items-center rounded-full shrink-0",
+                compact ? "h-5 w-5" : "h-6 w-6",
                 TONES[tone],
               )}
             >
-              <Icon className={compact ? "h-3 w-3" : "h-3.5 w-3.5"} />
+              <Icon className={compact ? "h-2.5 w-2.5" : "h-3 w-3"} />
             </span>
           )}
         </div>
         <p
           className={cn(
-            "font-semibold text-foreground",
-            compact ? "text-lg" : "text-2xl",
+            "font-semibold text-foreground leading-tight",
+            compact ? "text-base" : "text-xl",
           )}
         >
           {value}
         </p>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+        {hint && (
+          <p
+            className={cn(
+              "text-muted-foreground leading-tight",
+              compact ? "text-[10px]" : "text-[11px]",
+            )}
+          >
+            {hint}
+          </p>
+        )}
       </CardContent>
     </Card>
   );

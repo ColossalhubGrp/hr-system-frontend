@@ -4,7 +4,12 @@ import { notFound } from "next/navigation";
 import { Truck, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listCurrencies } from "@/lib/frappe/multi-currency/currency";
-import { listPaymentTerms } from "@/lib/frappe/masters/payment-term";
+import { listPaymentTermsTemplates } from "@/lib/frappe/masters/payment-terms-template";
+import {
+  listLanguages,
+  listPriceLists,
+  listTaxCategories,
+} from "@/lib/frappe/masters/link-lookups";
 import { listSupplierGroups } from "@/lib/frappe/buying/supplier-group";
 import { listCountries } from "@/lib/frappe/masters/company";
 import { getSupplier } from "@/lib/frappe/buying/supplier";
@@ -18,12 +23,15 @@ export async function generateMetadata({ params }: { params: { name: string } })
 
 export default async function EditSupplierPage({ params }: { params: { name: string } }) {
   const name = decodeURIComponent(params.name);
-  const [doc, groups, countries, currencies, terms] = await Promise.all([
+  const [doc, groups, countries, currencies, termsTemplates, languages, priceLists, taxCategories] = await Promise.all([
     getSupplier(name),
     listSupplierGroups(),
     listCountries(),
     listCurrencies(),
-    listPaymentTerms(),
+    listPaymentTermsTemplates(),
+    listLanguages(),
+    listPriceLists(),
+    listTaxCategories(),
   ]);
   if (!doc) notFound();
 
@@ -47,7 +55,10 @@ export default async function EditSupplierPage({ params }: { params: { name: str
         supplierGroups={groups.map((g) => g.name)}
         countries={countries}
         currencies={currencies.map((c) => c.name)}
-        paymentTerms={terms.map((t) => t.name)}
+        paymentTerms={termsTemplates.map((t) => t.name)}
+        languages={languages}
+        priceLists={priceLists}
+        taxCategories={taxCategories}
         initial={doc}
       />
     </div>

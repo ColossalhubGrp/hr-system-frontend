@@ -4,7 +4,14 @@ import { notFound } from "next/navigation";
 import { Users, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listCurrencies } from "@/lib/frappe/multi-currency/currency";
-import { listPaymentTerms } from "@/lib/frappe/masters/payment-term";
+import { listPaymentTermsTemplates } from "@/lib/frappe/masters/payment-terms-template";
+import {
+  listIndustries,
+  listMarketSegments,
+  listLanguages,
+  listPriceLists,
+  listTaxCategories,
+} from "@/lib/frappe/masters/link-lookups";
 import { listCustomerGroups } from "@/lib/frappe/sales/customer-group";
 import { getCustomer, listTerritories } from "@/lib/frappe/sales/customer";
 import { CustomerForm } from "@/components/sales/customer-form";
@@ -17,12 +24,28 @@ export async function generateMetadata({ params }: { params: { name: string } })
 
 export default async function EditCustomerPage({ params }: { params: { name: string } }) {
   const name = decodeURIComponent(params.name);
-  const [doc, groups, territories, currencies, terms] = await Promise.all([
+  const [
+    doc,
+    groups,
+    territories,
+    currencies,
+    termsTemplates,
+    industries,
+    marketSegments,
+    languages,
+    priceLists,
+    taxCategories,
+  ] = await Promise.all([
     getCustomer(name),
     listCustomerGroups(),
     listTerritories(),
     listCurrencies(),
-    listPaymentTerms(),
+    listPaymentTermsTemplates(),
+    listIndustries(),
+    listMarketSegments(),
+    listLanguages(),
+    listPriceLists(),
+    listTaxCategories(),
   ]);
   if (!doc) notFound();
 
@@ -46,7 +69,12 @@ export default async function EditCustomerPage({ params }: { params: { name: str
         customerGroups={groups.map((g) => g.name)}
         territories={territories}
         currencies={currencies.map((c) => c.name)}
-        paymentTerms={terms.map((t) => t.name)}
+        paymentTerms={termsTemplates.map((t) => t.name)}
+        industries={industries}
+        marketSegments={marketSegments}
+        languages={languages}
+        priceLists={priceLists}
+        taxCategories={taxCategories}
         initial={doc}
       />
     </div>

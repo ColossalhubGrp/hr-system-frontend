@@ -3,7 +3,12 @@ import type { Route } from "next";
 import { Truck, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listCurrencies } from "@/lib/frappe/multi-currency/currency";
-import { listPaymentTerms } from "@/lib/frappe/masters/payment-term";
+import { listPaymentTermsTemplates } from "@/lib/frappe/masters/payment-terms-template";
+import {
+  listLanguages,
+  listPriceLists,
+  listTaxCategories,
+} from "@/lib/frappe/masters/link-lookups";
 import { listSupplierGroups } from "@/lib/frappe/buying/supplier-group";
 import { listCountries } from "@/lib/frappe/masters/company";
 import { SupplierForm } from "@/components/buying/supplier-form";
@@ -12,11 +17,14 @@ export const metadata = { title: "New Supplier · Colossal HR" };
 export const dynamic = "force-dynamic";
 
 export default async function NewSupplierPage() {
-  const [groups, countries, currencies, terms] = await Promise.all([
+  const [groups, countries, currencies, termsTemplates, languages, priceLists, taxCategories] = await Promise.all([
     listSupplierGroups(),
     listCountries(),
     listCurrencies(),
-    listPaymentTerms(),
+    listPaymentTermsTemplates(),
+    listLanguages(),
+    listPriceLists(),
+    listTaxCategories(),
   ]);
   return (
     <div className="flex flex-col gap-5">
@@ -37,7 +45,10 @@ export default async function NewSupplierPage() {
         supplierGroups={groups.map((g) => g.name)}
         countries={countries}
         currencies={currencies.filter((c) => c.enabled).map((c) => c.name)}
-        paymentTerms={terms.map((t) => t.name)}
+        paymentTerms={termsTemplates.map((t) => t.name)}
+        languages={languages}
+        priceLists={priceLists}
+        taxCategories={taxCategories}
       />
     </div>
   );

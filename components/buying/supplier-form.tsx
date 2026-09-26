@@ -24,6 +24,9 @@ export function SupplierForm({
   countries,
   currencies,
   paymentTerms,
+  languages,
+  priceLists,
+  taxCategories,
   initial,
 }: {
   mode: "create" | "edit";
@@ -32,6 +35,9 @@ export function SupplierForm({
   countries: string[];
   currencies: string[];
   paymentTerms: string[];
+  languages: string[];
+  priceLists: string[];
+  taxCategories: string[];
   initial?: SupplierDetail;
 }) {
   const action = mode === "create" ? createSupplierAction : updateSupplierAction.bind(null, name ?? "");
@@ -84,13 +90,23 @@ export function SupplierForm({
             />
           </Field>
           <Field label="Default price list" htmlFor="default_price_list">
-            <TextInput id="default_price_list" name="default_price_list" defaultValue={initial?.defaultPriceList ?? ""} />
+            <SelectInput
+              id="default_price_list"
+              name="default_price_list"
+              defaultValue={initial?.defaultPriceList ?? ""}
+              options={[{ value: "", label: "—" }, ...priceLists.map((p) => ({ value: p, label: p }))]}
+            />
           </Field>
           <Field label="Tax ID" htmlFor="tax_id">
             <TextInput id="tax_id" name="tax_id" defaultValue={initial?.taxId ?? ""} placeholder="e.g. ZIMRA BP" />
           </Field>
           <Field label="Tax category" htmlFor="tax_category">
-            <TextInput id="tax_category" name="tax_category" defaultValue={initial?.taxCategory ?? ""} />
+            <SelectInput
+              id="tax_category"
+              name="tax_category"
+              defaultValue={initial?.taxCategory ?? ""}
+              options={[{ value: "", label: "—" }, ...taxCategories.map((c) => ({ value: c, label: c }))]}
+            />
           </Field>
           <Field label="Payment terms" htmlFor="payment_terms">
             <SelectInput
@@ -125,7 +141,12 @@ export function SupplierForm({
             <TextInput id="website" name="website" defaultValue={initial?.websiteUrl ?? ""} placeholder="https://…" />
           </Field>
           <Field label="Language" htmlFor="language">
-            <TextInput id="language" name="language" defaultValue={initial?.language ?? ""} placeholder="e.g. en" />
+            <SelectInput
+              id="language"
+              name="language"
+              defaultValue={initial?.language ?? ""}
+              options={[{ value: "", label: "—" }, ...languages.map((l) => ({ value: l, label: l }))]}
+            />
           </Field>
         </div>
       </FormSection>

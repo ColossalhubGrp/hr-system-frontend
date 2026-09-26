@@ -3,7 +3,14 @@ import type { Route } from "next";
 import { Users, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listCurrencies } from "@/lib/frappe/multi-currency/currency";
-import { listPaymentTerms } from "@/lib/frappe/masters/payment-term";
+import { listPaymentTermsTemplates } from "@/lib/frappe/masters/payment-terms-template";
+import {
+  listIndustries,
+  listMarketSegments,
+  listLanguages,
+  listPriceLists,
+  listTaxCategories,
+} from "@/lib/frappe/masters/link-lookups";
 import { listCustomerGroups } from "@/lib/frappe/sales/customer-group";
 import { listTerritories } from "@/lib/frappe/sales/customer";
 import { CustomerForm } from "@/components/sales/customer-form";
@@ -12,11 +19,26 @@ export const metadata = { title: "New Customer · Colossal HR" };
 export const dynamic = "force-dynamic";
 
 export default async function NewCustomerPage() {
-  const [groups, territories, currencies, terms] = await Promise.all([
+  const [
+    groups,
+    territories,
+    currencies,
+    termsTemplates,
+    industries,
+    marketSegments,
+    languages,
+    priceLists,
+    taxCategories,
+  ] = await Promise.all([
     listCustomerGroups(),
     listTerritories(),
     listCurrencies(),
-    listPaymentTerms(),
+    listPaymentTermsTemplates(),
+    listIndustries(),
+    listMarketSegments(),
+    listLanguages(),
+    listPriceLists(),
+    listTaxCategories(),
   ]);
   return (
     <div className="flex flex-col gap-5">
@@ -37,7 +59,12 @@ export default async function NewCustomerPage() {
         customerGroups={groups.map((g) => g.name)}
         territories={territories}
         currencies={currencies.filter((c) => c.enabled).map((c) => c.name)}
-        paymentTerms={terms.map((t) => t.name)}
+        paymentTerms={termsTemplates.map((t) => t.name)}
+        industries={industries}
+        marketSegments={marketSegments}
+        languages={languages}
+        priceLists={priceLists}
+        taxCategories={taxCategories}
       />
     </div>
   );

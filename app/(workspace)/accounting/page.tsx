@@ -79,7 +79,7 @@ const SECTIONS: Section[] = [
     title: "Accounting Masters",
     subtitle: "The setup layer — companies, calendars, dimensions.",
     tiles: [
-      { label: "Company", href: "/accounting/masters/companies", icon: Building, status: "pending" },
+      { label: "Company", href: "/accounting/masters/companies", icon: Building, status: "live" },
       { label: "Chart of Accounts", href: "/accounting/chart-of-accounts", icon: Layers, status: "live" },
       { label: "Accounts Settings", href: "/accounting/masters/settings", icon: ScrollText, status: "live" },
       { label: "Fiscal Year", href: "/accounting/masters/fiscal-year", icon: CalendarClock, status: "live" },

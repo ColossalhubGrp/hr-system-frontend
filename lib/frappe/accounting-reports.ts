@@ -149,6 +149,22 @@ export async function accountsReceivable(opts: { company: string; reportDate: st
   });
 }
 
+export async function shareLedger(opts: { company: string; shareholder?: string; fromDate?: string; toDate?: string }) {
+  return runReport("Share Ledger", {
+    company: opts.company,
+    shareholder: opts.shareholder,
+    from_date: opts.fromDate,
+    to_date: opts.toDate,
+  });
+}
+
+export async function shareBalance(opts: { company: string; asOfDate: string }) {
+  return runReport("Share Balance", {
+    company: opts.company,
+    as_on_date: opts.asOfDate,
+  });
+}
+
 export async function bankReconciliationStatement(opts: { company: string; account: string; reportDate: string }) {
   return runReport("Bank Reconciliation Statement", {
     company: opts.company,

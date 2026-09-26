@@ -175,10 +175,10 @@ const SECTIONS: Section[] = [
     title: "Share Management",
     subtitle: "Equity ownership, transfers and balances.",
     tiles: [
-      { label: "Shareholder", href: "/accounting/shares/shareholders", icon: Users, status: "pending" },
-      { label: "Share Transfer", href: "/accounting/shares/transfers", icon: ArrowRightLeft, status: "pending" },
-      { label: "Share Ledger", href: "/accounting/shares/ledger", icon: BookText, status: "pending" },
-      { label: "Share Balance", href: "/accounting/shares/balance", icon: Ratio, status: "pending" },
+      { label: "Shareholder", href: "/accounting/shares/shareholders", icon: Users, status: "live" },
+      { label: "Share Transfer", href: "/accounting/shares/transfers", icon: ArrowRightLeft, status: "live" },
+      { label: "Share Ledger", href: "/accounting/shares/ledger", icon: BookText, status: "live" },
+      { label: "Share Balance", href: "/accounting/shares/balance", icon: Ratio, status: "live" },
     ],
   },
   {

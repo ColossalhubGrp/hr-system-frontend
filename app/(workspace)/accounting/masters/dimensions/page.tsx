@@ -23,7 +23,7 @@ export default async function DimensionsPage() {
         icon={Layers}
         crumb="Accounting · Masters · Accounting Dimensions"
         title="Accounting Dimensions"
-        subtitle={`${rows.length.toLocaleString()} dimensions — extra tags (Branch, Project, Region) on GL entries.`}
+        subtitle={`${rows.length.toLocaleString()} dimensions — extra tags (Branch, Project, Region) on ledger entries.`}
         actions={
           <Link href={"/accounting/masters/dimensions/new" as Route} className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring">
             <Plus className="h-4 w-4" />
@@ -38,7 +38,7 @@ export default async function DimensionsPage() {
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No dimensions yet.</p>}
         columns={[
           { header: "Label", cell: (r) => <span className="font-semibold text-foreground">{r.label}</span> },
-          { header: "Backing DocType", cell: (r) => r.documentType },
+          { header: "Backing record", cell: (r) => r.documentType },
           { header: "Fieldname", cell: (r) => <span className="font-mono text-xs">{r.fieldname}</span> },
           { header: "Status", cell: (r) => <StatusPill status={r.disabled ? "Disabled" : "Active"} /> },
         ]}

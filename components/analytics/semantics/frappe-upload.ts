@@ -73,7 +73,7 @@ export async function uploadFileChunked(
   }
 
   if (!lastResponseMessage?.file_url) {
-    throw new Error("Upload finished but Frappe didn't return a file_url.");
+    throw new Error("Upload finished but the server didn't return a file URL.");
   }
   return lastResponseMessage;
 }

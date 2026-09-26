@@ -163,7 +163,7 @@ export function DepartmentsAdmin({
                         </Button>
                         <ConfirmDialog
                           title={`Delete "${d.department_name}"?`}
-                          description="Frappe refuses this if employees, sub-departments or leave applications still reference it — you'll see exactly what's blocking it."
+                          description="The delete is refused if employees, sub-departments or leave applications still reference this department — you'll see exactly what's blocking it."
                           confirmLabel="Delete"
                           destructive
                           onConfirm={async () => {

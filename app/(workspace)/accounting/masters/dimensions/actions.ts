@@ -14,7 +14,7 @@ export type FormState = { error?: string; fieldErrors?: Record<string, string> }
 
 const schema = z.object({
   label: z.string().trim().min(1, "Label is required."),
-  document_type: z.string().trim().min(1, "Backing DocType is required."),
+  document_type: z.string().trim().min(1, "Backing record type is required."),
   fieldname: z.string().trim().min(1, "Fieldname is required."),
   disabled: z.union([z.literal("on"), z.literal("")]).optional().transform((v) => v === "on"),
 });

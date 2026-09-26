@@ -222,7 +222,7 @@ export async function createLeavePolicyAssignmentAction(
   ) {
     return {
       error:
-        "Pick a leave period — Frappe HR derives the effective dates from it.",
+        "Pick a leave period — the effective dates come from it.",
       fieldErrors: { leave_period: "Required for period-based assignments." },
     };
   }
@@ -240,7 +240,7 @@ export async function createLeavePolicyAssignmentAction(
   ) {
     return {
       error:
-        "Pick an effective-to date — Frappe fills effective-from from the employee's DoJ, but still needs an end.",
+        "Pick an effective-to date — the effective-from comes from the employee's joining date, but we still need an end.",
       fieldErrors: {
         effective_to: "Required for joining-date assignments.",
       },

@@ -42,7 +42,7 @@ export function CoaImporterForm({ companies }: { companies: string[] }) {
         </div>
       </FormSection>
       <p className="text-xs text-muted-foreground">
-        The company must not already have accounts posted against it — ERPNext will refuse to overwrite a live chart. On success you&rsquo;ll land on the new Chart of Accounts tree.
+        The company must not already have accounts posted against it — the importer refuses to overwrite a live chart. On success you&rsquo;ll land on the new Chart of Accounts tree.
       </p>
       <div className="flex items-center justify-end gap-2">
         <Link href={"/accounting" as Route} className="rounded-chip border border-input px-4 py-2 text-sm font-semibold hover:bg-muted/40">Cancel</Link>

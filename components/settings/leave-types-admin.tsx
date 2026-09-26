@@ -695,7 +695,7 @@ function LeaveTypeFields({
       <Field
         label="Rounding"
         htmlFor="rounding"
-        hint="Rounds fractional accruals to the nearest step. Only these steps are supported by Frappe HR."
+        hint="Rounds fractional accruals to the nearest step. Only these steps are supported."
       >
         <select
           id="rounding"

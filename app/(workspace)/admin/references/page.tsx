@@ -46,8 +46,8 @@ export default async function ReferenceMastersPage() {
         title="Reference masters"
         subtitle={
           masters.length === 0
-            ? "No masters created yet. The bench-wide framework creates them as Select fields get promoted to Link."
-            : `${masters.length} master${masters.length === 1 ? "" : "s"} · ${totalRows.toLocaleString()} total row${totalRows === 1 ? "" : "s"} across the bench.`
+            ? "No masters created yet. They're created automatically as picklist fields get promoted to shared lookups."
+            : `${masters.length} master${masters.length === 1 ? "" : "s"} · ${totalRows.toLocaleString()} total row${totalRows === 1 ? "" : "s"} across the workspace.`
         }
         actions={<NewMasterDialog modules={modules} />}
       />

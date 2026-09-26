@@ -90,7 +90,7 @@ const COMPANY_CARDS: SettingCardSpec[] = [
     href: "/settings/payable-accounts",
     icon: <Wallet className="h-4 w-4" />,
     title: "Payable accounts",
-    desc: "Manage the Liability accounts the Expense Claim form (and any future payables flow) can post against — without opening the ERPNext Accounting UI.",
+    desc: "Manage the Liability accounts the Expense Claim form (and any future payables flow) can post against — without leaving Colossal HR.",
     show: (a) => a.isHrAdmin || a.isItAdmin,
   },
 ];

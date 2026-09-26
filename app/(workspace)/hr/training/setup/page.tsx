@@ -13,7 +13,7 @@ const CARDS: SetupCard[] = [
     href: "/settings/training-suppliers",
     icon: <Users className="h-4 w-4" />,
     title: "Training suppliers",
-    desc: "Lightweight registry of external training providers — used by Training Programs and Events without pulling in the ERPNext Buying module.",
+    desc: "Lightweight registry of external training providers — used by Training Programs and Events without pulling in a full procurement module.",
   },
 ];
 

@@ -19,7 +19,7 @@ export default function NewDimensionPage() {
         icon={Layers}
         crumb="Accounting · Masters · Accounting Dimensions · New"
         title="New Accounting Dimension"
-        subtitle="An extra tag GL entries carry alongside Account + Cost Center."
+        subtitle="An extra tag ledger entries carry alongside Account + Cost Center."
       />
       <DimensionForm mode="create" />
     </div>

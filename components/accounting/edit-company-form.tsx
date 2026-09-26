@@ -29,7 +29,7 @@ export function EditCompanyForm({ initial, accounts }: { initial: CompanyDetail;
         </div>
       )}
 
-      <FormSection title="Identity" description="Read-only — change these in Desk if you must (renames re-flow everywhere).">
+      <FormSection title="Identity" description="Read-only — renaming these values re-flows every posting in the company, so ask IT if you need to change them.">
         <div className="grid gap-4 sm:grid-cols-3">
           <Read label="Company name" value={initial.companyName} />
           <Read label="Abbreviation" value={initial.abbr} />

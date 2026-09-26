@@ -42,7 +42,7 @@ export default async function BiometricSetupPage() {
         icon={Fingerprint}
         crumb="Configuration · HR policy · Biometric devices"
         title="Biometric devices"
-        subtitle="Connect on-site fingerprint / face / RFID readers so punches flow into Attendance automatically. Colossal HR uses the standard Frappe HR ingestion endpoint — one Python sync tool runs on-site and posts logs here."
+        subtitle="Connect on-site fingerprint / face / RFID readers so punches flow into Attendance automatically. One small Python sync tool runs on-site alongside the reader and posts logs to Colossal HR."
       />
 
       <Step
@@ -69,10 +69,10 @@ export default async function BiometricSetupPage() {
         title="Install biometric-attendance-sync-tool on the machine next to the reader"
       >
         <p className="text-sm text-ash-700">
-          The Frappe team ships a small Python daemon that pulls logs from
-          ZKTeco / Essl devices over TCP/IP and forwards them to Colossal HR.
-          Any Linux, macOS or Windows machine on the same LAN as the device
-          works — a Raspberry Pi is enough.
+          The upstream project ships a small Python daemon that pulls logs
+          from ZKTeco / Essl devices over TCP/IP and forwards them to
+          Colossal HR. Any Linux, macOS or Windows machine on the same
+          LAN as the device works — a Raspberry Pi is enough.
         </p>
         <a
           href="https://github.com/frappe/biometric-attendance-sync-tool"
@@ -95,7 +95,7 @@ export default async function BiometricSetupPage() {
           The tool authenticates as a Colossal HR user with the{" "}
           <strong>HR User</strong> role. Create a dedicated service user (for
           example <code className="font-mono text-xs">biometric-sync@your-company.com</code>),
-          open its profile in Frappe Desk, and generate an API Key + API
+          open its profile in the admin console, and generate an API Key + API
           Secret. The sync tool&apos;s <code className="font-mono text-xs">local_config.py</code>{" "}
           needs both.
         </p>

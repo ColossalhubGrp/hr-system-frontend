@@ -50,7 +50,7 @@ export function AccountsSettingsForm({ initial }: { initial: AccountsSettings })
       <FormSection title="Cancellation policy" description="What happens to payments and advances when the parent doc is cancelled.">
         <Toggle name="unlink_payment_on_cancellation_of_invoice" label="Unlink payment when invoice is cancelled" defaultChecked={initial.unlinkPaymentOnCancellationOfInvoice} />
         <Toggle name="unlink_advance_payment_on_cancelation_of_order" label="Unlink advance payment when order is cancelled" defaultChecked={initial.unlinkAdvancePaymentOnCancellationOfOrder} />
-        <Toggle name="post_change_gl_entries" label="Allow posting changes to submitted GL entries" defaultChecked={initial.postChangeGlEntries} />
+        <Toggle name="post_change_gl_entries" label="Allow posting changes to already-posted ledger entries" defaultChecked={initial.postChangeGlEntries} />
       </FormSection>
 
       <FormSection title="Tax handling" description="How taxes flow from item templates to invoices.">
@@ -79,7 +79,7 @@ export function AccountsSettingsForm({ initial }: { initial: AccountsSettings })
       <FormSection title="Deferred revenue / expense" description="How multi-period revenue/expense recognition posts.">
         <Toggle name="automatically_process_deferred_accounting_entry" label="Automatically process deferred entries via scheduler" defaultChecked={initial.automaticallyProcessDeferredAccountingEntry} />
         <Toggle name="defer_accounting_for_all_parties_tagged" label="Defer accounting for all parties tagged" defaultChecked={initial.deferAccountingForAllPartiesTagged} />
-        <Toggle name="book_deferred_entries_via_journal_entry" label="Book deferred entries via Journal Entry (vs GL Entry)" defaultChecked={initial.bookDeferredEntriesViaJournalEntry} />
+        <Toggle name="book_deferred_entries_via_journal_entry" label="Book deferred entries as a Journal Entry (instead of posting straight to the ledger)" defaultChecked={initial.bookDeferredEntriesViaJournalEntry} />
         <Field label="Book deferred entries based on" htmlFor="book_deferred_entries_based_on">
           <SelectInput
             id="book_deferred_entries_based_on"

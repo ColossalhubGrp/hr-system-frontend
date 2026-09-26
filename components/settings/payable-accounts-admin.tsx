@@ -138,7 +138,7 @@ function DeleteButton({ name, label }: { name: string; label: string }) {
   return (
     <ConfirmDialog
       title={`Delete "${label}"?`}
-      description="Only accounts with no GL entries can be deleted. If the account has ever been used on an Expense Claim or Journal Entry, Frappe will refuse."
+      description="Only accounts with no ledger entries can be deleted. If the account has ever been used on an Expense Claim or Journal Entry, the delete will be refused."
       confirmLabel="Delete"
       destructive
       onConfirm={async () => {

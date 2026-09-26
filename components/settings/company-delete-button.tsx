@@ -20,7 +20,7 @@ export function CompanyDeleteButton({
   return (
     <ConfirmDialog
       title={`Delete "${label}"?`}
-      description="Only a Company with no linked records (Employees, transactions, salary slips) can be deleted. If anything is attached, Frappe will refuse."
+      description="Only a Company with no linked records (Employees, transactions, salary slips) can be deleted. If anything is attached, the delete will be refused."
       confirmLabel="Delete"
       destructive
       onConfirm={async () => {

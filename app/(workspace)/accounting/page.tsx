@@ -76,7 +76,7 @@ const SECTIONS: Section[] = [
   {
     id: "shortcuts",
     label: "Shortcuts",
-    subtitle: "The everyday desk — invoices, entries, ledger.",
+    subtitle: "The everyday actions — invoices, entries, ledger.",
     rows: [
       { label: "Chart of Accounts", href: "/accounting/chart-of-accounts", icon: Layers, desc: "The account tree per company — assets, liabilities, equity, income, expenses.", status: "live" },
       { label: "Sales Invoice", href: "/accounting/sales-invoices", icon: Receipt, desc: "Bill customers for goods or services with itemised lines and taxes.", status: "live" },
@@ -98,7 +98,7 @@ const SECTIONS: Section[] = [
       { label: "Chart of Accounts", href: "/accounting/chart-of-accounts", icon: Layers, desc: "Manage the ledger account tree per company.", status: "live" },
       { label: "Accounts Settings", href: "/accounting/masters/settings", icon: ScrollText, desc: "Site-wide switches — perpetual stock, credit control, tax handling, close policy.", status: "live" },
       { label: "Fiscal Year", href: "/accounting/masters/fiscal-year", icon: CalendarClock, desc: "Accounting calendar bounds; reports and opening balances key off these.", status: "live" },
-      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, desc: "Extra tags (Branch, Project, Region) that ride on every GL entry.", status: "live" },
+      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, desc: "Extra tags (Branch, Project, Region) that ride on every ledger entry.", status: "live" },
       { label: "Finance Book", href: "/accounting/masters/finance-books", icon: BookText, desc: "Parallel books of account for statutory vs management reporting.", status: "live" },
       { label: "Accounting Period", href: "/accounting/masters/periods", icon: CalendarClock, desc: "Lock a window of dates so no new postings or edits happen inside it.", status: "live" },
       { label: "Payment Term", href: "/accounting/masters/payment-terms", icon: ClipboardList, desc: "Reusable due-date rule — Net 30, Advance 50%, End of Month.", status: "live" },
@@ -136,7 +136,7 @@ const SECTIONS: Section[] = [
     rows: [
       { label: "Chart of Cost Centers", href: "/accounting/cost-centers", icon: Building2, desc: "How the company slices P&L — the cost-centre tree.", status: "live" },
       { label: "Budget", href: "/accounting/budgets", icon: Calculator, desc: "Cap spending against an account, per Cost Center/Project/Dimension.", status: "live" },
-      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, desc: "Extra tags on GL entries alongside Account + Cost Center.", status: "live" },
+      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, desc: "Extra tags on ledger entries alongside Account + Cost Center.", status: "live" },
       { label: "Cost Center Allocation", href: "/accounting/cost-centers/allocations", icon: PieChart, desc: "Split a main cost centre into sub-centres by percentage.", status: "live" },
       { label: "Budget Variance Report", href: "/accounting/reports/budget-variance", icon: LineChart, desc: "Budget vs actuals per Cost Center or Project, sliced by period.", status: "live" },
       { label: "Monthly Distribution", href: "/accounting/masters/monthly-distribution", icon: BarChart3, desc: "Spread a budget or target across the 12 months of the year.", status: "live" },
@@ -225,8 +225,8 @@ export default function AccountingLandingPage() {
         </h1>
         <p className="text-sm text-muted-foreground">
           Full general ledger, invoicing, payments, tax, budgeting and
-          financial reporting — mirroring ERPNext, rendered in the
-          Colossal HR design system.
+          financial reporting — everything the finance team needs to
+          keep the books.
         </p>
       </header>
 

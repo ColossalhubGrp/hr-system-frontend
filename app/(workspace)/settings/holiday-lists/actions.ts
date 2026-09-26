@@ -49,7 +49,7 @@ const nameSchema = z
   .max(140, "Keep it short.")
   .refine(
     (v) => !v.includes("/"),
-    "Slashes aren't allowed in the name — Frappe uses them internally.",
+    "Slashes aren't allowed in the name — they're reserved by the system.",
   );
 
 const createSchema = z

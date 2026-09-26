@@ -179,7 +179,7 @@ export function TypedTransferForm({
           <Field
             label="Create a fresh Employee ID"
             htmlFor="create_new_employee_id"
-            hint="Tick when moving to a subsidiary that keeps its own HRIS numbering. On submit, Frappe copies the Employee record to a new ID and marks this one as Left."
+            hint="Tick when moving to a subsidiary that keeps its own HRIS numbering. On submit, the Employee record is copied to a new ID and this one is marked as Left."
             wide
           >
             <label className="inline-flex items-center gap-2 text-sm text-foreground">

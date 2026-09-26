@@ -106,7 +106,7 @@ export function RelationshipsExplorer() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Filter by doctype / field / reason…"
+              placeholder="Filter by table / field / reason…"
               className="h-8 w-[280px] rounded-md border border-input bg-background pl-7 pr-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>

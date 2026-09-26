@@ -37,12 +37,12 @@ export function DimensionForm({
           <div>{state.error}</div>
         </div>
       )}
-      <FormSection title="Dimension" description="Extra tag that GL entries carry — pick a backing DocType (Project, Branch, etc.) and the field it lives in on child docs.">
+      <FormSection title="Dimension" description="Extra tag that ledger entries carry — pick a backing record type (Project, Branch, etc.) and the field it lives in on child rows.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Label (what users see)" htmlFor="label" error={fe.label} required>
             <TextInput id="label" name="label" defaultValue={initial?.label ?? ""} placeholder="e.g. Project, Branch, Region" />
           </Field>
-          <Field label="Backing DocType" htmlFor="document_type" error={fe.document_type} required>
+          <Field label="Backing record type" htmlFor="document_type" error={fe.document_type} required>
             <TextInput id="document_type" name="document_type" defaultValue={initial?.documentType ?? ""} placeholder="e.g. Project, Branch" />
           </Field>
           <Field label="Field name" htmlFor="fieldname" error={fe.fieldname} required>

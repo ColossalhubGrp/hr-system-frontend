@@ -1154,7 +1154,7 @@ function sourceLabel(sourceType: DataSourceType): string {
     snowflake: "Snowflake",
     redshift: "Redshift",
     dbt_manifest: "dbt",
-    frappe_doctype: "Frappe",
+    frappe_doctype: "Internal table",
     csv_upload: "CSV",
   }[sourceType] ?? sourceType;
 }

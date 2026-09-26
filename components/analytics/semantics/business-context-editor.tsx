@@ -247,7 +247,7 @@ export function BusinessContextEditor() {
 
         <Row
           label="Apps to profile"
-          hint="Comma-separated list of installed Frappe apps the profiler should scan. Empty = use built-in default set."
+          hint="Comma-separated list of installed apps the profiler should scan. Empty = use built-in default set."
           fallback={data.resolved.profile_apps.join(", ")}
           control={
             <input

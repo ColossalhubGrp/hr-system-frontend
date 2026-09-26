@@ -34,7 +34,7 @@ const baseSchema = z.object({
     .max(140, "Keep it short.")
     .refine(
       (v) => !v.includes("/"),
-      "Slashes aren't allowed — Frappe uses them internally.",
+      "Slashes aren't allowed — they're reserved by the system.",
     ),
   details: z
     .array(detailSchema)

@@ -282,7 +282,7 @@ function statusPillClass(status: string): string {
 function humanComputation(t: string): string {
   switch (t) {
     case "simple":
-      return "Simple aggregation (SQL auto-generated from source doctype + aggregation)";
+      return "Simple aggregation (SQL auto-generated from the source table + aggregation)";
     case "computed":
       return "Computed (formula over other metrics)";
     case "sql":

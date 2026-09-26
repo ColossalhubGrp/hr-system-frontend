@@ -165,9 +165,9 @@ const SECTIONS: Section[] = [
     title: "Subscription Management",
     subtitle: "Recurring plans and billing runs.",
     tiles: [
-      { label: "Subscription Plan", href: "/accounting/subscriptions/plans", icon: Repeat, status: "pending" },
-      { label: "Subscription", href: "/accounting/subscriptions", icon: Repeat, status: "pending" },
-      { label: "Subscription Settings", href: "/accounting/subscriptions/settings", icon: ScrollText, status: "pending" },
+      { label: "Subscription Plan", href: "/accounting/subscriptions/plans", icon: Repeat, status: "live" },
+      { label: "Subscription", href: "/accounting/subscriptions", icon: Repeat, status: "live" },
+      { label: "Subscription Settings", href: "/accounting/subscriptions/settings", icon: ScrollText, status: "live" },
     ],
   },
   {

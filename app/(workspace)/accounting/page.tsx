@@ -71,7 +71,7 @@ const SECTIONS: Section[] = [
       { label: "Accounts Receivable", href: "/accounting/reports/accounts-receivable", icon: FileOutput, status: "live" },
       { label: "General Ledger", href: "/accounting/reports/general-ledger", icon: BookText, status: "live" },
       { label: "Trial Balance", href: "/accounting/reports/trial-balance", icon: Ratio, status: "live" },
-      { label: "Dashboard", href: "/accounting/dashboard", icon: BarChart3, status: "pending" },
+      { label: "Dashboard", href: "/accounting/dashboard", icon: BarChart3, status: "live" },
     ],
   },
   {

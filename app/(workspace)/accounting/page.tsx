@@ -86,7 +86,7 @@ const SECTIONS: Section[] = [
       { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, status: "pending" },
       { label: "Finance Book", href: "/accounting/masters/finance-books", icon: BookText, status: "pending" },
       { label: "Accounting Period", href: "/accounting/masters/periods", icon: CalendarClock, status: "pending" },
-      { label: "Payment Term", href: "/accounting/masters/payment-terms", icon: ClipboardList, status: "pending" },
+      { label: "Payment Term", href: "/accounting/masters/payment-terms", icon: ClipboardList, status: "live" },
     ],
   },
   {
@@ -97,8 +97,8 @@ const SECTIONS: Section[] = [
       { label: "Payment Entry", href: "/accounting/payment-entries", icon: Wallet, status: "live" },
       { label: "Journal Entry", href: "/accounting/journal-entries", icon: BookOpen, status: "live" },
       { label: "Journal Entry Template", href: "/accounting/masters/journal-templates", icon: FileSpreadsheet, status: "pending" },
-      { label: "Terms and Conditions", href: "/accounting/masters/terms", icon: ScrollText, status: "pending" },
-      { label: "Mode of Payment", href: "/accounting/masters/modes-of-payment", icon: Coins, status: "pending" },
+      { label: "Terms and Conditions", href: "/accounting/masters/terms", icon: ScrollText, status: "live" },
+      { label: "Mode of Payment", href: "/accounting/masters/modes-of-payment", icon: Coins, status: "live" },
     ],
   },
   {

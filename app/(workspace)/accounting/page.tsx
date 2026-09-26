@@ -155,9 +155,9 @@ const SECTIONS: Section[] = [
     title: "Opening and Closing",
     subtitle: "Migrations, imports and year-end.",
     tiles: [
-      { label: "Opening Invoice Creation Tool", href: "/accounting/tools/opening-invoices", icon: FileInput, status: "pending" },
-      { label: "Chart of Accounts Importer", href: "/accounting/tools/coa-importer", icon: FileInput, status: "pending" },
-      { label: "Period Closing Voucher", href: "/accounting/tools/period-close", icon: CalendarClock, status: "pending" },
+      { label: "Opening Invoice Creation Tool", href: "/accounting/tools/opening-invoices", icon: FileInput, status: "live" },
+      { label: "Chart of Accounts Importer", href: "/accounting/tools/coa-importer", icon: FileInput, status: "live" },
+      { label: "Period Closing Voucher", href: "/accounting/tools/period-close", icon: CalendarClock, status: "live" },
     ],
   },
   {

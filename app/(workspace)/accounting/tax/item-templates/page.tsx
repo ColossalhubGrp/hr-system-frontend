@@ -37,7 +37,7 @@ export default async function ItemTaxTemplatesPage() {
         rowHref={(r) => `/accounting/tax/item-templates/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No templates yet.</p>}
         columns={[
-          { header: "Title", cell: (r) => <span className="font-semibold text-foreground">{r.title}</span> },
+          { header: "Title", cell: (r) => <Link href={`/accounting/tax/item-templates/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.title}</Link> },
           { header: "Company", cell: (r) => r.company },
           { header: "Status", cell: (r) => <StatusPill status={r.disabled ? "Disabled" : "Active"} /> },
         ]}

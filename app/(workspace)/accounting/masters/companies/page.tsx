@@ -36,7 +36,7 @@ export default async function CompaniesPage() {
         rowHref={(r) => `/accounting/masters/companies/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No companies yet.</p>}
         columns={[
-          { header: "Company", cell: (r) => <span className="font-semibold text-foreground">{r.companyName}</span> },
+          { header: "Company", cell: (r) => <Link href={`/accounting/masters/companies/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.companyName}</Link> },
           { header: "Abbr", cell: (r) => <span className="font-mono text-xs">{r.abbr}</span> },
           { header: "Country", cell: (r) => r.country ?? "—" },
           { header: "Default currency", cell: (r) => <span className="font-mono text-xs">{r.defaultCurrency}</span> },

@@ -41,7 +41,7 @@ export default async function SuppliersPage() {
           </div>
         }
         columns={[
-          { header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.supplierName}</span> },
+          { header: "Name", cell: (r) => <Link href={`/buying/suppliers/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.supplierName}</Link> },
           { header: "Kind", cell: (r) => r.supplierType },
           { header: "Group", cell: (r) => r.supplierGroup ?? "—", className: "hidden md:table-cell" },
           { header: "Country", cell: (r) => r.country ?? "—", className: "hidden md:table-cell" },

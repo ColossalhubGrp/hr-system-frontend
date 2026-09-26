@@ -36,7 +36,7 @@ export default async function SupplierGroupsPage() {
         rowHref={(r) => `/buying/supplier-groups/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No groups yet.</p>}
         columns={[
-          { header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.supplierGroupName}</span> },
+          { header: "Name", cell: (r) => <Link href={`/buying/supplier-groups/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.supplierGroupName}</Link> },
           { header: "Parent", cell: (r) => r.parent ?? "—" },
           { header: "Kind", cell: (r) => (r.isGroup ? "Group" : "Leaf") },
         ]}

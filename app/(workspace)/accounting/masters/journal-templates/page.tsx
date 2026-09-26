@@ -36,7 +36,7 @@ export default async function JournalTemplatesPage() {
         rowHref={(r) => `/accounting/masters/journal-templates/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No templates yet.</p>}
         columns={[
-          { header: "Title", cell: (r) => <span className="font-semibold text-foreground">{r.templateTitle}</span> },
+          { header: "Title", cell: (r) => <Link href={`/accounting/masters/journal-templates/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.templateTitle}</Link> },
           { header: "Voucher type", cell: (r) => r.voucherType },
           { header: "Company", cell: (r) => r.company ?? "—" },
           {

@@ -35,7 +35,7 @@ export default async function FinanceBooksPage() {
         rowKey={(r) => r.name}
         rowHref={(r) => `/accounting/masters/finance-books/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No finance books yet.</p>}
-        columns={[{ header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.financeBookName}</span> }]}
+        columns={[{ header: "Name", cell: (r) => <Link href={`/accounting/masters/finance-books/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.financeBookName}</Link> }]}
       />
     </div>
   );

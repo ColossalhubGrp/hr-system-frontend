@@ -37,7 +37,7 @@ export default async function DimensionsPage() {
         rowHref={(r) => `/accounting/masters/dimensions/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No dimensions yet.</p>}
         columns={[
-          { header: "Label", cell: (r) => <span className="font-semibold text-foreground">{r.label}</span> },
+          { header: "Label", cell: (r) => <Link href={`/accounting/masters/dimensions/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.label}</Link> },
           { header: "Backing record", cell: (r) => r.documentType },
           { header: "Fieldname", cell: (r) => <span className="font-mono text-xs">{r.fieldname}</span> },
           { header: "Status", cell: (r) => <StatusPill status={r.disabled ? "Disabled" : "Active"} /> },

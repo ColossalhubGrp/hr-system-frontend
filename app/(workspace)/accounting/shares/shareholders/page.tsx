@@ -36,7 +36,7 @@ export default async function ShareholdersPage() {
         rowHref={(r) => `/accounting/shares/shareholders/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No shareholders yet.</p>}
         columns={[
-          { header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.title}</span> },
+          { header: "Name", cell: (r) => <Link href={`/accounting/shares/shareholders/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.title}</Link> },
           { header: "Folio no.", cell: (r) => r.folioNo ?? "—" },
           { header: "Company", cell: (r) => r.company },
         ]}

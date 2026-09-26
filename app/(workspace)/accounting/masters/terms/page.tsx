@@ -47,7 +47,7 @@ export default async function TermsPage() {
           </div>
         }
         columns={[
-          { header: "Title", cell: (r) => <span className="font-semibold text-foreground">{r.title}</span> },
+          { header: "Title", cell: (r) => <Link href={`/accounting/masters/terms/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.title}</Link> },
           { header: "Status", cell: (r) => <StatusPill status={r.disabled ? "Disabled" : "Active"} /> },
           {
             header: "Last edited",

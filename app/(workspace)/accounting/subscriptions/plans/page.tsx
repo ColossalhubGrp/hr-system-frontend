@@ -36,7 +36,7 @@ export default async function SubscriptionPlansPage() {
         rowHref={(r) => `/accounting/subscriptions/plans/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No plans yet.</p>}
         columns={[
-          { header: "Plan", cell: (r) => <span className="font-semibold text-foreground">{r.planName}</span> },
+          { header: "Plan", cell: (r) => <Link href={`/accounting/subscriptions/plans/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.planName}</Link> },
           { header: "Item", cell: (r) => r.item ?? "—" },
           { header: "Cost", cell: (r) => `${r.currency} ${r.cost.toFixed(2)}`, className: "text-right tabular-nums" },
           { header: "Interval", cell: (r) => `${r.billingIntervalCount} ${r.billingInterval.toLowerCase()}${r.billingIntervalCount === 1 ? "" : "s"}` },

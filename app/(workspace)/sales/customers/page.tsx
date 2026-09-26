@@ -41,7 +41,7 @@ export default async function CustomersPage() {
           </div>
         }
         columns={[
-          { header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.customerName}</span> },
+          { header: "Name", cell: (r) => <Link href={`/sales/customers/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.customerName}</Link> },
           { header: "Kind", cell: (r) => r.customerType },
           { header: "Group", cell: (r) => r.customerGroup ?? "—", className: "hidden md:table-cell" },
           { header: "Territory", cell: (r) => r.territory ?? "—", className: "hidden md:table-cell" },

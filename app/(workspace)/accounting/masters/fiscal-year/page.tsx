@@ -46,7 +46,7 @@ export default async function FiscalYearPage() {
           </div>
         }
         columns={[
-          { header: "Year", cell: (r) => <span className="font-semibold text-foreground">{r.name}</span> },
+          { header: "Year", cell: (r) => <Link href={`/accounting/masters/fiscal-year/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Start", cell: (r) => r.yearStartDate },
           { header: "End", cell: (r) => r.yearEndDate },
           { header: "Status", cell: (r) => <StatusPill status={r.disabled ? "Disabled" : "Active"} /> },

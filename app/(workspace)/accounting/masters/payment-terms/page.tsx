@@ -46,7 +46,7 @@ export default async function PaymentTermsPage() {
           </div>
         }
         columns={[
-          { header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.paymentTermName}</span> },
+          { header: "Name", cell: (r) => <Link href={`/accounting/masters/payment-terms/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.paymentTermName}</Link> },
           { header: "Portion", cell: (r) => `${r.invoicePortion.toFixed(0)}%`, className: "text-right tabular-nums" },
           { header: "Credit", cell: (r) => `${r.creditDays}d + ${r.creditMonths}m` },
           { header: "Due basis", cell: (r) => r.dueDateBasedOn, className: "hidden md:table-cell" },

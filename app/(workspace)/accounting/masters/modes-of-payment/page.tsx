@@ -47,7 +47,7 @@ export default async function ModesOfPaymentPage() {
           </div>
         }
         columns={[
-          { header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.modeOfPayment}</span> },
+          { header: "Name", cell: (r) => <Link href={`/accounting/masters/modes-of-payment/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.modeOfPayment}</Link> },
           { header: "Type", cell: (r) => r.type },
           { header: "Status", cell: (r) => <StatusPill status={r.enabled ? "Enabled" : "Disabled"} /> },
         ]}

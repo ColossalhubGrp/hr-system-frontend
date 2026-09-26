@@ -36,7 +36,7 @@ export default async function TaxWithholdingPage() {
         rowHref={(r) => `/accounting/tax/withholding/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No categories yet.</p>}
         columns={[
-          { header: "Category", cell: (r) => <span className="font-semibold text-foreground">{r.category}</span> },
+          { header: "Category", cell: (r) => <Link href={`/accounting/tax/withholding/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.category}</Link> },
           { header: "Round-off?", cell: (r) => (r.roundOff ? "Yes" : "No") },
           { header: "Uses party ledger?", cell: (r) => (r.considerPartyLedgerAmount ? "Yes" : "No") },
         ]}

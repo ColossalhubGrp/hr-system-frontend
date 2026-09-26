@@ -36,7 +36,7 @@ export default async function MonthlyDistributionPage() {
         rowHref={(r) => `/accounting/masters/monthly-distribution/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No distributions yet.</p>}
         columns={[
-          { header: "Name", cell: (r) => <span className="font-semibold text-foreground">{r.distributionId}</span> },
+          { header: "Name", cell: (r) => <Link href={`/accounting/masters/monthly-distribution/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.distributionId}</Link> },
           { header: "Fiscal year", cell: (r) => r.fiscalYear ?? "—" },
         ]}
       />

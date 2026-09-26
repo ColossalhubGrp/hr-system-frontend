@@ -37,7 +37,7 @@ export default async function TaxCategoriesPage() {
         rowHref={(r) => `/accounting/tax/categories/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No tax categories yet.</p>}
         columns={[
-          { header: "Title", cell: (r) => <span className="font-semibold text-foreground">{r.title}</span> },
+          { header: "Title", cell: (r) => <Link href={`/accounting/tax/categories/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.title}</Link> },
           { header: "Status", cell: (r) => <StatusPill status={r.disabled ? "Disabled" : "Active"} /> },
         ]}
       />

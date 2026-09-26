@@ -36,7 +36,7 @@ export default async function BanksPage() {
         rowHref={(r) => `/accounting/banking/banks/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No banks yet. Add CBZ, Steward, FBC, Stanbic, whichever you use.</p>}
         columns={[
-          { header: "Bank", cell: (r) => <span className="font-semibold text-foreground">{r.bankName}</span> },
+          { header: "Bank", cell: (r) => <Link href={`/accounting/banking/banks/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.bankName}</Link> },
           { header: "SWIFT", cell: (r) => r.swiftNumber ?? "—", className: "font-mono text-xs" },
           { header: "Website", cell: (r) => r.website ?? "—" },
         ]}

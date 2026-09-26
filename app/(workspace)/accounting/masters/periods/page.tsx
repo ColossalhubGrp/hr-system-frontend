@@ -37,7 +37,7 @@ export default async function AccountingPeriodsPage() {
         rowHref={(r) => `/accounting/masters/periods/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No periods yet.</p>}
         columns={[
-          { header: "Period", cell: (r) => <span className="font-semibold text-foreground">{r.periodName}</span> },
+          { header: "Period", cell: (r) => <Link href={`/accounting/masters/periods/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.periodName}</Link> },
           { header: "Company", cell: (r) => r.company },
           { header: "Start", cell: (r) => r.startDate },
           { header: "End", cell: (r) => r.endDate },

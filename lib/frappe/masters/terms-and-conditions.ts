@@ -23,7 +23,9 @@ export async function listTerms(): Promise<TermsAndConditions[]> {
     as: "user",
     args: {
       doctype: "Terms and Conditions",
-      fields: ["name", "title", "disabled", "modified"],
+      // `disabled` not queryable via get_list under Frappe v15 field
+      // permissions. Only fetched on the detail form.
+      fields: ["name", "title", "modified"],
       order_by: "title asc",
       limit_page_length: 0,
     },
@@ -31,7 +33,7 @@ export async function listTerms(): Promise<TermsAndConditions[]> {
   return rows.map((r) => ({
     name: String(r.name ?? ""),
     title: String(r.title ?? r.name ?? ""),
-    disabled: Number(r.disabled ?? 0) === 1,
+    disabled: false, // see fields comment above
     modified: String(r.modified ?? ""),
   }));
 }

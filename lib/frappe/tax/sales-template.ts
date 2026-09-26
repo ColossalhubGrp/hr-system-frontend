@@ -33,7 +33,9 @@ export async function listSalesTaxTemplates(): Promise<SalesTaxTemplate[]> {
     as: "user",
     args: {
       doctype: "Sales Taxes and Charges Template",
-      fields: ["name", "title", "company", "is_default", "disabled"],
+      // `disabled` not queryable via get_list under Frappe v15 field
+      // permissions. Only fetched on the detail form.
+      fields: ["name", "title", "company", "is_default"],
       order_by: "title asc",
       limit_page_length: 0,
     },
@@ -43,7 +45,7 @@ export async function listSalesTaxTemplates(): Promise<SalesTaxTemplate[]> {
     title: String(r.title ?? r.name ?? ""),
     company: String(r.company ?? ""),
     isDefault: Number(r.is_default ?? 0) === 1,
-    disabled: Number(r.disabled ?? 0) === 1,
+    disabled: false, // see fields comment above
   }));
 }
 

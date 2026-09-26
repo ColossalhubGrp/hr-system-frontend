@@ -29,13 +29,14 @@ export async function listCostCenterTree(company: string): Promise<CostCenterNod
     as: "user",
     args: {
       doctype: "Cost Center",
+      // `disabled` isn't in the Cost Center list-view field allowlist; asking
+      // for it 417s under Frappe v15. Fetched-per-detail otherwise.
       fields: [
         "name",
         "cost_center_name",
         "parent_cost_center",
         "is_group",
         "company",
-        "disabled",
         "lft",
         "rgt",
       ],
@@ -51,7 +52,7 @@ export async function listCostCenterTree(company: string): Promise<CostCenterNod
     parent: (r.parent_cost_center as string | null) ?? null,
     isGroup: Number(r.is_group ?? 0) === 1,
     company: String(r.company ?? ""),
-    disabled: Number(r.disabled ?? 0) === 1,
+    disabled: false, // see fields comment above
     lft: Number(r.lft ?? 0),
     rgt: Number(r.rgt ?? 0),
   }));

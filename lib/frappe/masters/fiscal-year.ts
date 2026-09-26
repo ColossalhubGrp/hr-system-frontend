@@ -24,7 +24,9 @@ export async function listFiscalYears(): Promise<FiscalYear[]> {
     as: "user",
     args: {
       doctype: "Fiscal Year",
-      fields: ["name", "year_start_date", "year_end_date", "disabled", "auto_created"],
+      // `disabled` + `auto_created` aren't in Fiscal Year's queryable field
+      // allowlist under Frappe v15. Fetched per-detail if we need the flag.
+      fields: ["name", "year_start_date", "year_end_date"],
       order_by: "year_start_date desc",
       limit_page_length: 0,
     },
@@ -33,8 +35,8 @@ export async function listFiscalYears(): Promise<FiscalYear[]> {
     name: String(r.name ?? ""),
     yearStartDate: String(r.year_start_date ?? ""),
     yearEndDate: String(r.year_end_date ?? ""),
-    disabled: Number(r.disabled ?? 0) === 1,
-    autoCreated: Number(r.auto_created ?? 0) === 1,
+    disabled: false, // see fields comment above
+    autoCreated: false,
   }));
 }
 

@@ -336,7 +336,9 @@ export async function cancelSalesInvoice(name: string): Promise<void> {
 
 export async function listCustomers(opts: { search?: string; limit?: number } = {}): Promise<Array<{ name: string; label: string }>> {
   const limit = Math.min(50, opts.limit ?? 30);
-  const filters: [string, string, unknown][] = [["disabled", "=", 0]];
+  // `disabled` isn't in Customer's queryable field allowlist under Frappe
+  // v15 — filtering on it 417s. Every customer is returned.
+  const filters: [string, string, unknown][] = [];
   if (opts.search) filters.push(["customer_name", "like", `%${opts.search}%`]);
   const rows = await frappeCall<Array<Record<string, unknown>>>({
     method: "frappe.client.get_list",
@@ -357,7 +359,9 @@ export async function listCustomers(opts: { search?: string; limit?: number } = 
 
 export async function listItems(opts: { search?: string; limit?: number } = {}): Promise<Array<{ code: string; name: string; uom: string; standardRate: number }>> {
   const limit = Math.min(50, opts.limit ?? 30);
-  const filters: [string, string, unknown][] = [["disabled", "=", 0]];
+  // `disabled` isn't in Item's queryable field allowlist under Frappe v15
+  // — filtering on it 417s. Every item is returned.
+  const filters: [string, string, unknown][] = [];
   if (opts.search) filters.push(["item_name", "like", `%${opts.search}%`]);
   const rows = await frappeCall<Array<Record<string, unknown>>>({
     method: "frappe.client.get_list",

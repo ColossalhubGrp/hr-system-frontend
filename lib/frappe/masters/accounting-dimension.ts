@@ -34,7 +34,9 @@ export async function listAccountingDimensions(): Promise<AccountingDimension[]>
     as: "user",
     args: {
       doctype: "Accounting Dimension",
-      fields: ["name", "label", "document_type", "fieldname", "disabled"],
+      // `disabled` not queryable via get_list under Frappe v15 field
+      // permissions. Only fetched on the detail form.
+      fields: ["name", "label", "document_type", "fieldname"],
       order_by: "label asc",
       limit_page_length: 0,
     },
@@ -44,7 +46,7 @@ export async function listAccountingDimensions(): Promise<AccountingDimension[]>
     label: String(r.label ?? r.name ?? ""),
     documentType: String(r.document_type ?? ""),
     fieldname: String(r.fieldname ?? ""),
-    disabled: Number(r.disabled ?? 0) === 1,
+    disabled: false, // see fields comment above
   }));
 }
 

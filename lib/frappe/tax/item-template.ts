@@ -20,7 +20,9 @@ export async function listItemTaxTemplates(): Promise<ItemTaxTemplate[]> {
     as: "user",
     args: {
       doctype: "Item Tax Template",
-      fields: ["name", "title", "company", "disabled"],
+      // `disabled` not queryable via get_list under Frappe v15 field
+      // permissions. Only fetched on the detail form.
+      fields: ["name", "title", "company"],
       order_by: "title asc",
       limit_page_length: 0,
     },
@@ -29,7 +31,7 @@ export async function listItemTaxTemplates(): Promise<ItemTaxTemplate[]> {
     name: String(r.name ?? ""),
     title: String(r.title ?? r.name ?? ""),
     company: String(r.company ?? ""),
-    disabled: Number(r.disabled ?? 0) === 1,
+    disabled: false, // see fields comment above
   }));
 }
 

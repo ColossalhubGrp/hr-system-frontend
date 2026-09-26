@@ -332,7 +332,10 @@ export async function cancelPurchaseInvoice(name: string): Promise<void> {
 
 export async function listSuppliers(opts: { search?: string; limit?: number } = {}): Promise<Array<{ name: string; label: string }>> {
   const limit = Math.min(50, opts.limit ?? 30);
-  const filters: [string, string, unknown][] = [["disabled", "=", 0]];
+  // `disabled` isn't in Supplier's queryable field allowlist under Frappe
+  // v15 — filtering on it 417s. Every supplier is returned; disabled ones
+  // still work for opening invoices.
+  const filters: [string, string, unknown][] = [];
   if (opts.search) filters.push(["supplier_name", "like", `%${opts.search}%`]);
   const rows = await frappeCall<Array<Record<string, unknown>>>({
     method: "frappe.client.get_list",

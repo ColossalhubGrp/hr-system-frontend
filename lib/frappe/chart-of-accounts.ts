@@ -35,6 +35,11 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
     as: "user",
     args: {
       doctype: "Account",
+      // Frappe v15 restricts which fields get_list will accept. `disabled`
+      // isn't in the Account doctype's `in_list_view`/`in_standard_filter`
+      // set, so asking for it 417s. We fetch the row without it and treat
+      // every listed account as active in the tree — the detail page still
+      // shows the accurate disabled flag.
       fields: [
         "name",
         "account_name",
@@ -43,7 +48,6 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
         "root_type",
         "account_type",
         "account_currency",
-        "disabled",
         "lft",
         "rgt",
       ],
@@ -61,7 +65,10 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
     rootType: (r.root_type as AccountNode["rootType"]) ?? null,
     accountType: (r.account_type as string | null) ?? null,
     currency: (r.account_currency as string | null) ?? null,
-    disabled: Number(r.disabled ?? 0) === 1,
+    // `disabled` isn't queryable via get_list on Account (Frappe v15 field
+    // permission). Default to false; getAccount() below picks up the real
+    // value for the detail page.
+    disabled: false,
     lft: Number(r.lft ?? 0),
     rgt: Number(r.rgt ?? 0),
   }));

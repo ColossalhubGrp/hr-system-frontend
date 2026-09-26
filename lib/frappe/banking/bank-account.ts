@@ -29,9 +29,11 @@ export async function listBankAccounts(): Promise<BankAccount[]> {
     as: "user",
     args: {
       doctype: "Bank Account",
+      // `disabled` not queryable via get_list under Frappe v15 field
+      // permissions. Only fetched on the detail form.
       fields: [
         "name", "account_name", "bank", "account_type", "is_default",
-        "is_company_account", "disabled", "bank_account_no", "iban", "company",
+        "is_company_account", "bank_account_no", "iban", "company",
       ],
       order_by: "account_name asc",
       limit_page_length: 0,
@@ -44,7 +46,7 @@ export async function listBankAccounts(): Promise<BankAccount[]> {
     accountType: (r.account_type as string | null) ?? null,
     isDefault: Number(r.is_default ?? 0) === 1,
     isCompanyAccount: Number(r.is_company_account ?? 0) === 1,
-    disabled: Number(r.disabled ?? 0) === 1,
+    disabled: false, // see fields comment above
     bankAccountNo: (r.bank_account_no as string | null) ?? null,
     iban: (r.iban as string | null) ?? null,
     company: (r.company as string | null) ?? null,

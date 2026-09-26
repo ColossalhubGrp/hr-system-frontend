@@ -708,10 +708,13 @@ export async function listParties(partyType: string, opts: { search?: string; li
 
 export async function listAccounts(company: string, opts: { search?: string; limit?: number } = {}): Promise<AccountOption[]> {
   const limit = Math.min(50, opts.limit ?? 20);
+  // `disabled` isn't a queryable field on Account under Frappe v15's
+  // get_list field-permission check — it 417s if we include it in the
+  // filters. Users creating a new journal entry will still see disabled
+  // accounts here; we sort that out at post-time.
   const filters: [string, string, unknown][] = [
     ["company", "=", company],
     ["is_group", "=", 0],
-    ["disabled", "=", 0],
   ];
   if (opts.search) filters.push(["account_name", "like", `%${opts.search}%`]);
   const rows = await frappeCall<Array<Record<string, unknown>>>({

@@ -81,10 +81,10 @@ const SECTIONS: Section[] = [
     tiles: [
       { label: "Company", href: "/accounting/masters/companies", icon: Building, status: "pending" },
       { label: "Chart of Accounts", href: "/accounting/chart-of-accounts", icon: Layers, status: "live" },
-      { label: "Accounts Settings", href: "/accounting/masters/settings", icon: ScrollText, status: "pending" },
+      { label: "Accounts Settings", href: "/accounting/masters/settings", icon: ScrollText, status: "live" },
       { label: "Fiscal Year", href: "/accounting/masters/fiscal-year", icon: CalendarClock, status: "live" },
-      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, status: "pending" },
-      { label: "Finance Book", href: "/accounting/masters/finance-books", icon: BookText, status: "pending" },
+      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, status: "live" },
+      { label: "Finance Book", href: "/accounting/masters/finance-books", icon: BookText, status: "live" },
       { label: "Accounting Period", href: "/accounting/masters/periods", icon: CalendarClock, status: "live" },
       { label: "Payment Term", href: "/accounting/masters/payment-terms", icon: ClipboardList, status: "live" },
     ],
@@ -96,7 +96,7 @@ const SECTIONS: Section[] = [
     tiles: [
       { label: "Payment Entry", href: "/accounting/payment-entries", icon: Wallet, status: "live" },
       { label: "Journal Entry", href: "/accounting/journal-entries", icon: BookOpen, status: "live" },
-      { label: "Journal Entry Template", href: "/accounting/masters/journal-templates", icon: FileSpreadsheet, status: "pending" },
+      { label: "Journal Entry Template", href: "/accounting/masters/journal-templates", icon: FileSpreadsheet, status: "live" },
       { label: "Terms and Conditions", href: "/accounting/masters/terms", icon: ScrollText, status: "live" },
       { label: "Mode of Payment", href: "/accounting/masters/modes-of-payment", icon: Coins, status: "live" },
     ],
@@ -121,7 +121,7 @@ const SECTIONS: Section[] = [
     tiles: [
       { label: "Chart of Cost Centers", href: "/accounting/cost-centers", icon: Building2, status: "live" },
       { label: "Budget", href: "/accounting/budgets", icon: Calculator, status: "pending" },
-      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, status: "pending" },
+      { label: "Accounting Dimension", href: "/accounting/masters/dimensions", icon: Layers, status: "live" },
       { label: "Cost Center Allocation", href: "/accounting/cost-centers/allocations", icon: PieChart, status: "pending" },
       { label: "Budget Variance Report", href: "/accounting/reports/budget-variance", icon: LineChart, status: "pending" },
       { label: "Monthly Distribution", href: "/accounting/masters/monthly-distribution", icon: BarChart3, status: "pending" },

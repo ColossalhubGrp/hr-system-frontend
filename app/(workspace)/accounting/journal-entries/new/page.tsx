@@ -1,7 +1,9 @@
-import { BookOpen } from "lucide-react";
+import { BookOpen, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listCompanies, listAccounts, VOUCHER_TYPES } from "@/lib/frappe/accounting";
 import { NewJournalEntryForm } from "@/components/accounting/new-journal-entry-form";
+import Link from "next/link";
+import type { Route } from "next";
 
 export const metadata = { title: "New Journal Entry · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -26,6 +28,12 @@ export default async function NewJournalEntryPage() {
 
   return (
     <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-2 text-sm">
+        <Link href={"/accounting/journal-entries" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Back to Journal Entries
+        </Link>
+      </div>
       <PageHeader
         icon={BookOpen}
         crumb="Accounting · Journal Entries · New"

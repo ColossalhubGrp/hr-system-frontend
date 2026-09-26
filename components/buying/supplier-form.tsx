@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { CreatableSelect } from "@/components/common/creatable-select";
 import {
   createSupplierAction,
   updateSupplierAction,
@@ -90,31 +91,16 @@ export function SupplierForm({
             />
           </Field>
           <Field label="Default price list" htmlFor="default_price_list">
-            <SelectInput
-              id="default_price_list"
-              name="default_price_list"
-              defaultValue={initial?.defaultPriceList ?? ""}
-              options={[...priceLists.map((p) => ({ value: p, label: p }))]}
-            />
+            <CreatableSelect id="default_price_list" name="default_price_list" kind="price-list" defaultValue={initial?.defaultPriceList ?? ""} options={priceLists} />
           </Field>
           <Field label="Tax ID" htmlFor="tax_id">
             <TextInput id="tax_id" name="tax_id" defaultValue={initial?.taxId ?? ""} placeholder="e.g. ZIMRA BP" />
           </Field>
           <Field label="Tax category" htmlFor="tax_category">
-            <SelectInput
-              id="tax_category"
-              name="tax_category"
-              defaultValue={initial?.taxCategory ?? ""}
-              options={[...taxCategories.map((c) => ({ value: c, label: c }))]}
-            />
+            <CreatableSelect id="tax_category" name="tax_category" kind="tax-category" defaultValue={initial?.taxCategory ?? ""} options={taxCategories} />
           </Field>
           <Field label="Payment terms" htmlFor="payment_terms">
-            <SelectInput
-              id="payment_terms"
-              name="payment_terms"
-              defaultValue={initial?.paymentTerms ?? ""}
-              options={[...paymentTerms.map((t) => ({ value: t, label: t }))]}
-            />
+            <CreatableSelect id="payment_terms" name="payment_terms" kind="payment-terms-template" defaultValue={initial?.paymentTerms ?? ""} options={paymentTerms} />
           </Field>
         </div>
       </FormSection>
@@ -141,12 +127,7 @@ export function SupplierForm({
             <TextInput id="website" name="website" defaultValue={initial?.websiteUrl ?? ""} placeholder="https://…" />
           </Field>
           <Field label="Language" htmlFor="language">
-            <SelectInput
-              id="language"
-              name="language"
-              defaultValue={initial?.language ?? ""}
-              options={[...languages.map((l) => ({ value: l, label: l }))]}
-            />
+            <CreatableSelect id="language" name="language" kind="language" defaultValue={initial?.language ?? ""} options={languages} />
           </Field>
         </div>
       </FormSection>

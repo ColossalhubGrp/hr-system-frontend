@@ -13,7 +13,7 @@ import {
   type FormState,
 } from "@/app/(workspace)/accounting/budgets/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
-import { BUDGET_AGAINST, ACTIONS } from "@/lib/frappe/budgets/budget";
+import { BUDGET_AGAINST, ACTIONS } from "@/lib/frappe/budgets/budget-constants";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};

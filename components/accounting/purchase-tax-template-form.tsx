@@ -13,7 +13,7 @@ import {
   type FormState,
 } from "@/app/(workspace)/accounting/tax/purchase-templates/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
-import { CHARGE_TYPES, CATEGORY, ADD_DEDUCT } from "@/lib/frappe/tax/purchase-template";
+import { CHARGE_TYPES, CATEGORY, ADD_DEDUCT } from "@/lib/frappe/tax/purchase-template-constants";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};

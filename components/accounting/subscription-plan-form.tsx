@@ -12,7 +12,7 @@ import {
   type FormState,
 } from "@/app/(workspace)/accounting/subscriptions/plans/actions";
 import type { SubscriptionPlan } from "@/lib/frappe/subscriptions/plan";
-import { INTERVALS, PRICE_MODES } from "@/lib/frappe/subscriptions/plan";
+import { INTERVALS, PRICE_MODES } from "@/lib/frappe/subscriptions/plan-constants";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};

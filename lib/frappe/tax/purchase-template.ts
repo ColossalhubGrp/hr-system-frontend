@@ -1,21 +1,11 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+export { CHARGE_TYPES, CATEGORY, ADD_DEDUCT } from "./purchase-template-constants";
 
 /**
  * ERPNext "Purchase Taxes and Charges Template" — mirror of the sales
  * template, applied to Purchase Invoices, Purchase Orders and RFQ.
  */
-
-export const CHARGE_TYPES = [
-  "Actual",
-  "On Net Total",
-  "On Previous Row Amount",
-  "On Previous Row Total",
-  "On Item Quantity",
-] as const;
-
-export const CATEGORY = ["Total", "Valuation", "Valuation and Total"] as const;
-export const ADD_DEDUCT = ["Add", "Deduct"] as const;
 
 export type PurchaseTaxTemplate = {
   name: string;

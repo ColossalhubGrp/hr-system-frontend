@@ -1,29 +1,12 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+export { VOUCHER_TYPES } from "./journal-entry-template-constants";
 
 /**
  * ERPNext "Journal Entry Template" master — a saved template of an
  * accounts child table + voucher type. Speeds up recurring postings
  * (payroll runs, month-end accruals, etc.).
  */
-
-export const VOUCHER_TYPES = [
-  "Journal Entry",
-  "Inter Company Journal Entry",
-  "Bank Entry",
-  "Cash Entry",
-  "Credit Card Entry",
-  "Debit Note",
-  "Credit Note",
-  "Contra Entry",
-  "Excise Entry",
-  "Write Off Entry",
-  "Opening Entry",
-  "Depreciation Entry",
-  "Exchange Rate Revaluation",
-  "Deferred Revenue",
-  "Deferred Expense",
-] as const;
 
 export type JournalEntryTemplate = {
   name: string;

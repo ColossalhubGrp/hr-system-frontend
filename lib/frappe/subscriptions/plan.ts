@@ -1,10 +1,8 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+export { INTERVALS, PRICE_MODES } from "./plan-constants";
 
 /** ERPNext "Subscription Plan" — the priced offering that a Subscription bills. */
-
-export const INTERVALS = ["Day", "Week", "Month", "Year"] as const;
-export const PRICE_MODES = ["Fixed Rate", "Based on Price List", "Monthly Rate"] as const;
 
 export type SubscriptionPlan = {
   name: string;

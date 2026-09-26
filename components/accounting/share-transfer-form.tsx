@@ -13,7 +13,7 @@ import {
   type FormState,
 } from "@/app/(workspace)/accounting/shares/transfers/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
-import { TRANSFER_TYPES } from "@/lib/frappe/shares/share-transfer";
+import { TRANSFER_TYPES } from "@/lib/frappe/shares/share-transfer-constants";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};

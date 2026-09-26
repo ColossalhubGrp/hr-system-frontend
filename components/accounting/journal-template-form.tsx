@@ -13,7 +13,7 @@ import {
   type FormState,
 } from "@/app/(workspace)/accounting/masters/journal-templates/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
-import { VOUCHER_TYPES } from "@/lib/frappe/masters/journal-entry-template";
+import { VOUCHER_TYPES } from "@/lib/frappe/masters/journal-entry-template-constants";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};

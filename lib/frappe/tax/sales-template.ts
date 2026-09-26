@@ -1,18 +1,11 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+export { CHARGE_TYPES } from "./sales-template-constants";
 
 /**
  * ERPNext "Sales Taxes and Charges Template" — the reusable tax block
  * applied to Sales Invoices, Quotes and Sales Orders.
  */
-
-export const CHARGE_TYPES = [
-  "Actual",
-  "On Net Total",
-  "On Previous Row Amount",
-  "On Previous Row Total",
-  "On Item Quantity",
-] as const;
 
 export type SalesTaxTemplate = {
   name: string;

@@ -12,7 +12,7 @@ import {
   deleteMonthlyDistributionAction,
   type FormState,
 } from "@/app/(workspace)/accounting/masters/monthly-distribution/actions";
-import { MONTHS } from "@/lib/frappe/budgets/monthly-distribution";
+import { MONTHS } from "@/lib/frappe/budgets/monthly-distribution-constants";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};

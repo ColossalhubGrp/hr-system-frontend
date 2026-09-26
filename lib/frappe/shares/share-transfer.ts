@@ -1,9 +1,8 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+export { TRANSFER_TYPES } from "./share-transfer-constants";
 
 /** ERPNext "Share Transfer" — issue, buy-back or transfer of shares. */
-
-export const TRANSFER_TYPES = ["Issue", "Purchase", "Transfer"] as const;
 
 export type ShareTransfer = {
   name: string;

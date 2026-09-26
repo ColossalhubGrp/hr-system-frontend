@@ -1,14 +1,12 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+export { BUDGET_AGAINST, ACTIONS } from "./budget-constants";
 
 /**
  * ERPNext "Budget" — cap spending against an account, per Cost
  * Center / Project / Accounting Dimension. Sales orders, POs and
  * actual GL postings can be stopped/warned when the cap is hit.
  */
-
-export const BUDGET_AGAINST = ["Cost Center", "Project", "Accounting Dimension"] as const;
-export const ACTIONS = ["", "Stop", "Warn", "Ignore"] as const;
 
 export type BudgetRow = {
   name: string;

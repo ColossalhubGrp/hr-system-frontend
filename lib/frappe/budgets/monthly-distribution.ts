@@ -1,16 +1,12 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+import { MONTHS } from "./monthly-distribution-constants";
 
 /**
  * ERPNext "Monthly Distribution" — 12 percentages that add up to 100.
  * Used to spread a budget or a target across months (e.g. seasonal
  * sales targets: heavy in Q4, light in Q1).
  */
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-] as const;
 
 export type MonthlyDistribution = {
   name: string;
@@ -121,3 +117,4 @@ export async function deleteMonthlyDistribution(name: string): Promise<void> {
 }
 
 export { MONTHS };
+

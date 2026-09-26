@@ -1,8 +1,10 @@
-import { Receipt } from "lucide-react";
+import { Receipt, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listCustomers, listItems } from "@/lib/frappe/sales-invoice";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { NewSalesInvoiceForm } from "@/components/accounting/new-sales-invoice-form";
+import Link from "next/link";
+import type { Route } from "next";
 
 export const metadata = { title: "New Sales Invoice · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -18,6 +20,12 @@ export default async function NewSalesInvoicePage() {
 
   return (
     <div className="flex flex-col gap-5">
+      <div className="flex items-center gap-2 text-sm">
+        <Link href={"/accounting/sales-invoices" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+          <ChevronLeft className="h-3.5 w-3.5" />
+          Back to Sales Invoices
+        </Link>
+      </div>
       <PageHeader
         icon={Receipt}
         crumb="Accounting · Sales Invoices · New"

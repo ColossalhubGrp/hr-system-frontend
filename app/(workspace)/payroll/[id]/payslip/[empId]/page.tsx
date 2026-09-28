@@ -122,6 +122,7 @@ export default async function PayslipPage({
             <Info label="National ID" value={employee.national_id ?? "—"} />
             <Info label="ZIMRA tax no." value={employee.tax_number ?? "—"} />
             <Info label="NSSA no." value={employee.nssa_number ?? "—"} />
+            <Info label="Joining date" value={fmtDate(employee.date_of_joining ?? "")} />
             <Info
               label="Bank"
               value={
@@ -145,64 +146,61 @@ export default async function PayslipPage({
           </div>
         </div>
 
-        {/* Earnings + Deductions */}
+        {/* Earnings + Deductions — split table, USD + ZiG columns each side */}
         <div className="grid gap-px bg-border sm:grid-cols-2">
           <div className="bg-card p-6">
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">
               Earnings
             </h3>
-            <Line
-              label="Basic pay"
-              u={employee.basic_usd}
-              z={employee.basic_zig}
+            <MoneyTable
+              rows={[
+                { label: "Basic pay", u: employee.basic_usd, z: employee.basic_zig },
+                ...earnings.map((t) => ({
+                  key: t.name,
+                  label: `${t.code}${t.taxable ? "" : " (non-tax)"}`,
+                  u: t.currency === "USD" ? t.amount : 0,
+                  z: t.currency === "ZWG" ? t.amount : 0,
+                })),
+              ]}
+              total={{ label: "Gross earnings", u: slip.gross_usd, z: slip.gross_zig }}
             />
-            {earnings.map((t) => (
-              <Line
-                key={t.name}
-                label={`${t.code}${t.taxable ? "" : " (non-tax)"}`}
-                u={t.currency === "USD" ? t.amount : 0}
-                z={t.currency === "ZWG" ? t.amount : 0}
-              />
-            ))}
-            <Total label="Gross earnings" u={slip.gross_usd} z={slip.gross_zig} />
           </div>
 
           <div className="bg-card p-6">
             <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">
               Deductions
             </h3>
-            <Line label="PAYE" u={slip.paye_usd} z={slip.paye_zig} />
-            {slip.tax_credits_usd > 0 && (
-              <div className="flex items-center justify-between py-1 text-sm text-primary">
-                <span>Tax credits applied</span>
-                <span className="text-right">−{usd(slip.tax_credits_usd)}</span>
-              </div>
-            )}
-            <Line label="AIDS Levy (3%)" u={slip.aids_usd} z={slip.aids_zig} />
-            <Line label="NSSA (4.5%)" u={slip.nssa_employee} z={0} />
-            {employee.pension_pct > 0 && (
-              <Line
-                label={`Pension (${Math.round(employee.pension_pct * 100)}%)`}
-                u={slip.pension_usd}
-                z={pensionZig}
-              />
-            )}
-            {slip.medical_aid > 0 && (
-              <Line label="Medical aid" u={slip.medical_aid} z={0} />
-            )}
-            <Line label="NEC dues" u={slip.nec_dues} z={0} />
-            {deductions.map((t) => (
-              <Line
-                key={t.name}
-                label={t.code}
-                u={t.currency === "USD" ? t.amount : 0}
-                z={t.currency === "ZWG" ? t.amount : 0}
-              />
-            ))}
-            <Total
-              label="Total deductions"
-              u={slip.gross_usd - slip.net_usd}
-              z={slip.gross_zig - slip.net_zig}
+            <MoneyTable
+              rows={[
+                { label: "PAYE", u: slip.paye_usd, z: slip.paye_zig },
+                ...(slip.tax_credits_usd > 0
+                  ? [{ label: "Tax credits applied", u: -slip.tax_credits_usd, z: 0, tone: "credit" as const }]
+                  : []),
+                { label: "AIDS Levy (3%)", u: slip.aids_usd, z: slip.aids_zig },
+                { label: "NSSA (4.5%)", u: slip.nssa_employee, z: 0 },
+                ...(employee.pension_pct > 0
+                  ? [{
+                      label: `Pension (${Math.round(employee.pension_pct * 100)}%)`,
+                      u: slip.pension_usd,
+                      z: pensionZig,
+                    }]
+                  : []),
+                ...(slip.medical_aid > 0
+                  ? [{ label: "Medical aid", u: slip.medical_aid, z: 0 }]
+                  : []),
+                { label: "NEC dues", u: slip.nec_dues, z: 0 },
+                ...deductions.map((t) => ({
+                  key: t.name,
+                  label: t.code,
+                  u: t.currency === "USD" ? t.amount : 0,
+                  z: t.currency === "ZWG" ? t.amount : 0,
+                })),
+              ]}
+              total={{
+                label: "Total deductions",
+                u: slip.gross_usd - slip.net_usd,
+                z: slip.gross_zig - slip.net_zig,
+              }}
             />
           </div>
         </div>
@@ -248,27 +246,47 @@ function Info({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Line({ label, u, z }: { label: string; u: number; z: number }) {
-  return (
-    <div className="flex items-center justify-between py-1 text-sm">
-      <span className="text-foreground/80">{label}</span>
-      <span className="text-right">
-        {u ? usd(u) : ""}
-        {u && z ? " · " : ""}
-        {z ? <span className="text-muted-foreground">{zig(z)}</span> : ""}
-        {!u && !z ? "—" : ""}
-      </span>
-    </div>
-  );
-}
+type MoneyRow = { key?: string; label: string; u: number; z: number; tone?: "credit" };
+type MoneyTotal = { label: string; u: number; z: number };
 
-function Total({ label, u, z }: { label: string; u: number; z: number }) {
+/**
+ * Three-column money table: label | USD | ZiG. Values render with a
+ * tabular-nums font so digits line up across rows, and empty cells
+ * fall back to a subtle "—" instead of leaving a hole. Totals sit
+ * inside the same table so the columns keep aligning.
+ */
+function MoneyTable({ rows, total }: { rows: MoneyRow[]; total: MoneyTotal }) {
   return (
-    <div className="mt-2 flex items-center justify-between border-t pt-2 text-sm font-bold">
-      <span>{label}</span>
-      <span>
-        {usd(u)} · {zig(z)}
-      </span>
-    </div>
+    <table className="w-full text-sm tabular-nums">
+      <thead>
+        <tr className="text-[11px] uppercase tracking-wide text-muted-foreground">
+          <th className="pb-1 text-left font-medium">Item</th>
+          <th className="pb-1 text-right font-medium">USD</th>
+          <th className="pb-1 text-right font-medium">ZiG</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r, i) => (
+          <tr key={r.key ?? `${r.label}-${i}`}>
+            <td className={`py-1 ${r.tone === "credit" ? "text-primary" : "text-foreground/80"}`}>
+              {r.label}
+            </td>
+            <td className={`py-1 text-right ${r.tone === "credit" ? "text-primary" : ""}`}>
+              {r.u ? (r.u < 0 ? `−${usd(-r.u)}` : usd(r.u)) : <span className="text-muted-foreground">—</span>}
+            </td>
+            <td className="py-1 text-right text-muted-foreground">
+              {r.z ? zig(r.z) : "—"}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+      <tfoot>
+        <tr className="border-t font-bold">
+          <td className="pt-2">{total.label}</td>
+          <td className="pt-2 text-right">{usd(total.u)}</td>
+          <td className="pt-2 text-right">{zig(total.z)}</td>
+        </tr>
+      </tfoot>
+    </table>
   );
 }

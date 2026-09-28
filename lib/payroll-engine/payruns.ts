@@ -769,6 +769,7 @@ export type PayslipDetail = {
     name: string;
     employee_name: string;
     job_title: string | null;
+    date_of_joining: string | null;
     national_id: string | null;
     tax_number: string | null;
     nssa_number: string | null;
@@ -865,6 +866,7 @@ export async function getPayslipDetail(
       name: (e.name as string) || employee,
       employee_name: (e.employee_name as string) || employee,
       job_title: (e.job_title as string) || null,
+      date_of_joining: (e.date_of_joining as string) || null,
       national_id: (e.national_id as string) || null,
       tax_number: (e.tax_number as string) || null,
       nssa_number: (e.nssa_number as string) || null,

@@ -249,11 +249,15 @@ function Info({ label, value }: { label: string; value: string }) {
 type MoneyRow = { key?: string; label: string; u: number; z: number; tone?: "credit" };
 type MoneyTotal = { label: string; u: number; z: number };
 
+const num = (n: number) =>
+  n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 /**
- * Three-column money table: label | USD | ZiG. Values render with a
- * tabular-nums font so digits line up across rows, and empty cells
- * fall back to a subtle "—" instead of leaving a hole. Totals sit
- * inside the same table so the columns keep aligning.
+ * Three-column money table: label | USD | ZiG. Column headers carry
+ * the currency so cells only render the numeric value (no repeated
+ * "US$" / "ZiG" prefix per row). Tabular-nums keeps digits aligned
+ * across rows; empty cells fall back to a subtle "—". Totals sit
+ * inside the same <table> so the columns keep aligning.
  */
 function MoneyTable({ rows, total }: { rows: MoneyRow[]; total: MoneyTotal }) {
   return (
@@ -272,10 +276,10 @@ function MoneyTable({ rows, total }: { rows: MoneyRow[]; total: MoneyTotal }) {
               {r.label}
             </td>
             <td className={`py-1 text-right ${r.tone === "credit" ? "text-primary" : ""}`}>
-              {r.u ? (r.u < 0 ? `−${usd(-r.u)}` : usd(r.u)) : <span className="text-muted-foreground">—</span>}
+              {r.u ? (r.u < 0 ? `−${num(-r.u)}` : num(r.u)) : <span className="text-muted-foreground">—</span>}
             </td>
             <td className="py-1 text-right text-muted-foreground">
-              {r.z ? zig(r.z) : "—"}
+              {r.z ? num(r.z) : "—"}
             </td>
           </tr>
         ))}
@@ -283,8 +287,8 @@ function MoneyTable({ rows, total }: { rows: MoneyRow[]; total: MoneyTotal }) {
       <tfoot>
         <tr className="border-t font-bold">
           <td className="pt-2">{total.label}</td>
-          <td className="pt-2 text-right">{usd(total.u)}</td>
-          <td className="pt-2 text-right">{zig(total.z)}</td>
+          <td className="pt-2 text-right">{num(total.u)}</td>
+          <td className="pt-2 text-right">{num(total.z)}</td>
         </tr>
       </tfoot>
     </table>

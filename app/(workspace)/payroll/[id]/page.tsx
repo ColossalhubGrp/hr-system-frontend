@@ -315,43 +315,43 @@ export default async function PayRunDetail({
             </div>
           </div>
 
-          {/* Cap the register height so it scrolls INSIDE the Card
-              rather than pushing the page. Sticky <thead> + sticky
-              first column then both attach to the Card as their
-              common scroll ancestor — CSS overflow semantics won't
-              let us keep page scroll while also horizontally pinning
-              the Employee column. */}
+          {/* Register scrolls inside the Card so both sticky-top on
+              <thead> and sticky-left on the Employee column can attach
+              to the same scroll ancestor. NOTE: we use a raw <table>
+              here — shadcn's <Table> wraps in its own overflow-auto
+              div which would steal the scroll context and stop the
+              header from pinning. */}
           <Card className="p-0 overflow-auto max-h-[calc(100vh-14rem)]">
-            <Table>
-              <TableHeader className="sticky top-0 z-30 bg-card shadow-[0_1px_0_0_rgb(0_0_0/0.06)]">
-                <TableRow>
-                  <TableHead className="px-5 sticky left-0 z-40 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+            <table className="w-full caption-bottom text-sm">
+              <thead className="sticky top-0 z-30 bg-card shadow-[0_1px_0_0_rgb(0_0_0/0.06)] [&_tr]:border-b">
+                <tr className="border-b transition-colors hover:bg-muted/50">
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 sticky left-0 z-40 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                     Employee
-                  </TableHead>
-                  <TableHead className="px-5 text-right bg-card">Gross</TableHead>
-                  <TableHead className="px-5 text-right bg-card">PAYE</TableHead>
-                  <TableHead className="px-5 text-right bg-card">AIDS USD</TableHead>
-                  <TableHead className="px-5 text-right bg-card">NSSA USD</TableHead>
-                  <TableHead className="px-5 text-right bg-card" title="Employee pension contribution">Pension</TableHead>
-                  <TableHead className="px-5 text-right bg-card" title="Medical aid + NEC dues">Medical + NEC</TableHead>
-                  <TableHead className="px-5 text-right bg-card" title="Loans, advances, garnishments, other captured deductions">Other</TableHead>
-                  <TableHead className="px-5 text-right bg-card">Net USD</TableHead>
-                  <TableHead className="px-5 text-right bg-card">Net ZiG</TableHead>
-                  <TableHead className="px-5 text-right bg-card">vs previous</TableHead>
-                  <TableHead className="px-5 bg-card"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+                  </th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card">Gross</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card">PAYE</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card">AIDS USD</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card">NSSA USD</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card" title="Employee pension contribution">Pension</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card" title="Medical aid + NEC dues">Medical + NEC</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card" title="Loans, advances, garnishments, other captured deductions">Other</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card">Net USD</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card">Net ZiG</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 text-right bg-card">vs previous</th>
+                  <th className="h-10 align-middle font-medium text-muted-foreground px-5 bg-card"></th>
+                </tr>
+              </thead>
+              <tbody className="[&_tr:last-child]:border-0">
                 {slips.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={12} className="py-12 text-center text-sm text-muted-foreground">
+                  <tr className="border-b transition-colors hover:bg-muted/50">
+                    <td colSpan={12} className="align-middle py-12 text-center text-sm text-muted-foreground">
                       No payslips on this run yet.
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ) : (
                   slips.map((s) => (
-                    <TableRow key={s.name}>
-                      <TableCell className="px-5 align-middle sticky left-0 z-10 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                    <tr key={s.name} className="border-b transition-colors hover:bg-muted/50">
+                      <td className="align-middle px-5 align-middle sticky left-0 z-10 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
                             {initials(s.employee_name)}
@@ -380,83 +380,83 @@ export default async function PayRunDetail({
                             <div className="text-xs text-muted-foreground">{s.employee}</div>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right">
                         {usd(s.gross_usd)}
                         <div className="text-xs text-muted-foreground">{zig(s.gross_zig)}</div>
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right">
                         {usd(s.paye_usd)}
                         <div className="text-xs text-muted-foreground">{zig(s.paye_zig)}</div>
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right text-muted-foreground">
                         {num(s.aids_usd)}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right text-muted-foreground">
                         {num(s.nssa_employee)}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right text-muted-foreground">
                         {s.pension_usd ? num(s.pension_usd) : "—"}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right text-muted-foreground">
                         {s.medical_aid + s.nec_dues ? num(s.medical_aid + s.nec_dues) : "—"}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right text-muted-foreground">
                         {s.other_deduct_usd ? num(s.other_deduct_usd) : "—"}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right font-bold">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right font-bold">
                         {num(s.net_usd)}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right font-bold">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right font-bold">
                         {num(s.net_zig)}
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right">
                         <DeltaTag
                           current={s.net_usd}
                           previous={prev.byEmployee.get(s.employee)}
                           fmt={usd}
                           withPercent
                         />
-                      </TableCell>
-                      <TableCell className="px-5 align-middle text-right">
+                      </td>
+                      <td className="align-middle px-5 align-middle text-right">
                         <Link
                           href={`/payroll/${encodeURIComponent(run.name)}/payslip/${encodeURIComponent(s.employee)}` as Route}
                           className="text-xs font-semibold text-primary hover:underline"
                         >
                           Payslip →
                         </Link>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                    </tr>
                   ))
                 )}
-              </TableBody>
+              </tbody>
               {slips.length > 0 && (
-                <TableFooter>
-                  <TableRow className="border-t-2 bg-muted/30 font-bold">
-                    <TableCell className="px-5 sticky left-0 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                <tfoot className="border-t bg-muted/50 font-medium">
+                  <tr className="border-b transition-colors hover:bg-muted/50 border-t-2 bg-muted/30 font-bold">
+                    <td className="align-middle px-5 sticky left-0 z-10 bg-muted border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                       Totals
-                    </TableCell>
-                    <TableCell className="px-5 text-right">{usd(tot.grossUsd)}</TableCell>
-                    <TableCell className="px-5 text-right">{usd(tot.paye)}</TableCell>
-                    <TableCell className="px-5 text-right">{num(tot.aids)}</TableCell>
-                    <TableCell className="px-5 text-right">{num(tot.nssaEe)}</TableCell>
-                    <TableCell className="px-5 text-right">{num(tot.pension)}</TableCell>
-                    <TableCell className="px-5 text-right">{num(tot.medical)}</TableCell>
-                    <TableCell className="px-5 text-right">{num(tot.other)}</TableCell>
-                    <TableCell className="px-5 text-right text-emerald-700">{num(tot.netUsd)}</TableCell>
-                    <TableCell className="px-5 text-right text-emerald-700">{num(tot.netZig)}</TableCell>
-                    <TableCell className="px-5 text-right">
+                    </td>
+                    <td className="align-middle px-5 text-right">{usd(tot.grossUsd)}</td>
+                    <td className="align-middle px-5 text-right">{usd(tot.paye)}</td>
+                    <td className="align-middle px-5 text-right">{num(tot.aids)}</td>
+                    <td className="align-middle px-5 text-right">{num(tot.nssaEe)}</td>
+                    <td className="align-middle px-5 text-right">{num(tot.pension)}</td>
+                    <td className="align-middle px-5 text-right">{num(tot.medical)}</td>
+                    <td className="align-middle px-5 text-right">{num(tot.other)}</td>
+                    <td className="align-middle px-5 text-right text-emerald-700">{num(tot.netUsd)}</td>
+                    <td className="align-middle px-5 text-right text-emerald-700">{num(tot.netZig)}</td>
+                    <td className="align-middle px-5 text-right">
                       {prev.label ? (
                         <DeltaTag current={tot.netUsd} previous={prev.total} fmt={usd} withPercent />
                       ) : (
                         "—"
                       )}
-                    </TableCell>
-                    <TableCell className="px-5" />
-                  </TableRow>
-                </TableFooter>
+                    </td>
+                    <td className="align-middle px-5" />
+                  </tr>
+                </tfoot>
               )}
-            </Table>
+            </table>
           </Card>
         </>
       )}

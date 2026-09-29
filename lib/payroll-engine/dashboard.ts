@@ -3,6 +3,19 @@ import { frappeCall } from "@/lib/frappe/client";
 import { myCompany } from "@/lib/references/server";
 import { listPayRuns, type PayRunRow } from "./payruns";
 
+/** Named period the dashboard aggregates over. Kept short so it fits
+ *  in a URL query param (`?period=ytd`). */
+export type PeriodKey = "mtd" | "last_month" | "qtd" | "ytd" | "l6m" | "l12m";
+
+export const PERIOD_OPTIONS: Array<{ value: PeriodKey; label: string }> = [
+  { value: "mtd",        label: "Month to date" },
+  { value: "last_month", label: "Last month" },
+  { value: "qtd",        label: "Quarter to date" },
+  { value: "ytd",        label: "Year to date" },
+  { value: "l6m",        label: "Last 6 months" },
+  { value: "l12m",       label: "Last 12 months" },
+];
+
 export interface DashboardMetrics {
   currency: "USD";
   /** Latest processed/updated run's summed totals + count of payslips. */
@@ -31,13 +44,14 @@ export interface DashboardMetrics {
     payeUsd: number;
     isForecast: boolean;     // months with no processed run
   }>;
-  /** Year-to-date totals across every processed run in the current
-   *  calendar year. */
-  ytd: {
+  /** Totals across every processed run within the selected period. */
+  period: {
+    key: PeriodKey;
+    label: string;
     grossUsd: number;
     netUsd: number;
     payeUsd: number;
-    employerCostUsd: number; // net + NSSA_er + ZIMDEF
+    employerCostUsd: number; // gross + NSSA_er + ZIMDEF
     runs: number;
   };
   /** How many employees are excluded from the next run for missing
@@ -142,13 +156,77 @@ function keyToLabel(k: string): string {
   return `${MONTHS[(m || 1) - 1]} ${y}`;
 }
 
-export async function getDashboardMetrics(months = 6): Promise<DashboardMetrics> {
+function periodRange(key: PeriodKey, todayIso: string): {
+  startIso: string;
+  endIso: string;
+  label: string;
+  trendMonths: number;
+} {
+  const [y, m] = todayIso.slice(0, 10).split("-").map(Number);
+  const monthIdx = (m || 1) - 1;  // 0-based
+  const iso = (yy: number, mm: number, dd: number) =>
+    `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}`;
+  // days-in-month helper without pulling in Date arithmetic gremlins
+  const dim = (yy: number, mm: number) => new Date(yy, mm, 0).getDate();
+
+  switch (key) {
+    case "mtd":
+      return {
+        startIso: iso(y, m, 1), endIso: todayIso,
+        label: "Month to date", trendMonths: 3,
+      };
+    case "last_month": {
+      const py = monthIdx === 0 ? y - 1 : y;
+      const pm = monthIdx === 0 ? 12 : m - 1;
+      return {
+        startIso: iso(py, pm, 1),
+        endIso: iso(py, pm, dim(py, pm)),
+        label: "Last month", trendMonths: 3,
+      };
+    }
+    case "qtd": {
+      const qStart = Math.floor(monthIdx / 3) * 3 + 1;
+      return {
+        startIso: iso(y, qStart, 1), endIso: todayIso,
+        label: "Quarter to date", trendMonths: 3,
+      };
+    }
+    case "ytd":
+      return {
+        startIso: iso(y, 1, 1), endIso: todayIso,
+        label: "Year to date", trendMonths: Math.max(6, m),
+      };
+    case "l6m":
+      return {
+        startIso: iso(...(() => {
+          let yy = y, mm = m - 5;
+          while (mm <= 0) { mm += 12; yy -= 1; }
+          return [yy, mm, 1] as [number, number, number];
+        })()),
+        endIso: todayIso, label: "Last 6 months", trendMonths: 6,
+      };
+    case "l12m":
+      return {
+        startIso: iso(...(() => {
+          let yy = y, mm = m - 11;
+          while (mm <= 0) { mm += 12; yy -= 1; }
+          return [yy, mm, 1] as [number, number, number];
+        })()),
+        endIso: todayIso, label: "Last 12 months", trendMonths: 12,
+      };
+  }
+}
+
+export async function getDashboardMetrics(
+  period: PeriodKey = "l6m",
+): Promise<DashboardMetrics> {
   const runs = await listPayRuns();
   // Only processed/updated runs actually produced slips.
   const paid = runs.filter((r) => r.status === "PROCESSED" || r.status === "UPDATED");
 
   const today = new Date().toISOString().slice(0, 10);
-  const trendKeys = lastNMonthKeys(months, today);
+  const range = periodRange(period, today);
+  const trendKeys = lastNMonthKeys(range.trendMonths, today);
   const runsInTrend = paid.filter((r) => {
     if (!r.pay_date) return false;
     return trendKeys.includes(monthKey(r.pay_date));
@@ -219,22 +297,29 @@ export async function getDashboardMetrics(months = 6): Promise<DashboardMetrics>
     };
   });
 
-  // YTD across every processed run in the current year
-  const year = today.slice(0, 4);
-  const ytdRuns = paid.filter((r) => (r.pay_date || "").startsWith(year));
-  const ytdSlipMap = await fetchSlipsForRuns(ytdRuns.map((r) => r.name));
-  const ytd = { grossUsd: 0, netUsd: 0, payeUsd: 0, employerCostUsd: 0, runs: ytdRuns.length };
-  for (const r of ytdRuns) {
-    for (const s of ytdSlipMap.get(r.name) ?? []) {
+  // Totals across every processed run within the SELECTED period
+  const periodRuns = paid.filter((r) => {
+    const d = (r.pay_date || "").slice(0, 10);
+    return d && d >= range.startIso && d <= range.endIso;
+  });
+  const periodSlipMap = await fetchSlipsForRuns(periodRuns.map((r) => r.name));
+  const periodTotals = {
+    key: period,
+    label: range.label,
+    grossUsd: 0, netUsd: 0, payeUsd: 0, employerCostUsd: 0,
+    runs: periodRuns.length,
+  };
+  for (const r of periodRuns) {
+    for (const s of periodSlipMap.get(r.name) ?? []) {
       const gross = Number(s.gross_usd ?? 0);
       const net = Number(s.net_usd ?? 0);
       const paye = Number(s.paye_usd ?? 0);
       const nssaEr = Number(s.nssa_employer ?? 0);
       const zimdef = Number(s.zimdef ?? 0);
-      ytd.grossUsd += gross;
-      ytd.netUsd += net;
-      ytd.payeUsd += paye;
-      ytd.employerCostUsd += gross + nssaEr + zimdef;
+      periodTotals.grossUsd += gross;
+      periodTotals.netUsd += net;
+      periodTotals.payeUsd += paye;
+      periodTotals.employerCostUsd += gross + nssaEr + zimdef;
     }
   }
 
@@ -242,7 +327,7 @@ export async function getDashboardMetrics(months = 6): Promise<DashboardMetrics>
     currency: "USD",
     latest,
     trend,
-    ytd,
+    period: periodTotals,
     blockedEmployeeCount: 0,   // filled by caller (banner already runs its own query)
     recent: paid.slice(0, 5),
   };

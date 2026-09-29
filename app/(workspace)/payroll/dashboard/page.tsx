@@ -8,7 +8,7 @@ import {
   Coins,
   AlertTriangle,
 } from "lucide-react";
-import { getDashboardMetrics } from "@/lib/payroll-engine/dashboard";
+import { getDashboardMetrics, type PeriodKey, PERIOD_OPTIONS } from "@/lib/payroll-engine/dashboard";
 import { listMissingCriticalInfo } from "@/lib/payroll-engine/payruns";
 import {
   KpiTile,
@@ -17,6 +17,7 @@ import {
   BarsCard,
 } from "@/components/payroll/dashboard-charts";
 import { NewPeriodModal } from "@/components/payroll/new-period-modal";
+import { PeriodFilter } from "@/components/payroll/period-filter";
 
 export const metadata = { title: "Payroll Dashboard · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -42,14 +43,23 @@ function fmtDate(iso: string | null | undefined): string {
   });
 }
 
-export default async function PayrollDashboardPage() {
+export default async function PayrollDashboardPage({
+  searchParams,
+}: {
+  searchParams?: { period?: string };
+}) {
+  const validKeys = new Set(PERIOD_OPTIONS.map((o) => o.value));
+  const period: PeriodKey = validKeys.has((searchParams?.period ?? "") as PeriodKey)
+    ? (searchParams!.period as PeriodKey)
+    : "l6m";
+
   const [metrics, missing] = await Promise.all([
-    getDashboardMetrics(6),
+    getDashboardMetrics(period),
     listMissingCriticalInfo(),
   ]);
   metrics.blockedEmployeeCount = missing.length;
 
-  const { latest, trend, ytd, recent } = metrics;
+  const { latest, trend, period: periodTotals, recent } = metrics;
   const currentTrend = trend[trend.length - 1]?.netUsd ?? 0;
   const previousTrend = trend[trend.length - 2]?.netUsd ?? 0;
 
@@ -110,6 +120,7 @@ export default async function PayrollDashboardPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <PeriodFilter current={period} />
           <NewPeriodModal />
           <Link
             href={"/payroll" as Route}
@@ -174,9 +185,13 @@ export default async function PayrollDashboardPage() {
           accent="amber"
         />
         <KpiTile
-          label="YTD · Employer cost"
-          value={usd(ytd.employerCostUsd)}
-          hint={`${ytd.runs} run${ytd.runs === 1 ? "" : "s"} · Net paid: ${usd(ytd.netUsd)}`}
+          label={`${periodTotals.label} · Employer cost`}
+          value={usd(periodTotals.employerCostUsd)}
+          hint={
+            periodTotals.runs > 0
+              ? `${periodTotals.runs} run${periodTotals.runs === 1 ? "" : "s"} · Net paid: ${usd(periodTotals.netUsd)}`
+              : "No processed runs in this period"
+          }
           accent="primary"
         />
       </section>
@@ -185,7 +200,7 @@ export default async function PayrollDashboardPage() {
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <TrendChart
-            label="Net pay trend · last 6 months"
+            label={`Net pay trend · ${trend.length} month${trend.length === 1 ? "" : "s"}`}
             points={trendPoints}
             color="#059669"
           />

@@ -311,17 +311,14 @@ export default async function PayRunDetail({
             </div>
           </div>
 
-          <Card className="p-0">
-            {/* Horizontal scroll lives on this inner wrapper so the Card
-                itself is NOT the scroll ancestor. That keeps `main` as
-                the vertical scroll ancestor, which is what the sticky
-                <thead> attaches to. */}
-            <div className="overflow-x-auto">
+          {/* Cap the register height so it scrolls INSIDE the Card
+              rather than pushing the page. Sticky <thead> + sticky
+              first column then both attach to the Card as their
+              common scroll ancestor — CSS overflow semantics won't
+              let us keep page scroll while also horizontally pinning
+              the Employee column. */}
+          <Card className="p-0 overflow-auto max-h-[calc(100vh-14rem)]">
             <Table>
-              {/* Sticky header row — pins to the top of the workspace
-                  scroll area when the register scrolls past. Corner cell
-                  (Employee) keeps its horizontal-sticky behaviour and
-                  bumps its z-index so it stays over the diagonal. */}
               <TableHeader className="sticky top-0 z-30 bg-card shadow-[0_1px_0_0_rgb(0_0_0/0.06)]">
                 <TableRow>
                   <TableHead className="px-5 sticky left-0 z-40 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
@@ -441,7 +438,6 @@ export default async function PayRunDetail({
                 </TableFooter>
               )}
             </Table>
-            </div>
           </Card>
         </>
       )}

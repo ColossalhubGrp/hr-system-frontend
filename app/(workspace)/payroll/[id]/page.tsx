@@ -311,21 +311,30 @@ export default async function PayRunDetail({
             </div>
           </div>
 
-          <Card className="overflow-x-auto p-0">
+          <Card className="p-0">
+            {/* Horizontal scroll lives on this inner wrapper so the Card
+                itself is NOT the scroll ancestor. That keeps `main` as
+                the vertical scroll ancestor, which is what the sticky
+                <thead> attaches to. */}
+            <div className="overflow-x-auto">
             <Table>
-              <TableHeader>
+              {/* Sticky header row — pins to the top of the workspace
+                  scroll area when the register scrolls past. Corner cell
+                  (Employee) keeps its horizontal-sticky behaviour and
+                  bumps its z-index so it stays over the diagonal. */}
+              <TableHeader className="sticky top-0 z-30 bg-card shadow-[0_1px_0_0_rgb(0_0_0/0.06)]">
                 <TableRow>
-                  <TableHead className="px-5 sticky left-0 z-20 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
+                  <TableHead className="px-5 sticky left-0 z-40 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                     Employee
                   </TableHead>
-                  <TableHead className="px-5 text-right">Gross</TableHead>
-                  <TableHead className="px-5 text-right">PAYE</TableHead>
-                  <TableHead className="px-5 text-right">AIDS USD</TableHead>
-                  <TableHead className="px-5 text-right">NSSA USD</TableHead>
-                  <TableHead className="px-5 text-right">Net USD</TableHead>
-                  <TableHead className="px-5 text-right">Net ZiG</TableHead>
-                  <TableHead className="px-5 text-right">vs previous</TableHead>
-                  <TableHead className="px-5"></TableHead>
+                  <TableHead className="px-5 text-right bg-card">Gross</TableHead>
+                  <TableHead className="px-5 text-right bg-card">PAYE</TableHead>
+                  <TableHead className="px-5 text-right bg-card">AIDS USD</TableHead>
+                  <TableHead className="px-5 text-right bg-card">NSSA USD</TableHead>
+                  <TableHead className="px-5 text-right bg-card">Net USD</TableHead>
+                  <TableHead className="px-5 text-right bg-card">Net ZiG</TableHead>
+                  <TableHead className="px-5 text-right bg-card">vs previous</TableHead>
+                  <TableHead className="px-5 bg-card"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -432,6 +441,7 @@ export default async function PayRunDetail({
                 </TableFooter>
               )}
             </Table>
+            </div>
           </Card>
         </>
       )}

@@ -3,18 +3,8 @@ import { frappeCall } from "@/lib/frappe/client";
 import { myCompany } from "@/lib/references/server";
 import { listPayRuns, type PayRunRow } from "./payruns";
 
-/** Named period the dashboard aggregates over. Kept short so it fits
- *  in a URL query param (`?period=ytd`). */
-export type PeriodKey = "mtd" | "last_month" | "qtd" | "ytd" | "l6m" | "l12m";
-
-export const PERIOD_OPTIONS: Array<{ value: PeriodKey; label: string }> = [
-  { value: "mtd",        label: "Month to date" },
-  { value: "last_month", label: "Last month" },
-  { value: "qtd",        label: "Quarter to date" },
-  { value: "ytd",        label: "Year to date" },
-  { value: "l6m",        label: "Last 6 months" },
-  { value: "l12m",       label: "Last 12 months" },
-];
+export { PERIOD_OPTIONS, type PeriodKey } from "./dashboard-constants";
+import type { PeriodKey } from "./dashboard-constants";
 
 export interface DashboardMetrics {
   currency: "USD";

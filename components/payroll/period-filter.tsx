@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useTransition } from "react";
 import { ChevronDown, Loader2 } from "lucide-react";
-import { PERIOD_OPTIONS, type PeriodKey } from "@/lib/payroll-engine/dashboard";
+import { PERIOD_OPTIONS, type PeriodKey } from "@/lib/payroll-engine/dashboard-constants";
 import { cn } from "@/lib/cn";
 
 /**

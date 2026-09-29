@@ -134,10 +134,14 @@ export default async function PayRunDetail({
       nssaEe: a.nssaEe + s.nssa_employee,
       nssaEr: a.nssaEr + s.nssa_employer,
       zimdef: a.zimdef + s.zimdef,
+      pension: a.pension + s.pension_usd,
+      medical: a.medical + s.medical_aid + s.nec_dues,
+      other: a.other + s.other_deduct_usd,
       netUsd: a.netUsd + s.net_usd,
       netZig: a.netZig + s.net_zig,
     }),
-    { grossUsd: 0, grossZig: 0, paye: 0, payeZig: 0, aids: 0, nssaEe: 0, nssaEr: 0, zimdef: 0, netUsd: 0, netZig: 0 },
+    { grossUsd: 0, grossZig: 0, paye: 0, payeZig: 0, aids: 0, nssaEe: 0, nssaEr: 0,
+      zimdef: 0, pension: 0, medical: 0, other: 0, netUsd: 0, netZig: 0 },
   );
 
   return (
@@ -328,6 +332,9 @@ export default async function PayRunDetail({
                   <TableHead className="px-5 text-right bg-card">PAYE</TableHead>
                   <TableHead className="px-5 text-right bg-card">AIDS USD</TableHead>
                   <TableHead className="px-5 text-right bg-card">NSSA USD</TableHead>
+                  <TableHead className="px-5 text-right bg-card" title="Employee pension contribution">Pension</TableHead>
+                  <TableHead className="px-5 text-right bg-card" title="Medical aid + NEC dues">Medical + NEC</TableHead>
+                  <TableHead className="px-5 text-right bg-card" title="Loans, advances, garnishments, other captured deductions">Other</TableHead>
                   <TableHead className="px-5 text-right bg-card">Net USD</TableHead>
                   <TableHead className="px-5 text-right bg-card">Net ZiG</TableHead>
                   <TableHead className="px-5 text-right bg-card">vs previous</TableHead>
@@ -337,7 +344,7 @@ export default async function PayRunDetail({
               <TableBody>
                 {slips.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="py-12 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={12} className="py-12 text-center text-sm text-muted-foreground">
                       No payslips on this run yet.
                     </TableCell>
                   </TableRow>
@@ -388,6 +395,15 @@ export default async function PayRunDetail({
                       <TableCell className="px-5 align-middle text-right text-muted-foreground">
                         {num(s.nssa_employee)}
                       </TableCell>
+                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                        {s.pension_usd ? num(s.pension_usd) : "—"}
+                      </TableCell>
+                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                        {s.medical_aid + s.nec_dues ? num(s.medical_aid + s.nec_dues) : "—"}
+                      </TableCell>
+                      <TableCell className="px-5 align-middle text-right text-muted-foreground">
+                        {s.other_deduct_usd ? num(s.other_deduct_usd) : "—"}
+                      </TableCell>
                       <TableCell className="px-5 align-middle text-right font-bold">
                         {num(s.net_usd)}
                       </TableCell>
@@ -424,6 +440,9 @@ export default async function PayRunDetail({
                     <TableCell className="px-5 text-right">{usd(tot.paye)}</TableCell>
                     <TableCell className="px-5 text-right">{num(tot.aids)}</TableCell>
                     <TableCell className="px-5 text-right">{num(tot.nssaEe)}</TableCell>
+                    <TableCell className="px-5 text-right">{num(tot.pension)}</TableCell>
+                    <TableCell className="px-5 text-right">{num(tot.medical)}</TableCell>
+                    <TableCell className="px-5 text-right">{num(tot.other)}</TableCell>
                     <TableCell className="px-5 text-right text-emerald-700">{num(tot.netUsd)}</TableCell>
                     <TableCell className="px-5 text-right text-emerald-700">{num(tot.netZig)}</TableCell>
                     <TableCell className="px-5 text-right">

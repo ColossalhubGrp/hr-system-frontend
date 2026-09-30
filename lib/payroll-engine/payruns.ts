@@ -211,9 +211,15 @@ export type WizardEntry = {
    *  per-row so HR can override for a specific run (e.g. a
    *  holiday-heavy period). */
   overtime_multiplier: number;
+  /** Hours worked on a Saturday / Sunday. Priced at the weekend
+   *  multiplier. */
+  weekend_ot_hours: number;
   /** Multiplier for weekend hours (Sat/Sun work). Zim default 2×;
    *  per-row overridable, falls back to company setting. */
   weekend_multiplier: number;
+  /** Hours worked on a gazetted public holiday. Priced at the
+   *  holiday multiplier. */
+  holiday_ot_hours: number;
   /** Multiplier for gazetted public-holiday hours. Default 2×. */
   holiday_multiplier: number;
   contractor_flat_usd: number;
@@ -230,7 +236,9 @@ const EMPTY_WIZARD_ENTRY: WizardEntry = {
   hours_worked: 0,
   overtime_hours: 0,
   overtime_multiplier: DEFAULT_OT_MULTIPLIER,
+  weekend_ot_hours: 0,
   weekend_multiplier: DEFAULT_WEEKEND_MULTIPLIER,
+  holiday_ot_hours: 0,
   holiday_multiplier: DEFAULT_HOLIDAY_MULTIPLIER,
   contractor_flat_usd: 0,
 };
@@ -480,7 +488,9 @@ export async function listEmployeesForRun(
         hours_worked: Number(e.hours_worked ?? 0),
         overtime_hours: Number(e.overtime_hours ?? 0),
         overtime_multiplier: Number(e.overtime_multiplier ?? 0) || DEFAULT_OT_MULTIPLIER,
+        weekend_ot_hours: Number(e.weekend_ot_hours ?? 0),
         weekend_multiplier: Number(e.weekend_multiplier ?? 0) || DEFAULT_WEEKEND_MULTIPLIER,
+        holiday_ot_hours: Number(e.holiday_ot_hours ?? 0),
         holiday_multiplier: Number(e.holiday_multiplier ?? 0) || DEFAULT_HOLIDAY_MULTIPLIER,
         contractor_flat_usd: Number(e.contractor_flat_usd ?? 0),
       });

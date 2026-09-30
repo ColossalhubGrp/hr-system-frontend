@@ -55,11 +55,13 @@ function grossUsd(e: EmployeeForRun): number {
   const holMult = w.holiday_multiplier || 2.0;
 
   if (e.payroll_class === "HOURLY") {
-    // Approved timesheet wins over manual wizard cells.
+    // Approved timesheet wins over manual wizard cells for the
+    // hours side; falls back to the wizard's per-type OT hours when
+    // no timesheet has been imported.
     const hours = e.timesheet ? e.timesheet.regular_hours : w.hours_worked;
-    const ot = e.timesheet ? e.timesheet.overtime_hours : w.overtime_hours;
-    const we = e.timesheet ? e.timesheet.weekend_hours : 0;
-    const hol = e.timesheet ? e.timesheet.holiday_hours : 0;
+    const ot  = e.timesheet ? e.timesheet.overtime_hours : w.overtime_hours;
+    const we  = e.timesheet ? e.timesheet.weekend_hours  : w.weekend_ot_hours;
+    const hol = e.timesheet ? e.timesheet.holiday_hours  : w.holiday_ot_hours;
     return (
       w.hourly_rate_usd * hours +
       w.hourly_rate_usd * otMult * ot +
@@ -70,17 +72,21 @@ function grossUsd(e: EmployeeForRun): number {
   if (e.payroll_class === "CONTRACTOR") {
     return w.contractor_flat_usd;
   }
-  // Salaried: basic + adjustment + captured earnings + timesheet-driven
-  // OT / weekend / holiday earnings (each = basic/expected_hours ×
-  // its own multiplier × hours in that category).
+  // Salaried: basic + adjustment + captured earnings + OT / weekend /
+  // holiday earnings (each = basic/expected_hours × its own multiplier
+  // × hours in that category). Hours from timesheet when present,
+  // else from the wizard row.
   let salariedExtras = 0;
-  if (e.timesheet && e.basic_usd > 0) {
-    const expected = e.timesheet.expected_hours || 176;
+  if (e.basic_usd > 0) {
+    const expected = (e.timesheet?.expected_hours || 176);
     const hourly = e.basic_usd / expected;
+    const ot  = e.timesheet ? e.timesheet.overtime_hours : w.overtime_hours;
+    const we  = e.timesheet ? e.timesheet.weekend_hours  : w.weekend_ot_hours;
+    const hol = e.timesheet ? e.timesheet.holiday_hours  : w.holiday_ot_hours;
     salariedExtras =
-      hourly * otMult * e.timesheet.overtime_hours +
-      hourly * weMult * e.timesheet.weekend_hours +
-      hourly * holMult * e.timesheet.holiday_hours;
+      hourly * otMult * ot +
+      hourly * weMult * we +
+      hourly * holMult * hol;
   }
   return e.basic_usd + w.salary_adjustment_usd + e.captured_earn_usd + salariedExtras;
 }
@@ -981,22 +987,46 @@ function ClassStep({
                 </TableHead>
                 <TableHead
                   className="px-3 text-right w-24 whitespace-nowrap"
-                  title="Overtime multiplier — Zim weekday default 1.5×; weekends / public holidays commonly 2×. Editable per row."
+                  title="Regular OT multiplier — Zim weekday default 1.5×. Editable per row."
                 >
                   <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
-                    OVERTIME
+                    REG OT
                   </span>
                   ×
                 </TableHead>
-                <TableHead className="px-3 text-right w-24 whitespace-nowrap">
+                <TableHead
+                  className="px-3 text-right w-24 whitespace-nowrap"
+                  title="Regular weekday overtime hours."
+                >
                   <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
-                    OVERTIME
+                    REG OT
                   </span>
                   Hours
                 </TableHead>
-                <TableHead className="px-3 text-right w-28 whitespace-nowrap">
+                <TableHead
+                  className="px-3 text-right w-24 whitespace-nowrap"
+                  title="Weekend hours worked (Sat / Sun). Priced at the Weekend multiplier — default 2×."
+                >
                   <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
-                    OVERTIME
+                    WEEKEND
+                  </span>
+                  Hours
+                </TableHead>
+                <TableHead
+                  className="px-3 text-right w-24 whitespace-nowrap"
+                  title="Gazetted public-holiday hours worked. Priced at the Holiday multiplier — default 2×."
+                >
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    HOLIDAY
+                  </span>
+                  Hours
+                </TableHead>
+                <TableHead
+                  className="px-3 text-right w-28 whitespace-nowrap"
+                  title="Sum of regular OT + weekend + holiday, each priced at its own multiplier."
+                >
+                  <span className="text-[10px] font-normal normal-case tracking-normal text-muted-foreground block">
+                    OT TOTAL
                   </span>
                   Amount
                 </TableHead>
@@ -1364,14 +1394,62 @@ function ClassStep({
                         />
                       )}
                     </TableCell>
-                    {/* OVERTIME — Amount (= Rate × mult × OT hours) */}
+                    {/* WEEKEND — Hours */}
+                    <TableCell className="px-3 align-middle text-right">
+                      {r.timesheet ? (
+                        <ReadOnlyHours
+                          value={r.timesheet.weekend_hours}
+                          source={r.timesheet.source}
+                        />
+                      ) : (
+                        <NumCell
+                          value={r.wiz.weekend_ot_hours}
+                          disabled={isMissing}
+                          step="0.25"
+                          onCommit={(v) =>
+                            patchWiz({ weekend_ot_hours: v }, { weekend_ot_hours: v })
+                          }
+                        />
+                      )}
+                    </TableCell>
+                    {/* HOLIDAY — Hours */}
+                    <TableCell className="px-3 align-middle text-right">
+                      {r.timesheet ? (
+                        <ReadOnlyHours
+                          value={r.timesheet.holiday_hours}
+                          source={r.timesheet.source}
+                        />
+                      ) : (
+                        <NumCell
+                          value={r.wiz.holiday_ot_hours}
+                          disabled={isMissing}
+                          step="0.25"
+                          onCommit={(v) =>
+                            patchWiz({ holiday_ot_hours: v }, { holiday_ot_hours: v })
+                          }
+                        />
+                      )}
+                    </TableCell>
+                    {/* OT TOTAL — sum of regular + weekend + holiday */}
                     <TableCell className="px-3 align-middle text-right font-medium text-foreground tabular-nums">
                       {(() => {
-                        const otHrs = r.timesheet
+                        const rate = r.wiz.hourly_rate_usd;
+                        const regHrs = r.timesheet
                           ? r.timesheet.overtime_hours
                           : r.wiz.overtime_hours;
-                        const mult = r.wiz.overtime_multiplier || 1.5;
-                        const amt = r.wiz.hourly_rate_usd * mult * otHrs;
+                        const wknHrs = r.timesheet
+                          ? r.timesheet.weekend_hours
+                          : r.wiz.weekend_ot_hours;
+                        const holHrs = r.timesheet
+                          ? r.timesheet.holiday_hours
+                          : r.wiz.holiday_ot_hours;
+                        const otMult = r.wiz.overtime_multiplier || 1.5;
+                        const wknMult = r.wiz.weekend_multiplier || 2.0;
+                        const holMult = r.wiz.holiday_multiplier || 2.0;
+                        const amt =
+                          rate * otMult * regHrs +
+                          rate * wknMult * wknHrs +
+                          rate * holMult * holHrs;
                         return amt ? usd(amt) : "—";
                       })()}
                     </TableCell>
@@ -1751,7 +1829,7 @@ function ClassStep({
                     return t ? usd(t) : "—";
                   })()}
                 </TableCell>
-                {/* OT: × (no sum) | Hours | Amount */}
+                {/* REG OT: × (no sum) | Hours */}
                 <TableCell className="px-3 text-right text-muted-foreground text-xs">
                   —
                 </TableCell>
@@ -1764,12 +1842,41 @@ function ClassStep({
                     )
                     .toFixed(2)}
                 </TableCell>
+                {/* WEEKEND Hours */}
+                <TableCell className="px-3 text-right">
+                  {includedRows
+                    .reduce(
+                      (a, e) =>
+                        a + (e.timesheet ? e.timesheet.weekend_hours : e.wiz.weekend_ot_hours),
+                      0,
+                    )
+                    .toFixed(2)}
+                </TableCell>
+                {/* HOLIDAY Hours */}
+                <TableCell className="px-3 text-right">
+                  {includedRows
+                    .reduce(
+                      (a, e) =>
+                        a + (e.timesheet ? e.timesheet.holiday_hours : e.wiz.holiday_ot_hours),
+                      0,
+                    )
+                    .toFixed(2)}
+                </TableCell>
+                {/* OT TOTAL Amount */}
                 <TableCell className="px-3 text-right">
                   {(() => {
                     const t = includedRows.reduce((a, e) => {
-                      const otHrs = e.timesheet ? e.timesheet.overtime_hours : e.wiz.overtime_hours;
-                      const mult = e.wiz.overtime_multiplier || 1.5;
-                      return a + e.wiz.hourly_rate_usd * mult * otHrs;
+                      const rate = e.wiz.hourly_rate_usd;
+                      const regHrs = e.timesheet ? e.timesheet.overtime_hours : e.wiz.overtime_hours;
+                      const wknHrs = e.timesheet ? e.timesheet.weekend_hours : e.wiz.weekend_ot_hours;
+                      const holHrs = e.timesheet ? e.timesheet.holiday_hours : e.wiz.holiday_ot_hours;
+                      const otMult = e.wiz.overtime_multiplier || 1.5;
+                      const wknMult = e.wiz.weekend_multiplier || 2.0;
+                      const holMult = e.wiz.holiday_multiplier || 2.0;
+                      return a
+                        + rate * otMult * regHrs
+                        + rate * wknMult * wknHrs
+                        + rate * holMult * holHrs;
                     }, 0);
                     return t ? usd(t) : "—";
                   })()}

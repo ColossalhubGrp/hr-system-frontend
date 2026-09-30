@@ -147,7 +147,9 @@ export type WizardEntryPatch = Partial<{
   hours_worked: number;
   overtime_hours: number;
   overtime_multiplier: number;
+  weekend_ot_hours: number;
   weekend_multiplier: number;
+  holiday_ot_hours: number;
   holiday_multiplier: number;
   contractor_flat_usd: number;
 }>;

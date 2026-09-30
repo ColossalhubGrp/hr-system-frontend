@@ -13,6 +13,7 @@ import {
   listPreviousRunNetMap,
   type PayRunStatus,
 } from "@/lib/payroll-engine/payruns";
+import { getMyAccess } from "@/lib/frappe/roles";
 import { FlowSteps } from "@/components/payroll/flow-steps";
 import { PayRunActions } from "@/components/payroll/pay-run-actions";
 import { DeltaTag } from "@/components/payroll/delta-tag";
@@ -80,10 +81,11 @@ export default async function PayRunDetail({
   // "vs previous" DeltaTag on the register. OPEN view only needs the
   // employee roster for the "ready to run" card counts — everything
   // per-employee is now inside the wizard.
-  const [employees, slips, prev] = await Promise.all([
+  const [employees, slips, prev, access] = await Promise.all([
     isOpen ? listEmployeesForRun(id) : Promise.resolve([]),
     isOpen ? Promise.resolve([]) : listPayslipsForRun(id),
     listPreviousRunNetMap(id),
+    getMyAccess(),
   ]);
 
   // Tax-method lookup for the FDS / NON_FDS pill. One bulk fetch keyed
@@ -196,7 +198,7 @@ export default async function PayRunDetail({
 
       <Card className="flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between">
         <FlowSteps status={run.status} />
-        <PayRunActions id={run.name} status={run.status} />
+        <PayRunActions id={run.name} status={run.status} canReopenClosed={access.isPayrollAdmin} />
       </Card>
 
       {isOpen ? (

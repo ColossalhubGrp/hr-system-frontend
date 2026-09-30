@@ -68,14 +68,22 @@ export default async function ReportsTab({
 
   return (
     <div className="flex flex-col gap-5">
-      <header>
-        <h1 className="text-[28px] font-bold leading-tight text-foreground">
-          Reports
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {filtered.length} run{filtered.length === 1 ? "" : "s"} matching ·{" "}
-          {all.length} payslip{all.length === 1 ? "" : "s"}
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-[28px] font-bold leading-tight text-foreground">
+            Reports
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {filtered.length} run{filtered.length === 1 ? "" : "s"} matching ·{" "}
+            {all.length} payslip{all.length === 1 ? "" : "s"}
+          </p>
+        </div>
+        <Link
+          href={`/payroll/audit-report?from=${from}&to=${to}` as Route}
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+        >
+          Print for external audit →
+        </Link>
       </header>
 
       <form className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">

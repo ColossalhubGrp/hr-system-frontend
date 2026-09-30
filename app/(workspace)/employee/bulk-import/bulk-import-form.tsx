@@ -9,9 +9,8 @@ import { toast } from "@/components/ui/sonner";
 import {
   bulkImportEmployeesAction,
   downloadEmployeeTemplateAction,
-  type ImportSummary,
 } from "./actions";
-import { TEMPLATE_COLUMNS } from "./actions";
+import { TEMPLATE_COLUMNS, type ImportSummary } from "./constants";
 
 export function BulkImportForm() {
   const [fileName, setFileName] = useState<string | null>(null);

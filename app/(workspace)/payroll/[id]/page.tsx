@@ -146,6 +146,10 @@ export default async function PayRunDetail({
       zimdef: 0, pension: 0, medical: 0, other: 0, netUsd: 0, netZig: 0 },
   );
 
+  // Negative-net payslips = deductions exceeded gross. Never right for a
+  // real run — surface as a warning banner so HR reviews before closing.
+  const negativeSlips = slips.filter((s) => s.net_usd < 0);
+
   return (
     <div className="flex flex-col gap-5">
       <Link
@@ -290,6 +294,38 @@ export default async function PayRunDetail({
             </div>
           </Card>
 
+          {negativeSlips.length > 0 && (
+            <div className="flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9"  x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-rose-800">
+                  {negativeSlips.length} payslip{negativeSlips.length === 1 ? "" : "s"} with negative net pay
+                </div>
+                <p className="mt-1 text-xs text-rose-700/80">
+                  Deductions exceed gross earnings on {negativeSlips.length === 1 ? "this employee" : "these employees"}.
+                  Real payroll should never leave someone owing the company at month-end —
+                  review + resolve (edit the employee&apos;s pension&nbsp;%, medical aid, or other deductions,
+                  or delete the excess Payroll Transaction rows on this run) before closing.
+                </p>
+                <ul className="mt-2 flex flex-wrap gap-1.5 text-xs">
+                  {negativeSlips.slice(0, 12).map((s) => (
+                    <li key={s.name}
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-white px-2 py-0.5 font-mono text-rose-800">
+                      {s.employee_name} <span className="text-rose-500">({num(s.net_usd)})</span>
+                    </li>
+                  ))}
+                  {negativeSlips.length > 12 && (
+                    <li className="text-rose-700">+ {negativeSlips.length - 12} more — see the highlighted rows below.</li>
+                  )}
+                </ul>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-bold text-foreground">Payslip register</h2>
@@ -352,7 +388,14 @@ export default async function PayRunDetail({
                   </tr>
                 ) : (
                   slips.map((s) => (
-                    <tr key={s.name} className="border-b transition-colors hover:bg-muted/50">
+                    <tr
+                      key={s.name}
+                      className={cn(
+                        "border-b transition-colors hover:bg-muted/50",
+                        s.net_usd < 0 && "bg-rose-50/60 hover:bg-rose-50",
+                      )}
+                      title={s.net_usd < 0 ? "Net pay is negative — deductions exceeded gross." : undefined}
+                    >
                       <td className="align-middle px-5 align-middle sticky left-0 z-10 bg-card border-r shadow-[1px_0_0_0_rgb(0_0_0/0.04)]">
                         <div className="flex items-center gap-3">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
@@ -406,10 +449,16 @@ export default async function PayRunDetail({
                       <td className="align-middle px-5 align-middle text-right text-muted-foreground">
                         {s.other_deduct_usd ? num(s.other_deduct_usd) : "—"}
                       </td>
-                      <td className="align-middle px-5 align-middle text-right font-bold">
+                      <td className={cn(
+                        "align-middle px-5 align-middle text-right font-bold",
+                        s.net_usd < 0 && "text-rose-700",
+                      )}>
                         {num(s.net_usd)}
                       </td>
-                      <td className="align-middle px-5 align-middle text-right font-bold">
+                      <td className={cn(
+                        "align-middle px-5 align-middle text-right font-bold",
+                        s.net_zig < 0 && "text-rose-700",
+                      )}>
                         {num(s.net_zig)}
                       </td>
                       <td className="align-middle px-5 align-middle text-right">

@@ -193,53 +193,69 @@ export function Sidebar({ access }: { access: AccessBundle }) {
             return (
               <li key={item.label}>
                 {item.children ? (
-                  // Parent with children: the label is a real Link so the
-                  // parent's href navigates; clicking it ALSO expands the
-                  // children (when not collapsed). Chevron is a hint.
-                  <Link
-                    href={item.href as never}
-                    onClick={() => toggle(item.label)}
-                    title={collapsed ? item.label : undefined}
-                    className={cn(
-                      "group flex w-full items-center rounded-xl text-[15px] font-medium transition focus-ring",
-                      collapsed
-                        ? "h-11 justify-center px-0"
-                        : "justify-between gap-3 px-3 py-2.5",
-                      isActive
-                        ? "bg-white text-ink-800"
-                        : "text-white/85 hover:bg-white/[0.06]",
-                    )}
-                    aria-expanded={!collapsed && isOpen}
-                    aria-label={collapsed ? item.label : undefined}
-                  >
-                    {collapsed ? (
+                  // Parent with children: the label part is a Link that
+                  // navigates to the parent's href. The chevron is its
+                  // own button that ONLY toggles the group — clicking
+                  // the arrow never navigates. In collapsed rail mode
+                  // the whole cell reverts to a plain icon-link since
+                  // sub-navs aren't shown then.
+                  collapsed ? (
+                    <Link
+                      href={item.href as never}
+                      title={item.label}
+                      aria-label={item.label}
+                      className={cn(
+                        "flex h-11 items-center justify-center rounded-xl transition focus-ring",
+                        isActive
+                          ? "bg-white text-ink-800"
+                          : "text-white/85 hover:bg-white/[0.06]",
+                      )}
+                    >
                       <Icon
                         className={cn(
                           "h-[18px] w-[18px]",
                           isActive ? "text-ink-700" : "text-white/85",
                         )}
                       />
-                    ) : (
-                      <>
-                        <span className="flex items-center gap-3">
-                          <Icon
-                            className={cn(
-                              "h-[18px] w-[18px]",
-                              isActive ? "text-ink-700" : "text-white/85",
-                            )}
-                          />
-                          {item.label}
-                        </span>
-                        <ChevronRight
+                    </Link>
+                  ) : (
+                    <div
+                      className={cn(
+                        "group flex w-full items-stretch rounded-xl text-[15px] font-medium transition",
+                        isActive
+                          ? "bg-white text-ink-800"
+                          : "text-white/85 hover:bg-white/[0.06]",
+                      )}
+                    >
+                      <Link
+                        href={item.href as never}
+                        className="flex flex-1 items-center gap-3 rounded-l-xl px-3 py-2.5 focus-ring"
+                      >
+                        <Icon
                           className={cn(
-                            "h-4 w-4 transition",
-                            isOpen ? "rotate-90" : "",
-                            isActive ? "text-ink-700" : "text-white/60",
+                            "h-[18px] w-[18px]",
+                            isActive ? "text-ink-700" : "text-white/85",
                           )}
                         />
-                      </>
-                    )}
-                  </Link>
+                        {item.label}
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => toggle(item.label)}
+                        aria-expanded={isOpen}
+                        aria-label={isOpen ? `Collapse ${item.label}` : `Expand ${item.label}`}
+                        className="flex w-10 items-center justify-center rounded-r-xl text-inherit hover:bg-white/[0.08] focus-ring"
+                      >
+                        <ChevronRight
+                          className={cn(
+                            "h-4 w-4 transition-transform",
+                            isOpen ? "rotate-90" : "",
+                            isActive ? "text-ink-700" : "text-white/70",
+                          )}
+                        />
+                      </button>
+                    </div>
+                  )
                 ) : (
                   <Link
                     href={item.href as never}

@@ -3,6 +3,7 @@ import { listPayRuns, listPayslipsForRun } from "@/lib/payroll-engine/payruns";
 import { myCompany } from "@/lib/references/server";
 import { readSession } from "@/lib/frappe/session";
 import { PrintButton } from "@/components/payroll/print-button";
+import { AuditRangePicker } from "@/components/payroll/audit-range-picker";
 
 export const metadata = { title: "Payroll audit report · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -112,23 +113,10 @@ export default async function AuditReportPage({
             also has &quot;Save as PDF&quot; for handing to auditors.
           </p>
         </div>
-        <form className="flex flex-wrap items-end gap-2">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="from" className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">From</label>
-            <input type="date" id="from" name="from" defaultValue={from}
-                   className="h-10 rounded-md border border-input bg-transparent px-3 text-sm" />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label htmlFor="to" className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">To</label>
-            <input type="date" id="to" name="to" defaultValue={to}
-                   className="h-10 rounded-md border border-input bg-transparent px-3 text-sm" />
-          </div>
-          <button type="submit"
-                  className="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground">
-            Update
-          </button>
+        <div className="flex flex-wrap items-end gap-2">
+          <AuditRangePicker from={from} to={to} />
           <PrintButton label="Print / Save PDF" />
-        </form>
+        </div>
       </div>
 
       {/* Printable article — everything below prints */}

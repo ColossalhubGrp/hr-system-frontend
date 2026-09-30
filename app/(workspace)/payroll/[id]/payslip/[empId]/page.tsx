@@ -51,8 +51,29 @@ export default async function PayslipPage({
   const backLabel = fromMe ? "← Back to my payslips" : "← Back to pay run";
 
   const { run, company, employee, slip, earnings, deductions } = data;
-  const pensionZig = employee.basic_zig * employee.pension_pct;
   const companyDisplay = company.legal_name || company.company_name;
+
+  // Snapshot values — derive what basic + pension % WERE at run time from
+  // the frozen payslip totals. The Employee record may have been edited
+  // since the run was processed, so `employee.basic_usd` etc. can drift.
+  // gross = basic + earnings, so basic = gross − earnings.
+  const earningsUsdTotal = earnings
+    .filter((t) => t.currency === "USD")
+    .reduce((s, t) => s + t.amount, 0);
+  const earningsZigTotal = earnings
+    .filter((t) => t.currency === "ZWG")
+    .reduce((s, t) => s + t.amount, 0);
+  const snapshotBasicUsd = Math.max(0, slip.gross_usd - earningsUsdTotal);
+  const snapshotBasicZig = Math.max(0, slip.gross_zig - earningsZigTotal);
+  // pension_pct back-computed from stored pension_usd (USD side used first;
+  // fall back to ZiG if USD basic is 0). Both sides use the same %.
+  const snapshotPensionPct =
+    snapshotBasicUsd > 0
+      ? slip.pension_usd / snapshotBasicUsd
+      : snapshotBasicZig > 0
+        ? (employee.basic_zig ? slip.pension_usd / employee.basic_zig : employee.pension_pct)
+        : employee.pension_pct;
+  const pensionZig = snapshotBasicZig * snapshotPensionPct;
 
   // Filename shape: "Payslip_Grace_Okafor_2026-06.pdf". Sanitize the
   // employee name so browsers accept the download; period_label like
@@ -133,13 +154,13 @@ export default async function PayslipPage({
             />
             <Info
               label="Monthly basic"
-              value={`${usd(employee.basic_usd)} · ${zig(employee.basic_zig)}`}
+              value={`${usd(snapshotBasicUsd)} · ${zig(snapshotBasicZig)}`}
             />
             <Info
               label="Pension"
               value={
-                employee.pension_pct > 0
-                  ? `${(employee.pension_pct * 100).toFixed(1)}%`
+                snapshotPensionPct > 0
+                  ? `${(snapshotPensionPct * 100).toFixed(1)}%`
                   : "—"
               }
             />
@@ -154,7 +175,7 @@ export default async function PayslipPage({
             </h3>
             <MoneyTable
               rows={[
-                { label: "Basic pay", u: employee.basic_usd, z: employee.basic_zig },
+                { label: "Basic pay", u: snapshotBasicUsd, z: snapshotBasicZig },
                 ...earnings.map((t) => ({
                   key: t.name,
                   label: `${t.code}${t.taxable ? "" : " (non-tax)"}`,
@@ -178,9 +199,9 @@ export default async function PayslipPage({
                   : []),
                 { label: "AIDS Levy (3%)", u: slip.aids_usd, z: slip.aids_zig },
                 { label: "NSSA (4.5%)", u: slip.nssa_employee, z: 0 },
-                ...(employee.pension_pct > 0
+                ...(snapshotPensionPct > 0
                   ? [{
-                      label: `Pension (${Math.round(employee.pension_pct * 100)}%)`,
+                      label: `Pension (${Math.round(snapshotPensionPct * 100)}%)`,
                       u: slip.pension_usd,
                       z: pensionZig,
                     }]

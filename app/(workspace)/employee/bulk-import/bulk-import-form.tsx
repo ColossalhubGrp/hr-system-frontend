@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useState, useTransition } from "react";
 import { Upload, Download, Loader2, CheckCircle2, AlertCircle, ChevronLeft } from "lucide-react";
+import * as XLSX from "xlsx";
 import { toast } from "@/components/ui/sonner";
 import {
   bulkImportEmployeesAction,
@@ -19,16 +20,52 @@ export function BulkImportForm() {
   const [summary, setSummary] = useState<ImportSummary | null>(null);
 
   function pickFile(f: File) {
-    if (!f.name.toLowerCase().endsWith(".csv")) {
-      toast.error("Upload a .csv file. To use Excel: File → Save As → CSV.");
+    const name = f.name.toLowerCase();
+    const isCsv = name.endsWith(".csv");
+    const isXlsx = name.endsWith(".xlsx") || name.endsWith(".xls");
+    if (!isCsv && !isXlsx) {
+      toast.error("Upload a .csv, .xlsx or .xls file.");
       return;
     }
     setFileName(f.name);
     setSummary(null);
+    setCsvText("");
+
     const reader = new FileReader();
-    reader.onload = () => setCsvText(String(reader.result ?? ""));
     reader.onerror = () => toast.error("Couldn't read the file.");
-    reader.readAsText(f);
+    if (isCsv) {
+      reader.onload = () => setCsvText(String(reader.result ?? ""));
+      reader.readAsText(f);
+      return;
+    }
+    // .xlsx / .xls — parse first sheet, convert to CSV so we hit the
+    // same server-side pipeline as CSV uploads.
+    reader.onload = () => {
+      try {
+        const buf = reader.result as ArrayBuffer;
+        const wb = XLSX.read(buf, { type: "array", cellDates: true });
+        const first = wb.SheetNames[0];
+        if (!first) {
+          toast.error("Spreadsheet has no sheets.");
+          return;
+        }
+        const csv = XLSX.utils.sheet_to_csv(wb.Sheets[first], {
+          blankrows: false,
+          dateNF: "yyyy-mm-dd",
+        });
+        if (!csv.trim()) {
+          toast.error(`Sheet "${first}" is empty.`);
+          return;
+        }
+        setCsvText(csv);
+        if (wb.SheetNames.length > 1) {
+          toast.warning(`Using first sheet "${first}" — ${wb.SheetNames.length - 1} other sheet(s) ignored.`);
+        }
+      } catch (err) {
+        toast.error((err as { message?: string })?.message ?? "Couldn't parse the spreadsheet.");
+      }
+    };
+    reader.readAsArrayBuffer(f);
   }
 
   function submit() {
@@ -53,21 +90,37 @@ export function BulkImportForm() {
     });
   }
 
-  async function downloadTemplate() {
+  async function downloadTemplate(kind: "csv" | "xlsx") {
     try {
-      const csv = await downloadEmployeeTemplateAction();
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "employee-bulk-hire-template.csv";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      if (kind === "csv") {
+        const csv = await downloadEmployeeTemplateAction();
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+        triggerDownload(blob, "employee-bulk-hire-template.csv");
+      } else {
+        // Build the .xlsx CLIENT-side from the same rows the server would
+        // return, so the same libraries produce reader + writer output.
+        const csv = await downloadEmployeeTemplateAction();
+        const wb = XLSX.read(csv, { type: "string" });
+        const out = XLSX.write(wb, { bookType: "xlsx", type: "array" }) as ArrayBuffer;
+        const blob = new Blob([out], {
+          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        });
+        triggerDownload(blob, "employee-bulk-hire-template.xlsx");
+      }
     } catch {
       toast.error("Couldn't build the template.");
     }
+  }
+
+  function triggerDownload(blob: Blob, filename: string) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   const rowCount = csvText
@@ -95,25 +148,35 @@ export function BulkImportForm() {
 
       {/* Step 1 — download template */}
       <section className="rounded-xl border bg-card p-5">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
               Step 1
             </div>
             <h2 className="text-base font-bold text-foreground">Download the template</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              A CSV with all supported columns + one example row. Open it in Excel,
-              fill each row (one employee per line), then save as CSV.
+              All supported columns + one example row. Open in Excel / Google Sheets,
+              fill one employee per line, then save.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={downloadTemplate}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-input bg-transparent px-4 text-sm font-semibold text-foreground hover:bg-muted/40"
-          >
-            <Download className="h-4 w-4" />
-            Download CSV template
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => downloadTemplate("xlsx")}
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-input bg-transparent px-4 text-sm font-semibold text-foreground hover:bg-muted/40"
+            >
+              <Download className="h-4 w-4" />
+              Download .xlsx
+            </button>
+            <button
+              type="button"
+              onClick={() => downloadTemplate("csv")}
+              className="inline-flex h-10 shrink-0 items-center gap-1.5 rounded-lg border border-input bg-transparent px-4 text-sm font-semibold text-foreground hover:bg-muted/40"
+            >
+              <Download className="h-4 w-4" />
+              Download .csv
+            </button>
+          </div>
         </div>
         <details className="mt-3 text-xs">
           <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
@@ -147,17 +210,18 @@ export function BulkImportForm() {
         <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
           Step 2
         </div>
-        <h2 className="text-base font-bold text-foreground">Upload the filled CSV</h2>
+        <h2 className="text-base font-bold text-foreground">Upload the filled file</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Only .csv is accepted. Excel: File → Save As → CSV (Comma delimited).
+          .csv, .xlsx or .xls all work. For .xlsx / .xls only the first
+          sheet is imported.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700">
             <Upload className="h-4 w-4" />
-            Choose CSV file
+            Choose file
             <input
               type="file"
-              accept=".csv,text/csv"
+              accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               onChange={(e) => {
                 const f = e.currentTarget.files?.[0];
                 if (f) pickFile(f);

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import type { Route } from "next";
-import { Users, Plus, Settings2 } from "lucide-react";
+import { Users, Plus, Settings2, Upload } from "lucide-react";
 import { DirectoryFilters } from "@/components/employee/directory-filters";
 import { DirectoryTable } from "@/components/employee/directory-table";
 import { DirectoryPagination } from "@/components/employee/directory-pagination";
@@ -80,6 +80,14 @@ export default async function EmployeeDirectoryPage({
           >
             <Settings2 className="h-4 w-4" />
             Setup
+          </Link>
+          <Link
+            href={"/employee/bulk-import" as Route}
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            title="Import many employees at once from a CSV — for mass hires / intakes"
+          >
+            <Upload className="h-4 w-4" />
+            Bulk hire
           </Link>
           <Link
             href={"/employee/new" as Route}

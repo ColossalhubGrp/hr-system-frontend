@@ -274,34 +274,9 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
       step: "0.5",
       editableValue: num("contractor_wht_pct") || 10,
     },
-    {
-      key: "default_weekend_multiplier",
-      label: "Default weekend OT ×",
-      value: fmtMult(num("default_weekend_multiplier") || 2),
-      raw: num("default_weekend_multiplier"),
-      currency: "MULT",
-      hint: "Rate for Saturday / Sunday hours. Zim default 2×; overridable per Wizard Entry.",
-      lastUpdated: null,
-      stale: false,
-      editField: "default_weekend_multiplier",
-      displayFactor: 1,
-      step: "0.1",
-      editableValue: num("default_weekend_multiplier") || 2,
-    },
-    {
-      key: "default_holiday_multiplier",
-      label: "Default public-holiday OT ×",
-      value: fmtMult(num("default_holiday_multiplier") || 2),
-      raw: num("default_holiday_multiplier"),
-      currency: "MULT",
-      hint: "Rate for gazetted public-holiday hours (from each employee's Holiday List). Default 2×.",
-      lastUpdated: null,
-      stale: false,
-      editField: "default_holiday_multiplier",
-      displayFactor: 1,
-      step: "0.1",
-      editableValue: num("default_holiday_multiplier") || 2,
-    },
+    // OT multipliers (regular / weekend / holiday) are now fixed at
+    // 1.5× / 2× / 2.5× directly on the pay-run wizard, so they're no
+    // longer surfaced here as separate knobs.
     {
       key: "long_shift_hours_cap",
       label: "Long-shift hours cap",

@@ -43,39 +43,14 @@ function ageLabel(iso: string | null): string {
  * side; the admin console enforces its own audit trail.
  */
 export function CompliancePanel({ snapshot }: { snapshot: ComplianceSnapshot }) {
-  const staleCount = snapshot.knobs.filter((k) => k.stale).length;
-
   return (
     <div className="flex flex-col gap-5">
       <Card className="border-amber-200 bg-amber-50 p-4">
         <div className="flex flex-wrap items-start gap-3">
           <AlertTriangle className="mt-0.5 h-5 w-5 flex-none text-amber-700" />
-          <div className="flex-1">
-            <p className="font-semibold text-amber-900">
-              ZIMRA compliance health — read-only
-            </p>
-            <p className="mt-1 text-sm text-amber-800">
-              Every knob the payroll engine relies on, with the value it&apos;s
-              running on today and when it was last confirmed against ZIMRA&apos;s
-              published schedule. This page is informational only — changing
-              a value or resetting the staleness clock is done by an
-              administrator in the admin console.
-              {staleCount > 0 ? (
-                <>
-                  {" "}
-                  <strong>
-                    {staleCount} {staleCount === 1 ? "item" : "items"} not
-                    confirmed in the past 12 months.
-                  </strong>
-                </>
-              ) : null}
-            </p>
-            <p className="mt-2 text-xs text-amber-800">
-              To edit: open <strong>Company Payroll Settings</strong> in the
-              admin console. All changes there flow back to this view on next
-              reload.
-            </p>
-          </div>
+          <p className="flex-1 text-sm text-amber-900">
+            If you notice any errors here, contact Colossal Hub.
+          </p>
         </div>
       </Card>
 

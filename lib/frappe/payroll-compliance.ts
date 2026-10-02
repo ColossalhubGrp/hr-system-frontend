@@ -276,20 +276,8 @@ export async function loadComplianceSnapshot(): Promise<ComplianceSnapshot> {
     },
     // OT multipliers (regular / weekend / holiday) are now fixed at
     // 1.5× / 2× / 2.5× directly on the pay-run wizard, so they're no
-    // longer surfaced here as separate knobs.
-    {
-      key: "long_shift_hours_cap",
-      label: "Long-shift hours cap",
-      value: `${(num("long_shift_hours_cap") || 12).toFixed(1)} h`,
-      raw: num("long_shift_hours_cap"),
-      hint: "Timesheet import flags any single-day shift longer than this as SHIFT_TOO_LONG. Zim NEC norm 12h; SMEs sometimes 14h.",
-      lastUpdated: null,
-      stale: false,
-      editField: "long_shift_hours_cap",
-      displayFactor: 1,
-      step: "0.5",
-      editableValue: num("long_shift_hours_cap") || 12,
-    },
+    // longer surfaced here as separate knobs. Long-shift hours cap
+    // also removed — not a ZIMRA knob, it's a timesheet-import rule.
     {
       key: "retrench_floor_usd",
       label: "Retrenchment exemption floor",

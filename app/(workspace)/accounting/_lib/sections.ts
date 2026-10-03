@@ -5,7 +5,7 @@ import {
   Layers, BookOpen, Wallet, Receipt, LineChart, Building, Ratio,
   ArrowRightLeft, ArrowLeftRight, ScrollText, ClipboardList,
   BadgeDollarSign, ReceiptText, BookText, FileInput, FileOutput,
-  FileSpreadsheet, PieChart, RefreshCw,
+  FileSpreadsheet, PieChart, RefreshCw, Package,
 } from "lucide-react";
 
 export type Row = {
@@ -47,6 +47,8 @@ export const SECTIONS: Section[] = [
       { label: "Finance Book", href: "/accounting/masters/finance-books", icon: BookText, desc: "Parallel books of account for statutory vs management reporting." },
       { label: "Accounting Period", href: "/accounting/masters/periods", icon: CalendarClock, desc: "Lock a window of dates so no new postings or edits happen inside it." },
       { label: "Payment Term", href: "/accounting/masters/payment-terms", icon: ClipboardList, desc: "Reusable due-date rule — Net 30, Advance 50%, End of Month." },
+      { label: "Item", href: "/accounting/items", icon: Package, desc: "The catalog of products and services billed on invoices — code, name, UOM, price." },
+      { label: "Item Group", href: "/accounting/items/groups", icon: Layers, desc: "Buckets that items belong to (Services, Hardware, Subscriptions) — used for reporting and defaults." },
     ],
   },
   {

@@ -35,25 +35,52 @@ export async function listSuppliersDirectory(opts: { search?: string; limit?: nu
   // check -- would 417 the whole page.
   const filters: [string, string, unknown][] = [];
   if (opts.search) filters.push(["supplier_name", "like", `%${opts.search}%`]);
-  const rows = await frappeCall<Array<Record<string, unknown>>>({
-    method: "frappe.client.get_list",
-    as: "user",
-    args: {
-      doctype: "Supplier",
-      fields: [
-        "name",
-        "supplier_name",
-        "supplier_type",
-        "supplier_group",
-        "country",
-        "default_currency",
-        "tax_id",
-      ],
-      filters,
-      order_by: "supplier_name asc",
-      limit_page_length: limit,
-    },
-  });
+
+  // Try the richer field set first; if Frappe rejects any single
+  // field for permission reasons (417 PERMISSION_ERROR naming the
+  // field) fall back to the identity-only columns so the page still
+  // renders. Beats a server-side exception every time.
+  const SAFE_FIELDS = ["name", "supplier_name"];
+  const RICH_FIELDS = [
+    ...SAFE_FIELDS,
+    "supplier_type",
+    "supplier_group",
+    "country",
+    "default_currency",
+    "tax_id",
+  ];
+
+  let rows: Array<Record<string, unknown>>;
+  try {
+    rows = await frappeCall<Array<Record<string, unknown>>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "Supplier",
+        fields: RICH_FIELDS,
+        filters,
+        order_by: "supplier_name asc",
+        limit_page_length: limit,
+      },
+    });
+  } catch (err) {
+    if (err instanceof FrappeRequestError && err.status === 417) {
+      rows = await frappeCall<Array<Record<string, unknown>>>({
+        method: "frappe.client.get_list",
+        as: "user",
+        args: {
+          doctype: "Supplier",
+          fields: SAFE_FIELDS,
+          filters,
+          order_by: "supplier_name asc",
+          limit_page_length: limit,
+        },
+      });
+    } else {
+      throw err;
+    }
+  }
+
   return rows.map((r) => ({
     name: String(r.name ?? ""),
     supplierName: String(r.supplier_name ?? r.name ?? ""),

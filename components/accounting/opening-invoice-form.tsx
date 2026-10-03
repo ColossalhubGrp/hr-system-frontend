@@ -69,34 +69,66 @@ export function OpeningInvoiceForm({
       <FormSection title="Opening invoices" description="Party (customer or supplier), amount owed at cut-over, temporary opening account, and posting date.">
         <div className="flex flex-col gap-3">
           {rows.map((r, idx) => (
-            <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
-              <div className="col-span-12 md:col-span-3">
+            // Flex-wrap layout with per-field min-widths: each field keeps
+            // enough room for its own input (date pickers / selects need
+            // ~160–240px), and the row wraps to a second line on narrow
+            // viewports instead of truncating labels + values.
+            <div key={idx} className="flex flex-wrap items-end gap-3 rounded-xl border border-border/60 bg-muted/10 p-3">
+              <div className="min-w-[200px] flex-1">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Party #{idx + 1}</label>
-                <TextInput value={r.party} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, party: e.target.value } : x)))} placeholder="Customer/Supplier ID" />
+                <TextInput
+                  value={r.party}
+                  onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, party: e.target.value } : x)))}
+                  placeholder="Customer or Supplier ID"
+                />
               </div>
-              <div className="col-span-6 md:col-span-2">
+              <div className="min-w-[140px] flex-[0_0_auto]">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Amount</label>
-                <TextInput type="number" step="0.01" min="0" value={r.amount} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, amount: e.target.value } : x)))} className="tabular-nums" />
+                <TextInput
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={r.amount}
+                  onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, amount: e.target.value } : x)))}
+                  className="tabular-nums"
+                />
               </div>
-              <div className="col-span-6 md:col-span-3">
+              <div className="min-w-[240px] flex-1">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Opening account</label>
-                <SelectInput value={r.temporary_opening_account} options={[...openingAccounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, temporary_opening_account: e.target.value } : x)))} />
+                <SelectInput
+                  value={r.temporary_opening_account}
+                  options={[...openingAccounts.map((a) => ({ value: a.name, label: a.name }))]}
+                  onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, temporary_opening_account: e.target.value } : x)))}
+                />
               </div>
-              <div className="col-span-6 md:col-span-2">
+              <div className="min-w-[170px] flex-[0_0_auto]">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Posting date</label>
-                <TextInput type="date" value={r.posting_date} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, posting_date: e.target.value } : x)))} />
+                <TextInput
+                  type="date"
+                  value={r.posting_date}
+                  onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, posting_date: e.target.value } : x)))}
+                />
               </div>
-              <div className="col-span-6 md:col-span-1">
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Ref no.</label>
-                <TextInput value={r.invoice_number} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, invoice_number: e.target.value } : x)))} />
+              <div className="min-w-[150px] flex-[0_0_auto]">
+                <label className="mb-1 block whitespace-nowrap text-xs font-semibold text-muted-foreground">
+                  Reference no.
+                </label>
+                <TextInput
+                  value={r.invoice_number}
+                  onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, invoice_number: e.target.value } : x)))}
+                  placeholder="Optional"
+                />
               </div>
-              <div className="col-span-11 md:col-span-1 flex justify-end">
-                {rows.length > 1 && (
-                  <button type="button" onClick={() => setRows((p) => p.filter((_, i) => i !== idx))} className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label={`Remove row ${idx + 1}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+              {rows.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setRows((p) => p.filter((_, i) => i !== idx))}
+                  className="shrink-0 rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  aria-label={`Remove row ${idx + 1}`}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
             </div>
           ))}
           <button type="button" onClick={() => setRows((p) => [...p, EMPTY_ROW(defaultDate)])} className="inline-flex w-max items-center gap-1.5 rounded-chip border border-input px-3 py-1.5 text-sm font-semibold hover:bg-muted/40">

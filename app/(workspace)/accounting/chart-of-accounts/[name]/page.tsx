@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { notFound } from "next/navigation";
-import { Layers, ChevronLeft } from "lucide-react";
+import { Layers, ChevronLeft, ArrowRight, BookText } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { getAccount } from "@/lib/frappe/chart-of-accounts";
 import { AccountActions } from "./account-actions";
@@ -58,11 +58,28 @@ export default async function AccountDetailPage({
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">
-        <h3 className="text-sm font-semibold text-foreground">Ledger view</h3>
-        <p className="mt-1 text-sm text-muted-foreground">
-          For the running balance and each posting against this account, open the General Ledger report and filter to this account. That page is next in the roadmap.
-        </p>
+      <section className="rounded-2xl border border-border/60 bg-card p-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="flex items-center gap-1.5 text-sm font-semibold text-foreground">
+              <BookText className="h-4 w-4 text-primary" />
+              Every posting against this account
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The running balance and every debit / credit that has landed here —
+              with the voucher that posted it, the party, and the amount — opens
+              in the General Ledger pre-filtered to{" "}
+              <span className="font-mono text-foreground">{account.name}</span>.
+            </p>
+          </div>
+          <Link
+            href={`/accounting/reports/general-ledger?account=${encodeURIComponent(account.name)}${searchParams.company ? `&company=${encodeURIComponent(searchParams.company)}` : ""}` as Route}
+            className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white hover:bg-ink-700"
+          >
+            Open ledger
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       </section>
     </div>
   );

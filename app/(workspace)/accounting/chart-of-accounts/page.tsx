@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { listAccountTree, type AccountNode } from "@/lib/frappe/chart-of-accounts";
 import { AccountTree } from "@/components/accounting/account-tree";
+import { AddAccountDialog, type ParentOption } from "./add-account-dialog";
 
 export const metadata = { title: "Chart of Accounts · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -34,6 +35,23 @@ export default async function ChartOfAccountsPage({ searchParams }: { searchPara
   const company = searchParams.company || companies[0]?.name || "";
   const roots = company ? await listAccountTree(company) : [];
 
+  // Flatten groups only — the "Parent account" picker on the Add
+  // dialog never offers a leaf, since only groups can hold children.
+  const parentOptions: ParentOption[] = [];
+  (function walk(nodes: AccountNode[], depth = 0) {
+    for (const n of nodes) {
+      if (n.isGroup) {
+        parentOptions.push({
+          name: n.name,
+          label: `${"— ".repeat(depth)}${n.accountName}`,
+          rootType: n.rootType,
+          currency: n.currency,
+        });
+      }
+      if (n.children.length) walk(n.children, depth + 1);
+    }
+  })(roots);
+
   const grouped = new Map<string, AccountNode[]>();
   for (const r of ROOT_ORDER) grouped.set(r ?? "", []);
   for (const root of roots) {
@@ -57,7 +75,12 @@ export default async function ChartOfAccountsPage({ searchParams }: { searchPara
         title="Chart of Accounts"
         subtitle="The full ledger tree for this company — grouped by Assets, Liabilities, Equity, Income and Expenses."
         actions={
-          <CompanyPicker companies={companies.map((c) => c.name)} active={company} />
+          <div className="flex items-center gap-2">
+            <CompanyPicker companies={companies.map((c) => c.name)} active={company} />
+            {company && parentOptions.length > 0 && (
+              <AddAccountDialog company={company} parents={parentOptions} />
+            )}
+          </div>
         }
       />
 

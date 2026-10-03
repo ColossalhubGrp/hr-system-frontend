@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Layers, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { getAccount } from "@/lib/frappe/chart-of-accounts";
+import { AccountActions } from "./account-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +43,7 @@ export default async function AccountDetailPage({
         crumb={`Accounting · Chart of Accounts · ${account.accountName}`}
         title={account.accountName}
         subtitle={account.name}
+        actions={<AccountActions account={account} backHref={back} />}
       />
 
       <section className="rounded-2xl border border-border/60 bg-card p-4">

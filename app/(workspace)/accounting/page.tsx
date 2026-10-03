@@ -1,8 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { ChevronRight, ArrowRight, Receipt, Wallet, BookOpen, FileSpreadsheet } from "lucide-react";
-import { SECTIONS, OVERVIEW_ID, findSection, type Section, type Row } from "./_lib/sections";
-import { SectionNav } from "./_components/section-nav";
+import { OVERVIEW_ID, findSection, type Section, type Row } from "./_lib/sections";
 import { SetupChecklist } from "./_components/setup-checklist";
 import { DismissibleSetup } from "./_components/dismissible-setup";
 import { Suspense } from "react";
@@ -48,34 +47,28 @@ export default function AccountingLandingPage({
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[220px_1fr]">
-        <SectionNav active={active.id} />
-
-        <div className="flex min-w-0 flex-col gap-5">
-          {/* Breadcrumb strip */}
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <Link href={"/accounting" as Route} className="hover:text-foreground">Accounting</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="font-semibold text-foreground">{active.label}</span>
-          </div>
-
-          {/* Section pane header */}
-          <div>
-            <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
-              <SectionIcon className="h-5 w-5 text-primary" />
-              {active.label}
-            </h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">{active.subtitle}</p>
-          </div>
-
-          {/* Pane body */}
-          {isOverview ? (
-            <OverviewPane />
-          ) : (
-            <SectionRows section={active} />
-          )}
-        </div>
+      {/* Breadcrumb strip */}
+      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <Link href={"/accounting" as Route} className="hover:text-foreground">Accounting</Link>
+        <ChevronRight className="h-3 w-3" />
+        <span className="font-semibold text-foreground">{active.label}</span>
       </div>
+
+      {/* Section pane header */}
+      <div>
+        <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
+          <SectionIcon className="h-5 w-5 text-primary" />
+          {active.label}
+        </h2>
+        <p className="mt-0.5 text-sm text-muted-foreground">{active.subtitle}</p>
+      </div>
+
+      {/* Pane body */}
+      {isOverview ? (
+        <OverviewPane />
+      ) : (
+        <SectionRows section={active} />
+      )}
     </div>
   );
 }

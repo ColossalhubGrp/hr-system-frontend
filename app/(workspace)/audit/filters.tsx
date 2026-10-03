@@ -6,10 +6,18 @@ import { Loader2, X } from "lucide-react";
 
 const OPERATIONS = ["", "Login", "Logout", "Created", "Updated", "Deleted", "Submitted", "Cancelled", "Exported"];
 const DOCTYPES = [
-  "", "Employee", "Payroll Run", "Payroll Wizard Entry", "Payroll Transaction",
-  "Payroll Run Payslip", "Company Payroll Settings", "Leave Application",
-  "Attendance", "Shift Assignment", "Timesheet", "User",
-  "Department", "Job Title", "Payroll NEC Industry", "Payroll Pay Grade",
+  "",
+  // Accounting
+  "Journal Entry", "Payment Entry", "Sales Invoice", "Purchase Invoice",
+  "Period Closing Voucher", "Share Transfer", "Exchange Rate Revaluation",
+  // Payroll
+  "Payroll Run", "Payroll Wizard Entry", "Payroll Transaction",
+  "Payroll Run Payslip", "Company Payroll Settings", "Salary Slip",
+  // HR
+  "Employee", "Leave Application", "Attendance", "Shift Assignment",
+  "Timesheet", "Expense Claim", "Appraisal",
+  // Admin
+  "User", "Department", "Job Title", "Payroll NEC Industry", "Payroll Pay Grade",
 ];
 
 /**

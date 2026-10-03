@@ -7,6 +7,13 @@ import { StatusPill } from "@/components/common/status-pill";
 import { getJournalEntry } from "@/lib/frappe/accounting";
 import { JournalEntryActions } from "@/components/accounting/journal-entry-actions";
 
+/** Mirrors the list page's ERPNext-style docstatus palette. */
+const VOUCHER_STATUS_TONES: Record<string, string> = {
+  Draft: "bg-amber-100 text-amber-800 ring-amber-200",
+  Submitted: "bg-sky-100 text-sky-800 ring-sky-200",
+  Cancelled: "bg-rose-100 text-rose-700 ring-rose-200",
+};
+
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
@@ -48,7 +55,7 @@ export default async function JournalEntryDetailPage({
         subtitle={`${doc.voucherType} · ${doc.postingDate} · ${doc.company}`}
         actions={
           <div className="flex items-center gap-3">
-            <StatusPill status={statusLabel} />
+            <StatusPill status={statusLabel} tones={VOUCHER_STATUS_TONES} />
             <JournalEntryActions name={doc.name} docstatus={doc.docstatus} />
           </div>
         }

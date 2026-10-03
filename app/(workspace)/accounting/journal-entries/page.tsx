@@ -7,6 +7,16 @@ import { StatusPill } from "@/components/common/status-pill";
 import { DataTable } from "@/components/common/data-table";
 import { listJournalEntries, VOUCHER_TYPES, type JournalEntryRow } from "@/lib/frappe/accounting";
 
+/** ERPNext-style palette for accounting voucher docstatus pills.
+ *  Draft = amber, Submitted = sky-blue (matches the ERPNext badge),
+ *  Cancelled = red. Overrides the global defaults (which lean green
+ *  for Submitted) because accounting readers expect the ERPNext colours. */
+const VOUCHER_STATUS_TONES: Record<string, string> = {
+  Draft: "bg-amber-100 text-amber-800 ring-amber-200",
+  Submitted: "bg-sky-100 text-sky-800 ring-sky-200",
+  Cancelled: "bg-rose-100 text-rose-700 ring-rose-200",
+};
+
 export const metadata = { title: "Journal Entries · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
 
@@ -121,7 +131,12 @@ export default async function JournalEntriesPage({
           { header: "Company", cell: (r) => r.company, className: "hidden lg:table-cell" },
           { header: "Debit", cell: (r) => formatMoney(r.totalDebit), className: "text-right tabular-nums" },
           { header: "Credit", cell: (r) => formatMoney(r.totalCredit), className: "text-right tabular-nums" },
-          { header: "Status", cell: (r) => <StatusPill status={docstatusLabel(r.docstatus)} /> },
+          {
+            header: "Status",
+            cell: (r) => (
+              <StatusPill status={docstatusLabel(r.docstatus)} tones={VOUCHER_STATUS_TONES} />
+            ),
+          },
         ]}
       />
 

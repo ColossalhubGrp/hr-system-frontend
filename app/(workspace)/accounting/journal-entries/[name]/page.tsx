@@ -6,13 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { getJournalEntry } from "@/lib/frappe/accounting";
 import { JournalEntryActions } from "@/components/accounting/journal-entry-actions";
-
-/** Mirrors the list page's ERPNext-style docstatus palette. */
-const VOUCHER_STATUS_TONES: Record<string, string> = {
-  Draft: "bg-amber-100 text-amber-800 ring-amber-200",
-  Submitted: "bg-sky-100 text-sky-800 ring-sky-200",
-  Cancelled: "bg-rose-100 text-rose-700 ring-rose-200",
-};
+import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
 export const dynamic = "force-dynamic";
 

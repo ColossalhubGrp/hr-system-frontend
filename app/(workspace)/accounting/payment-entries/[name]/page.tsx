@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { getPaymentEntry } from "@/lib/frappe/accounting";
 import { PaymentEntryActions } from "@/components/accounting/payment-entry-actions";
+import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
 export const dynamic = "force-dynamic";
 
@@ -52,7 +53,7 @@ export default async function PaymentEntryDetailPage({
         subtitle={`${doc.paymentType} · ${doc.postingDate} · ${doc.company}`}
         actions={
           <div className="flex items-center gap-3">
-            <StatusPill status={statusLabel} />
+            <StatusPill status={statusLabel} tones={VOUCHER_STATUS_TONES} />
             <PaymentEntryActions name={doc.name} docstatus={doc.docstatus} />
           </div>
         }

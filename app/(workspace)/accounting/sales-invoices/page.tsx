@@ -14,6 +14,7 @@ import { SummaryTile } from "@/components/common/summary-tile";
 import { StatusPill } from "@/components/common/status-pill";
 import { DataTable } from "@/components/common/data-table";
 import { listSalesInvoices, type SalesInvoiceRow } from "@/lib/frappe/sales-invoice";
+import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
 export const metadata = { title: "Sales Invoices · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -108,7 +109,15 @@ export default async function SalesInvoicesPage({ searchParams }: { searchParams
             ),
             className: "text-right tabular-nums",
           },
-          { header: "Status", cell: (r) => <StatusPill status={r.status || docstatusLabel(r.docstatus)} /> },
+          {
+            header: "Status",
+            cell: (r) => (
+              <StatusPill
+                status={r.status || docstatusLabel(r.docstatus)}
+                tones={VOUCHER_STATUS_TONES}
+              />
+            ),
+          },
         ]}
       />
 

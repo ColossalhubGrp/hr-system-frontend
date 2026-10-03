@@ -19,6 +19,7 @@ import {
   PAYMENT_TYPES,
   type PaymentEntryRow,
 } from "@/lib/frappe/accounting";
+import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
 export const metadata = { title: "Payment Entries · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -116,7 +117,12 @@ export default async function PaymentEntriesPage({
                 : formatMoney(r.paidAmount),
             className: "text-right tabular-nums",
           },
-          { header: "Status", cell: (r) => <StatusPill status={docstatusLabel(r.docstatus)} /> },
+          {
+            header: "Status",
+            cell: (r) => (
+              <StatusPill status={docstatusLabel(r.docstatus)} tones={VOUCHER_STATUS_TONES} />
+            ),
+          },
         ]}
       />
 

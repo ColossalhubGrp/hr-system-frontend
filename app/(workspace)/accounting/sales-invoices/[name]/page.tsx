@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { getSalesInvoice } from "@/lib/frappe/sales-invoice";
 import { SalesInvoiceActions } from "@/components/accounting/sales-invoice-actions";
+import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
 export const dynamic = "force-dynamic";
 
@@ -34,7 +35,10 @@ export default async function SalesInvoiceDetailPage({ params }: { params: { nam
         subtitle={`${doc.customerName ?? doc.customer} · ${doc.postingDate} · ${doc.company}`}
         actions={
           <div className="flex items-center gap-3">
-            <StatusPill status={doc.status || (doc.docstatus === 0 ? "Draft" : doc.docstatus === 1 ? "Submitted" : "Cancelled")} />
+            <StatusPill
+              status={doc.status || (doc.docstatus === 0 ? "Draft" : doc.docstatus === 1 ? "Submitted" : "Cancelled")}
+              tones={VOUCHER_STATUS_TONES}
+            />
             <SalesInvoiceActions name={doc.name} docstatus={doc.docstatus} />
           </div>
         }

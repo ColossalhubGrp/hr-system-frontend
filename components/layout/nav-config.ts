@@ -180,21 +180,26 @@ export const NAV: NavItem[] = [
     // Children mirror the 11 sections on /accounting's sub-sidebar
     // so the whole module is reachable from the main rail in one
     // click without opening the Overview first.
+    //
+    // Gate relaxed to HR_ADMIN so HR / platform admins see the full
+    // group alongside dedicated accounting roles (Accounts Manager,
+    // Finance Reviewer, HR Director — all of which already satisfy
+    // HR_ADMIN via the role-bundle rules).
     href: "/accounting",
     icon: Landmark,
-    requires: "ACCOUNTING",
+    requires: "HR_ADMIN",
     children: [
-      { label: "Overview",          href: "/accounting",                 requires: "ACCOUNTING" },
-      { label: "Masters",           href: "/accounting?s=masters",       requires: "ACCOUNTING" },
-      { label: "Transactions",      href: "/accounting?s=transactions",  requires: "ACCOUNTING" },
-      { label: "Tax",               href: "/accounting?s=tax",           requires: "ACCOUNTING" },
-      { label: "Cost & Budget",     href: "/accounting?s=cost-centers",  requires: "ACCOUNTING" },
-      { label: "Multi-currency",    href: "/accounting?s=multi-currency",requires: "ACCOUNTING" },
-      { label: "Banking",           href: "/accounting?s=banking",       requires: "ACCOUNTING" },
-      { label: "Opening & Closing", href: "/accounting?s=opening",       requires: "ACCOUNTING" },
-      { label: "Subscriptions",     href: "/accounting?s=subscriptions", requires: "ACCOUNTING" },
-      { label: "Shares",            href: "/accounting?s=shares",        requires: "ACCOUNTING" },
-      { label: "Reports",           href: "/accounting?s=reports",       requires: "ACCOUNTING" },
+      { label: "Overview",          href: "/accounting",                 requires: "HR_ADMIN" },
+      { label: "Masters",           href: "/accounting?s=masters",       requires: "HR_ADMIN" },
+      { label: "Transactions",      href: "/accounting?s=transactions",  requires: "HR_ADMIN" },
+      { label: "Tax",               href: "/accounting?s=tax",           requires: "HR_ADMIN" },
+      { label: "Cost & Budget",     href: "/accounting?s=cost-centers",  requires: "HR_ADMIN" },
+      { label: "Multi-currency",    href: "/accounting?s=multi-currency",requires: "HR_ADMIN" },
+      { label: "Banking",           href: "/accounting?s=banking",       requires: "HR_ADMIN" },
+      { label: "Opening & Closing", href: "/accounting?s=opening",       requires: "HR_ADMIN" },
+      { label: "Subscriptions",     href: "/accounting?s=subscriptions", requires: "HR_ADMIN" },
+      { label: "Shares",            href: "/accounting?s=shares",        requires: "HR_ADMIN" },
+      { label: "Reports",           href: "/accounting?s=reports",       requires: "HR_ADMIN" },
     ],
   },
 
@@ -250,8 +255,9 @@ export const NAV: NavItem[] = [
     requires: "SETTINGS_ANY",
   },
 
-  // ERPNext modules — admin-only by default.
-  { label: "Accounting", href: "/accounting", icon: Banknote, requires: "HR_ADMIN" },
+  // ERPNext modules — admin-only by default. (Accounting is handled
+  // further up with its own 11-section child list, so it doesn't
+  // appear here.)
   { label: "Sales", href: "/sales", icon: BarChart3, requires: "HR_ADMIN" },
   { label: "Stock", href: "/stock", icon: Package, requires: "HR_ADMIN" },
   { label: "Buying", href: "/buying", icon: ShoppingBag, requires: "HR_ADMIN" },

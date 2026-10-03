@@ -2,8 +2,8 @@ import { frappeCall } from "@/lib/frappe/client";
 import { listPayRuns, listPayslipsForRun } from "@/lib/payroll-engine/payruns";
 import { myCompany } from "@/lib/references/server";
 import { readSession } from "@/lib/frappe/session";
-import { PrintButton } from "@/components/payroll/print-button";
 import { AuditRangePicker } from "@/components/payroll/audit-range-picker";
+import { PrintWithAudit } from "./print-with-audit";
 
 export const metadata = { title: "Payroll audit report · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -115,7 +115,7 @@ export default async function AuditReportPage({
         </div>
         <div className="flex flex-wrap items-end gap-2">
           <AuditRangePicker from={from} to={to} />
-          <PrintButton label="Print / Save PDF" />
+          <PrintWithAudit from={from} to={to} runCount={runs.length} />
         </div>
       </div>
 

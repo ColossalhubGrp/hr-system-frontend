@@ -4,7 +4,7 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Loader2, X } from "lucide-react";
 
-const OPERATIONS = ["", "Login", "Logout", "Created", "Updated", "Deleted", "Submitted", "Cancelled"];
+const OPERATIONS = ["", "Login", "Logout", "Created", "Updated", "Deleted", "Submitted", "Cancelled", "Exported"];
 const DOCTYPES = [
   "", "Employee", "Payroll Run", "Payroll Wizard Entry", "Payroll Transaction",
   "Payroll Run Payslip", "Company Payroll Settings", "Leave Application",

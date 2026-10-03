@@ -176,15 +176,25 @@ export const NAV: NavItem[] = [
 
   {
     label: "Accounting",
-    // Landing surface — the module overview lists sub-features
-    // (Journal Entries, Chart of Accounts, Reports, etc.). Only
-    // Journal Entries is real in phase 1; the rest are stubs.
+    // Landing surface — the module Overview is the entry point.
+    // Children mirror the 11 sections on /accounting's sub-sidebar
+    // so the whole module is reachable from the main rail in one
+    // click without opening the Overview first.
     href: "/accounting",
     icon: Landmark,
     requires: "ACCOUNTING",
     children: [
-      { label: "Overview", href: "/accounting", requires: "ACCOUNTING" },
-      { label: "Journal Entries", href: "/accounting/journal-entries", requires: "ACCOUNTING" },
+      { label: "Overview",          href: "/accounting",                 requires: "ACCOUNTING" },
+      { label: "Masters",           href: "/accounting?s=masters",       requires: "ACCOUNTING" },
+      { label: "Transactions",      href: "/accounting?s=transactions",  requires: "ACCOUNTING" },
+      { label: "Tax",               href: "/accounting?s=tax",           requires: "ACCOUNTING" },
+      { label: "Cost & Budget",     href: "/accounting?s=cost-centers",  requires: "ACCOUNTING" },
+      { label: "Multi-currency",    href: "/accounting?s=multi-currency",requires: "ACCOUNTING" },
+      { label: "Banking",           href: "/accounting?s=banking",       requires: "ACCOUNTING" },
+      { label: "Opening & Closing", href: "/accounting?s=opening",       requires: "ACCOUNTING" },
+      { label: "Subscriptions",     href: "/accounting?s=subscriptions", requires: "ACCOUNTING" },
+      { label: "Shares",            href: "/accounting?s=shares",        requires: "ACCOUNTING" },
+      { label: "Reports",           href: "/accounting?s=reports",       requires: "ACCOUNTING" },
     ],
   },
 

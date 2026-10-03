@@ -790,7 +790,7 @@ export async function listParties(partyType: string, opts: { search?: string; li
 // ── Accounts (used by Journal + Payment) ─────────────────────────
 
 export async function listAccounts(company: string, opts: { search?: string; limit?: number } = {}): Promise<AccountOption[]> {
-  const limit = Math.min(50, opts.limit ?? 20);
+  const limit = Math.min(200, opts.limit ?? 20);
   // `disabled` isn't a queryable field on Account under Frappe v15's
   // get_list field-permission check — it 417s if we include it in the
   // filters. Users creating a new journal entry will still see disabled
@@ -800,24 +800,51 @@ export async function listAccounts(company: string, opts: { search?: string; lim
     ["is_group", "=", 0],
   ];
   if (opts.search) filters.push(["account_name", "like", `%${opts.search}%`]);
-  const rows = await frappeCall<Array<Record<string, unknown>>>({
-    method: "frappe.client.get_list",
-    as: "user",
-    args: {
-      doctype: "Account",
-      fields: [
-        "name",
-        "account_name",
-        "account_type",
-        "root_type",
-        "is_group",
-        "account_currency",
-      ],
-      filters,
-      order_by: "account_name asc",
-      limit_page_length: limit,
-    },
-  });
+
+  const RICH_FIELDS = [
+    "name",
+    "account_name",
+    "account_type",
+    "root_type",
+    "is_group",
+    "account_currency",
+  ];
+  const SAFE_FIELDS = ["name", "account_name", "is_group"];
+
+  let rows: Array<Record<string, unknown>>;
+  try {
+    rows = await frappeCall<Array<Record<string, unknown>>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "Account",
+        fields: RICH_FIELDS,
+        filters,
+        order_by: "account_name asc",
+        limit_page_length: limit,
+      },
+    });
+  } catch (err) {
+    // Any single restricted field 417s the whole call. Fall back to
+    // identity-only so the picker still loads (just without type /
+    // root_type / currency metadata).
+    if (err instanceof FrappeRequestError && err.status === 417) {
+      rows = await frappeCall<Array<Record<string, unknown>>>({
+        method: "frappe.client.get_list",
+        as: "user",
+        args: {
+          doctype: "Account",
+          fields: SAFE_FIELDS,
+          filters,
+          order_by: "account_name asc",
+          limit_page_length: limit,
+        },
+      });
+    } else {
+      throw err;
+    }
+  }
+
   return rows.map((r) => ({
     name: String(r.name ?? ""),
     accountName: String(r.account_name ?? ""),

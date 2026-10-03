@@ -1,5 +1,5 @@
 import "server-only";
-import { frappeCall } from "./client";
+import { FrappeRequestError, frappeCall } from "./client";
 
 /**
  * Cost Center tree — mirrors the Chart of Accounts helpers, but for
@@ -24,27 +24,52 @@ export type CostCenterNode = CostCenter & {
 };
 
 export async function listCostCenterTree(company: string): Promise<CostCenterNode[]> {
-  const rows = await frappeCall<Array<Record<string, unknown>>>({
-    method: "frappe.client.get_list",
-    as: "user",
-    args: {
-      doctype: "Cost Center",
-      // `disabled` isn't in the Cost Center list-view field allowlist; asking
-      // for it 417s under Frappe v15. Fetched-per-detail otherwise.
-      fields: [
-        "name",
-        "cost_center_name",
-        "parent_cost_center",
-        "is_group",
-        "company",
-        "lft",
-        "rgt",
-      ],
-      filters: [["company", "=", company]],
-      order_by: "lft asc",
-      limit_page_length: 0,
-    },
-  });
+  // `disabled` isn't in the Cost Center list-view field allowlist; asking
+  // for it 417s under Frappe v15. Fetched-per-detail otherwise.
+  const RICH_FIELDS = [
+    "name",
+    "cost_center_name",
+    "parent_cost_center",
+    "is_group",
+    "company",
+    "lft",
+    "rgt",
+  ];
+  const SAFE_FIELDS = ["name", "cost_center_name", "parent_cost_center", "is_group", "company"];
+
+  let rows: Array<Record<string, unknown>>;
+  try {
+    rows = await frappeCall<Array<Record<string, unknown>>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "Cost Center",
+        fields: RICH_FIELDS,
+        filters: [["company", "=", company]],
+        order_by: "lft asc",
+        limit_page_length: 0,
+      },
+    });
+  } catch (err) {
+    // If any field is behind a perm the user doesn't have, Frappe
+    // returns 417. Fall back to the identity-only set so the tree
+    // still renders (just without left/right nested-set markers).
+    if (err instanceof FrappeRequestError && err.status === 417) {
+      rows = await frappeCall<Array<Record<string, unknown>>>({
+        method: "frappe.client.get_list",
+        as: "user",
+        args: {
+          doctype: "Cost Center",
+          fields: SAFE_FIELDS,
+          filters: [["company", "=", company]],
+          order_by: "cost_center_name asc",
+          limit_page_length: 0,
+        },
+      });
+    } else {
+      throw err;
+    }
+  }
 
   const centers: CostCenter[] = rows.map((r) => ({
     name: String(r.name ?? ""),

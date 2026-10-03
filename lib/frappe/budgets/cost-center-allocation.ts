@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+import { submitDoc } from "../submit-doc";
 
 /**
  * ERPNext "Cost Center Allocation" — splits a "main" cost center into
@@ -120,12 +121,7 @@ export async function updateCostCenterAllocation(name: string, input: CostCenter
 }
 
 export async function submitCostCenterAllocation(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.submit",
-    as: "user",
-    verb: "POST",
-    args: { doc: { doctype: "Cost Center Allocation", name } },
-  });
+  await submitDoc("Cost Center Allocation", name);
 }
 
 export async function deleteCostCenterAllocation(name: string): Promise<void> {

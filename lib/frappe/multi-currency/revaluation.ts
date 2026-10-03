@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+import { submitDoc } from "../submit-doc";
 
 /**
  * ERPNext "Exchange Rate Revaluation" — periodic FX revaluation of
@@ -124,12 +125,7 @@ export async function fetchRevaluationBalances(name: string): Promise<void> {
 }
 
 export async function submitRevaluation(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.submit",
-    as: "user",
-    verb: "POST",
-    args: { doc: { doctype: "Exchange Rate Revaluation", name } },
-  });
+  await submitDoc("Exchange Rate Revaluation", name);
 }
 
 export async function cancelRevaluation(name: string): Promise<void> {

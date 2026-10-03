@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+import { submitDoc } from "../submit-doc";
 
 /**
  * ERPNext "Period Closing Voucher" — the year-end voucher that moves
@@ -110,12 +111,7 @@ export async function createPeriodClosing(input: PeriodClosingInput): Promise<{ 
 }
 
 export async function submitPeriodClosing(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.submit",
-    as: "user",
-    verb: "POST",
-    args: { doc: { doctype: "Period Closing Voucher", name } },
-  });
+  await submitDoc("Period Closing Voucher", name);
 }
 
 export async function cancelPeriodClosing(name: string): Promise<void> {

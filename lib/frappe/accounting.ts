@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "./client";
+import { submitDoc, cancelDoc } from "./submit-doc";
 
 /**
  * Server-side helpers for the Accounting module.
@@ -319,21 +320,11 @@ export async function createJournalEntry(input: JournalEntryCreateInput): Promis
 }
 
 export async function submitJournalEntry(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.submit",
-    as: "user",
-    verb: "POST",
-    args: { doc: { doctype: "Journal Entry", name } },
-  });
+  await submitDoc("Journal Entry", name);
 }
 
 export async function cancelJournalEntry(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.cancel",
-    as: "user",
-    verb: "POST",
-    args: { doctype: "Journal Entry", name },
-  });
+  await cancelDoc("Journal Entry", name);
 }
 
 // ── Lookups (for the form) ───────────────────────────────────────
@@ -650,21 +641,11 @@ export async function createPaymentEntry(input: PaymentEntryCreateInput): Promis
 }
 
 export async function submitPaymentEntry(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.submit",
-    as: "user",
-    verb: "POST",
-    args: { doc: { doctype: "Payment Entry", name } },
-  });
+  await submitDoc("Payment Entry", name);
 }
 
 export async function cancelPaymentEntry(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.cancel",
-    as: "user",
-    verb: "POST",
-    args: { doctype: "Payment Entry", name },
-  });
+  await cancelDoc("Payment Entry", name);
 }
 
 export async function listModesOfPayment(): Promise<Array<{ name: string; type: string }>> {

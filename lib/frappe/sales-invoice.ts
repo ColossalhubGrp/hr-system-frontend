@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "./client";
+import { submitDoc } from "./submit-doc";
 
 /**
  * Server-side helpers for ERPNext Sales Invoice.
@@ -317,12 +318,7 @@ export async function createSalesInvoice(input: SalesInvoiceCreateInput): Promis
 }
 
 export async function submitSalesInvoice(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.submit",
-    as: "user",
-    verb: "POST",
-    args: { doc: { doctype: "Sales Invoice", name } },
-  });
+  await submitDoc("Sales Invoice", name);
 }
 
 export async function cancelSalesInvoice(name: string): Promise<void> {

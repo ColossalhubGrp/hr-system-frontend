@@ -95,39 +95,43 @@ export default async function JournalEntryDetailPage({
           Lines
         </h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full border-separate border-spacing-x-4 border-spacing-y-0 text-sm">
             <thead>
-              <tr className="border-b border-border/60 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <th className="py-2 text-left">#</th>
-                <th className="py-2 text-left">Account</th>
-                <th className="py-2 text-left">Party</th>
-                <th className="py-2 text-right">Debit</th>
-                <th className="py-2 text-right">Credit</th>
-                <th className="py-2 text-left">Cost Center</th>
-                <th className="py-2 text-left">Reference</th>
+              <tr className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="border-b border-border/60 py-2 text-left">#</th>
+                <th className="border-b border-border/60 py-2 text-left">Account</th>
+                <th className="border-b border-border/60 py-2 text-left">Party</th>
+                <th className="border-b border-border/60 py-2 text-right">Debit</th>
+                <th className="border-b border-border/60 py-2 text-right">Credit</th>
+                <th className="border-b border-border/60 py-2 text-left">Cost Center</th>
+                <th className="border-b border-border/60 py-2 text-left">Reference</th>
               </tr>
             </thead>
             <tbody>
-              {doc.accounts.map((l) => (
-                <tr key={l.idx} className="border-b border-border/30 last:border-0">
-                  <td className="py-2 pr-2 text-muted-foreground">{l.idx}</td>
-                  <td className="py-2 pr-2 font-medium">
+              {doc.accounts.map((l, i) => (
+                <tr key={l.idx}>
+                  <td className={`py-2 text-muted-foreground ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
+                    {l.idx}
+                  </td>
+                  <td className={`py-2 font-medium ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
                     {l.account}
                     {l.accountCurrency && l.accountCurrency !== "USD" && (
                       <span className="ml-1 text-xs text-muted-foreground">({l.accountCurrency})</span>
                     )}
                   </td>
-                  <td className="py-2 pr-2 text-muted-foreground">
+                  <td className={`py-2 text-muted-foreground ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
                     {l.party ? `${l.partyType ?? ""} · ${l.party}` : "—"}
                   </td>
-                  <td className="py-2 pr-2 text-right tabular-nums">
+                  <td className={`py-2 text-right tabular-nums ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
                     {l.debitInAccountCurrency ? l.debitInAccountCurrency.toFixed(2) : "—"}
                   </td>
-                  <td className="py-2 pr-2 text-right tabular-nums">
+                  <td className={`py-2 text-right tabular-nums ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
                     {l.creditInAccountCurrency ? l.creditInAccountCurrency.toFixed(2) : "—"}
                   </td>
-                  <td className="py-2 pr-2 text-muted-foreground">{l.costCenter ?? "—"}</td>
-                  <td className="py-2 text-muted-foreground">
+                  <td className={`py-2 text-muted-foreground ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
+                    {l.costCenter ?? "—"}
+                  </td>
+                  <td className={`py-2 text-muted-foreground ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
                     {l.referenceType && l.referenceName
                       ? `${l.referenceType} · ${l.referenceName}`
                       : "—"}
@@ -136,13 +140,13 @@ export default async function JournalEntryDetailPage({
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-border/70 font-semibold">
-                <td colSpan={3} className="py-2 text-right text-muted-foreground">
+              <tr className="font-semibold">
+                <td colSpan={3} className="border-t-2 border-border/70 py-2 text-right text-muted-foreground">
                   Totals
                 </td>
-                <td className="py-2 pr-2 text-right tabular-nums">{doc.totalDebit.toFixed(2)}</td>
-                <td className="py-2 pr-2 text-right tabular-nums">{doc.totalCredit.toFixed(2)}</td>
-                <td colSpan={2} />
+                <td className="border-t-2 border-border/70 py-2 text-right tabular-nums">{doc.totalDebit.toFixed(2)}</td>
+                <td className="border-t-2 border-border/70 py-2 text-right tabular-nums">{doc.totalCredit.toFixed(2)}</td>
+                <td colSpan={2} className="border-t-2 border-border/70" />
               </tr>
             </tfoot>
           </table>

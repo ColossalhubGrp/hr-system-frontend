@@ -1,5 +1,6 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
+import { submitDoc } from "../submit-doc";
 export { TRANSFER_TYPES } from "./share-transfer-constants";
 
 /** ERPNext "Share Transfer" — issue, buy-back or transfer of shares. */
@@ -140,12 +141,7 @@ export async function updateShareTransfer(name: string, input: ShareTransferInpu
 }
 
 export async function submitShareTransfer(name: string): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.submit",
-    as: "user",
-    verb: "POST",
-    args: { doc: { doctype: "Share Transfer", name } },
-  });
+  await submitDoc("Share Transfer", name);
 }
 
 export async function cancelShareTransfer(name: string): Promise<void> {

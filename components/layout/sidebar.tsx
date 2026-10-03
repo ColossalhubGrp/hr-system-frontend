@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { NAV, type NavItem } from "./nav-config";
@@ -70,6 +70,38 @@ const COLLAPSED_KEY = "colossal.sidebar.collapsed";
  */
 export function Sidebar({ access }: { access: AccessBundle }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  /**
+   * Decide whether a child nav link should be rendered as "active".
+   *
+   * We care about three families of child href:
+   *   1. plain path          — `/accounting`, `/me`, `/employee`
+   *   2. path + search param — `/accounting?s=reports`
+   *   3. deep sibling path   — the user is on `/accounting/reports/trial-balance`
+   *                            which belongs to the "Reports" tab even though
+   *                            the href is `/accounting?s=reports`.
+   *
+   * Family 1 → strict equality (and no stray `s` param on the current URL).
+   * Family 2 → compare search params; the one named on the href must match
+   *            the current URL exactly (so Overview doesn't win when `s=reports`).
+   * Family 3 → the child declares `matchPrefixes`; any pathname that starts
+   *            with one of those prefixes activates it.
+   */
+  const isChildActive = (child: {
+    href: string;
+    matchPrefixes?: string[];
+  }): boolean => {
+    if (child.matchPrefixes?.some((p) => pathname.startsWith(p))) return true;
+
+    const [childPath, childQuery = ""] = child.href.split("?");
+    if (pathname !== childPath) return false;
+
+    const childSP = new URLSearchParams(childQuery);
+    const currentS = searchParams.get("s") ?? "";
+    const expectedS = childSP.get("s") ?? "";
+    return currentS === expectedS;
+  };
 
   // Filter NAV by (a) role + (b) whether the user's company has
   // subscribed to the app the nav entry belongs to. Both must pass.
@@ -287,7 +319,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                 {!collapsed && item.children && isOpen && (
                   <ul className="ml-9 mt-1 flex flex-col gap-0.5 border-l border-white/10 pl-3">
                     {item.children.map((child) => {
-                      const childActive = pathname === child.href;
+                      const childActive = isChildActive(child);
                       if (child.external) {
                         return (
                           <li key={child.href}>

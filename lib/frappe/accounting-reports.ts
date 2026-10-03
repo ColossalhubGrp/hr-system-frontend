@@ -2,6 +2,43 @@ import "server-only";
 import { frappeCall } from "./client";
 
 /**
+ * Resolve the Fiscal Year master row whose range contains `date`.
+ * ERPNext's Trial Balance / Budget Variance / P&L (filter_based_on =
+ * Fiscal Year) throw a validation error (surfaces to us as a 417) when
+ * `fiscal_year` is missing or doesn't resolve. Falls back to the first
+ * Fiscal Year the user can see if the date isn't inside any FY.
+ */
+export async function fiscalYearForDate(date: string): Promise<string | null> {
+  const rows = await frappeCall<Array<{ name: string }>>({
+    method: "frappe.client.get_list",
+    as: "user",
+    args: {
+      doctype: "Fiscal Year",
+      fields: ["name"],
+      filters: [
+        ["year_start_date", "<=", date],
+        ["year_end_date", ">=", date],
+      ],
+      limit_page_length: 1,
+    },
+  }).catch(() => [] as Array<{ name: string }>);
+  if (rows[0]?.name) return rows[0].name;
+
+  // Fall back to any FY so the report still runs. Prefer the newest.
+  const anyFy = await frappeCall<Array<{ name: string }>>({
+    method: "frappe.client.get_list",
+    as: "user",
+    args: {
+      doctype: "Fiscal Year",
+      fields: ["name"],
+      order_by: "year_end_date desc",
+      limit_page_length: 1,
+    },
+  }).catch(() => [] as Array<{ name: string }>);
+  return anyFy[0]?.name ?? null;
+}
+
+/**
  * Wrapper around ERPNext's `frappe.desk.query_report.run` for the
  * canonical financial reports (General Ledger, Trial Balance, P&L,
  * Balance Sheet, Cash Flow, Accounts Receivable/Payable).
@@ -98,43 +135,69 @@ export async function generalLedger(opts: PeriodFilter & { account?: string; par
 }
 
 export async function trialBalance(opts: PeriodFilter) {
+  // ERPNext's Trial Balance throws "Fiscal Year is required" when the
+  // filter is missing — resolve it from the From date, falling back to
+  // any FY the user can see.
+  const [fromFy, toFy] = await Promise.all([
+    fiscalYearForDate(opts.fromDate),
+    fiscalYearForDate(opts.toDate),
+  ]);
   return runReport("Trial Balance", {
     company: opts.company,
     from_date: opts.fromDate,
     to_date: opts.toDate,
-    fiscal_year: undefined,
+    // Trial Balance wraps the result inside a single FY; use `fromFy`
+    // and let dates narrow the window.
+    fiscal_year: fromFy ?? toFy ?? undefined,
+    from_fiscal_year: fromFy ?? toFy ?? undefined,
+    to_fiscal_year: toFy ?? fromFy ?? undefined,
     show_zero_values: 0,
     show_unclosed_fy_pl_balances: 1,
   });
 }
 
 export async function profitAndLoss(opts: PeriodFilter & { periodicity?: string }) {
+  const [fromFy, toFy] = await Promise.all([
+    fiscalYearForDate(opts.fromDate),
+    fiscalYearForDate(opts.toDate),
+  ]);
   return runReport("Profit and Loss Statement", {
     company: opts.company,
     from_date: opts.fromDate,
     to_date: opts.toDate,
     periodicity: opts.periodicity ?? "Monthly",
     filter_based_on: "Date Range",
+    from_fiscal_year: fromFy ?? toFy ?? undefined,
+    to_fiscal_year: toFy ?? fromFy ?? undefined,
   });
 }
 
 export async function balanceSheet(opts: { company: string; toDate: string; periodicity?: string }) {
+  const toFy = await fiscalYearForDate(opts.toDate);
   return runReport("Balance Sheet", {
     company: opts.company,
     to_date: opts.toDate,
     periodicity: opts.periodicity ?? "Yearly",
     filter_based_on: "Date Range",
     from_date: opts.toDate,
+    from_fiscal_year: toFy ?? undefined,
+    to_fiscal_year: toFy ?? undefined,
   });
 }
 
 export async function cashFlow(opts: PeriodFilter & { periodicity?: string }) {
+  const [fromFy, toFy] = await Promise.all([
+    fiscalYearForDate(opts.fromDate),
+    fiscalYearForDate(opts.toDate),
+  ]);
   return runReport("Cash Flow", {
     company: opts.company,
     from_date: opts.fromDate,
     to_date: opts.toDate,
     periodicity: opts.periodicity ?? "Monthly",
     filter_based_on: "Date Range",
+    from_fiscal_year: fromFy ?? toFy ?? undefined,
+    to_fiscal_year: toFy ?? fromFy ?? undefined,
   });
 }
 

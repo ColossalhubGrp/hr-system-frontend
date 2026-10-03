@@ -42,7 +42,11 @@ export default async function NewSupplierPage() {
       />
       <SupplierForm
         mode="create"
-        supplierGroups={groups.map((g) => g.name)}
+        // ERPNext rejects a Supplier whose supplier_group is a non-leaf
+        // (is_group=1) node — the root "All Supplier Groups" lives in
+        // the tree only to parent other groups. Filter them out of the
+        // picker so the UI can't lead the user into a 500.
+        supplierGroups={groups.filter((g) => !g.isGroup).map((g) => g.name)}
         countries={countries}
         currencies={currencies.filter((c) => c.enabled).map((c) => c.name)}
         paymentTerms={termsTemplates.map((t) => t.name)}

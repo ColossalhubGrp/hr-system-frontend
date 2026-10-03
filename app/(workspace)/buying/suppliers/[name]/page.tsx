@@ -52,7 +52,7 @@ export default async function EditSupplierPage({ params }: { params: { name: str
       <SupplierForm
         mode="edit"
         name={doc.name}
-        supplierGroups={groups.map((g) => g.name)}
+        supplierGroups={groups.filter((g) => !g.isGroup).map((g) => g.name)}
         countries={countries}
         currencies={currencies.map((c) => c.name)}
         paymentTerms={termsTemplates.map((t) => t.name)}

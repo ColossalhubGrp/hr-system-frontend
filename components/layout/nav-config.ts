@@ -25,6 +25,12 @@ export type NavChild = {
   /** Role bundle required to see this child item. Omit for "any signed-in
    *  user can see it" (e.g. own profile, own dashboard). */
   requires?: RoleGroup;
+  /** Extra pathname prefixes that should also light up this child as
+   *  active. Needed when the "canonical" href lives at a search-param
+   *  variant of the parent (e.g. `/accounting?s=reports`) but deep
+   *  routes under a different pathname (`/accounting/reports/*`)
+   *  logically belong to the same section. */
+  matchPrefixes?: string[];
 };
 export type NavItem = {
   label: string;
@@ -189,17 +195,76 @@ export const NAV: NavItem[] = [
     icon: Landmark,
     requires: "HR_ADMIN",
     children: [
-      { label: "Overview",          href: "/accounting",                 requires: "HR_ADMIN" },
-      { label: "Masters",           href: "/accounting?s=masters",       requires: "HR_ADMIN" },
-      { label: "Transactions",      href: "/accounting?s=transactions",  requires: "HR_ADMIN" },
-      { label: "Tax",               href: "/accounting?s=tax",           requires: "HR_ADMIN" },
-      { label: "Cost & Budget",     href: "/accounting?s=cost-centers",  requires: "HR_ADMIN" },
-      { label: "Multi-currency",    href: "/accounting?s=multi-currency",requires: "HR_ADMIN" },
-      { label: "Banking",           href: "/accounting?s=banking",       requires: "HR_ADMIN" },
-      { label: "Opening & Closing", href: "/accounting?s=opening",       requires: "HR_ADMIN" },
-      { label: "Subscriptions",     href: "/accounting?s=subscriptions", requires: "HR_ADMIN" },
-      { label: "Shares",            href: "/accounting?s=shares",        requires: "HR_ADMIN" },
-      { label: "Reports",           href: "/accounting?s=reports",       requires: "HR_ADMIN" },
+      { label: "Overview", href: "/accounting", requires: "HR_ADMIN" },
+      {
+        label: "Masters",
+        href: "/accounting?s=masters",
+        requires: "HR_ADMIN",
+        matchPrefixes: [
+          "/accounting/chart-of-accounts",
+          "/accounting/items",
+          "/accounting/masters",
+        ],
+      },
+      {
+        label: "Transactions",
+        href: "/accounting?s=transactions",
+        requires: "HR_ADMIN",
+        matchPrefixes: [
+          "/accounting/journal-entries",
+          "/accounting/payment-entries",
+          "/accounting/sales-invoices",
+          "/accounting/purchase-invoices",
+        ],
+      },
+      {
+        label: "Tax",
+        href: "/accounting?s=tax",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/tax"],
+      },
+      {
+        label: "Cost & Budget",
+        href: "/accounting?s=cost-centers",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/cost-centers", "/accounting/budgets"],
+      },
+      {
+        label: "Multi-currency",
+        href: "/accounting?s=multi-currency",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/multi-currency"],
+      },
+      {
+        label: "Banking",
+        href: "/accounting?s=banking",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/banking"],
+      },
+      {
+        label: "Opening & Closing",
+        href: "/accounting?s=opening",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/tools"],
+      },
+      {
+        label: "Subscriptions",
+        href: "/accounting?s=subscriptions",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/subscriptions"],
+      },
+      {
+        label: "Shares",
+        href: "/accounting?s=shares",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/shares"],
+      },
+      {
+        label: "Reports",
+        href: "/accounting?s=reports",
+        requires: "HR_ADMIN",
+        matchPrefixes: ["/accounting/reports"],
+      },
     ],
   },
 

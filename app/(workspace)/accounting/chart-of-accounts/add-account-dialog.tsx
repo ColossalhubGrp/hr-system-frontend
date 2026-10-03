@@ -31,6 +31,13 @@ const ACCOUNT_TYPES = [
   "Temporary", "Round Off for Opening",
 ];
 
+const ROOT_TYPES: Array<"Asset" | "Liability" | "Equity" | "Income" | "Expense"> =
+  ["Asset", "Liability", "Equity", "Income", "Expense"];
+
+// Sentinel value the parent dropdown uses when the user wants to
+// create a top-level root instead of nesting under an existing group.
+const ROOT_SENTINEL = "__ROOT__";
+
 export function AddAccountDialog({
   company,
   parents,
@@ -52,15 +59,19 @@ export function AddAccountDialog({
 
   const [accountName, setAccountName] = useState("");
   const [parent, setParent] = useState(presetParent ?? parents[0]?.name ?? "");
+  const [rootType, setRootType] = useState<typeof ROOT_TYPES[number]>("Asset");
   const [isGroup, setIsGroup] = useState(false);
   const [accountType, setAccountType] = useState("");
   const [currency, setCurrency] = useState("");
+
+  const isRoot = parent === ROOT_SENTINEL;
 
   useEffect(() => {
     if (open) {
       setErr(null);
       setAccountName("");
       setParent(presetParent ?? parents[0]?.name ?? "");
+      setRootType("Asset");
       setIsGroup(false);
       setAccountType("");
       setCurrency("");
@@ -68,16 +79,22 @@ export function AddAccountDialog({
     }
   }, [open, parents, presetParent]);
 
+  // Root accounts must be groups — the actual postings live on children.
+  useEffect(() => {
+    if (isRoot && !isGroup) setIsGroup(true);
+  }, [isRoot, isGroup]);
+
   function submit() {
     setErr(null);
     start(async () => {
       const res = await createAccountAction({
         company,
         accountName,
-        parentAccount: parent,
+        parentAccount: isRoot ? "" : parent,
         isGroup,
-        accountType: accountType || null,
+        accountType: isRoot ? null : (accountType || null),
         currency: currency || null,
+        rootType: isRoot ? rootType : null,
       });
       if (!res.ok) {
         setErr(res.error);
@@ -138,7 +155,8 @@ export function AddAccountDialog({
                 disabled={pending}
                 className={input}
               >
-                <option value="">—</option>
+                <option value={ROOT_SENTINEL}>★ Root (new top-level account)</option>
+                <option disabled>──────────</option>
                 {parents.map((p) => (
                   <option key={p.name} value={p.name}>
                     {p.label} {p.rootType ? `· ${p.rootType}` : ""}
@@ -147,31 +165,47 @@ export function AddAccountDialog({
               </select>
             </Field>
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Account type" hint="Leave blank for most groups.">
+            {isRoot ? (
+              <Field label="Root type" required
+                     hint="Which of the five standard roots this new tree belongs to. Rarely needed — the seed already has one of each.">
                 <select
-                  value={accountType}
-                  onChange={(e) => setAccountType(e.currentTarget.value)}
-                  disabled={pending || isGroup}
+                  value={rootType}
+                  onChange={(e) => setRootType(e.currentTarget.value as typeof ROOT_TYPES[number])}
+                  disabled={pending}
                   className={input}
                 >
-                  {ACCOUNT_TYPES.map((t) => (
-                    <option key={t} value={t}>{t || "—"}</option>
+                  {ROOT_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
                   ))}
                 </select>
               </Field>
-              <Field label="Currency" hint="Blank = company default.">
-                <input
-                  type="text"
-                  value={currency}
-                  onChange={(e) => setCurrency(e.currentTarget.value.toUpperCase())}
-                  placeholder="USD / ZWG"
-                  disabled={pending}
-                  className={input}
-                  maxLength={3}
-                />
-              </Field>
-            </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Account type" hint="Leave blank for most groups.">
+                  <select
+                    value={accountType}
+                    onChange={(e) => setAccountType(e.currentTarget.value)}
+                    disabled={pending || isGroup}
+                    className={input}
+                  >
+                    {ACCOUNT_TYPES.map((t) => (
+                      <option key={t} value={t}>{t || "—"}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Currency" hint="Blank = company default.">
+                  <input
+                    type="text"
+                    value={currency}
+                    onChange={(e) => setCurrency(e.currentTarget.value.toUpperCase())}
+                    placeholder="USD / ZWG"
+                    disabled={pending}
+                    className={input}
+                    maxLength={3}
+                  />
+                </Field>
+              </div>
+            )}
 
             <label className="inline-flex items-center gap-2 text-sm">
               <input
@@ -181,10 +215,15 @@ export function AddAccountDialog({
                   setIsGroup(e.currentTarget.checked);
                   if (e.currentTarget.checked) setAccountType("");
                 }}
-                disabled={pending}
+                disabled={pending || isRoot}  /* roots must be groups */
                 className="h-4 w-4"
               />
               This is a group account (a folder, not postable)
+              {isRoot && (
+                <span className="text-[10px] font-semibold text-muted-foreground">
+                  (required for root accounts)
+                </span>
+              )}
             </label>
 
             {err && (
@@ -207,7 +246,7 @@ export function AddAccountDialog({
             <button
               type="button"
               onClick={submit}
-              disabled={pending || !accountName.trim() || !parent}
+              disabled={pending || !accountName.trim() || (!parent && !isRoot)}
               className="inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white disabled:opacity-60 hover:bg-ink-700"
             >
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}

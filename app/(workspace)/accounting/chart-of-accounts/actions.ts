@@ -46,7 +46,15 @@ export async function createAccountAction(input: NewAccountInput): Promise<Actio
   const name = (input.accountName ?? "").trim();
   if (!name) return { ok: false, error: "Account name is required." };
   if (!input.company) return { ok: false, error: "Company is required." };
-  if (!input.parentAccount) return { ok: false, error: "Pick a parent account." };
+  // Either a parent OR an explicit root type is required.
+  // Root accounts (no parent) must declare their rootType AND be a
+  // group — they can't be postable leaves at the top of the tree.
+  if (!input.parentAccount && !input.rootType) {
+    return { ok: false, error: "Pick a parent, or set a root type to create a top-level root account." };
+  }
+  if (!input.parentAccount && !input.isGroup) {
+    return { ok: false, error: "Root accounts (no parent) must be groups — the actual postings live on children." };
+  }
 
   try {
     const doc = await frappeCall<{ name: string }>({
@@ -57,7 +65,7 @@ export async function createAccountAction(input: NewAccountInput): Promise<Actio
         doc: {
           doctype: "Account",
           account_name: name,
-          parent_account: input.parentAccount,
+          parent_account: input.parentAccount || null,
           company: input.company,
           is_group: input.isGroup ? 1 : 0,
           account_type: input.accountType || null,

@@ -111,7 +111,7 @@ export default async function ChartOfAccountsPage({ searchParams }: { searchPara
                     {key}
                   </span>
                 </header>
-                <AccountTree nodes={branch} company={company} />
+                <AccountTree nodes={branch} company={company} parents={parentOptions} />
               </section>
             );
           })}

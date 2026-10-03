@@ -3,7 +3,9 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { Building2, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { StatusPill } from "@/components/common/status-pill";
 import { getCostCenter } from "@/lib/frappe/cost-centers";
+import { CostCenterDetailActions } from "@/components/accounting/cost-center-detail-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +44,19 @@ export default async function CostCenterDetailPage({
         crumb={`Accounting · Cost Centers · ${cc.costCenterName}`}
         title={cc.costCenterName}
         subtitle={cc.name}
+        actions={
+          <div className="flex items-center gap-3">
+            <StatusPill status={cc.disabled ? "Disabled" : "Active"} />
+            <CostCenterDetailActions
+              name={cc.name}
+              label={cc.costCenterName}
+              isGroup={cc.isGroup}
+              disabled={cc.disabled}
+              company={cc.company}
+              backHref={back}
+            />
+          </div>
+        }
       />
 
       <section className="rounded-2xl border border-border/60 bg-card p-4">

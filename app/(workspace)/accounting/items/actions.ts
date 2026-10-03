@@ -8,6 +8,8 @@ import {
   updateItem,
   setItemDisabled,
   createItemGroup,
+  renameItemGroup,
+  deleteItemGroup,
   type ItemCreateInput,
   type ItemDefault,
 } from "@/lib/frappe/item";
@@ -174,4 +176,53 @@ export async function createItemGroupAction(formData: FormData): Promise<void> {
   revalidatePath("/accounting/items/groups");
   revalidatePath("/accounting/items/new");
   redirect("/accounting/items/groups");
+}
+
+export async function renameItemGroupAction(
+  oldName: string,
+  newName: string,
+): Promise<{ ok: true; name: string; message: string } | { ok: false; error: string }> {
+  try {
+    const res = await renameItemGroup(oldName, newName);
+    revalidatePath("/accounting/items/groups");
+    revalidatePath("/accounting/items/new");
+    revalidatePath("/accounting/items");
+    return {
+      ok: true,
+      name: res.name,
+      message: res.name === oldName ? "No change." : `Renamed to ${res.name}.`,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof FrappeRequestError
+          ? err.message || `Backend error (${err.status}).`
+          : err instanceof Error
+            ? err.message
+            : "Could not rename.",
+    };
+  }
+}
+
+export async function deleteItemGroupAction(
+  name: string,
+): Promise<{ ok: true; message: string } | { ok: false; error: string }> {
+  try {
+    await deleteItemGroup(name);
+    revalidatePath("/accounting/items/groups");
+    revalidatePath("/accounting/items/new");
+    revalidatePath("/accounting/items");
+    return { ok: true, message: `${name} deleted.` };
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof FrappeRequestError
+          ? err.message || `Backend error (${err.status}).`
+          : err instanceof Error
+            ? err.message
+            : "Could not delete. The group may be in use.",
+    };
+  }
 }

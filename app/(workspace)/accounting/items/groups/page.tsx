@@ -4,6 +4,7 @@ import { Layers, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listItemGroups } from "@/lib/frappe/item";
 import { createItemGroupAction } from "@/app/(workspace)/accounting/items/actions";
+import { ItemGroupRow } from "@/components/accounting/item-group-row";
 
 export const metadata = { title: "Item Groups · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -82,12 +83,7 @@ export default async function ItemGroupsPage() {
         ) : (
           <ul className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
             {groups.map((g) => (
-              <li
-                key={g.name}
-                className="rounded-lg border border-border/40 bg-muted/10 px-3 py-2 text-sm"
-              >
-                {g.name}
-              </li>
+              <ItemGroupRow key={g.name} name={g.name} />
             ))}
           </ul>
         )}

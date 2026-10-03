@@ -281,3 +281,36 @@ export async function createItemGroup(name: string, parent?: string): Promise<{ 
   });
   return { name: created.name };
 }
+
+/** Rename a leaf Item Group. Frappe autoname uses the group name as
+ *  the id, so renaming the field also renames the record via
+ *  `frappe.client.rename_doc`. Returns the new id. */
+export async function renameItemGroup(oldName: string, newName: string): Promise<{ name: string }> {
+  const target = newName.trim();
+  if (!target) throw new Error("New name is required.");
+  if (target === oldName) return { name: oldName };
+  const res = await frappeCall<{ name?: string } | string>({
+    method: "frappe.client.rename_doc",
+    as: "user",
+    verb: "POST",
+    args: {
+      doctype: "Item Group",
+      old_name: oldName,
+      new_name: target,
+      merge: 0,
+    },
+  });
+  return { name: typeof res === "string" ? res : (res?.name ?? target) };
+}
+
+/** Delete an Item Group. Frappe refuses the delete if the group has
+ *  children or if any Item references it; the error bubbles up to the
+ *  server action for the UI to surface. */
+export async function deleteItemGroup(name: string): Promise<void> {
+  await frappeCall({
+    method: "frappe.client.delete",
+    as: "user",
+    verb: "POST",
+    args: { doctype: "Item Group", name },
+  });
+}

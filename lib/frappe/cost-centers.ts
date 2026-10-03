@@ -37,14 +37,18 @@ export async function listCostCenterTree(company: string): Promise<CostCenterNod
   ];
   const SAFE_FIELDS = ["name", "cost_center_name", "parent_cost_center", "is_group", "company"];
 
-  // Frappe v15 can refuse the lft/rgt (and sometimes is_group) fields
-  // with 417 or 403 depending on the user's role bundle. Attempt the
-  // rich set once; on ANY FrappeRequestError, retry with the identity-
-  // only set so the tree still renders.
-  async function fetch(fields: string[], orderBy: string) {
+  // The Chart of Cost Centers is tenant-wide reference data — any
+  // user who can reach the Accounting workspace needs to see it to
+  // post entries. We first ask AS THE USER; if their custom DocPerm
+  // bundle is tighter than ERPNext's default (403), fall back to the
+  // service key — the structure isn't sensitive and the page is
+  // already role-gated at the workspace layout.
+  // A field-perm 417 drops to SAFE_FIELDS instead; a 403 is a
+  // doctype-level denial and the service retry is the only option.
+  async function fetch(as: "user" | "service", fields: string[], orderBy: string) {
     return frappeCall<Array<Record<string, unknown>>>({
       method: "frappe.client.get_list",
-      as: "user",
+      as,
       args: {
         doctype: "Cost Center",
         fields,
@@ -57,12 +61,20 @@ export async function listCostCenterTree(company: string): Promise<CostCenterNod
 
   let rows: Array<Record<string, unknown>>;
   try {
-    rows = await fetch(RICH_FIELDS, "lft asc");
+    rows = await fetch("user", RICH_FIELDS, "lft asc");
   } catch (err) {
-    if (err instanceof FrappeRequestError) {
-      rows = await fetch(SAFE_FIELDS, "cost_center_name asc");
+    if (!(err instanceof FrappeRequestError)) throw err;
+    if (err.status === 403) {
+      // Fall through to service with rich fields first, then safe.
+      try {
+        rows = await fetch("service", RICH_FIELDS, "lft asc");
+      } catch (err2) {
+        if (!(err2 instanceof FrappeRequestError)) throw err2;
+        rows = await fetch("service", SAFE_FIELDS, "cost_center_name asc");
+      }
     } else {
-      throw err;
+      // 417 / other — retry as the user with the safe field set.
+      rows = await fetch("user", SAFE_FIELDS, "cost_center_name asc");
     }
   }
 

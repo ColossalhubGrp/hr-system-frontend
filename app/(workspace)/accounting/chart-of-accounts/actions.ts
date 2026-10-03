@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 export type NewAccountInput = {
   company: string;
   accountName: string;
+  accountNumber?: string | null;      // optional numeric prefix — Frappe prepends to the final account name
   parentAccount: string;
   isGroup: boolean;
   accountType?: string | null;
@@ -16,6 +17,7 @@ export type NewAccountInput = {
 
 export type UpdateAccountInput = Partial<{
   accountName: string;
+  accountNumber: string | null;
   accountType: string | null;
   currency: string | null;
   disabled: boolean;
@@ -65,6 +67,7 @@ export async function createAccountAction(input: NewAccountInput): Promise<Actio
         doc: {
           doctype: "Account",
           account_name: name,
+          account_number: (input.accountNumber || "").trim() || null,
           parent_account: input.parentAccount || null,
           company: input.company,
           is_group: input.isGroup ? 1 : 0,
@@ -87,10 +90,11 @@ export async function updateAccountAction(
 ): Promise<ActionResult> {
   await requireGroup("HR_ADMIN");
   const dbPatch: Record<string, unknown> = {};
-  if (patch.accountName !== undefined) dbPatch.account_name = patch.accountName.trim();
-  if (patch.accountType !== undefined) dbPatch.account_type = patch.accountType || null;
-  if (patch.currency !== undefined)    dbPatch.account_currency = patch.currency || null;
-  if (patch.disabled !== undefined)    dbPatch.disabled = patch.disabled ? 1 : 0;
+  if (patch.accountName !== undefined)   dbPatch.account_name = patch.accountName.trim();
+  if (patch.accountNumber !== undefined) dbPatch.account_number = (patch.accountNumber ?? "").trim() || null;
+  if (patch.accountType !== undefined)   dbPatch.account_type = patch.accountType || null;
+  if (patch.currency !== undefined)      dbPatch.account_currency = patch.currency || null;
+  if (patch.disabled !== undefined)      dbPatch.disabled = patch.disabled ? 1 : 0;
 
   if (Object.keys(dbPatch).length === 0) {
     return { ok: true, message: "Nothing to update." };

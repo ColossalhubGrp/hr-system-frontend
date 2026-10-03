@@ -14,6 +14,7 @@ import { frappeCall } from "./client";
 export type Account = {
   name: string;
   accountName: string;
+  accountNumber: string | null;
   parent: string | null;
   isGroup: boolean;
   rootType: "Asset" | "Liability" | "Equity" | "Income" | "Expense" | null;
@@ -27,6 +28,10 @@ export type Account = {
 export type AccountNode = Account & {
   children: AccountNode[];
   depth: number;
+  /** debit − credit for this account over all time (leaves);
+   *  rolled-up sum of children for groups. Null when the balance
+   *  query failed. */
+  balance: number | null;
 };
 
 export async function listAccountTree(company: string): Promise<AccountNode[]> {
@@ -43,6 +48,7 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
       fields: [
         "name",
         "account_name",
+        "account_number",
         "parent_account",
         "is_group",
         "root_type",
@@ -57,9 +63,35 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
     },
   });
 
+  // Per-account balance = SUM(debit) − SUM(credit) across all GL
+  // Entries for this company. One aggregated query → no N+1.
+  const balances = new Map<string, number>();
+  try {
+    const glRows = await frappeCall<Array<Record<string, unknown>>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "GL Entry",
+        fields: ["account", "sum(debit) as debit_sum", "sum(credit) as credit_sum"],
+        filters: [["company", "=", company], ["is_cancelled", "=", 0]],
+        group_by: "account",
+        limit_page_length: 0,
+      },
+    });
+    for (const g of glRows) {
+      const acct = String(g.account ?? "");
+      if (!acct) continue;
+      balances.set(acct, Number(g.debit_sum ?? 0) - Number(g.credit_sum ?? 0));
+    }
+  } catch {
+    // Permission denied or no GL yet — leave the map empty; the tree
+    // then renders without balance chips rather than erroring the page.
+  }
+
   const accounts: Account[] = rows.map((r) => ({
     name: String(r.name ?? ""),
     accountName: String(r.account_name ?? ""),
+    accountNumber: (r.account_number as string | null) ?? null,
     parent: (r.parent_account as string | null) ?? null,
     isGroup: Number(r.is_group ?? 0) === 1,
     rootType: (r.root_type as AccountNode["rootType"]) ?? null,
@@ -76,7 +108,18 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
   // Build the tree. We keep the same MPTT (lft asc) order so children
   // stay in the ledger's canonical sequence.
   const byName = new Map<string, AccountNode>();
-  for (const a of accounts) byName.set(a.name, { ...a, children: [], depth: 0 });
+  for (const a of accounts) {
+    byName.set(a.name, {
+      ...a,
+      children: [],
+      depth: 0,
+      // Leaves get their raw balance from the GL aggregation. Groups
+      // start at 0 and have their children summed in during rollup.
+      balance: a.name && !Number.isNaN(balances.get(a.name) ?? NaN)
+        ? (balances.get(a.name) ?? 0)
+        : 0,
+    });
+  }
 
   const roots: AccountNode[] = [];
   for (const a of accounts) {
@@ -89,6 +132,24 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
       roots.push(node);
     }
   }
+
+  // Roll leaf balances UP into their parent groups. Post-order over
+  // the full forest: children before their parents.
+  function rollup(n: AccountNode): number {
+    if (n.children.length === 0) return n.balance ?? 0;
+    let total = 0;
+    for (const c of n.children) total += rollup(c);
+    n.balance = total;
+    return total;
+  }
+  for (const r of roots) rollup(r);
+
+  // If no GL rows were loaded, drop balance to null so the UI can
+  // skip the chip rather than show misleading zeros everywhere.
+  if (balances.size === 0) {
+    for (const n of byName.values()) n.balance = null;
+  }
+
   return roots;
 }
 
@@ -102,6 +163,7 @@ export async function getAccount(name: string): Promise<Account | null> {
     return {
       name: String(doc.name ?? name),
       accountName: String(doc.account_name ?? ""),
+      accountNumber: (doc.account_number as string | null) ?? null,
       parent: (doc.parent_account as string | null) ?? null,
       isGroup: Number(doc.is_group ?? 0) === 1,
       rootType: (doc.root_type as Account["rootType"]) ?? null,

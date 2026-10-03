@@ -103,13 +103,14 @@ function TreeItem({
         <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
           {node.disabled && <Ban className="h-3 w-3 text-fall" aria-label="Disabled" />}
           {node.accountType && !node.isGroup && (
-            <span className="hidden sm:inline">{node.accountType}</span>
+            <span className="hidden md:inline">{node.accountType}</span>
           )}
           {node.currency && (
             <span className="rounded bg-muted/60 px-1.5 py-0.5 font-mono text-[10px]">
               {node.currency}
             </span>
           )}
+          <BalanceChip node={node} />
         </div>
       </div>
 
@@ -197,6 +198,48 @@ function PillBtn({
   );
 }
 
+/* ────────────── Balance chip (Dr/Cr) ────────────── */
+
+/**
+ * Renders the account's balance with the Dr/Cr convention.
+ *
+ *   Asset / Expense:          positive balance → Dr, negative → Cr
+ *   Liability / Equity / Income:  positive balance → Cr, negative → Dr
+ *
+ * Zero balances fall back to a muted "—". Null balance (no GL rows
+ * loaded, or permission denied on GL Entry) collapses the chip.
+ */
+function BalanceChip({ node }: { node: AccountNode }) {
+  if (node.balance === null) return null;
+  const bal = node.balance;
+  const credit = node.rootType === "Liability" || node.rootType === "Equity" || node.rootType === "Income";
+  // Credit-side accounts: credit is positive, so FLIP the sign of
+  // `debit − credit` to find the "natural" magnitude.
+  const natural = credit ? -bal : bal;
+  if (Math.abs(natural) < 0.005) {
+    return <span className="text-[10px] text-muted-foreground/60">—</span>;
+  }
+  const dr = natural >= 0;
+  // Natural side (Dr for asset/expense, Cr for liability/equity/income)
+  // is the "normal" sign and renders in the brand palette; abnormal
+  // (an asset in credit, say) renders in rose so it jumps out.
+  const normal = (dr && !credit) || (!dr && credit);
+  const toneCls = normal ? "text-foreground" : "text-rose-700";
+  const dcCls   = normal ? "bg-primary/10 text-primary" : "bg-rose-100 text-rose-700";
+  return (
+    <span className={cn("inline-flex items-center gap-1 whitespace-nowrap font-mono text-[11px] tabular-nums", toneCls)}>
+      {fmtMoney(Math.abs(natural))}
+      <span className={cn("rounded px-1 text-[9px] font-bold uppercase", dcCls)}>
+        {dr ? "Dr" : "Cr"}
+      </span>
+    </span>
+  );
+}
+
+function fmtMoney(n: number): string {
+  return n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 /* ────────────── Inline Edit dialog ────────────── */
 
 const ACCOUNT_TYPES = [
@@ -215,6 +258,7 @@ function EditDialog({
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
   const [name, setName] = useState(node.accountName);
+  const [number, setNumber] = useState(node.accountNumber ?? "");
   const [type, setType] = useState(node.accountType ?? "");
   const [currency, setCurrency] = useState(node.currency ?? "");
   const [disabled, setDisabled] = useState(node.disabled);
@@ -224,6 +268,7 @@ function EditDialog({
     start(async () => {
       const res = await updateAccountAction(node.name, {
         accountName: name,
+        accountNumber: number || null,
         accountType: type || null,
         currency: currency || null,
         disabled,
@@ -246,10 +291,18 @@ function EditDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">
-          <Field label="Account name" required>
-            <input type="text" value={name} onChange={(e) => setName(e.currentTarget.value)}
-                   className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm" />
-          </Field>
+          <div className="grid grid-cols-[1fr_120px] gap-3">
+            <Field label="Account name" required>
+              <input type="text" value={name} onChange={(e) => setName(e.currentTarget.value)}
+                     className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm" />
+            </Field>
+            <Field label="Account no." hint="Numeric prefix.">
+              <input type="text" value={number} inputMode="numeric" maxLength={16}
+                     onChange={(e) => setNumber(e.currentTarget.value)}
+                     placeholder="1710"
+                     className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm" />
+            </Field>
+          </div>
           {!node.isGroup && (
             <Field label="Account type">
               <select value={type} onChange={(e) => setType(e.currentTarget.value)}

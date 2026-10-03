@@ -58,6 +58,7 @@ export function AddAccountDialog({
   const nameRef = useRef<HTMLInputElement | null>(null);
 
   const [accountName, setAccountName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
   const [parent, setParent] = useState(presetParent ?? parents[0]?.name ?? "");
   const [rootType, setRootType] = useState<typeof ROOT_TYPES[number]>("Asset");
   const [isGroup, setIsGroup] = useState(false);
@@ -70,6 +71,7 @@ export function AddAccountDialog({
     if (open) {
       setErr(null);
       setAccountName("");
+      setAccountNumber("");
       setParent(presetParent ?? parents[0]?.name ?? "");
       setRootType("Asset");
       setIsGroup(false);
@@ -90,6 +92,7 @@ export function AddAccountDialog({
       const res = await createAccountAction({
         company,
         accountName,
+        accountNumber: accountNumber || null,
         parentAccount: isRoot ? "" : parent,
         isGroup,
         accountType: isRoot ? null : (accountType || null),
@@ -130,23 +133,37 @@ export function AddAccountDialog({
           </DialogHeader>
 
           <div className="flex flex-col gap-3">
-            <Field label="Account name" required>
-              <input
-                ref={nameRef}
-                type="text"
-                value={accountName}
-                onChange={(e) => setAccountName(e.currentTarget.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && accountName.trim()) {
-                    e.preventDefault();
-                    submit();
-                  }
-                }}
-                placeholder="e.g. CBZ USD Current Account"
-                disabled={pending}
-                className={cn(input, err && "border-destructive")}
-              />
-            </Field>
+            <div className="grid grid-cols-[1fr_120px] gap-3">
+              <Field label="Account name" required>
+                <input
+                  ref={nameRef}
+                  type="text"
+                  value={accountName}
+                  onChange={(e) => setAccountName(e.currentTarget.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && accountName.trim()) {
+                      e.preventDefault();
+                      submit();
+                    }
+                  }}
+                  placeholder="e.g. CBZ USD Current Account"
+                  disabled={pending}
+                  className={cn(input, err && "border-destructive")}
+                />
+              </Field>
+              <Field label="Account no." hint="Prefix. Optional.">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={accountNumber}
+                  onChange={(e) => setAccountNumber(e.currentTarget.value)}
+                  placeholder="1710"
+                  disabled={pending}
+                  className={input}
+                  maxLength={16}
+                />
+              </Field>
+            </div>
 
             <Field label="Parent" required>
               <select

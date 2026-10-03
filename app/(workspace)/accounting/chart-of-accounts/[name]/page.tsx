@@ -49,6 +49,7 @@ export default async function AccountDetailPage({
       <section className="rounded-2xl border border-border/60 bg-card p-4">
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Details</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Detail label="Account no." value={account.accountNumber ?? "—"} />
           <Detail label="Root type" value={account.rootType ?? "—"} />
           <Detail label="Account type" value={account.accountType ?? "—"} />
           <Detail label="Currency" value={account.currency ?? "—"} />

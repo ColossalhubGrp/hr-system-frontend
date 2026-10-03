@@ -23,6 +23,7 @@ import { cn } from "@/lib/cn";
 type Account = {
   name: string;
   accountName: string;
+  accountNumber: string | null;
   accountType: string | null;
   currency: string | null;
   disabled: boolean;
@@ -51,12 +52,14 @@ export function AccountActions({ account, backHref }: { account: Account; backHr
 
   // Edit form state
   const [name, setName] = useState(account.accountName);
+  const [number, setNumber] = useState(account.accountNumber ?? "");
   const [type, setType] = useState(account.accountType ?? "");
   const [currency, setCurrency] = useState(account.currency ?? "");
   const [err, setErr] = useState<string | null>(null);
 
   function openEdit() {
     setName(account.accountName);
+    setNumber(account.accountNumber ?? "");
     setType(account.accountType ?? "");
     setCurrency(account.currency ?? "");
     setErr(null);
@@ -68,6 +71,7 @@ export function AccountActions({ account, backHref }: { account: Account; backHr
     start(async () => {
       const res = await updateAccountAction(account.name, {
         accountName: name,
+        accountNumber: number || null,
         accountType: type || null,
         currency: currency || null,
       });
@@ -149,14 +153,27 @@ export function AccountActions({ account, backHref }: { account: Account; backHr
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3">
-            <Field label="Account name" required>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.currentTarget.value)}
-                className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
-              />
-            </Field>
+            <div className="grid grid-cols-[1fr_120px] gap-3">
+              <Field label="Account name" required>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.currentTarget.value)}
+                  className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                />
+              </Field>
+              <Field label="Account no." hint="Numeric prefix.">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={16}
+                  value={number}
+                  onChange={(e) => setNumber(e.currentTarget.value)}
+                  placeholder="1710"
+                  className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
+                />
+              </Field>
+            </div>
             <Field label="Account type">
               <select
                 value={type}

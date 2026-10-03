@@ -1,10 +1,15 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { Suspense } from "react";
 import { ChevronRight, ArrowRight, Receipt, Wallet, BookOpen, FileSpreadsheet } from "lucide-react";
 import { OVERVIEW_ID, findSection, type Section, type Row } from "./_lib/sections";
+import { loadOverviewData } from "./_lib/overview-data";
 import { SetupChecklist } from "./_components/setup-checklist";
 import { DismissibleSetup } from "./_components/dismissible-setup";
-import { Suspense } from "react";
+import { KpiStrip } from "./_components/kpi-strip";
+import { NeedsAttention } from "./_components/needs-attention";
+import { MiniPnlChart } from "./_components/mini-pnl-chart";
+import { RecentActivity } from "./_components/recent-activity";
 
 export const metadata = { title: "Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -22,50 +27,55 @@ export default function AccountingLandingPage({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Hero header — brand primary band, dense info strip */}
-      <header className="rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-sm">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <div className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">
-              Finance
+      {/* Hero only on Overview — on section views the breadcrumb +
+          section header carries enough context. */}
+      {isOverview && (
+        <header className="rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/80 p-6 text-primary-foreground shadow-sm">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <div className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/70">
+                Finance
+              </div>
+              <h1 className="mt-1 text-[26px] font-bold leading-tight">Accounting</h1>
+              <p className="mt-1 max-w-xl text-sm text-primary-foreground/80">
+                Live view of the ledger — invoices, payments, tax, cash position
+                and what&apos;s waiting on your attention.
+              </p>
             </div>
-            <h1 className="mt-1 text-[26px] font-bold leading-tight">
-              Accounting
-            </h1>
-            <p className="mt-1 max-w-xl text-sm text-primary-foreground/80">
-              Full general ledger, invoicing, payments, tax, budgeting and
-              financial reporting — everything the finance team needs to
-              keep the books.
-            </p>
+            <div className="flex flex-wrap gap-2">
+              <HeroCta href="/accounting/sales-invoices/new" icon={Receipt} label="New sales invoice" />
+              <HeroCta href="/accounting/purchase-invoices/new" icon={FileSpreadsheet} label="New purchase invoice" />
+              <HeroCta href="/accounting/payment-entries/new" icon={Wallet} label="New payment" />
+              <HeroCta href="/accounting/journal-entries/new" icon={BookOpen} label="Journal entry" />
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <HeroCta href="/accounting/sales-invoices/new" icon={Receipt} label="New sales invoice" />
-            <HeroCta href="/accounting/purchase-invoices/new" icon={FileSpreadsheet} label="New purchase invoice" />
-            <HeroCta href="/accounting/payment-entries/new" icon={Wallet} label="New payment" />
-            <HeroCta href="/accounting/journal-entries/new" icon={BookOpen} label="Journal entry" />
-          </div>
+        </header>
+      )}
+
+      {/* Breadcrumb — only on section views. Overview is the root. */}
+      {!isOverview && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <Link href={"/accounting" as Route} className="hover:text-foreground">Accounting</Link>
+          <ChevronRight className="h-3 w-3" />
+          <span className="font-semibold text-foreground">{active.label}</span>
         </div>
-      </header>
+      )}
 
-      {/* Breadcrumb strip */}
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <Link href={"/accounting" as Route} className="hover:text-foreground">Accounting</Link>
-        <ChevronRight className="h-3 w-3" />
-        <span className="font-semibold text-foreground">{active.label}</span>
-      </div>
+      {/* Section pane header — only on sub-sections. Overview has its own hero. */}
+      {!isOverview && (
+        <div>
+          <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
+            <SectionIcon className="h-5 w-5 text-primary" />
+            {active.label}
+          </h2>
+          <p className="mt-0.5 text-sm text-muted-foreground">{active.subtitle}</p>
+        </div>
+      )}
 
-      {/* Section pane header */}
-      <div>
-        <h2 className="flex items-center gap-2 text-xl font-bold text-foreground">
-          <SectionIcon className="h-5 w-5 text-primary" />
-          {active.label}
-        </h2>
-        <p className="mt-0.5 text-sm text-muted-foreground">{active.subtitle}</p>
-      </div>
-
-      {/* Pane body */}
       {isOverview ? (
-        <OverviewPane />
+        <Suspense fallback={<OverviewSkeleton />}>
+          <OverviewPane />
+        </Suspense>
       ) : (
         <SectionRows section={active} />
       )}
@@ -89,80 +99,50 @@ function HeroCta({
   );
 }
 
-function OverviewPane() {
+async function OverviewPane() {
+  const data = await loadOverviewData();
+
   return (
     <div className="flex flex-col gap-5">
-      {/* First-time setup checklist — server-detects completion */}
-      <DismissibleSetup>
-        <Suspense fallback={<ChecklistSkeleton />}>
-          <SetupChecklist />
-        </Suspense>
-      </DismissibleSetup>
+      {/* KPI strip — six tiles with real numbers + inline sparklines */}
+      <KpiStrip data={data} />
 
-      {/* Quick-access tiles — primary everyday destinations */}
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">
-            Quick access
-          </h3>
-          <Link href={"/accounting/dashboard" as Route}
-                className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
-            Full dashboard
-            <ArrowRight className="h-3 w-3" />
-          </Link>
+      {/* Two-column: alerts on the left, recent activity on the right */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+        <div className="lg:col-span-2 flex flex-col gap-5">
+          <NeedsAttention data={data} />
+          <DismissibleSetup>
+            <SetupChecklist />
+          </DismissibleSetup>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          <QuickTile href="/accounting/chart-of-accounts" title="Chart of Accounts" blurb="The account tree." />
-          <QuickTile href="/accounting/sales-invoices" title="Sales Invoices" blurb="Bill customers." />
-          <QuickTile href="/accounting/purchase-invoices" title="Purchase Invoices" blurb="Record supplier bills." />
-          <QuickTile href="/accounting/payment-entries" title="Payment Entries" blurb="Money in / out." />
-          <QuickTile href="/accounting/reports/general-ledger" title="General Ledger" blurb="Every posting." />
-          <QuickTile href="/accounting/reports/trial-balance" title="Trial Balance" blurb="Opening + close per account." />
-          <QuickTile href="/accounting/reports/profit-and-loss" title="Profit & Loss" blurb="Income minus expenses." />
-          <QuickTile href="/accounting/reports/balance-sheet" title="Balance Sheet" blurb="Assets, liabilities, equity." />
+        <div className="lg:col-span-3 flex flex-col gap-5">
+          <MiniPnlChart data={data} />
+          <RecentActivity data={data} />
         </div>
-      </section>
+      </div>
     </div>
   );
 }
 
-function QuickTile({
-  href, title, blurb,
-}: {
-  href: string; title: string; blurb: string;
-}) {
+function OverviewSkeleton() {
   return (
-    <Link
-      href={href as Route}
-      className="group flex flex-col gap-1 rounded-xl border border-border bg-card p-3 transition hover:border-primary/30 hover:shadow-sm"
-    >
-      <div className="flex items-center justify-between">
-        <span className="truncate text-sm font-bold text-foreground">{title}</span>
-        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 transition group-hover:opacity-100" />
-      </div>
-      <span className="text-[11px] text-muted-foreground">{blurb}</span>
-    </Link>
-  );
-}
-
-function ChecklistSkeleton() {
-  return (
-    <div className="animate-pulse rounded-xl border border-primary/20 bg-primary/[0.03] p-5">
-      <div className="h-4 w-40 rounded bg-primary/20" />
-      <div className="mt-2 h-6 w-80 rounded bg-primary/15" />
-      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+    <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-16 rounded-lg border border-border/70 bg-card" />
+          <div key={i} className="h-[108px] animate-pulse rounded-xl border border-border bg-card" />
         ))}
+      </div>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">
+        <div className="lg:col-span-2 h-[320px] animate-pulse rounded-xl border bg-card" />
+        <div className="lg:col-span-3 h-[320px] animate-pulse rounded-xl border bg-card" />
       </div>
     </div>
   );
 }
 
 /**
- * Each non-Overview section renders its rows as a tight card grid
- * instead of the old "table of settings" look — matches how real
- * accounting navs feel (think shortcut cards on QuickBooks / Xero).
+ * Non-Overview sections — a tight 3-column card grid, one card per
+ * row. Reads like QuickBooks / Xero rather than a settings table.
  */
 function SectionRows({ section }: { section: Section }) {
   return (

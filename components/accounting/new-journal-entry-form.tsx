@@ -26,6 +26,9 @@ type Line = {
   credit: string;
   cost_center: string;
   user_remark: string;
+  /** Rate from account currency → company currency. Only used when
+   *  multi-currency is on; otherwise it's implicitly 1.0 per line. */
+  exchange_rate: string;
 };
 
 const EMPTY_LINE = (): Line => ({
@@ -34,6 +37,7 @@ const EMPTY_LINE = (): Line => ({
   credit: "",
   cost_center: "",
   user_remark: "",
+  exchange_rate: "1",
 });
 
 export function NewJournalEntryForm({
@@ -55,19 +59,32 @@ export function NewJournalEntryForm({
   const [company, setCompany] = useState(defaultCompany);
   const [accounts, setAccounts] = useState<AccountOption[]>(initialAccounts);
   const [lines, setLines] = useState<Line[]>([EMPTY_LINE(), EMPTY_LINE()]);
+  const [multiCurrency, setMultiCurrency] = useState(false);
 
+  const companyCurrency =
+    companies.find((c) => c.name === company)?.currency ?? "USD";
+
+  // Multi-currency mode balances in COMPANY currency: each line's
+  // debit/credit is in the account's currency, multiplied by the user's
+  // exchange rate before being summed. Single-currency mode just sums
+  // the raw inputs (rate is 1.0 everywhere).
   const totals = useMemo(() => {
     let debit = 0;
     let credit = 0;
     for (const l of lines) {
-      debit += Number(l.debit) || 0;
-      credit += Number(l.credit) || 0;
+      const rate = multiCurrency ? Number(l.exchange_rate) || 0 : 1;
+      debit += (Number(l.debit) || 0) * rate;
+      credit += (Number(l.credit) || 0) * rate;
     }
     return { debit, credit, diff: Math.round((debit - credit) * 100) / 100 };
-  }, [lines]);
+  }, [lines, multiCurrency]);
 
   const balanced = Math.abs(totals.diff) < 0.005;
-  const canSubmit = balanced && totals.debit > 0 && lines.every((l) => l.account);
+  const ratesValid =
+    !multiCurrency ||
+    lines.every((l) => !l.exchange_rate || Number(l.exchange_rate) > 0);
+  const canSubmit =
+    balanced && totals.debit > 0 && lines.every((l) => l.account) && ratesValid;
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -124,6 +141,24 @@ export function NewJournalEntryForm({
         description="Add one or more debits and credits. Totals must balance to save."
       >
         <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-3 py-2">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-input"
+                checked={multiCurrency}
+                onChange={(e) => setMultiCurrency(e.target.checked)}
+              />
+              Multi-currency
+            </label>
+            <p className="text-xs text-muted-foreground">
+              {multiCurrency
+                ? `Each line keeps its own currency; totals balance in ${companyCurrency}.`
+                : `All lines post in ${companyCurrency}.`}
+            </p>
+          </div>
+          <input type="hidden" name="multi_currency" value={multiCurrency ? "1" : "0"} />
+
           {lines.map((line, idx) => (
             <LineRow
               key={idx}
@@ -131,6 +166,8 @@ export function NewJournalEntryForm({
               line={line}
               accounts={accounts}
               canRemove={lines.length > 2}
+              multiCurrency={multiCurrency}
+              companyCurrency={companyCurrency}
               onChange={(patch) =>
                 setLines((prev) => prev.map((l, i) => (i === idx ? { ...l, ...patch } : l)))
               }
@@ -151,7 +188,12 @@ export function NewJournalEntryForm({
               <Plus className="h-3.5 w-3.5" />
               Add line
             </button>
-            <TotalsBar debit={totals.debit} credit={totals.credit} balanced={balanced} />
+            <TotalsBar
+              debit={totals.debit}
+              credit={totals.credit}
+              balanced={balanced}
+              currency={companyCurrency}
+            />
           </div>
         </div>
 
@@ -166,6 +208,9 @@ export function NewJournalEntryForm({
               credit: Number(l.credit) || 0,
               cost_center: l.cost_center || undefined,
               user_remark: l.user_remark || undefined,
+              exchange_rate: multiCurrency
+                ? Number(l.exchange_rate) || 1
+                : 1,
             })),
           )}
         />
@@ -189,6 +234,8 @@ function LineRow({
   line,
   accounts,
   canRemove,
+  multiCurrency,
+  companyCurrency,
   onChange,
   onRemove,
 }: {
@@ -196,14 +243,30 @@ function LineRow({
   line: Line;
   accounts: AccountOption[];
   canRemove: boolean;
+  multiCurrency: boolean;
+  companyCurrency: string;
   onChange: (patch: Partial<Line>) => void;
   onRemove: () => void;
 }) {
+  const picked = accounts.find((a) => a.name === line.account);
+  const accountCurrency = picked?.currency || companyCurrency;
+  const foreign = multiCurrency && accountCurrency !== companyCurrency;
+  const rate = Number(line.exchange_rate) || 1;
+  const debitInCompany =
+    foreign && line.debit ? (Number(line.debit) || 0) * rate : 0;
+  const creditInCompany =
+    foreign && line.credit ? (Number(line.credit) || 0) * rate : 0;
+
   return (
     <div className="grid grid-cols-12 items-start gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
-      <div className="col-span-12 md:col-span-5">
+      <div className="col-span-12 md:col-span-4">
         <label className="mb-1 block text-xs font-semibold text-muted-foreground">
           Account #{idx + 1}
+          {multiCurrency && picked && (
+            <span className="ml-1 font-mono text-[10px] uppercase tracking-wide text-muted-foreground/80">
+              ({accountCurrency})
+            </span>
+          )}
         </label>
         <SelectInput
           value={line.account}
@@ -212,8 +275,10 @@ function LineRow({
           onChange={(e) => onChange({ account: e.target.value })}
         />
       </div>
-      <div className="col-span-6 md:col-span-2">
-        <label className="mb-1 block text-xs font-semibold text-muted-foreground">Debit</label>
+      <div className={multiCurrency ? "col-span-6 md:col-span-2" : "col-span-6 md:col-span-2"}>
+        <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+          Debit {multiCurrency && <span className="font-mono text-[10px]">({accountCurrency})</span>}
+        </label>
         <TextInput
           type="number"
           step="0.01"
@@ -222,7 +287,6 @@ function LineRow({
           onChange={(e) =>
             onChange({
               debit: e.target.value,
-              // Enforce debit XOR credit at the input level
               credit: e.target.value ? "" : line.credit,
             })
           }
@@ -231,7 +295,9 @@ function LineRow({
         />
       </div>
       <div className="col-span-6 md:col-span-2">
-        <label className="mb-1 block text-xs font-semibold text-muted-foreground">Credit</label>
+        <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+          Credit {multiCurrency && <span className="font-mono text-[10px]">({accountCurrency})</span>}
+        </label>
         <TextInput
           type="number"
           step="0.01"
@@ -247,7 +313,29 @@ function LineRow({
           className="tabular-nums"
         />
       </div>
-      <div className="col-span-11 md:col-span-2">
+      {multiCurrency && (
+        <div className="col-span-6 md:col-span-2">
+          <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+            Rate → {companyCurrency}
+          </label>
+          <TextInput
+            type="number"
+            step="0.000001"
+            min="0"
+            value={line.exchange_rate}
+            onChange={(e) => onChange({ exchange_rate: e.target.value })}
+            placeholder="1.0"
+            disabled={!foreign}
+            className="tabular-nums"
+          />
+          {foreign && (debitInCompany > 0 || creditInCompany > 0) && (
+            <p className="mt-1 text-[10px] tabular-nums text-muted-foreground">
+              = {(debitInCompany || creditInCompany).toFixed(2)} {companyCurrency}
+            </p>
+          )}
+        </div>
+      )}
+      <div className={cn(multiCurrency ? "col-span-5 md:col-span-1" : "col-span-11 md:col-span-3")}>
         <label className="mb-1 block text-xs font-semibold text-muted-foreground">Cost Center</label>
         <TextInput
           value={line.cost_center}
@@ -275,18 +363,26 @@ function TotalsBar({
   debit,
   credit,
   balanced,
+  currency,
 }: {
   debit: number;
   credit: number;
   balanced: boolean;
+  currency: string;
 }) {
   return (
     <div className="flex items-center gap-4 text-sm">
       <span className="text-muted-foreground">
-        Debit <strong className="tabular-nums text-foreground">{debit.toFixed(2)}</strong>
+        Debit{" "}
+        <strong className="tabular-nums text-foreground">
+          {debit.toFixed(2)} {currency}
+        </strong>
       </span>
       <span className="text-muted-foreground">
-        Credit <strong className="tabular-nums text-foreground">{credit.toFixed(2)}</strong>
+        Credit{" "}
+        <strong className="tabular-nums text-foreground">
+          {credit.toFixed(2)} {currency}
+        </strong>
       </span>
       <span
         className={cn(
@@ -296,7 +392,7 @@ function TotalsBar({
             : "bg-destructive/10 text-destructive",
         )}
       >
-        {balanced ? "Balanced" : `Off by ${Math.abs(debit - credit).toFixed(2)}`}
+        {balanced ? "Balanced" : `Off by ${Math.abs(debit - credit).toFixed(2)} ${currency}`}
       </span>
     </div>
   );

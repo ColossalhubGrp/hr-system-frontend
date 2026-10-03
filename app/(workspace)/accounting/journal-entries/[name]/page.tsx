@@ -115,8 +115,13 @@ export default async function JournalEntryDetailPage({
                   </td>
                   <td className={`py-2 font-medium ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>
                     {l.account}
-                    {l.accountCurrency && l.accountCurrency !== "USD" && (
+                    {doc.multiCurrency && l.accountCurrency && (
                       <span className="ml-1 text-xs text-muted-foreground">({l.accountCurrency})</span>
+                    )}
+                    {doc.multiCurrency && l.exchangeRate !== 1 && (
+                      <span className="ml-1 text-[10px] text-muted-foreground">
+                        @ {l.exchangeRate.toFixed(4)}
+                      </span>
                     )}
                   </td>
                   <td className={`py-2 text-muted-foreground ${i < doc.accounts.length - 1 ? "border-b border-border/30" : ""}`}>

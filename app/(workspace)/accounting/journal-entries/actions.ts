@@ -28,6 +28,9 @@ const lineSchema = z
     credit: z.coerce.number().min(0).default(0),
     cost_center: z.string().trim().optional(),
     user_remark: z.string().trim().optional(),
+    // Rate from the line's account currency → company currency.
+    // Defaults to 1 (same-currency); only meaningful in multi-currency mode.
+    exchange_rate: z.coerce.number().positive().default(1),
   })
   .refine(
     (l) => (l.debit || 0) > 0 || (l.credit || 0) > 0,
@@ -46,6 +49,10 @@ const createSchema = z
     cheque_no: z.string().trim().optional(),
     cheque_date: z.string().trim().optional(),
     user_remark: z.string().trim().optional(),
+    multi_currency: z
+      .union([z.literal("1"), z.literal("0"), z.literal("")])
+      .optional()
+      .transform((v) => v === "1"),
     // Client posts the child table as a JSON blob so the form can keep
     // the whole grid in one hidden input — matches the pattern the
     // expense-claims form uses.
@@ -64,8 +71,16 @@ const createSchema = z
   })
   .refine(
     (v) => {
-      const totalDebit = v.accounts_json.reduce((a, l) => a + (l.debit || 0), 0);
-      const totalCredit = v.accounts_json.reduce((a, l) => a + (l.credit || 0), 0);
+      // Multi-currency: compare in company currency (× exchange_rate).
+      // Single-currency: rates are 1, so the math collapses to raw sums.
+      const totalDebit = v.accounts_json.reduce(
+        (a, l) => a + (l.debit || 0) * (l.exchange_rate || 1),
+        0,
+      );
+      const totalCredit = v.accounts_json.reduce(
+        (a, l) => a + (l.credit || 0) * (l.exchange_rate || 1),
+        0,
+      );
       return Math.abs(totalDebit - totalCredit) < 0.005;
     },
     {
@@ -111,6 +126,7 @@ export async function createJournalEntryAction(
       chequeNo: parsed.data.cheque_no || undefined,
       chequeDate: parsed.data.cheque_date || undefined,
       userRemark: parsed.data.user_remark || undefined,
+      multiCurrency: parsed.data.multi_currency,
       accounts: parsed.data.accounts_json.map((l) => ({
         account: l.account,
         partyType: l.party_type,
@@ -119,6 +135,7 @@ export async function createJournalEntryAction(
         credit: l.credit,
         costCenter: l.cost_center,
         userRemark: l.user_remark,
+        exchangeRate: l.exchange_rate,
       })),
     });
   } catch (err) {
@@ -137,7 +154,11 @@ export async function submitJournalEntryAction(name: string): Promise<FormState>
   }
   revalidatePath("/accounting/journal-entries");
   revalidatePath(`/accounting/journal-entries/${name}`);
-  return {};
+  // Submit posts the voucher to the ledger — the user's next step is
+  // almost always "see what's in the ledger now", so bounce them to the
+  // list where the new row shows up at the top. redirect() throws
+  // NEXT_REDIRECT which Server Actions carry back to the client router.
+  redirect("/accounting/journal-entries");
 }
 
 export async function cancelJournalEntryAction(name: string): Promise<FormState> {

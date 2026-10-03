@@ -105,7 +105,17 @@ export default async function JournalEntriesPage({
           </div>
         }
         columns={[
-          { header: "Voucher", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          {
+            header: "Voucher",
+            cell: (r) => (
+              <Link
+                href={`/accounting/journal-entries/${encodeURIComponent(r.name)}` as Route}
+                className="font-mono text-sm text-ink-800 underline-offset-4 hover:underline"
+              >
+                {r.name}
+              </Link>
+            ),
+          },
           { header: "Type", cell: (r) => r.voucherType, className: "hidden md:table-cell" },
           { header: "Date", cell: (r) => r.postingDate },
           { header: "Company", cell: (r) => r.company, className: "hidden lg:table-cell" },

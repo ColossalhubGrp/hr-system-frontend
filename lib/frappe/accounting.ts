@@ -81,6 +81,8 @@ export type JournalEntryLine = {
   debitInAccountCurrency: number;
   creditInAccountCurrency: number;
   accountCurrency: string | null;
+  /** Rate from account currency → company currency. 1 for same-currency rows. */
+  exchangeRate: number;
   costCenter: string | null;
   referenceType: string | null;
   referenceName: string | null;
@@ -258,6 +260,7 @@ export async function getJournalEntry(name: string): Promise<JournalEntryDetail 
         debitInAccountCurrency: Number(r.debit_in_account_currency ?? 0),
         creditInAccountCurrency: Number(r.credit_in_account_currency ?? 0),
         accountCurrency: (r.account_currency as string | null) ?? null,
+        exchangeRate: Number(r.exchange_rate ?? 1) || 1,
         costCenter: (r.cost_center as string | null) ?? null,
         referenceType: (r.reference_type as string | null) ?? null,
         referenceName: (r.reference_name as string | null) ?? null,
@@ -279,6 +282,9 @@ export type JournalEntryCreateInput = {
   chequeNo?: string;
   chequeDate?: string;
   userRemark?: string;
+  /** Enables mixed-currency child lines; each row carries its own
+   *  exchange_rate back to company currency. */
+  multiCurrency?: boolean;
   accounts: Array<{
     account: string;
     partyType?: string;
@@ -287,6 +293,8 @@ export type JournalEntryCreateInput = {
     credit?: number;
     costCenter?: string;
     userRemark?: string;
+    /** Account currency → company currency. Defaults to 1.0. */
+    exchangeRate?: number;
   }>;
 };
 
@@ -299,12 +307,14 @@ export async function createJournalEntry(input: JournalEntryCreateInput): Promis
     cheque_no: input.chequeNo || undefined,
     cheque_date: input.chequeDate || undefined,
     user_remark: input.userRemark || undefined,
+    multi_currency: input.multiCurrency ? 1 : 0,
     accounts: input.accounts.map((line) => ({
       account: line.account,
       party_type: line.partyType || undefined,
       party: line.party || undefined,
       debit_in_account_currency: Number(line.debit ?? 0) || 0,
       credit_in_account_currency: Number(line.credit ?? 0) || 0,
+      exchange_rate: Number(line.exchangeRate ?? 1) || 1,
       cost_center: line.costCenter || undefined,
       user_remark: line.userRemark || undefined,
     })),

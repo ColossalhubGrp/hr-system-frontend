@@ -392,16 +392,34 @@ export async function updateJournalEntry(
 // ── Lookups (for the form) ───────────────────────────────────────
 
 export async function listCompanies(): Promise<Array<{ name: string; abbr: string; currency: string }>> {
-  const rows = await frappeCall<Array<Record<string, unknown>>>({
-    method: "frappe.client.get_list",
-    as: "user",
-    args: {
-      doctype: "Company",
-      fields: ["name", "abbr", "default_currency"],
-      order_by: "name asc",
-      limit_page_length: 0,
-    },
-  });
+  const RICH = ["name", "abbr", "default_currency"];
+  const SAFE = ["name"];
+  async function fetch(fields: string[]) {
+    return frappeCall<Array<Record<string, unknown>>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "Company",
+        fields,
+        order_by: "name asc",
+        limit_page_length: 0,
+      },
+    });
+  }
+  let rows: Array<Record<string, unknown>>;
+  try {
+    rows = await fetch(RICH);
+  } catch (err) {
+    // Frappe v15 can refuse `default_currency`/`abbr` for users with
+    // only ACCOUNTING-level perms (no System Manager). Falling back to
+    // identity-only keeps the picker working — company abbr + default
+    // currency aren't used by every caller.
+    if (err instanceof FrappeRequestError) {
+      rows = await fetch(SAFE);
+    } else {
+      throw err;
+    }
+  }
   return rows.map((r) => ({
     name: String(r.name ?? ""),
     abbr: String(r.abbr ?? ""),

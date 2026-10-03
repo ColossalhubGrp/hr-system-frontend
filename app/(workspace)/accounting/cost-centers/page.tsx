@@ -1,10 +1,11 @@
 import Link from "next/link";
 import type { Route } from "next";
-import { Building2, ChevronLeft } from "lucide-react";
+import { Building2, ChevronLeft, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { listCompanies } from "@/lib/frappe/accounting";
-import { listCostCenterTree } from "@/lib/frappe/cost-centers";
+import { listCostCenterTree, type CostCenterNode } from "@/lib/frappe/cost-centers";
 import { CostCenterTree } from "@/components/accounting/cost-center-tree";
+import { FrappeRequestError } from "@/lib/frappe/client";
 
 export const metadata = { title: "Chart of Cost Centers · Accounting · Colossal HR" };
 export const dynamic = "force-dynamic";
@@ -12,9 +13,32 @@ export const dynamic = "force-dynamic";
 type SP = { company?: string };
 
 export default async function CostCentersPage({ searchParams }: { searchParams: SP }) {
-  const companies = await listCompanies();
+  // Catch at the page level so the actual backend message surfaces
+  // in the UI. If this throws up to the workspace error.tsx, Next's
+  // production build strips the message and the user is left staring
+  // at "Server Components render" boilerplate.
+  let companies: Awaited<ReturnType<typeof listCompanies>> = [];
+  let roots: CostCenterNode[] = [];
+  let error: string | null = null;
+  try {
+    companies = await listCompanies();
+  } catch (e) {
+    error = extract(e, "Could not load the company list.");
+  }
   const company = searchParams.company || companies[0]?.name || "";
-  const roots = company ? await listCostCenterTree(company) : [];
+  if (company && !error) {
+    try {
+      roots = await listCostCenterTree(company);
+    } catch (e) {
+      error = extract(e, "Could not load the cost center tree.");
+    }
+  }
+
+  function extract(e: unknown, fallback: string): string {
+    if (e instanceof FrappeRequestError) return e.message || `Backend error (${e.status}).`;
+    if (e instanceof Error) return e.message;
+    return fallback;
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -36,6 +60,14 @@ export default async function CostCentersPage({ searchParams }: { searchParams: 
       {!company ? (
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-8 text-center text-sm text-muted-foreground">
           No company set up yet.
+        </div>
+      ) : error ? (
+        <div className="flex items-start gap-2 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <div className="font-semibold">Couldn&apos;t load the cost center tree.</div>
+            <div className="mt-1 text-destructive/80">{error}</div>
+          </div>
         </div>
       ) : roots.length === 0 ? (
         <div className="rounded-2xl border border-border/60 bg-muted/20 p-8 text-center text-sm text-muted-foreground">

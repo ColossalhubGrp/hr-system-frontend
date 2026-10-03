@@ -37,35 +37,30 @@ export async function listCostCenterTree(company: string): Promise<CostCenterNod
   ];
   const SAFE_FIELDS = ["name", "cost_center_name", "parent_cost_center", "is_group", "company"];
 
-  let rows: Array<Record<string, unknown>>;
-  try {
-    rows = await frappeCall<Array<Record<string, unknown>>>({
+  // Frappe v15 can refuse the lft/rgt (and sometimes is_group) fields
+  // with 417 or 403 depending on the user's role bundle. Attempt the
+  // rich set once; on ANY FrappeRequestError, retry with the identity-
+  // only set so the tree still renders.
+  async function fetch(fields: string[], orderBy: string) {
+    return frappeCall<Array<Record<string, unknown>>>({
       method: "frappe.client.get_list",
       as: "user",
       args: {
         doctype: "Cost Center",
-        fields: RICH_FIELDS,
+        fields,
         filters: [["company", "=", company]],
-        order_by: "lft asc",
+        order_by: orderBy,
         limit_page_length: 0,
       },
     });
+  }
+
+  let rows: Array<Record<string, unknown>>;
+  try {
+    rows = await fetch(RICH_FIELDS, "lft asc");
   } catch (err) {
-    // If any field is behind a perm the user doesn't have, Frappe
-    // returns 417. Fall back to the identity-only set so the tree
-    // still renders (just without left/right nested-set markers).
-    if (err instanceof FrappeRequestError && err.status === 417) {
-      rows = await frappeCall<Array<Record<string, unknown>>>({
-        method: "frappe.client.get_list",
-        as: "user",
-        args: {
-          doctype: "Cost Center",
-          fields: SAFE_FIELDS,
-          filters: [["company", "=", company]],
-          order_by: "cost_center_name asc",
-          limit_page_length: 0,
-        },
-      });
+    if (err instanceof FrappeRequestError) {
+      rows = await fetch(SAFE_FIELDS, "cost_center_name asc");
     } else {
       throw err;
     }

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   createSalesInvoice,
+  updateSalesInvoice,
   submitSalesInvoice,
   cancelSalesInvoice,
 } from "@/lib/frappe/sales-invoice";
@@ -106,6 +107,50 @@ export async function createSalesInvoiceAction(
   redirect(`/accounting/sales-invoices/${encodeURIComponent(created.name)}`);
 }
 
+export async function updateSalesInvoiceAction(
+  name: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = createSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "");
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    return { fieldErrors, error: "Please fix the highlighted fields." };
+  }
+
+  try {
+    await updateSalesInvoice(name, {
+      customer: parsed.data.customer,
+      postingDate: parsed.data.posting_date,
+      dueDate: parsed.data.due_date || undefined,
+      company: parsed.data.company,
+      currency: parsed.data.currency || undefined,
+      poNo: parsed.data.po_no || undefined,
+      poDate: parsed.data.po_date || undefined,
+      remarks: parsed.data.remarks || undefined,
+      items: parsed.data.items_json.map((i) => ({
+        itemCode: i.item_code,
+        qty: i.qty,
+        rate: i.rate,
+        uom: i.uom,
+        description: i.description,
+        incomeAccount: i.income_account,
+        costCenter: i.cost_center,
+      })),
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+
+  revalidatePath("/accounting/sales-invoices");
+  revalidatePath(`/accounting/sales-invoices/${name}`);
+  redirect(`/accounting/sales-invoices/${encodeURIComponent(name)}`);
+}
+
 export async function submitSalesInvoiceAction(name: string): Promise<FormState> {
   try {
     await submitSalesInvoice(name);
@@ -114,7 +159,7 @@ export async function submitSalesInvoiceAction(name: string): Promise<FormState>
   }
   revalidatePath("/accounting/sales-invoices");
   revalidatePath(`/accounting/sales-invoices/${name}`);
-  return {};
+  redirect("/accounting/sales-invoices");
 }
 
 export async function cancelSalesInvoiceAction(name: string): Promise<FormState> {

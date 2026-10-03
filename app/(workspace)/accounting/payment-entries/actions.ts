@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   createPaymentEntry,
+  updatePaymentEntry,
   submitPaymentEntry,
   cancelPaymentEntry,
   PAYMENT_TYPES,
@@ -96,6 +97,46 @@ export async function createPaymentEntryAction(
   redirect(`/accounting/payment-entries/${encodeURIComponent(created.name)}`);
 }
 
+export async function updatePaymentEntryAction(
+  name: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = createSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "");
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    return { fieldErrors, error: "Please fix the highlighted fields." };
+  }
+
+  try {
+    await updatePaymentEntry(name, {
+      paymentType: parsed.data.payment_type,
+      postingDate: parsed.data.posting_date,
+      company: parsed.data.company,
+      partyType: parsed.data.party_type,
+      party: parsed.data.party,
+      paidFrom: parsed.data.paid_from,
+      paidTo: parsed.data.paid_to,
+      paidAmount: parsed.data.paid_amount,
+      receivedAmount: parsed.data.received_amount ?? parsed.data.paid_amount,
+      modeOfPayment: parsed.data.mode_of_payment,
+      referenceNo: parsed.data.reference_no,
+      referenceDate: parsed.data.reference_date,
+      remarks: parsed.data.remarks,
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+
+  revalidatePath("/accounting/payment-entries");
+  revalidatePath(`/accounting/payment-entries/${name}`);
+  redirect(`/accounting/payment-entries/${encodeURIComponent(name)}`);
+}
+
 export async function submitPaymentEntryAction(name: string): Promise<FormState> {
   try {
     await submitPaymentEntry(name);
@@ -104,7 +145,7 @@ export async function submitPaymentEntryAction(name: string): Promise<FormState>
   }
   revalidatePath("/accounting/payment-entries");
   revalidatePath(`/accounting/payment-entries/${name}`);
-  return {};
+  redirect("/accounting/payment-entries");
 }
 
 export async function cancelPaymentEntryAction(name: string): Promise<FormState> {

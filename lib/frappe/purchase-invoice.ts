@@ -317,6 +317,50 @@ export async function submitPurchaseInvoice(name: string): Promise<void> {
   await submitDoc("Purchase Invoice", name);
 }
 
+/** Draft-only overwrite — same pattern as updateJournalEntry. */
+export async function updatePurchaseInvoice(
+  name: string,
+  input: PurchaseInvoiceCreateInput,
+): Promise<void> {
+  const existing = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    as: "user",
+    args: { doctype: "Purchase Invoice", name },
+  });
+  if (Number(existing.docstatus ?? 0) !== 0) {
+    throw new Error("This invoice is no longer a draft, so it can't be edited. Reload the page.");
+  }
+
+  const doc = {
+    ...existing,
+    doctype: "Purchase Invoice",
+    supplier: input.supplier,
+    posting_date: input.postingDate,
+    due_date: input.dueDate || null,
+    company: input.company,
+    currency: input.currency || existing.currency,
+    bill_no: input.billNo || null,
+    bill_date: input.billDate || null,
+    remarks: input.remarks || null,
+    items: input.items.map((it) => ({
+      item_code: it.itemCode,
+      qty: Number(it.qty),
+      rate: Number(it.rate),
+      uom: it.uom || null,
+      description: it.description || null,
+      expense_account: it.expenseAccount || null,
+      cost_center: it.costCenter || null,
+    })),
+  };
+
+  await frappeCall({
+    method: "frappe.client.save",
+    as: "user",
+    verb: "POST",
+    args: { doc },
+  });
+}
+
 export async function cancelPurchaseInvoice(name: string): Promise<void> {
   await frappeCall({
     method: "frappe.client.cancel",

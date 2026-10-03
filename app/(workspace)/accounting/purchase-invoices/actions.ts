@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   createPurchaseInvoice,
+  updatePurchaseInvoice,
   submitPurchaseInvoice,
   cancelPurchaseInvoice,
 } from "@/lib/frappe/purchase-invoice";
@@ -106,6 +107,50 @@ export async function createPurchaseInvoiceAction(
   redirect(`/accounting/purchase-invoices/${encodeURIComponent(created.name)}`);
 }
 
+export async function updatePurchaseInvoiceAction(
+  name: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = createSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "");
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    return { fieldErrors, error: "Please fix the highlighted fields." };
+  }
+
+  try {
+    await updatePurchaseInvoice(name, {
+      supplier: parsed.data.supplier,
+      postingDate: parsed.data.posting_date,
+      dueDate: parsed.data.due_date || undefined,
+      company: parsed.data.company,
+      currency: parsed.data.currency || undefined,
+      billNo: parsed.data.bill_no || undefined,
+      billDate: parsed.data.bill_date || undefined,
+      remarks: parsed.data.remarks || undefined,
+      items: parsed.data.items_json.map((i) => ({
+        itemCode: i.item_code,
+        qty: i.qty,
+        rate: i.rate,
+        uom: i.uom,
+        description: i.description,
+        expenseAccount: i.expense_account,
+        costCenter: i.cost_center,
+      })),
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+
+  revalidatePath("/accounting/purchase-invoices");
+  revalidatePath(`/accounting/purchase-invoices/${name}`);
+  redirect(`/accounting/purchase-invoices/${encodeURIComponent(name)}`);
+}
+
 export async function submitPurchaseInvoiceAction(name: string): Promise<FormState> {
   try {
     await submitPurchaseInvoice(name);
@@ -114,7 +159,7 @@ export async function submitPurchaseInvoiceAction(name: string): Promise<FormSta
   }
   revalidatePath("/accounting/purchase-invoices");
   revalidatePath(`/accounting/purchase-invoices/${name}`);
-  return {};
+  redirect("/accounting/purchase-invoices");
 }
 
 export async function cancelPurchaseInvoiceAction(name: string): Promise<FormState> {

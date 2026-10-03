@@ -14,6 +14,7 @@ import {
 } from "@/components/employee/form-bits";
 import {
   createSalesInvoiceAction,
+  updateSalesInvoiceAction,
   type FormState,
 } from "@/app/(workspace)/accounting/sales-invoices/actions";
 import { cn } from "@/lib/cn";
@@ -34,23 +35,58 @@ type Line = {
 
 const EMPTY_LINE = (): Line => ({ item_code: "", item_name: "", qty: "1", rate: "0", uom: "" });
 
+export type SalesInvoiceEditInitial = {
+  name: string;
+  customer: string;
+  postingDate: string;
+  dueDate: string | null;
+  company: string;
+  poNo: string | null;
+  poDate: string | null;
+  remarks: string | null;
+  lines: Array<{
+    itemCode: string;
+    itemName: string;
+    qty: number;
+    rate: number;
+    uom: string | null;
+  }>;
+};
+
 export function NewSalesInvoiceForm({
   customers,
   items,
   companies,
   defaultCompany,
   defaultDate,
+  initial,
 }: {
   customers: Customer[];
   items: Item[];
   companies: Company[];
   defaultCompany: string;
   defaultDate: string;
+  initial?: SalesInvoiceEditInitial;
 }) {
-  const [state, dispatch] = useFormState(createSalesInvoiceAction, EMPTY);
+  const isEdit = Boolean(initial);
+  const boundAction = isEdit
+    ? updateSalesInvoiceAction.bind(null, initial!.name)
+    : createSalesInvoiceAction;
+  const [state, dispatch] = useFormState(boundAction, EMPTY);
   const fe = state.fieldErrors ?? {};
 
-  const [lines, setLines] = useState<Line[]>([EMPTY_LINE()]);
+  const [lines, setLines] = useState<Line[]>(() => {
+    if (initial && initial.lines.length > 0) {
+      return initial.lines.map((l) => ({
+        item_code: l.itemCode,
+        item_name: l.itemName,
+        qty: String(l.qty),
+        rate: String(l.rate),
+        uom: l.uom ?? "",
+      }));
+    }
+    return [EMPTY_LINE()];
+  });
 
   const itemsByCode = useMemo(() => {
     const map = new Map<string, Item>();
@@ -94,7 +130,7 @@ export function NewSalesInvoiceForm({
             <SelectInput
               id="customer"
               name="customer"
-              defaultValue=""
+              defaultValue={initial?.customer ?? ""}
               placeholder="Select a customer…"
               options={[
                 ...customers.map((c) => ({ value: c.name, label: c.label })),
@@ -105,24 +141,50 @@ export function NewSalesInvoiceForm({
             <SelectInput
               id="company"
               name="company"
-              defaultValue={defaultCompany}
+              defaultValue={initial?.company ?? defaultCompany}
               options={companies.map((c) => ({ value: c.name, label: c.name }))}
             />
           </Field>
           <Field label="Posting Date" htmlFor="posting_date" error={fe.posting_date} required>
-            <TextInput id="posting_date" type="date" name="posting_date" defaultValue={defaultDate} />
+            <TextInput
+              id="posting_date"
+              type="date"
+              name="posting_date"
+              defaultValue={initial?.postingDate ?? defaultDate}
+            />
           </Field>
           <Field label="Due Date" htmlFor="due_date" error={fe.due_date}>
-            <TextInput id="due_date" type="date" name="due_date" />
+            <TextInput
+              id="due_date"
+              type="date"
+              name="due_date"
+              defaultValue={initial?.dueDate ?? ""}
+            />
           </Field>
           <Field label="Customer PO" htmlFor="po_no" error={fe.po_no}>
-            <TextInput id="po_no" name="po_no" placeholder="Optional" />
+            <TextInput
+              id="po_no"
+              name="po_no"
+              defaultValue={initial?.poNo ?? ""}
+              placeholder="Optional"
+            />
           </Field>
           <Field label="PO Date" htmlFor="po_date" error={fe.po_date}>
-            <TextInput id="po_date" name="po_date" type="date" />
+            <TextInput
+              id="po_date"
+              name="po_date"
+              type="date"
+              defaultValue={initial?.poDate ?? ""}
+            />
           </Field>
           <Field label="Remarks" htmlFor="remarks" error={fe.remarks} wide>
-            <TextArea id="remarks" name="remarks" rows={2} placeholder="Notes shown on the invoice." />
+            <TextArea
+              id="remarks"
+              name="remarks"
+              rows={2}
+              defaultValue={initial?.remarks ?? ""}
+              placeholder="Notes shown on the invoice."
+            />
           </Field>
         </div>
       </FormSection>
@@ -223,19 +285,26 @@ export function NewSalesInvoiceForm({
 
       <div className="flex items-center justify-end gap-2">
         <Link
-          href={"/accounting/sales-invoices" as Route}
+          href={
+            (isEdit
+              ? `/accounting/sales-invoices/${encodeURIComponent(initial!.name)}`
+              : "/accounting/sales-invoices") as Route
+          }
           className="rounded-chip border border-input px-4 py-2 text-sm font-semibold hover:bg-muted/40"
         >
           Cancel
         </Link>
-        <SubmitButton />
+        <SubmitButton isEdit={isEdit} />
       </div>
     </form>
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
+  const label = isEdit
+    ? pending ? "Saving changes…" : "Save changes"
+    : pending ? "Saving…" : "Save draft";
   return (
     <button
       type="submit"
@@ -246,7 +315,7 @@ function SubmitButton() {
       )}
     >
       <Save className="h-4 w-4" />
-      {pending ? "Saving…" : "Save draft"}
+      {label}
     </button>
   );
 }

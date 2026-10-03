@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import {
   createJournalEntry,
+  updateJournalEntry,
   submitJournalEntry,
   cancelJournalEntry,
   VOUCHER_TYPES,
@@ -144,6 +145,53 @@ export async function createJournalEntryAction(
 
   revalidatePath("/accounting/journal-entries");
   redirect(`/accounting/journal-entries/${encodeURIComponent(created.name)}`);
+}
+
+/** Same validation as create; `name` is the existing voucher being
+ *  overwritten in place via `frappe.client.save`. On success, bounces
+ *  the user back to the detail page so they see the saved state. */
+export async function updateJournalEntryAction(
+  name: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const parsed = createSchema.safeParse(Object.fromEntries(formData));
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = String(issue.path[0] ?? "");
+      if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    }
+    return { fieldErrors, error: "Please fix the highlighted fields." };
+  }
+
+  try {
+    await updateJournalEntry(name, {
+      voucherType: parsed.data.voucher_type,
+      postingDate: parsed.data.posting_date,
+      company: parsed.data.company,
+      chequeNo: parsed.data.cheque_no || undefined,
+      chequeDate: parsed.data.cheque_date || undefined,
+      userRemark: parsed.data.user_remark || undefined,
+      multiCurrency: parsed.data.multi_currency,
+      accounts: parsed.data.accounts_json.map((l) => ({
+        account: l.account,
+        partyType: l.party_type,
+        party: l.party,
+        debit: l.debit,
+        credit: l.credit,
+        costCenter: l.cost_center,
+        userRemark: l.user_remark,
+        exchangeRate: l.exchange_rate,
+      })),
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+
+  revalidatePath("/accounting/journal-entries");
+  revalidatePath(`/accounting/journal-entries/${name}`);
+  redirect(`/accounting/journal-entries/${encodeURIComponent(name)}`);
 }
 
 export async function submitJournalEntryAction(name: string): Promise<FormState> {

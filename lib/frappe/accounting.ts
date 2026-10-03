@@ -337,6 +337,58 @@ export async function cancelJournalEntry(name: string): Promise<void> {
   await cancelDoc("Journal Entry", name);
 }
 
+/** Draft-only overwrite. Loads the current doc, re-maps the input onto
+ *  it (header fields + full child table), and POSTs it back through
+ *  `frappe.client.save` which runs the standard controller validations.
+ *  Rejects the update when the server has moved the doc out of Draft
+ *  since the user opened the form — avoids silently overwriting a
+ *  submitted voucher. */
+export async function updateJournalEntry(
+  name: string,
+  input: JournalEntryCreateInput,
+): Promise<void> {
+  const existing = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    as: "user",
+    args: { doctype: "Journal Entry", name },
+  });
+  if (Number(existing.docstatus ?? 0) !== 0) {
+    throw new Error("This voucher is no longer a draft, so it can't be edited. Reload the page.");
+  }
+
+  // Build the doc Frappe will persist. Keep the server-managed
+  // identifiers (name, owner, creation) so save() updates in place
+  // instead of inserting a new row.
+  const doc = {
+    ...existing,
+    doctype: "Journal Entry",
+    voucher_type: input.voucherType,
+    posting_date: input.postingDate,
+    company: input.company,
+    cheque_no: input.chequeNo || null,
+    cheque_date: input.chequeDate || null,
+    user_remark: input.userRemark || null,
+    multi_currency: input.multiCurrency ? 1 : 0,
+    accounts: input.accounts.map((line) => ({
+      account: line.account,
+      party_type: line.partyType || null,
+      party: line.party || null,
+      debit_in_account_currency: Number(line.debit ?? 0) || 0,
+      credit_in_account_currency: Number(line.credit ?? 0) || 0,
+      exchange_rate: Number(line.exchangeRate ?? 1) || 1,
+      cost_center: line.costCenter || null,
+      user_remark: line.userRemark || null,
+    })),
+  };
+
+  await frappeCall({
+    method: "frappe.client.save",
+    as: "user",
+    verb: "POST",
+    args: { doc },
+  });
+}
+
 // ── Lookups (for the form) ───────────────────────────────────────
 
 export async function listCompanies(): Promise<Array<{ name: string; abbr: string; currency: string }>> {
@@ -656,6 +708,46 @@ export async function submitPaymentEntry(name: string): Promise<void> {
 
 export async function cancelPaymentEntry(name: string): Promise<void> {
   await cancelDoc("Payment Entry", name);
+}
+
+/** Draft-only overwrite — see updateJournalEntry for the pattern. */
+export async function updatePaymentEntry(
+  name: string,
+  input: PaymentEntryCreateInput,
+): Promise<void> {
+  const existing = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    as: "user",
+    args: { doctype: "Payment Entry", name },
+  });
+  if (Number(existing.docstatus ?? 0) !== 0) {
+    throw new Error("This voucher is no longer a draft, so it can't be edited. Reload the page.");
+  }
+
+  const doc: Record<string, unknown> = {
+    ...existing,
+    doctype: "Payment Entry",
+    payment_type: input.paymentType,
+    posting_date: input.postingDate,
+    company: input.company,
+    paid_amount: Number(input.paidAmount),
+    received_amount: Number(input.receivedAmount ?? input.paidAmount),
+    mode_of_payment: input.modeOfPayment || null,
+    reference_no: input.referenceNo || null,
+    reference_date: input.referenceDate || null,
+    remarks: input.remarks || null,
+    party_type: input.paymentType !== "Internal Transfer" ? (input.partyType || null) : null,
+    party: input.paymentType !== "Internal Transfer" ? (input.party || null) : null,
+    paid_from: input.paidFrom || null,
+    paid_to: input.paidTo || null,
+  };
+
+  await frappeCall({
+    method: "frappe.client.save",
+    as: "user",
+    verb: "POST",
+    args: { doc },
+  });
 }
 
 export async function listModesOfPayment(): Promise<Array<{ name: string; type: string }>> {

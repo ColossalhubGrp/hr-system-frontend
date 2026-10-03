@@ -14,6 +14,7 @@ import {
 } from "@/components/employee/form-bits";
 import {
   createPurchaseInvoiceAction,
+  updatePurchaseInvoiceAction,
   type FormState,
 } from "@/app/(workspace)/accounting/purchase-invoices/actions";
 import { cn } from "@/lib/cn";
@@ -33,23 +34,56 @@ type Line = {
 
 const EMPTY_LINE = (): Line => ({ item_code: "", qty: "1", rate: "0", uom: "" });
 
+export type PurchaseInvoiceEditInitial = {
+  name: string;
+  supplier: string;
+  postingDate: string;
+  dueDate: string | null;
+  company: string;
+  billNo: string | null;
+  billDate: string | null;
+  remarks: string | null;
+  lines: Array<{
+    itemCode: string;
+    qty: number;
+    rate: number;
+    uom: string | null;
+  }>;
+};
+
 export function NewPurchaseInvoiceForm({
   suppliers,
   items,
   companies,
   defaultCompany,
   defaultDate,
+  initial,
 }: {
   suppliers: Supplier[];
   items: Item[];
   companies: Company[];
   defaultCompany: string;
   defaultDate: string;
+  initial?: PurchaseInvoiceEditInitial;
 }) {
-  const [state, dispatch] = useFormState(createPurchaseInvoiceAction, EMPTY);
+  const isEdit = Boolean(initial);
+  const boundAction = isEdit
+    ? updatePurchaseInvoiceAction.bind(null, initial!.name)
+    : createPurchaseInvoiceAction;
+  const [state, dispatch] = useFormState(boundAction, EMPTY);
   const fe = state.fieldErrors ?? {};
 
-  const [lines, setLines] = useState<Line[]>([EMPTY_LINE()]);
+  const [lines, setLines] = useState<Line[]>(() => {
+    if (initial && initial.lines.length > 0) {
+      return initial.lines.map((l) => ({
+        item_code: l.itemCode,
+        qty: String(l.qty),
+        rate: String(l.rate),
+        uom: l.uom ?? "",
+      }));
+    }
+    return [EMPTY_LINE()];
+  });
 
   const itemsByCode = useMemo(() => {
     const map = new Map<string, Item>();
@@ -92,7 +126,7 @@ export function NewPurchaseInvoiceForm({
             <SelectInput
               id="supplier"
               name="supplier"
-              defaultValue=""
+              defaultValue={initial?.supplier ?? ""}
               placeholder="Select a supplier…"
               options={[
                 ...suppliers.map((s) => ({ value: s.name, label: s.label })),
@@ -103,24 +137,50 @@ export function NewPurchaseInvoiceForm({
             <SelectInput
               id="company"
               name="company"
-              defaultValue={defaultCompany}
+              defaultValue={initial?.company ?? defaultCompany}
               options={companies.map((c) => ({ value: c.name, label: c.name }))}
             />
           </Field>
           <Field label="Posting Date" htmlFor="posting_date" error={fe.posting_date} required>
-            <TextInput id="posting_date" type="date" name="posting_date" defaultValue={defaultDate} />
+            <TextInput
+              id="posting_date"
+              type="date"
+              name="posting_date"
+              defaultValue={initial?.postingDate ?? defaultDate}
+            />
           </Field>
           <Field label="Due Date" htmlFor="due_date" error={fe.due_date}>
-            <TextInput id="due_date" type="date" name="due_date" />
+            <TextInput
+              id="due_date"
+              type="date"
+              name="due_date"
+              defaultValue={initial?.dueDate ?? ""}
+            />
           </Field>
           <Field label="Supplier Bill No." htmlFor="bill_no" error={fe.bill_no}>
-            <TextInput id="bill_no" name="bill_no" placeholder="Vendor invoice reference" />
+            <TextInput
+              id="bill_no"
+              name="bill_no"
+              defaultValue={initial?.billNo ?? ""}
+              placeholder="Vendor invoice reference"
+            />
           </Field>
           <Field label="Bill Date" htmlFor="bill_date" error={fe.bill_date}>
-            <TextInput id="bill_date" name="bill_date" type="date" />
+            <TextInput
+              id="bill_date"
+              name="bill_date"
+              type="date"
+              defaultValue={initial?.billDate ?? ""}
+            />
           </Field>
           <Field label="Remarks" htmlFor="remarks" error={fe.remarks} wide>
-            <TextArea id="remarks" name="remarks" rows={2} placeholder="Optional notes." />
+            <TextArea
+              id="remarks"
+              name="remarks"
+              rows={2}
+              defaultValue={initial?.remarks ?? ""}
+              placeholder="Optional notes."
+            />
           </Field>
         </div>
       </FormSection>
@@ -221,19 +281,26 @@ export function NewPurchaseInvoiceForm({
 
       <div className="flex items-center justify-end gap-2">
         <Link
-          href={"/accounting/purchase-invoices" as Route}
+          href={
+            (isEdit
+              ? `/accounting/purchase-invoices/${encodeURIComponent(initial!.name)}`
+              : "/accounting/purchase-invoices") as Route
+          }
           className="rounded-chip border border-input px-4 py-2 text-sm font-semibold hover:bg-muted/40"
         >
           Cancel
         </Link>
-        <SubmitButton />
+        <SubmitButton isEdit={isEdit} />
       </div>
     </form>
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
+  const label = isEdit
+    ? pending ? "Saving changes…" : "Save changes"
+    : pending ? "Saving…" : "Save draft";
   return (
     <button
       type="submit"
@@ -244,7 +311,7 @@ function SubmitButton() {
       )}
     >
       <Save className="h-4 w-4" />
-      {pending ? "Saving…" : "Save draft"}
+      {label}
     </button>
   );
 }

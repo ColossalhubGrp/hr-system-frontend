@@ -12,7 +12,11 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
-import { createJournalEntryAction, type FormState } from "@/app/(workspace)/accounting/journal-entries/actions";
+import {
+  createJournalEntryAction,
+  updateJournalEntryAction,
+  type FormState,
+} from "@/app/(workspace)/accounting/journal-entries/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
 import { cn } from "@/lib/cn";
 
@@ -40,26 +44,67 @@ const EMPTY_LINE = (): Line => ({
   exchange_rate: "1",
 });
 
+/** Shape of an existing voucher being hydrated into the form for edit. */
+export type JournalEntryEditInitial = {
+  name: string;
+  voucherType: string;
+  postingDate: string;
+  company: string;
+  chequeNo: string | null;
+  chequeDate: string | null;
+  userRemark: string | null;
+  multiCurrency: boolean;
+  lines: Array<{
+    account: string;
+    debit: number;
+    credit: number;
+    costCenter: string | null;
+    userRemark: string | null;
+    exchangeRate: number;
+  }>;
+};
+
 export function NewJournalEntryForm({
   companies,
   initialAccounts,
   voucherTypes,
   defaultCompany,
   defaultDate,
+  initial,
 }: {
   companies: Company[];
   initialAccounts: AccountOption[];
   voucherTypes: string[];
   defaultCompany: string;
   defaultDate: string;
+  /** When provided, the form hydrates with these values and submits
+   *  via updateJournalEntryAction bound to `initial.name`. Omit for
+   *  the New flow. */
+  initial?: JournalEntryEditInitial;
 }) {
-  const [state, dispatch] = useFormState(createJournalEntryAction, EMPTY);
+  const isEdit = Boolean(initial);
+  const boundAction = isEdit
+    ? updateJournalEntryAction.bind(null, initial!.name)
+    : createJournalEntryAction;
+  const [state, dispatch] = useFormState(boundAction, EMPTY);
   const fe = state.fieldErrors ?? {};
 
-  const [company, setCompany] = useState(defaultCompany);
+  const [company, setCompany] = useState(initial?.company ?? defaultCompany);
   const [accounts, setAccounts] = useState<AccountOption[]>(initialAccounts);
-  const [lines, setLines] = useState<Line[]>([EMPTY_LINE(), EMPTY_LINE()]);
-  const [multiCurrency, setMultiCurrency] = useState(false);
+  const [lines, setLines] = useState<Line[]>(() => {
+    if (initial && initial.lines.length > 0) {
+      return initial.lines.map((l) => ({
+        account: l.account,
+        debit: l.debit ? String(l.debit) : "",
+        credit: l.credit ? String(l.credit) : "",
+        cost_center: l.costCenter ?? "",
+        user_remark: l.userRemark ?? "",
+        exchange_rate: l.exchangeRate ? String(l.exchangeRate) : "1",
+      }));
+    }
+    return [EMPTY_LINE(), EMPTY_LINE()];
+  });
+  const [multiCurrency, setMultiCurrency] = useState(initial?.multiCurrency ?? false);
 
   const companyCurrency =
     companies.find((c) => c.name === company)?.currency ?? "USD";
@@ -117,21 +162,42 @@ export function NewJournalEntryForm({
             <SelectInput
               id="voucher_type"
               name="voucher_type"
-              defaultValue="Journal Entry"
+              defaultValue={initial?.voucherType ?? "Journal Entry"}
               options={voucherTypes}
             />
           </Field>
           <Field label="Posting Date" htmlFor="posting_date" error={fe.posting_date} required>
-            <TextInput id="posting_date" type="date" name="posting_date" defaultValue={defaultDate} />
+            <TextInput
+              id="posting_date"
+              type="date"
+              name="posting_date"
+              defaultValue={initial?.postingDate ?? defaultDate}
+            />
           </Field>
           <Field label="Cheque / Reference No." htmlFor="cheque_no" error={fe.cheque_no}>
-            <TextInput id="cheque_no" name="cheque_no" placeholder="Optional" />
+            <TextInput
+              id="cheque_no"
+              name="cheque_no"
+              defaultValue={initial?.chequeNo ?? ""}
+              placeholder="Optional"
+            />
           </Field>
           <Field label="Cheque / Reference Date" htmlFor="cheque_date" error={fe.cheque_date}>
-            <TextInput id="cheque_date" type="date" name="cheque_date" />
+            <TextInput
+              id="cheque_date"
+              type="date"
+              name="cheque_date"
+              defaultValue={initial?.chequeDate ?? ""}
+            />
           </Field>
           <Field label="Remark" htmlFor="user_remark" error={fe.user_remark} wide>
-            <TextArea id="user_remark" name="user_remark" rows={2} placeholder="What this entry is for." />
+            <TextArea
+              id="user_remark"
+              name="user_remark"
+              rows={2}
+              defaultValue={initial?.userRemark ?? ""}
+              placeholder="What this entry is for."
+            />
           </Field>
         </div>
       </FormSection>
@@ -218,12 +284,16 @@ export function NewJournalEntryForm({
 
       <div className="flex items-center justify-end gap-2">
         <Link
-          href={"/accounting/journal-entries" as Route}
+          href={
+            (isEdit
+              ? `/accounting/journal-entries/${encodeURIComponent(initial!.name)}`
+              : "/accounting/journal-entries") as Route
+          }
           className="rounded-chip border border-input px-4 py-2 text-sm font-semibold hover:bg-muted/40"
         >
           Cancel
         </Link>
-        <SubmitButton disabled={!canSubmit} />
+        <SubmitButton disabled={!canSubmit} isEdit={isEdit} />
       </div>
     </form>
   );
@@ -398,8 +468,11 @@ function TotalsBar({
   );
 }
 
-function SubmitButton({ disabled }: { disabled: boolean }) {
+function SubmitButton({ disabled, isEdit }: { disabled: boolean; isEdit: boolean }) {
   const { pending } = useFormStatus();
+  const label = isEdit
+    ? pending ? "Saving changes…" : "Save changes"
+    : pending ? "Saving…" : "Save draft";
   return (
     <button
       type="submit"
@@ -412,7 +485,7 @@ function SubmitButton({ disabled }: { disabled: boolean }) {
       )}
     >
       <Save className="h-4 w-4" />
-      {pending ? "Saving…" : "Save draft"}
+      {label}
     </button>
   );
 }

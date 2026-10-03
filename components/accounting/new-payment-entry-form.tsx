@@ -14,6 +14,7 @@ import {
 } from "@/components/employee/form-bits";
 import {
   createPaymentEntryAction,
+  updatePaymentEntryAction,
   type FormState,
 } from "@/app/(workspace)/accounting/payment-entries/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
@@ -24,6 +25,23 @@ const EMPTY: FormState = {};
 type Company = { name: string; abbr: string; currency: string };
 type Mode = { name: string; type: string };
 
+export type PaymentEntryEditInitial = {
+  name: string;
+  paymentType: string;
+  postingDate: string;
+  company: string;
+  partyType: string | null;
+  party: string | null;
+  paidFrom: string | null;
+  paidTo: string | null;
+  paidAmount: number;
+  receivedAmount: number;
+  modeOfPayment: string | null;
+  referenceNo: string | null;
+  referenceDate: string | null;
+  remarks: string | null;
+};
+
 export function NewPaymentEntryForm({
   companies,
   accounts,
@@ -32,6 +50,7 @@ export function NewPaymentEntryForm({
   paymentTypes,
   defaultCompany,
   defaultDate,
+  initial,
 }: {
   companies: Company[];
   accounts: AccountOption[];
@@ -40,13 +59,20 @@ export function NewPaymentEntryForm({
   paymentTypes: string[];
   defaultCompany: string;
   defaultDate: string;
+  initial?: PaymentEntryEditInitial;
 }) {
-  const [state, dispatch] = useFormState(createPaymentEntryAction, EMPTY);
+  const isEdit = Boolean(initial);
+  const boundAction = isEdit
+    ? updatePaymentEntryAction.bind(null, initial!.name)
+    : createPaymentEntryAction;
+  const [state, dispatch] = useFormState(boundAction, EMPTY);
   const fe = state.fieldErrors ?? {};
 
-  const [paymentType, setPaymentType] = useState("Receive");
-  const [partyType, setPartyType] = useState("Customer");
-  const [paidAmount, setPaidAmount] = useState("");
+  const [paymentType, setPaymentType] = useState(initial?.paymentType ?? "Receive");
+  const [partyType, setPartyType] = useState(initial?.partyType ?? "Customer");
+  const [paidAmount, setPaidAmount] = useState(
+    initial?.paidAmount ? String(initial.paidAmount) : "",
+  );
 
   const isInternal = paymentType === "Internal Transfer";
 
@@ -79,18 +105,23 @@ export function NewPaymentEntryForm({
             <SelectInput
               id="company"
               name="company"
-              defaultValue={defaultCompany}
+              defaultValue={initial?.company ?? defaultCompany}
               options={companies.map((c) => ({ value: c.name, label: c.name }))}
             />
           </Field>
           <Field label="Posting Date" htmlFor="posting_date" error={fe.posting_date} required>
-            <TextInput id="posting_date" type="date" name="posting_date" defaultValue={defaultDate} />
+            <TextInput
+              id="posting_date"
+              type="date"
+              name="posting_date"
+              defaultValue={initial?.postingDate ?? defaultDate}
+            />
           </Field>
           <Field label="Mode of Payment" htmlFor="mode_of_payment" error={fe.mode_of_payment}>
             <SelectInput
               id="mode_of_payment"
               name="mode_of_payment"
-              defaultValue=""
+              defaultValue={initial?.modeOfPayment ?? ""}
               options={[
                 ...modes.map((m) => ({ value: m.name, label: `${m.name} (${m.type})` })),
               ]}
@@ -115,6 +146,7 @@ export function NewPaymentEntryForm({
               <TextInput
                 id="party"
                 name="party"
+                defaultValue={initial?.party ?? ""}
                 placeholder={`Enter ${partyType} ID`}
               />
             </Field>
@@ -128,7 +160,7 @@ export function NewPaymentEntryForm({
             <SelectInput
               id="paid_from"
               name="paid_from"
-              defaultValue=""
+              defaultValue={initial?.paidFrom ?? ""}
               options={[...accountOptions]}
             />
           </Field>
@@ -136,7 +168,7 @@ export function NewPaymentEntryForm({
             <SelectInput
               id="paid_to"
               name="paid_to"
-              defaultValue=""
+              defaultValue={initial?.paidTo ?? ""}
               options={[...accountOptions]}
             />
           </Field>
@@ -160,6 +192,7 @@ export function NewPaymentEntryForm({
               type="number"
               step="0.01"
               min="0"
+              defaultValue={initial?.receivedAmount ? String(initial.receivedAmount) : ""}
               placeholder="Defaults to Paid Amount"
               className="tabular-nums"
             />
@@ -170,32 +203,55 @@ export function NewPaymentEntryForm({
       <FormSection title="Reference" description="Cheque number, bank ref, or invoice reference — anything to trace this payment.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Reference No." htmlFor="reference_no" error={fe.reference_no}>
-            <TextInput id="reference_no" name="reference_no" placeholder="Optional" />
+            <TextInput
+              id="reference_no"
+              name="reference_no"
+              defaultValue={initial?.referenceNo ?? ""}
+              placeholder="Optional"
+            />
           </Field>
           <Field label="Reference Date" htmlFor="reference_date" error={fe.reference_date}>
-            <TextInput id="reference_date" name="reference_date" type="date" />
+            <TextInput
+              id="reference_date"
+              name="reference_date"
+              type="date"
+              defaultValue={initial?.referenceDate ?? ""}
+            />
           </Field>
           <Field label="Remarks" htmlFor="remarks" error={fe.remarks} wide>
-            <TextArea id="remarks" name="remarks" rows={2} placeholder="What this payment is for." />
+            <TextArea
+              id="remarks"
+              name="remarks"
+              rows={2}
+              defaultValue={initial?.remarks ?? ""}
+              placeholder="What this payment is for."
+            />
           </Field>
         </div>
       </FormSection>
 
       <div className="flex items-center justify-end gap-2">
         <Link
-          href={"/accounting/payment-entries" as Route}
+          href={
+            (isEdit
+              ? `/accounting/payment-entries/${encodeURIComponent(initial!.name)}`
+              : "/accounting/payment-entries") as Route
+          }
           className="rounded-chip border border-input px-4 py-2 text-sm font-semibold hover:bg-muted/40"
         >
           Cancel
         </Link>
-        <SubmitButton />
+        <SubmitButton isEdit={isEdit} />
       </div>
     </form>
   );
 }
 
-function SubmitButton() {
+function SubmitButton({ isEdit }: { isEdit: boolean }) {
   const { pending } = useFormStatus();
+  const label = isEdit
+    ? pending ? "Saving changes…" : "Save changes"
+    : pending ? "Saving…" : "Save draft";
   return (
     <button
       type="submit"
@@ -206,7 +262,7 @@ function SubmitButton() {
       )}
     >
       <Save className="h-4 w-4" />
-      {pending ? "Saving…" : "Save draft"}
+      {label}
     </button>
   );
 }

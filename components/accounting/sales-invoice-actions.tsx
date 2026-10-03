@@ -2,7 +2,9 @@
 
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Send, Ban } from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
+import { AlertCircle, Send, Ban, Pencil } from "lucide-react";
 import {
   submitSalesInvoiceAction,
   cancelSalesInvoiceAction,
@@ -35,19 +37,30 @@ export function SalesInvoiceActions({
 
   return (
     <div className="flex flex-col items-end gap-1">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={pending}
-        className={cn(
-          "inline-flex h-9 items-center gap-1.5 rounded-chip px-3 text-sm font-semibold text-white transition focus-ring",
-          isDraft ? "bg-ink-800 hover:bg-ink-700" : "bg-destructive hover:bg-destructive/90",
-          pending && "cursor-not-allowed opacity-60",
+      <div className="flex items-center gap-2">
+        {isDraft && (
+          <Link
+            href={`/accounting/sales-invoices/${encodeURIComponent(name)}/edit` as Route}
+            className="inline-flex h-9 items-center gap-1.5 rounded-chip border border-input bg-transparent px-3 text-sm font-semibold hover:bg-muted/40 focus-ring"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </Link>
         )}
-      >
-        {isDraft ? <Send className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
-        {pending ? (isDraft ? "Submitting…" : "Cancelling…") : isDraft ? "Submit" : "Cancel"}
-      </button>
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={pending}
+          className={cn(
+            "inline-flex h-9 items-center gap-1.5 rounded-chip px-3 text-sm font-semibold text-white transition focus-ring",
+            isDraft ? "bg-ink-800 hover:bg-ink-700" : "bg-destructive hover:bg-destructive/90",
+            pending && "cursor-not-allowed opacity-60",
+          )}
+        >
+          {isDraft ? <Send className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
+          {pending ? (isDraft ? "Submitting…" : "Cancelling…") : isDraft ? "Submit" : "Cancel"}
+        </button>
+      </div>
       {error && (
         <div className="flex items-start gap-1 text-xs text-destructive">
           <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />

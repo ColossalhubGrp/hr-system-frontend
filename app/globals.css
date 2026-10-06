@@ -4,85 +4,86 @@
 
 @layer base {
   :root {
-    /* -- Existing brand tokens (preserved) ----------------------------- */
-    --canvas: 244 245 250;
+    /* -- Brand tokens — matched to the Colossal Hub public site.
+     *    See tailwind.config.ts for the full ink/ash/canvas mapping. */
+    --canvas: 248 250 252;           /* slate-50  #F8FAFC */
     --surface: 255 255 255;
-    --ink: 22 19 65;
-    --ash-900: 17 20 42;
-    --ash-500: 107 114 128;
+    --ink: 37 99 235;                /* blue-600  #2563EB  — brand primary */
+    --ash-900: 15 23 42;             /* slate-900 #0F172A */
+    --ash-500: 100 116 139;          /* slate-500 #64748B */
 
     /*
-     * shadcn/ui semantic tokens — mapped onto the existing brand palette
+     * shadcn/ui semantic tokens — mapped onto the Colossal Hub brand
      * instead of the default zinc. Anything spelled `text-foreground`,
-     * `bg-card`, `border-border`, `bg-primary`, etc. now renders in the
-     * Colossal HR brand.
+     * `bg-card`, `border-border`, `bg-primary`, etc. now renders in blue.
      *
-     * Values are HSL components (no commas, no `hsl(...)`) because Tailwind's
-     * shadcn preset wraps them with `hsl(var(--token))`.
+     * Values are HSL components (no commas, no `hsl(...)`) because
+     * Tailwind's shadcn preset wraps them with `hsl(var(--token))`.
      */
 
-    /* Page surfaces */
-    --background: 230 27% 97%;       /* matches --canvas #F4F5FA */
-    --foreground: 230 41% 12%;       /* matches --ash-900 #11142A */
+    /* Page surfaces — slate neutrals */
+    --background: 210 40% 98%;        /* slate-50  #F8FAFC */
+    --foreground: 222 47% 11%;        /* slate-900 #0F172A */
     --card: 0 0% 100%;
-    --card-foreground: 230 41% 12%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 230 41% 12%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Brand primary = ink-800 purple */
-    --primary: 244 51% 21%;
+    /* Brand primary = website #2563EB */
+    --primary: 221 83% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Subtle secondary = canvas/surface mix */
-    --secondary: 230 25% 95%;
-    --secondary-foreground: 244 51% 21%;
+    /* Subtle secondary = slate-100 */
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 221 83% 53%;
 
-    /* Muted text / disabled = ash-500 */
-    --muted: 230 25% 93%;
-    --muted-foreground: 220 9% 46%;
+    /* Muted text / disabled = slate */
+    --muted: 210 40% 94%;
+    --muted-foreground: 215 16% 47%;
 
-    /* Accent = ink-50 (subtle hover backgrounds) */
-    --accent: 230 60% 95%;
-    --accent-foreground: 244 51% 21%;
+    /* Accent = blue-50 (subtle hover backgrounds) */
+    --accent: 214 100% 97%;
+    --accent-foreground: 221 83% 53%;
 
-    /* Trend semantics map to existing tokens */
-    --destructive: 0 84% 60%;        /* fall #EF4444 */
+    /* Trend semantics */
+    --destructive: 0 84% 60%;         /* fall #EF4444 */
     --destructive-foreground: 0 0% 100%;
 
     /* Borders + inputs + focus ring */
-    --border: 230 18% 92%;           /* hairline #E6E8EE */
-    --input: 230 18% 92%;
-    --ring: 244 51% 21%;             /* focus ring = brand primary */
+    --border: 214 32% 91%;            /* slate-200 #E2E8F0 */
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;              /* focus ring = brand blue */
 
     /* Radius — shadcn primitives binding */
     --radius: 0.75rem;
   }
 
   /*
-   * Dark mode tokens (kept opt-in via the `dark` class on <html>). We don't
-   * ship a dark experience today; declared here so shadcn components don't
-   * fall back to zinc defaults if a user toggles dark mode in DevTools.
+   * Dark mode tokens — slate-900 ground, blue accents. Opt-in via the
+   * `dark` class on <html>. We don't ship a dark experience today;
+   * declared so shadcn components don't fall back to zinc defaults if a
+   * user toggles dark mode in DevTools.
    */
   .dark {
-    --background: 230 41% 8%;
-    --foreground: 0 0% 98%;
-    --card: 230 41% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 230 41% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 230 60% 95%;
-    --primary-foreground: 244 51% 21%;
-    --secondary: 230 41% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 230 41% 14%;
-    --muted-foreground: 230 20% 60%;
-    --accent: 230 41% 14%;
-    --accent-foreground: 0 0% 98%;
+    --background: 222 47% 11%;        /* slate-900 */
+    --foreground: 210 40% 98%;        /* slate-50 */
+    --card: 217 33% 17%;              /* slate-800 */
+    --card-foreground: 210 40% 98%;
+    --popover: 217 33% 17%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 213 94% 68%;           /* blue-400 — lighter on dark */
+    --primary-foreground: 222 47% 11%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 217 33% 17%;
+    --accent-foreground: 210 40% 98%;
     --destructive: 0 65% 45%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 230 41% 14%;
-    --input: 230 41% 14%;
-    --ring: 230 60% 95%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 213 94% 68%;              /* ring matches primary */
   }
 
   html,

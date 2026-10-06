@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
   <style>
-    .bg     { fill: hsl(244, 51%, 21%); }
+    .bg     { fill: hsl(221, 83%, 53%); }
     .stroke { stroke: #ffffff; }
     @media (prefers-color-scheme: dark) {
       .bg     { fill: #ffffff; }
-      .stroke { stroke: hsl(244, 51%, 21%); }
+      .stroke { stroke: hsl(221, 83%, 53%); }
     }
   </style>
   <rect class="bg" width="24" height="24" rx="5"/>

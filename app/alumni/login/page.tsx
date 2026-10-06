@@ -26,16 +26,31 @@ export default async function AlumniLoginPage() {
   return (
     <main className="min-h-screen bg-canvas">
       <div className="grid min-h-screen lg:grid-cols-[460px_1fr]">
-        <aside className="relative hidden bg-ink-800 text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
-          <div className="flex items-center gap-3">
+        {/* Brand panel — animated but quieter than the main /login
+            because this is an archival surface, not a live workspace.
+            Two drifting blobs (not three), a soft dot-grid, a fade-up
+            entrance, and a marquee of record-type labels along the
+            bottom. Same motion vocabulary as /login (globals.css
+            auth-* keyframes); same prefers-reduced-motion gate. */}
+        <aside className="relative hidden overflow-hidden bg-ink-900 text-white lg:flex lg:flex-col lg:justify-between lg:p-10">
+          <div aria-hidden className="pointer-events-none absolute inset-0">
+            <div className="auth-blob-1 absolute -right-24 -top-24 h-72 w-72 rounded-full bg-ink-700 opacity-35 blur-3xl" />
+            <div className="auth-blob-2 absolute -bottom-28 -left-16 h-80 w-80 rounded-full bg-ink-500 opacity-30 blur-3xl" />
+          </div>
+          <div aria-hidden className="auth-dot-grid pointer-events-none absolute inset-0" />
+
+          <div className="relative auth-fade-up flex items-center gap-3">
             <BrandMark className="h-9 w-9" />
             <span className="text-base font-semibold tracking-tight">
               Colossal HR
             </span>
           </div>
 
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 rounded-chip bg-white/10 px-3 py-1 text-xs font-medium text-white/80">
+          <div
+            className="relative auth-fade-up space-y-4"
+            style={{ ["--auth-fade-delay" as string]: "150ms" }}
+          >
+            <div className="inline-flex items-center gap-2 rounded-chip bg-white/10 px-3 py-1 text-xs font-medium text-white/80 ring-1 ring-white/15 backdrop-blur-sm">
               <Award className="h-3.5 w-3.5" />
               Alumni gate
             </div>
@@ -43,7 +58,7 @@ export default async function AlumniLoginPage() {
               Welcome back.
             </h1>
             <p className="max-w-sm text-sm text-ink-50/80">
-              This sign-in is for former colleagues. We'll show you a read-only
+              This sign-in is for former colleagues. We&apos;ll show you a read-only
               window into your historical records — your last role, tenure, and
               final salary slips.
             </p>
@@ -59,13 +74,47 @@ export default async function AlumniLoginPage() {
             </p>
           </div>
 
-          <p className="text-xs text-ink-50/60">
-            © {new Date().getFullYear()} Colossal HR. Alumni access is read-only.
-          </p>
+          <div
+            className="relative auth-fade-up space-y-4"
+            style={{ ["--auth-fade-delay" as string]: "300ms" }}
+          >
+            {/* Archival capability marquee — fewer labels + slower
+                vibe than the main login. */}
+            <div
+              className="auth-marquee overflow-hidden"
+              style={{
+                maskImage:
+                  "linear-gradient(90deg, transparent, black 15%, black 85%, transparent)",
+                WebkitMaskImage:
+                  "linear-gradient(90deg, transparent, black 15%, black 85%, transparent)",
+              }}
+              aria-hidden
+            >
+              <div className="auth-marquee-track flex w-max gap-3 whitespace-nowrap">
+                {[
+                  "Payslips", "Tenure", "Last role", "Certificates",
+                  "Exit letter", "Benefits summary",
+                ]
+                  .flatMap((l) => [l, l])
+                  .map((label, i) => (
+                    <span
+                      key={`${label}-${i}`}
+                      className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] font-medium text-white/60"
+                    >
+                      {label}
+                    </span>
+                  ))}
+              </div>
+            </div>
+
+            <p className="text-xs text-ink-50/60">
+              © {new Date().getFullYear()} Colossal HR. Alumni access is read-only.
+            </p>
+          </div>
         </aside>
 
         <section className="flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-sm">
+          <div className="auth-fade-up w-full max-w-sm">
             <div className="mb-8 flex flex-col items-center text-center lg:hidden">
               <BrandMark className="mb-3 h-10 w-10 ring-1 ring-hairline" />
               <span className="text-sm font-semibold text-ink-800">
@@ -94,13 +143,13 @@ export default async function AlumniLoginPage() {
                 <a href="mailto:hr@colossalhub.com" className="underline">
                   hr@colossalhub.com
                 </a>{" "}
-                and we'll re-issue your alumni invite.
+                and we&apos;ll re-issue your alumni invite.
               </p>
               <Link
                 href={"/login" as Route}
                 className="inline-flex items-center gap-1 text-ink-700 hover:underline"
               >
-                I'm a current employee — take me to the main sign-in
+                I&apos;m a current employee — take me to the main sign-in
                 <ArrowRight className="h-3 w-3" />
               </Link>
             </div>

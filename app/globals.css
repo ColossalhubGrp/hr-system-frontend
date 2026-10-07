@@ -125,89 +125,19 @@
   }
 }
 
-/* ──────────────────────────────────────────────────────────────────
- * Auth-page motion kit
- *
- * Vocabulary ported from the Colossal Hub public site (colossal-hub
- * globals.css: .float, .marquee, .flow, .dot-grid) so the auth
- * screens feel continuous with the marketing page a visitor just
- * came from. Everything no-ops under prefers-reduced-motion.
- * ────────────────────────────────────────────────────────────────── */
-
-/* Drifting gradient blobs behind the brand panel. Three distinct
- * tracks so overlapping blobs don't line up. Translation amounts
- * stay inside the viewport so the blob never fully leaves. */
-@keyframes auth-drift-1 {
-  0%,100% { transform: translate3d(0,0,0) scale(1); }
-  50%     { transform: translate3d(40px,-30px,0) scale(1.08); }
-}
-@keyframes auth-drift-2 {
-  0%,100% { transform: translate3d(0,0,0) scale(1); }
-  50%     { transform: translate3d(-50px,40px,0) scale(1.12); }
-}
-@keyframes auth-drift-3 {
-  0%,100% { transform: translate3d(0,0,0) scale(1); }
-  50%     { transform: translate3d(30px,50px,0) scale(0.95); }
-}
-.auth-blob-1 { animation: auth-drift-1 24s ease-in-out infinite; }
-.auth-blob-2 { animation: auth-drift-2 32s ease-in-out infinite; }
-.auth-blob-3 { animation: auth-drift-3 28s ease-in-out infinite; }
-
-/* Gentle vertical bob — floating product chips + feature icons. */
-@keyframes auth-float {
-  0%,100% { transform: translateY(0); }
-  50%     { transform: translateY(-10px); }
-}
-.auth-float {
-  animation: auth-float 6s ease-in-out infinite;
-  animation-delay: var(--auth-float-delay, 0s);
-}
-
-/* SVG stroke-dash flow for the connector lines between the central
- * node and the floating chips. Mirrors the website's `.flow`. */
-@keyframes auth-dash {
-  to { stroke-dashoffset: -20; }
-}
-.auth-flow {
-  stroke-dasharray: 3 3;
-  animation: auth-dash 1.6s linear infinite;
-}
-
-/* Horizontal infinite strip — capability chips along the bottom. */
-@keyframes auth-marquee {
-  to { transform: translateX(-50%); }
-}
-.auth-marquee-track {
-  animation: auth-marquee 40s linear infinite;
-}
-.auth-marquee:hover .auth-marquee-track {
-  animation-play-state: paused;
-}
-
-/* Form entrance — fade + lift. */
+/* Auth-page entrance — gentle fade + lift on the form card. The
+ * elaborate drifting-blob / marquee / dot-grid motion kit was
+ * removed on 2026-10-07; the user wanted the login clean. This is
+ * the one piece worth keeping — a quiet entrance that doesn't make
+ * the page feel like it snapped in. */
 @keyframes auth-fade-up {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: none; }
 }
 .auth-fade-up {
   animation: auth-fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: var(--auth-fade-delay, 0ms);
-}
-
-/* Soft dot grid under the floating elements. */
-.auth-dot-grid {
-  background-image: radial-gradient(circle, rgba(255,255,255,0.18) 1px, transparent 1px);
-  background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .auth-blob-1,
-  .auth-blob-2,
-  .auth-blob-3,
-  .auth-float,
-  .auth-flow,
-  .auth-marquee-track { animation: none; }
   .auth-fade-up { animation: none; opacity: 1; transform: none; }
 }

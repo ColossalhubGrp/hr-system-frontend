@@ -6,7 +6,7 @@ import { publicEnv } from "@/lib/env";
 
 /**
  * Full-height iframe embed of the nao chat runtime under
- * hr.colossalhub.com/analytics/ask. Cross-subdomain session cookies
+ * app.colossalhub.com/analytics/ask. Cross-subdomain session cookies
  * (Domain=.colossalhub.com) let the iframe authenticate silently —
  * users never see the nao-rivers.colossalhub.com URL.
  *

@@ -68,6 +68,30 @@ const config: Config = {
         rise: "#22C55E",
         fall: "#EF4444",
 
+        // Tailwind's own `blue-*` scale is REDEFINED to the brand
+        // navy ramp. Status chips scattered across the app (payroll
+        // "Processed", analytics "Candidate" / "int type") used raw
+        // `bg-blue-100`, `text-blue-700`, `bg-blue-500` — those are
+        // semantic badges, not brand accents, but letting them stay
+        // the stock Tailwind blue clashes with the brand navy
+        // everywhere else. Remap so every `*-blue-N` across the app
+        // (and anything a future contributor writes) tracks the
+        // official brand, without needing to find and rewrite each
+        // badge. blue-600 lands exactly on the brand primary.
+        blue: {
+          50:  "#E8ECF4",
+          100: "#D1D8E8",
+          200: "#A3B1D1",
+          300: "#7589B5",
+          400: "#4F6598",
+          500: "#334678",
+          600: "#203060",   // brand navy
+          700: "#1A2850",
+          800: "#141F42",
+          900: "#0E1733",
+          950: "#080E22",
+        },
+
         // -- shadcn/ui semantic tokens --------------------------------------
         // These read from CSS variables defined in globals.css. Each one is
         // mapped to a brand value so shadcn components inherit the existing

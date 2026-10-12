@@ -8,8 +8,9 @@ import { cn } from "@/lib/cn";
  * the brand pack delivered 2026-10-12). Rendered via next/image so
  * it scales cleanly on retina and ships in the browser's own cache.
  *
- * For dark surfaces (sidebar, modals in dark mode) pass
- * `variant="inverse"` to get the white-on-navy variant.
+ * For dark surfaces (navy buttons, modals in dark mode) pass
+ * `variant="inverse"` to get the white-on-navy variant. The default
+ * `light` variant is what sits on the (white) workspace sidebar.
  */
 export function BrandMark({
   className,

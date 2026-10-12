@@ -177,7 +177,12 @@ export function Sidebar({ access }: { access: AccessBundle }) {
   return (
     <aside
       className={cn(
-        "flex h-full flex-col gap-6 bg-ink-800 text-white shadow-rail transition-[width] duration-200",
+        // Clean white rail. A right-edge hairline keeps the rail
+        // visually separate from the canvas (which is slate-50) now
+        // that the two surfaces are nearly the same colour. Shadow
+        // dropped on purpose — a crisp hairline reads cleaner than a
+        // tinted glow on a light rail.
+        "flex h-full flex-col gap-6 border-r border-hairline bg-white text-ink-800 transition-[width] duration-200",
         collapsed ? "w-[68px]" : "w-[244px]",
       )}
     >
@@ -196,7 +201,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/70 transition hover:bg-white/10 hover:text-white focus-ring",
+            "ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-ash-500 transition hover:bg-canvas hover:text-ink-800 focus-ring",
             collapsed && "ml-0 mt-2",
           )}
         >
@@ -239,14 +244,14 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                       className={cn(
                         "flex h-11 items-center justify-center rounded-xl transition focus-ring",
                         isActive
-                          ? "bg-white text-ink-800"
-                          : "text-white/85 hover:bg-white/[0.06]",
+                          ? "bg-ink-800 text-white"
+                          : "text-ink-800 hover:bg-canvas",
                       )}
                     >
                       <Icon
                         className={cn(
                           "h-[18px] w-[18px]",
-                          isActive ? "text-ink-700" : "text-white/85",
+                          isActive ? "text-white" : "text-ash-500",
                         )}
                       />
                     </Link>
@@ -255,8 +260,8 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                       className={cn(
                         "group flex w-full items-stretch rounded-xl text-[15px] font-medium transition",
                         isActive
-                          ? "bg-white text-ink-800"
-                          : "text-white/85 hover:bg-white/[0.06]",
+                          ? "bg-ink-800 text-white"
+                          : "text-ink-800 hover:bg-canvas",
                       )}
                     >
                       <Link
@@ -266,7 +271,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                         <Icon
                           className={cn(
                             "h-[18px] w-[18px]",
-                            isActive ? "text-ink-700" : "text-white/85",
+                            isActive ? "text-white" : "text-ash-500",
                           )}
                         />
                         {item.label}
@@ -276,13 +281,16 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                         onClick={() => toggle(item.label)}
                         aria-expanded={isOpen}
                         aria-label={isOpen ? `Collapse ${item.label}` : `Expand ${item.label}`}
-                        className="flex w-10 items-center justify-center rounded-r-xl text-inherit hover:bg-white/[0.08] focus-ring"
+                        className={cn(
+                          "flex w-10 items-center justify-center rounded-r-xl text-inherit focus-ring",
+                          isActive ? "hover:bg-white/10" : "hover:bg-slate-200/70",
+                        )}
                       >
                         <ChevronRight
                           className={cn(
                             "h-4 w-4 transition-transform",
                             isOpen ? "rotate-90" : "",
-                            isActive ? "text-ink-700" : "text-white/70",
+                            isActive ? "text-white/80" : "text-ash-400",
                           )}
                         />
                       </button>
@@ -299,14 +307,14 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                         ? "h-11 justify-center px-0"
                         : "gap-3 px-3 py-2.5",
                       isActive
-                        ? "bg-white text-ink-800"
-                        : "text-white/85 hover:bg-white/[0.06]",
+                        ? "bg-ink-800 text-white"
+                        : "text-ink-800 hover:bg-canvas",
                     )}
                   >
                     <Icon
                       className={cn(
                         "h-[18px] w-[18px]",
-                        isActive ? "text-ink-700" : "text-white/85",
+                        isActive ? "text-white" : "text-ash-500",
                       )}
                     />
                     {!collapsed && item.label}
@@ -317,7 +325,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                     collapsed mode users navigate to the parent and
                     expand it inside the surface once they land. */}
                 {!collapsed && item.children && isOpen && (
-                  <ul className="ml-9 mt-1 flex flex-col gap-0.5 border-l border-white/10 pl-3">
+                  <ul className="ml-9 mt-1 flex flex-col gap-0.5 border-l border-hairline pl-3">
                     {item.children.map((child) => {
                       const childActive = isChildActive(child);
                       if (child.external) {
@@ -329,7 +337,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                               rel="noreferrer"
                               className={cn(
                                 "flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-[13.5px] transition focus-ring",
-                                "text-white/65 hover:text-white",
+                                "text-ash-500 hover:text-ink-800",
                               )}
                             >
                               {child.label}
@@ -345,8 +353,8 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                             className={cn(
                               "flex w-full rounded-lg px-2 py-1.5 text-[13.5px] transition focus-ring",
                               childActive
-                                ? "text-white font-semibold"
-                                : "text-white/65 hover:text-white",
+                                ? "text-ink-800 font-semibold"
+                                : "text-ash-500 hover:text-ink-800",
                             )}
                           >
                             {child.label}

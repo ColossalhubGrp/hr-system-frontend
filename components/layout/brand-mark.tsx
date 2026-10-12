@@ -1,31 +1,42 @@
+import Image from "next/image";
 import { cn } from "@/lib/cn";
 
 /**
- * The "C" wordmark used in the sidebar and on auth pages. SVG so it stays
- * crisp on retina and small enough to inline without an asset round-trip.
- * Stroke + cap chosen to match the friendly, slightly rounded mockup glyph.
+ * Official Colossal Hub brand mark — navy ring + mint green C.
+ *
+ * The asset lives at `/public/colossal-hub-mark.png` (sampled from
+ * the brand pack delivered 2026-10-12). Rendered via next/image so
+ * it scales cleanly on retina and ships in the browser's own cache.
+ *
+ * For dark surfaces (sidebar, modals in dark mode) pass
+ * `variant="inverse"` to get the white-on-navy variant.
  */
-export function BrandMark({ className }: { className?: string }) {
+export function BrandMark({
+  className,
+  variant = "light",
+}: {
+  className?: string;
+  /** `light` → color mark on transparent (works on white / light bg).
+   *  `inverse` → white mark on navy ground (works on dark bg). */
+  variant?: "light" | "inverse";
+}) {
+  const src =
+    variant === "inverse"
+      ? "/colossal-hub-mark-inverse.png"
+      : "/colossal-hub-mark.png";
   return (
     <div
-      className={cn(
-        "grid place-items-center rounded-full bg-white text-ink-800",
-        className,
-      )}
-      aria-label="Colossal"
+      className={cn("relative overflow-hidden rounded-full", className)}
+      aria-label="Colossal Hub"
     >
-      <svg
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="h-1/2 w-1/2"
-        aria-hidden
-      >
-        <path d="M19 6.5A8.5 8.5 0 1 0 19 17.5" />
-      </svg>
+      <Image
+        src={src}
+        alt=""
+        fill
+        sizes="40px"
+        priority
+        className="object-contain"
+      />
     </div>
   );
 }

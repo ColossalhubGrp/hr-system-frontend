@@ -4,18 +4,19 @@
 
 @layer base {
   :root {
-    /* -- Brand tokens — matched to the Colossal Hub public site.
-     *    See tailwind.config.ts for the full ink/ash/canvas mapping. */
+    /* -- Brand tokens — matched 2026-10-12 to the official Colossal
+     *    Hub brand pack. Navy #203060 primary, Mint #88D0B8 accent.
+     *    See tailwind.config.ts for the full ink / mint / ash mapping. */
     --canvas: 248 250 252;           /* slate-50  #F8FAFC */
     --surface: 255 255 255;
-    --ink: 37 99 235;                /* blue-600  #2563EB  — brand primary */
+    --ink: 32 48 96;                 /* #203060 — official brand navy */
     --ash-900: 15 23 42;             /* slate-900 #0F172A */
     --ash-500: 100 116 139;          /* slate-500 #64748B */
 
     /*
-     * shadcn/ui semantic tokens — mapped onto the Colossal Hub brand
-     * instead of the default zinc. Anything spelled `text-foreground`,
-     * `bg-card`, `border-border`, `bg-primary`, etc. now renders in blue.
+     * shadcn/ui semantic tokens — mapped onto the official brand.
+     * Anything spelled `text-foreground`, `bg-card`, `border-border`,
+     * `bg-primary`, etc. renders in the brand navy.
      *
      * Values are HSL components (no commas, no `hsl(...)`) because
      * Tailwind's shadcn preset wraps them with `hsl(var(--token))`.
@@ -29,21 +30,21 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Brand primary = website #2563EB */
-    --primary: 221 83% 53%;
+    /* Brand primary = official navy #203060 */
+    --primary: 225 50% 25%;
     --primary-foreground: 0 0% 100%;
 
     /* Subtle secondary = slate-100 */
     --secondary: 210 40% 96%;
-    --secondary-foreground: 221 83% 53%;
+    --secondary-foreground: 225 50% 25%;
 
     /* Muted text / disabled = slate */
     --muted: 210 40% 94%;
     --muted-foreground: 215 16% 47%;
 
-    /* Accent = blue-50 (subtle hover backgrounds) */
-    --accent: 214 100% 97%;
-    --accent-foreground: 221 83% 53%;
+    /* Accent = mint-50 (soft hover accents) */
+    --accent: 148 42% 95%;
+    --accent-foreground: 225 50% 25%;
 
     /* Trend semantics */
     --destructive: 0 84% 60%;         /* fall #EF4444 */
@@ -52,7 +53,7 @@
     /* Borders + inputs + focus ring */
     --border: 214 32% 91%;            /* slate-200 #E2E8F0 */
     --input: 214 32% 91%;
-    --ring: 221 83% 53%;              /* focus ring = brand blue */
+    --ring: 225 50% 25%;              /* focus ring = brand navy */
 
     /* Radius — shadcn primitives binding */
     --radius: 0.75rem;
@@ -71,8 +72,8 @@
     --card-foreground: 210 40% 98%;
     --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
-    --primary: 213 94% 68%;           /* blue-400 — lighter on dark */
-    --primary-foreground: 222 47% 11%;
+    --primary: 148 42% 68%;           /* mint — pops on dark ground */
+    --primary-foreground: 225 50% 15%;
     --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 17%;
@@ -83,7 +84,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217 33% 20%;
     --input: 217 33% 20%;
-    --ring: 213 94% 68%;              /* ring matches primary */
+    --ring: 148 42% 68%;              /* ring matches primary (mint) */
   }
 
   html,

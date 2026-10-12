@@ -1,8 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180">
-  <rect width="180" height="180" fill="hsl(221, 83%, 53%)"/>
-  <g transform="translate(24, 24) scale(5.5)">
-    <path d="M19 6.5 A 8.5 8.5 0 1 0 19 17.5"
-          fill="none" stroke="#ffffff" stroke-width="2.6"
+  <!-- iOS Home Screen icon — navy square ground with the mark in
+       white (matches the official "mark on navy" variant). The
+       square has no explicit rounded corners because iOS applies
+       its own rounded mask. -->
+  <rect width="180" height="180" fill="#203060"/>
+  <g transform="translate(40 40) scale(1)">
+    <circle cx="50" cy="50" r="44" fill="none" stroke="#ffffff" stroke-width="5"/>
+    <path d="M 72 32 A 22 22 0 1 0 72 68"
+          fill="none" stroke="#ffffff" stroke-width="14"
           stroke-linecap="round" stroke-linejoin="round"/>
   </g>
 </svg>

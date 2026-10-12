@@ -1,15 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="32" height="32">
+  <!-- Colossal Hub official brand mark: navy outer ring + mint green
+       C letter inside. Sampled from the official logo on 2026-10-12.
+       Navy #203060, Mint #88D0B8. On dark system theme the ring and C
+       both go white for contrast. -->
   <style>
-    .bg     { fill: hsl(221, 83%, 53%); }
-    .stroke { stroke: #ffffff; }
+    .ring { stroke: #203060; }
+    .c    { stroke: #88D0B8; }
     @media (prefers-color-scheme: dark) {
-      .bg     { fill: #ffffff; }
-      .stroke { stroke: hsl(221, 83%, 53%); }
+      .ring { stroke: #ffffff; }
+      .c    { stroke: #ffffff; }
     }
   </style>
-  <rect class="bg" width="24" height="24" rx="5"/>
-  <path class="stroke"
-        d="M19 6.5 A 8.5 8.5 0 1 0 19 17.5"
-        fill="none" stroke-width="2.6"
+  <circle class="ring" cx="50" cy="50" r="44" fill="none" stroke-width="5"/>
+  <path class="c" d="M 72 32 A 22 22 0 1 0 72 68"
+        fill="none" stroke-width="14"
         stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

@@ -12,34 +12,48 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // -- Brand palette — matched 2026-10-06 to the Colossal Hub
-        //    public site (colossal-hub repo, src/app/globals.css):
-        //      --color-primary       #2563EB (Tailwind blue-600)
-        //      --color-primary-dark  #1D4ED8 (Tailwind blue-700)
-        //    plus the Tailwind slate ramp for neutrals.
+        // -- Brand palette — matched 2026-10-12 to the official
+        //    Colossal Hub brand pack. Primary is a deep muted navy
+        //    (sampled from the logo ring + wordmark); the mint green
+        //    on the C letter is the accent.
         //
-        //    The `ink` scale is kept by name for backwards compatibility
+        //    Navy  #203060   (ring, wordmark, primary buttons)
+        //    Mint  #88D0B8   (C letter, accent chips, "live" dots)
+        //
+        //    The `ink` scale is kept by name for backwards compat
         //    (hundreds of ink-800/ink-700 class references across the
-        //    codebase). The values now map to the Tailwind blue ramp,
-        //    anchored so that `ink-800` renders as the website's primary
-        //    and `ink-700` renders as its primary-dark (hover state).
-        //    That makes the existing `bg-ink-800 hover:bg-ink-700`
-        //    pattern go darker on hover, matching the site's own
-        //    primary → primary-dark interaction.
+        //    codebase). Values anchored so `ink-800` renders as the
+        //    exact brand navy and `ink-700` a slightly darker shade for
+        //    hover. 50-600 fill in a ramp around the brand navy; 900
+        //    is the deepest for sidebar / high-contrast surfaces.
         ink: {
-          50:  "#EFF6FF",   // blue-50   — subtle accent backgrounds
-          100: "#DBEAFE",   // blue-100
-          200: "#BFDBFE",   // blue-200
-          300: "#93C5FD",   // blue-300
-          400: "#60A5FA",   // blue-400
-          500: "#3B82F6",   // blue-500
-          600: "#2563EB",   // blue-600  — brand primary (same as 800)
-          700: "#1D4ED8",   // blue-700  — brand primary-dark (hover)
-          800: "#2563EB",   // brand primary — most-used token
-          900: "#1E3A8A",   // blue-900  — deepest, used for sidebar
+          50:  "#E8ECF4",   // palest navy tint — subtle accent bg
+          100: "#C8D0E0",
+          200: "#9AA6C4",
+          300: "#6B7CA8",
+          400: "#4C5F8E",
+          500: "#334678",
+          600: "#243666",   // just below primary
+          700: "#1A2850",   // brand primary-dark (hover state)
+          800: "#203060",   // BRAND PRIMARY — official navy
+          900: "#141E42",   // deepest; sidebar + high-contrast surfaces
         },
-        // Neutral surfaces — swapped from purple-tinted to slate
-        // ramp so they sit under the blue brand cleanly.
+        // Mint accent — new in the 2026-10-12 rebrand. Used for
+        // "live" indicator dots, subtle hover accents, and anywhere
+        // we want a soft callout that isn't the primary brand navy.
+        mint: {
+          50:  "#F0FAF5",
+          100: "#DAF2E6",
+          200: "#BDE6D1",
+          300: "#9FDAC0",
+          400: "#88D0B8",   // BRAND ACCENT — mint green from the C
+          500: "#6CBFA4",
+          600: "#4FA98B",
+          700: "#3C8E73",
+          800: "#2C6D59",
+          900: "#1F4F40",
+        },
+        // Neutral surfaces — slate ramp (unchanged from Oct-06).
         canvas: "#F8FAFC",   // slate-50
         surface: "#FFFFFF",
         hairline: "#E2E8F0", // slate-200
@@ -105,11 +119,11 @@ const config: Config = {
         ],
       },
       boxShadow: {
-        // Shadows re-tuned to the slate / blue family. The rail
-        // shadow sits under the brand sidebar so it carries a hint of
-        // blue instead of purple.
+        // Shadows carry a hint of the brand navy under the sidebar
+        // and cards. Card shadow stays slate-neutral so it reads as
+        // depth, not colour.
         card: "0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04)",
-        rail: "0 8px 32px rgba(30, 58, 138, 0.18)",
+        rail: "0 8px 32px rgba(32, 48, 96, 0.22)",
       },
       borderRadius: {
         // -- Existing brand-specific radii (preserved) ----------------------

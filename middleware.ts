@@ -15,6 +15,7 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/activate",
   "/reset-password",
+  "/update-password",
   "/api/auth",
   // Interview room — externally-invited candidates open the link from their
   // email and have no sid. The page itself is at /recruitment/interviews/

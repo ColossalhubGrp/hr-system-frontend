@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { ThemedSelect } from "@/components/employee/form-themed-select";
 import {
   createJournalTemplateAction,
   updateJournalTemplateAction,
@@ -61,14 +62,24 @@ export function JournalTemplateForm({
             <TextInput id="template_title" name="template_title" defaultValue={initial?.templateTitle ?? ""} placeholder="e.g. Payroll accrual - Zimbabwe" />
           </Field>
           <Field label="Voucher type" htmlFor="voucher_type" error={fe.voucher_type} required>
-            <SelectInput id="voucher_type" name="voucher_type" defaultValue={initial?.voucherType ?? "Journal Entry"} options={[...VOUCHER_TYPES]} />
+            <ThemedSelect
+              id="voucher_type"
+              name="voucher_type"
+              defaultValue={initial?.voucherType ?? "Journal Entry"}
+              options={[...VOUCHER_TYPES]}
+              placeholder="Pick a voucher type"
+              invalid={!!fe.voucher_type}
+              required
+            />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company}>
-            <SelectInput
+            <ThemedSelect
               id="company"
               name="company"
               defaultValue={initial?.company ?? ""}
               options={[{ value: "", label: "Any company" }, ...companies.map((c) => ({ value: c.name, label: c.name }))]}
+              placeholder="Any company"
+              invalid={!!fe.company}
             />
           </Field>
         </div>

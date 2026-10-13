@@ -290,6 +290,9 @@ export type MyAccess = {
   isPayrollReviewer: boolean;
   isPayrollAny: boolean;
 
+  /** Any role that can see the Accounting workspace. */
+  isAccountingAny: boolean;
+
   isShiftAdmin: boolean;
 
   /** Manages a direct-report team — sees own team's records only. */
@@ -342,6 +345,7 @@ export async function getMyAccess(): Promise<MyAccess> {
     isPayrollAdmin: isInGroup(roles, "PAYROLL_ADMIN"),
     isPayrollReviewer: isInGroup(roles, "PAYROLL_REVIEWER"),
     isPayrollAny: isInGroup(roles, "PAYROLL_ANY"),
+    isAccountingAny: isInGroup(roles, "ACCOUNTING"),
     isShiftAdmin: isInGroup(roles, "SHIFT_ADMIN"),
     isLineManager: isInGroup(roles, "LINE_MANAGER"),
     isRecruiter: isInGroup(roles, "RECRUITER"),

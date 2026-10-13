@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { NavProgress } from "@/components/layout/nav-progress";
 import { Toaster } from "@/components/ui/sonner";
 import { isAuthenticated, readSession, resolveAvatarUrl } from "@/lib/frappe/session";
 import { getMyAccess } from "@/lib/frappe/roles";
@@ -49,6 +51,9 @@ export default async function WorkspaceLayout({
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-canvas">
+      <Suspense fallback={null}>
+        <NavProgress />
+      </Suspense>
       <Sidebar
         access={{
           isHrAdmin: access.isHrAdmin,

@@ -92,7 +92,19 @@ export function ThemedSelect({
         >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent>
+        {/* `position="popper"` + anchored side+sideOffset = the
+            dropdown always opens BELOW the trigger (or above only
+            when there's no room), with collision-aware clamping.
+            Default `item-aligned` positioning tried to line up the
+            selected item with the trigger, which pushed the whole
+            menu above the viewport and clipped the top of the list. */}
+        <SelectContent
+          position="popper"
+          side="bottom"
+          align="start"
+          sideOffset={4}
+          className="max-h-[min(60vh,320px)] w-[var(--radix-select-trigger-width)]"
+        >
           {items.map((o) => (
             <SelectItem
               key={o.value || EMPTY_SENTINEL}

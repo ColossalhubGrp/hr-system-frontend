@@ -3,7 +3,10 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import type { GenderSlice } from "@/lib/frappe/queries";
 
-const PALETTE = ["#1E1B53", "#A8AEE0", "#7A82CF", "#5057BE"];
+// Brand-aligned palette (navy → ink-500 → ink-300 → mint-400).
+// Same colours in both themes so the donut reads consistently
+// on light + dark grounds.
+const PALETTE = ["#203060", "#4C5F8E", "#9AA6C4", "#88D0B8"];
 
 export function GenderDonut({ data }: { data: GenderSlice[] }) {
   if (data.length === 0) {
@@ -22,7 +25,9 @@ export function GenderDonut({ data }: { data: GenderSlice[] }) {
             <Tooltip
               contentStyle={{
                 borderRadius: 12,
-                border: "1px solid #E6E8EE",
+                border: "1px solid rgb(var(--hairline))",
+                background: "rgb(var(--surface))",
+                color: "rgb(var(--ash-900))",
                 fontSize: 12,
               }}
               formatter={(v: number, n: string) => [`${v}%`, n]}

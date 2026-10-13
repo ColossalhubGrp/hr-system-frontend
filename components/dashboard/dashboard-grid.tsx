@@ -2,6 +2,9 @@ import { KpiCard } from "./kpi-card";
 import { ChartCard } from "./chart-card";
 import { DepartmentBarChart } from "./department-bar-chart";
 import { GenderDonut } from "./gender-donut";
+import { HeadcountTrendChart } from "./headcount-trend-chart";
+import { FlowChart } from "./flow-chart";
+import { BucketBarChart } from "./bucket-bar-chart";
 import type { DashboardSnapshot } from "@/lib/frappe/queries";
 
 type Props = {
@@ -10,12 +13,20 @@ type Props = {
 };
 
 /**
- * The shared layout used by both /dashboard and /hr — same grid, same chrome,
- * different page title. KPI 1 + 4 both render headcount, exactly as the
- * mockup does. Staff cost is shown as `—` until the payroll cube is exposed.
+ * Shared layout for /dashboard (Overall) and /hr. Four unique KPIs
+ * across the top (headcount + hires + separations + turnover) and
+ * six charts arranged to tell the workforce story:
+ *
+ *   Row 1  Headcount by Department  · Gender Distribution
+ *   Row 2  Headcount Trend (12mo)   · Hires vs Separations (12mo)
+ *   Row 3  Age Distribution          · Tenure Distribution
+ *
+ * All charts are vertical-bar (or area / donut) by request; the
+ * old chart card had been duplicated three times with the same data.
  */
 export function DashboardGrid({ title, snapshot }: Props) {
-  const headcountFmt = new Intl.NumberFormat("en").format(snapshot.headcount);
+  const fmt = new Intl.NumberFormat("en");
+  const headcountFmt = fmt.format(snapshot.headcount);
 
   return (
     <div className="flex flex-col gap-6">
@@ -34,38 +45,29 @@ export function DashboardGrid({ title, snapshot }: Props) {
           spark={snapshot.spark.headcount}
         />
         <KpiCard
-          label="Staff Cost to Income"
-          value={
-            snapshot.staffCostToIncomePct === null
-              ? "—"
-              : `${snapshot.staffCostToIncomePct}%`
-          }
-          trendPct={snapshot.staffCostTrendPct}
-          trendDirection={
-            snapshot.staffCostTrendPct === null
-              ? "flat"
-              : snapshot.staffCostTrendPct > 0
-              ? "down" // a rise in this ratio is *bad* — red
-              : "up"
-          }
+          label="New Hires"
+          value={fmt.format(snapshot.hires12mo)}
+          trendPct={null}
+          caption="Last 12 months"
         />
         <KpiCard
-          label="Employee Turnover"
+          label="Separations"
+          value={fmt.format(snapshot.separations12mo)}
+          trendPct={null}
+          caption="Last 12 months"
+          trendDirection="down" // red colour semantic — separations are a cost
+        />
+        <KpiCard
+          label="Turnover Rate"
           value={`${snapshot.turnoverPct}%`}
           trendPct={snapshot.turnoverTrendPct}
           trendDirection={snapshot.turnoverTrendPct >= 0 ? "down" : "up"}
           spark={snapshot.spark.turnover}
         />
-        <KpiCard
-          label="Headcount"
-          value={headcountFmt}
-          trendPct={snapshot.headcountTrendPct}
-          spark={snapshot.spark.headcount}
-        />
       </section>
 
       <section
-        aria-label="Distributions"
+        aria-label="Workforce shape"
         className="grid grid-cols-1 gap-4 lg:grid-cols-2"
       >
         <ChartCard title="Headcount by Department">
@@ -77,14 +79,32 @@ export function DashboardGrid({ title, snapshot }: Props) {
       </section>
 
       <section
-        aria-label="Distributions, continued"
+        aria-label="Workforce movement"
         className="grid grid-cols-1 gap-4 lg:grid-cols-2"
       >
-        <ChartCard title="Headcount by Department">
-          <DepartmentBarChart data={snapshot.departments} />
+        <ChartCard title="Headcount Trend (12 months)">
+          <HeadcountTrendChart data={snapshot.headcountTrend} />
         </ChartCard>
-        <ChartCard title="Headcount by Department">
-          <DepartmentBarChart data={snapshot.departments} />
+        <ChartCard title="Hires vs Separations (12 months)">
+          <FlowChart data={snapshot.flow} />
+        </ChartCard>
+      </section>
+
+      <section
+        aria-label="Workforce demographics"
+        className="grid grid-cols-1 gap-4 lg:grid-cols-2"
+      >
+        <ChartCard title="Age Distribution">
+          <BucketBarChart
+            data={snapshot.ageBuckets}
+            emptyMessage="No birthdates on file yet."
+          />
+        </ChartCard>
+        <ChartCard title="Tenure Distribution">
+          <BucketBarChart
+            data={snapshot.tenureBuckets}
+            emptyMessage="No join dates on file yet."
+          />
         </ChartCard>
       </section>
     </div>

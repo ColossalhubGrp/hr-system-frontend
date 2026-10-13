@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { SectionBack } from "../../_lib/section-back";
 import type { Route } from "next";
-import { FileSpreadsheet, Plus, ChevronLeft } from "lucide-react";
+import { FileSpreadsheet, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listJournalTemplates, type JournalEntryTemplate } from "@/lib/frappe/masters/journal-entry-template";
@@ -12,12 +13,7 @@ export default async function JournalTemplatesPage() {
   const rows = await listJournalTemplates();
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-2 text-sm">
-        <Link href={"/accounting" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to Accounting
-        </Link>
-      </div>
+      <SectionBack path="/accounting/masters/journal-templates" />
       <PageHeader
         icon={FileSpreadsheet}
         crumb="Accounting · Masters · Journal Entry Templates"
@@ -39,11 +35,6 @@ export default async function JournalTemplatesPage() {
           { header: "Title", cell: (r) => <Link href={`/accounting/masters/journal-templates/${encodeURIComponent(r.name)}` as Route} className="font-semibold text-foreground hover:underline">{r.templateTitle}</Link> },
           { header: "Voucher type", cell: (r) => r.voucherType },
           { header: "Company", cell: (r) => r.company ?? "—" },
-          {
-            header: "Source",
-            cell: (r) => (r.isSystemGenerated ? "System" : "User"),
-            className: "hidden md:table-cell text-muted-foreground",
-          },
         ]}
       />
     </div>

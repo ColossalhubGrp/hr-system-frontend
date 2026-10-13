@@ -13,7 +13,6 @@ export type JournalEntryTemplate = {
   templateTitle: string;
   voucherType: string;
   company: string | null;
-  isSystemGenerated: boolean;
 };
 
 export type JournalTemplateAccount = {
@@ -32,12 +31,18 @@ export type JournalEntryTemplateDetail = JournalEntryTemplate & {
 };
 
 export async function listJournalTemplates(): Promise<JournalEntryTemplate[]> {
+  // `is_system_generated` is a Frappe-core flag only present on
+  // framework System DocTypes; it does NOT exist on the ERPNext
+  // Journal Entry Template, and asking for it in get_list makes
+  // Frappe reject the whole query (which showed up on the client
+  // as a bare "An error occurred in the Server Components render"
+  // because Next.js hides server errors in prod).
   const rows = await frappeCall<Array<Record<string, unknown>>>({
     method: "frappe.client.get_list",
     as: "user",
     args: {
       doctype: "Journal Entry Template",
-      fields: ["name", "template_title", "voucher_type", "company", "is_system_generated"],
+      fields: ["name", "template_title", "voucher_type", "company"],
       order_by: "template_title asc",
       limit_page_length: 0,
     },
@@ -47,7 +52,6 @@ export async function listJournalTemplates(): Promise<JournalEntryTemplate[]> {
     templateTitle: String(r.template_title ?? r.name ?? ""),
     voucherType: String(r.voucher_type ?? "Journal Entry"),
     company: (r.company as string | null) ?? null,
-    isSystemGenerated: Number(r.is_system_generated ?? 0) === 1,
   }));
 }
 
@@ -64,7 +68,6 @@ export async function getJournalTemplate(name: string): Promise<JournalEntryTemp
       templateTitle: String(doc.template_title ?? doc.name ?? ""),
       voucherType: String(doc.voucher_type ?? "Journal Entry"),
       company: (doc.company as string | null) ?? null,
-      isSystemGenerated: Number(doc.is_system_generated ?? 0) === 1,
       namingSeries: (doc.naming_series as string | null) ?? null,
       accounts: accounts.map((r, i) => ({
         idx: Number(r.idx ?? i + 1),

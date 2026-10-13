@@ -15,13 +15,15 @@ export type FormState = { error?: string; fieldErrors?: Record<string, string> }
 const iso = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD.");
 const opt = z.string().trim().optional().transform((v) => v || undefined);
 
+// ERPNext dropped `posting_date` + `cost_center` + `finance_book`
+// on this DocType. The grid is now defined by `period_start_date`
+// and `period_end_date`; both are required by the backend.
 const schema = z.object({
   company: z.string().trim().min(1, "Company is required."),
   fiscal_year: z.string().trim().min(1, "Fiscal year is required."),
-  posting_date: iso,
+  period_start_date: iso,
+  period_end_date: iso,
   closing_account_head: z.string().trim().min(1, "Closing account is required."),
-  cost_center: opt,
-  finance_book: opt,
   remarks: opt,
 });
 
@@ -50,10 +52,9 @@ export async function createPeriodClosingAction(_prev: FormState, formData: Form
     created = await createPeriodClosing({
       company: parsed.data.company,
       fiscalYear: parsed.data.fiscal_year,
-      postingDate: parsed.data.posting_date,
+      periodStartDate: parsed.data.period_start_date,
+      periodEndDate: parsed.data.period_end_date,
       closingAccountHead: parsed.data.closing_account_head,
-      costCenter: parsed.data.cost_center,
-      financeBook: parsed.data.finance_book,
       remarks: parsed.data.remarks,
     });
   } catch (err) { return toFormState(err); }

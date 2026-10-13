@@ -41,17 +41,14 @@ export function NewPeriodClosingForm({
           <Field label="Fiscal year" htmlFor="fiscal_year" error={fe.fiscal_year} required>
             <SelectInput id="fiscal_year" name="fiscal_year" defaultValue={fiscalYears[0] ?? ""} options={fiscalYears} />
           </Field>
-          <Field label="Posting date" htmlFor="posting_date" error={fe.posting_date} required>
-            <TextInput id="posting_date" name="posting_date" type="date" defaultValue={defaultDate} />
+          <Field label="Period start" htmlFor="period_start_date" error={fe.period_start_date} required>
+            <TextInput id="period_start_date" name="period_start_date" type="date" />
+          </Field>
+          <Field label="Period end" htmlFor="period_end_date" error={fe.period_end_date} required>
+            <TextInput id="period_end_date" name="period_end_date" type="date" defaultValue={defaultDate} />
           </Field>
           <Field label="Closing account (retained earnings)" htmlFor="closing_account_head" error={fe.closing_account_head} required>
             <SelectInput id="closing_account_head" name="closing_account_head" defaultValue="" options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
-          </Field>
-          <Field label="Cost centre" htmlFor="cost_center">
-            <TextInput id="cost_center" name="cost_center" />
-          </Field>
-          <Field label="Finance book" htmlFor="finance_book">
-            <TextInput id="finance_book" name="finance_book" />
           </Field>
           <Field label="Remarks" htmlFor="remarks" wide>
             <TextArea id="remarks" name="remarks" rows={2} />

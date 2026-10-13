@@ -174,4 +174,28 @@ export function findSection(id: string | undefined): Section {
   return SECTIONS.find((s) => s.id === id) ?? SECTIONS[0];
 }
 
+/**
+ * Reverse lookup: given a page path like "/accounting/banking/banks"
+ * or "/accounting/sales-invoices", find which section owns it.
+ *
+ * A path belongs to a section when it matches one of the section's
+ * rows exactly, or sits under that row (so detail pages like
+ * `/accounting/sales-invoices/INV-0001` are also attributed to the
+ * section Sales Invoices lives in — Transactions).
+ *
+ * Returns null for paths not registered in any section (e.g. the
+ * `/accounting` root itself, or internal tools).
+ */
+export function sectionForHref(href: string): Section | null {
+  for (const section of SECTIONS) {
+    if (section.id === OVERVIEW_ID) continue;
+    for (const row of section.rows) {
+      if (href === row.href || href.startsWith(row.href + "/")) {
+        return section;
+      }
+    }
+  }
+  return null;
+}
+
 export const LANDMARK_ICON = Landmark;

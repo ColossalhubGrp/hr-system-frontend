@@ -29,7 +29,7 @@ export default async function PeriodClosingDetailPage({ params }: { params: { na
         icon={CalendarClock}
         crumb={`Accounting · Tools · Period Closing · ${doc.name}`}
         title={doc.name}
-        subtitle={`${doc.company} · ${doc.fiscalYear} · ${doc.postingDate}`}
+        subtitle={`${doc.company} · ${doc.fiscalYear} · ${doc.periodEndDate}`}
         actions={<StatusPill status={doc.docstatus === 0 ? "Draft" : doc.docstatus === 1 ? "Submitted" : "Cancelled"} />}
       />
 
@@ -37,10 +37,8 @@ export default async function PeriodClosingDetailPage({ params }: { params: { na
         <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">Voucher</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <Detail label="Closing account" value={doc.closingAccountHead} />
-          <Detail label="Cost centre" value={doc.costCenter ?? "—"} />
-          <Detail label="Finance book" value={doc.financeBook ?? "—"} />
-          <Detail label="Year start" value={doc.yearStartDate ?? "—"} />
-          <Detail label="Year end" value={doc.yearEndDate ?? "—"} />
+          <Detail label="Period start" value={doc.periodStartDate ?? "—"} />
+          <Detail label="Period end" value={doc.periodEndDate} />
           <Detail label="Remarks" value={doc.remarks ?? "—"} />
         </div>
       </section>

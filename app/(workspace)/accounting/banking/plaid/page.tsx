@@ -1,6 +1,6 @@
 import Link from "next/link";
-import type { Route } from "next";
-import { ScrollText, ChevronLeft } from "lucide-react";
+import { SectionBack } from "../../_lib/section-back";
+import { ScrollText } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { getPlaidSettings } from "@/lib/frappe/banking/plaid-settings";
 import { PlaidForm } from "@/components/accounting/plaid-form";
@@ -12,12 +12,7 @@ export default async function PlaidPage() {
   const initial = await getPlaidSettings();
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-2 text-sm">
-        <Link href={"/accounting" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to Accounting
-        </Link>
-      </div>
+      <SectionBack path="/accounting/banking/plaid" />
       <PageHeader
         icon={ScrollText}
         crumb="Accounting · Banking · Plaid"

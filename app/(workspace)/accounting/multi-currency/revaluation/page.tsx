@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { SectionBack } from "../../_lib/section-back";
 import type { Route } from "next";
-import { RefreshCw, Plus, ChevronLeft } from "lucide-react";
+import { RefreshCw, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
@@ -13,12 +14,7 @@ export default async function RevaluationPage() {
   const rows = await listRevaluations();
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-2 text-sm">
-        <Link href={"/accounting" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to Accounting
-        </Link>
-      </div>
+      <SectionBack path="/accounting/multi-currency/revaluation" />
       <PageHeader
         icon={RefreshCw}
         crumb="Accounting · Multi-Currency · Revaluation"

@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { SectionBack } from "../../_lib/section-back";
 import type { Route } from "next";
-import { ClipboardList, Plus, ChevronLeft } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listTaxRules, type TaxRuleRow } from "@/lib/frappe/tax/rule";
@@ -12,12 +13,7 @@ export default async function TaxRulesPage() {
   const rows = await listTaxRules();
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-2 text-sm">
-        <Link href={"/accounting" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to Accounting
-        </Link>
-      </div>
+      <SectionBack path="/accounting/tax/rules" />
       <PageHeader
         icon={ClipboardList}
         crumb="Accounting · Tax · Rules"

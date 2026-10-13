@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { SectionBack } from "../../_lib/section-back";
 import type { Route } from "next";
-import { ArrowLeftRight, ChevronLeft, Search, ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
+import { ArrowLeftRight, Search, ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { listBankAccounts } from "@/lib/frappe/banking/bank-account";
@@ -44,12 +45,7 @@ export default async function BankReconciliationToolPage({ searchParams }: { sea
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-2 text-sm">
-        <Link href={"/accounting" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to Accounting
-        </Link>
-      </div>
+      <SectionBack path="/accounting/banking/reconciliation-tool" />
       <PageHeader
         icon={ArrowLeftRight}
         crumb="Accounting · Banking · Reconciliation Tool"

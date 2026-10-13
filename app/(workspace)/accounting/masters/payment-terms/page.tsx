@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { SectionBack } from "../../_lib/section-back";
 import type { Route } from "next";
-import { ClipboardList, Plus, ChevronLeft } from "lucide-react";
+import { ClipboardList, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listPaymentTerms, type PaymentTerm } from "@/lib/frappe/masters/payment-term";
@@ -13,12 +14,7 @@ export default async function PaymentTermsPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex items-center gap-2 text-sm">
-        <Link href={"/accounting" as Route} className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Back to Accounting
-        </Link>
-      </div>
+      <SectionBack path="/accounting/masters/payment-terms" />
       <PageHeader
         icon={ClipboardList}
         crumb="Accounting · Masters · Payment Terms"

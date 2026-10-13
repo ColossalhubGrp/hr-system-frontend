@@ -8,22 +8,25 @@ import { submitDoc } from "../submit-doc";
  * account so the next fiscal year starts clean.
  */
 
+// ERPNext renamed the posting-date field to `period_end_date` and
+// added `period_start_date` (the old `posting_date` is the latter's
+// `oldfieldname`). Neither `cost_center` nor `finance_book` exists
+// on this DocType. Asking Frappe for a non-existent column makes
+// get_list reject the whole query, which showed up on the client
+// as the bare "Server Components render" error.
 export type PeriodClosingVoucher = {
   name: string;
   company: string;
   fiscalYear: string;
-  postingDate: string;
+  periodEndDate: string;
   closingAccountHead: string;
   docstatus: 0 | 1 | 2;
   transactionDate: string | null;
 };
 
 export type PeriodClosingVoucherDetail = PeriodClosingVoucher & {
-  costCenter: string | null;
-  financeBook: string | null;
   remarks: string | null;
-  yearStartDate: string | null;
-  yearEndDate: string | null;
+  periodStartDate: string | null;
 };
 
 export async function listPeriodClosings(): Promise<PeriodClosingVoucher[]> {
@@ -33,10 +36,10 @@ export async function listPeriodClosings(): Promise<PeriodClosingVoucher[]> {
     args: {
       doctype: "Period Closing Voucher",
       fields: [
-        "name", "company", "fiscal_year", "posting_date",
+        "name", "company", "fiscal_year", "period_end_date",
         "closing_account_head", "docstatus", "transaction_date",
       ],
-      order_by: "posting_date desc",
+      order_by: "period_end_date desc",
       limit_page_length: 0,
     },
   });
@@ -44,7 +47,7 @@ export async function listPeriodClosings(): Promise<PeriodClosingVoucher[]> {
     name: String(r.name ?? ""),
     company: String(r.company ?? ""),
     fiscalYear: String(r.fiscal_year ?? ""),
-    postingDate: String(r.posting_date ?? ""),
+    periodEndDate: String(r.period_end_date ?? ""),
     closingAccountHead: String(r.closing_account_head ?? ""),
     docstatus: (r.docstatus as 0 | 1 | 2) ?? 0,
     transactionDate: (r.transaction_date as string | null) ?? null,
@@ -62,15 +65,12 @@ export async function getPeriodClosing(name: string): Promise<PeriodClosingVouch
       name: String(doc.name ?? name),
       company: String(doc.company ?? ""),
       fiscalYear: String(doc.fiscal_year ?? ""),
-      postingDate: String(doc.posting_date ?? ""),
+      periodEndDate: String(doc.period_end_date ?? ""),
       closingAccountHead: String(doc.closing_account_head ?? ""),
       docstatus: (doc.docstatus as 0 | 1 | 2) ?? 0,
       transactionDate: (doc.transaction_date as string | null) ?? null,
-      costCenter: (doc.cost_center as string | null) ?? null,
-      financeBook: (doc.finance_book as string | null) ?? null,
       remarks: (doc.remarks as string | null) ?? null,
-      yearStartDate: (doc.year_start_date as string | null) ?? null,
-      yearEndDate: (doc.year_end_date as string | null) ?? null,
+      periodStartDate: (doc.period_start_date as string | null) ?? null,
     };
   } catch (e) {
     if (e instanceof FrappeRequestError && e.status === 404) return null;
@@ -81,10 +81,9 @@ export async function getPeriodClosing(name: string): Promise<PeriodClosingVouch
 export type PeriodClosingInput = {
   company: string;
   fiscalYear: string;
-  postingDate: string;
+  periodStartDate: string;
+  periodEndDate: string;
   closingAccountHead: string;
-  costCenter?: string;
-  financeBook?: string;
   remarks?: string;
 };
 
@@ -98,11 +97,10 @@ export async function createPeriodClosing(input: PeriodClosingInput): Promise<{ 
         doctype: "Period Closing Voucher",
         company: input.company,
         fiscal_year: input.fiscalYear,
-        posting_date: input.postingDate,
-        transaction_date: input.postingDate,
+        period_start_date: input.periodStartDate,
+        period_end_date: input.periodEndDate,
+        transaction_date: input.periodEndDate,
         closing_account_head: input.closingAccountHead,
-        cost_center: input.costCenter || undefined,
-        finance_book: input.financeBook || undefined,
         remarks: input.remarks || undefined,
       },
     },

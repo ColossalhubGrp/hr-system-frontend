@@ -19,16 +19,11 @@ import {
 } from "./chart-theme";
 
 /**
- * Vertical bars, one per top-6 department.
- *
- * Labels sit HORIZONTAL (no rotation) and wrap on whitespace into
- * up to two lines, so two-word labels like "Customer Service" show
- * fully instead of being clipped by angled-tick overflow. If a
- * single word is longer than 11 chars we truncate with "…" to
- * avoid colliding with the neighbour bar.
- *
- * The full name (incl. company suffix) is always available in the
- * tooltip, so no information is lost on hover either.
+ * Horizontal bars (recharts' `layout="vertical"` idiom), one row
+ * per top-6 department. Each department label sits on its OWN
+ * line to the left of its bar, so there's no label crowding or
+ * clipping no matter how long the department name is. The
+ * percentage prints at the end of each bar.
  */
 export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
   const { effective } = useTheme();
@@ -47,18 +42,32 @@ export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
     short: shortName(d.department),
   }));
 
+  // Give the longest label the room it needs; recharts' YAxis
+  // `width` is literal pixels and doesn't auto-measure.
+  const longestChars = shaped.reduce((m, r) => Math.max(m, r.short.length), 0);
+  const yWidth = Math.min(140, Math.max(72, longestChars * 7 + 12));
+
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={shaped} margin={{ top: 24, right: 8, bottom: 4, left: 4 }}>
+      <BarChart
+        data={shaped}
+        layout="vertical"
+        margin={{ top: 8, right: 36, bottom: 4, left: 4 }}
+      >
         <XAxis
+          type="number"
+          hide
+          domain={[0, "dataMax + 6"]}
+        />
+        <YAxis
           dataKey="short"
+          type="category"
           tickLine={false}
           axisLine={false}
+          tick={{ fill: tick, fontSize: 12 }}
+          width={yWidth}
           interval={0}
-          height={44}
-          tick={<WrappedTick fill={tick} />}
         />
-        <YAxis hide domain={[0, "dataMax + 10"]} />
         <Tooltip
           cursor={{ fill: "rgba(32, 48, 96, 0.08)" }}
           contentStyle={{
@@ -73,13 +82,13 @@ export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
             (p as Array<{ payload?: DepartmentSlice }>)?.[0]?.payload?.department ?? ""
           }
         />
-        <Bar dataKey="percentage" radius={[8, 8, 4, 4]} maxBarSize={48}>
+        <Bar dataKey="percentage" radius={[4, 8, 8, 4]} barSize={18}>
           {shaped.map((_, i) => (
             <Cell key={i} fill={CHART_NAVY} />
           ))}
           <LabelList
             dataKey="percentage"
-            position="top"
+            position="right"
             formatter={(v: number) => `${v}%`}
             style={{ fill: tick, fontSize: 11, fontWeight: 600 }}
           />
@@ -87,49 +96,6 @@ export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
       </BarChart>
     </ResponsiveContainer>
   );
-}
-
-/**
- * Multi-line SVG tick. Splits the label into words and lays each
- * on its own line, up to 2 lines; anything over 11 chars inside
- * a single word gets truncated with "…".
- */
-function WrappedTick({
-  x,
-  y,
-  payload,
-  fill,
-}: {
-  x?: number;
-  y?: number;
-  payload?: { value?: string };
-  fill: string;
-}) {
-  const raw = payload?.value ?? "";
-  const words = raw.split(" ").filter(Boolean);
-  const lines = (
-    words.length === 1 ? [truncate(words[0], 11)] : words.slice(0, 2).map((w) => truncate(w, 11))
-  );
-  return (
-    <g transform={`translate(${x ?? 0},${y ?? 0})`}>
-      {lines.map((line, i) => (
-        <text
-          key={i}
-          x={0}
-          y={14 + i * 13}
-          textAnchor="middle"
-          fill={fill}
-          fontSize={11}
-        >
-          {line}
-        </text>
-      ))}
-    </g>
-  );
-}
-
-function truncate(s: string, max: number): string {
-  return s.length > max ? s.slice(0, max - 1) + "…" : s;
 }
 
 /** "Warehouse - Rivers Inc" → "Warehouse"; "Sales" → "Sales". */

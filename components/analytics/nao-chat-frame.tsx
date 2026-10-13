@@ -99,7 +99,7 @@ export function NaoChatFrame({
           ) : (
             <div className="max-w-md rounded-card border border-hairline bg-surface p-6 text-center">
               <AlertCircle className="mx-auto mb-3 h-10 w-10 text-fall" />
-              <p className="mb-1 text-sm font-semibold text-ink-900">
+              <p className="mb-1 text-sm font-semibold text-ash-900">
                 Analytics chat isn&rsquo;t available right now
               </p>
               <p className="text-xs text-ash-600">

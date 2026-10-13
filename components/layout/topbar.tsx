@@ -5,6 +5,7 @@ import { logoutAction } from "@/app/login/actions";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 // Basic HR-policy chatbot drawer (US-45) — hidden from the UI while
 // the analytics assistant at /analytics/ask is the primary AI surface.
 // Re-enable by uncommenting the import + the <ChatDrawer /> mount
@@ -43,6 +44,8 @@ export function Topbar({ user, notifications = 0 }: Props) {
       </label>
 
       {/* <ChatDrawer /> — hidden. See import block for revival notes. */}
+
+      <ThemeToggle />
 
       <Button
         type="button"

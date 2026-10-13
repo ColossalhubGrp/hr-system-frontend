@@ -99,7 +99,7 @@ function StatCard({
           ? "#DCFCE7"
           : "#F5F5F5"
   return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+    <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">
           {label}
@@ -297,7 +297,7 @@ export function InterviewReportsClient({
         </div>
 
         {loading && (
-          <div className="rounded-xl border border-[#E5E5E5] bg-white p-10 text-center text-sm text-[#525252]">
+          <div className="rounded-xl border border-[#E5E5E5] bg-surface p-10 text-center text-sm text-[#525252]">
             Loading interview data…
           </div>
         )}
@@ -310,7 +310,7 @@ export function InterviewReportsClient({
         )}
 
         {!loading && !error && stats.total === 0 && (
-          <div className="relative overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white p-10 text-center">
+          <div className="relative overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface p-10 text-center">
             <div
               className="pointer-events-none absolute -right-12 -top-12 h-44 w-44 rounded-full opacity-20 blur-3xl"
               style={{ background: "#1282A2" }}
@@ -389,7 +389,7 @@ export function InterviewReportsClient({
 
             {/* Breakdown row: status + top jobs */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-              <section className="rounded-xl border border-[#E5E5E5] bg-white p-5">
+              <section className="rounded-xl border border-[#E5E5E5] bg-surface p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-[#034078]" />
                   <h2 className="text-sm font-semibold text-[#0A1128]">
@@ -409,7 +409,7 @@ export function InterviewReportsClient({
                 </div>
               </section>
 
-              <section className="rounded-xl border border-[#E5E5E5] bg-white p-5">
+              <section className="rounded-xl border border-[#E5E5E5] bg-surface p-5">
                 <div className="mb-4 flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-[#034078]" />
                   <h2 className="text-sm font-semibold text-[#0A1128]">
@@ -435,7 +435,7 @@ export function InterviewReportsClient({
             </div>
 
             {/* Recent completed sessions */}
-            <section className="rounded-xl border border-[#E5E5E5] bg-white">
+            <section className="rounded-xl border border-[#E5E5E5] bg-surface">
               <div className="flex items-center justify-between border-b border-[#E5E5E5] px-5 py-3">
                 <div className="flex items-center gap-2">
                   <Video className="h-4 w-4 text-[#034078]" />

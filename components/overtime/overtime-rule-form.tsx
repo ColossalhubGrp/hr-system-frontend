@@ -350,7 +350,7 @@ export function OvertimeRuleForm({
             <button
               type="button"
               onClick={addTier}
-              className="inline-flex h-9 w-fit items-center gap-1 rounded-chip border border-hairline px-3 text-xs font-medium text-ink-800 hover:bg-canvas focus-ring"
+              className="inline-flex h-9 w-fit items-center gap-1 rounded-chip border border-hairline px-3 text-xs font-medium text-ash-900 hover:bg-canvas focus-ring"
             >
               <Plus className="h-3 w-3" />
               Add tier

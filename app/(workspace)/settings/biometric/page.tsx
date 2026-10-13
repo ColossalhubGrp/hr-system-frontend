@@ -57,7 +57,7 @@ export default async function BiometricSetupPage() {
         </p>
         <Link
           href={"/employee" as Route}
-          className="mt-2 inline-flex h-8 items-center gap-1 rounded-chip border border-hairline px-3 text-xs font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+          className="mt-2 inline-flex h-8 items-center gap-1 rounded-chip border border-hairline px-3 text-xs font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900 focus-ring"
         >
           Open the directory
         </Link>
@@ -78,7 +78,7 @@ export default async function BiometricSetupPage() {
           href="https://github.com/frappe/biometric-attendance-sync-tool"
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-flex h-8 items-center gap-1 rounded-chip border border-hairline px-3 text-xs font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+          className="mt-2 inline-flex h-8 items-center gap-1 rounded-chip border border-hairline px-3 text-xs font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900 focus-ring"
         >
           <Download className="h-3 w-3" />
           github.com/frappe/biometric-attendance-sync-tool
@@ -147,7 +147,7 @@ devices = [
           open{" "}
           <Link
             href={"/hr/attendance?tab=checkins" as Route}
-            className="underline hover:text-ink-800"
+            className="underline hover:text-ash-900"
           >
             Attendance → Check-ins
           </Link>{" "}
@@ -179,7 +179,7 @@ function Step({
         {n}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <h2 className="flex items-center gap-2 text-sm font-semibold text-ink-900">
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-ash-900">
           {icon}
           {title}
         </h2>

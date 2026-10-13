@@ -65,7 +65,7 @@ export default async function CheckinDetailPage({
                   href={
                     `/employee/${encodeURIComponent(c.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {c.employeeName ?? c.employee}
                 </Link>

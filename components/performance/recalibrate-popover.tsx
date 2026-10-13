@@ -67,7 +67,7 @@ export function RecalibratePopover({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="group inline-flex items-center gap-1 truncate rounded-chip border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-ink-800 transition hover:border-ink-300 hover:bg-canvas focus-ring"
+        className="group inline-flex items-center gap-1 truncate rounded-chip border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-ash-900 transition hover:border-ink-300 hover:bg-canvas focus-ring"
         aria-expanded={open}
         title={canEdit ? "Click to recalibrate" : "View only"}
       >
@@ -124,7 +124,7 @@ function PopoverContent({
     <form action={dispatch} className="flex flex-col gap-2 text-sm">
       <header className="flex items-start justify-between gap-2 pb-1">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-ink-900">{employeeName}</p>
+          <p className="truncate font-semibold text-ash-900">{employeeName}</p>
           <p className="text-[11px] text-ash-500">
             {appraisalId} · score {finalScore.toFixed(1)} ({performanceLabel})
           </p>

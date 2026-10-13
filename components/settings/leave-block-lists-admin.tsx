@@ -53,7 +53,7 @@ export function LeaveBlockListsAdmin({
               name="name"
               required
               placeholder="e.g. Year-end close 2026"
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -61,7 +61,7 @@ export function LeaveBlockListsAdmin({
             <select
               name="company"
               defaultValue=""
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm"
             >
               <option value="">—</option>
               {companies.map((c) => (
@@ -74,7 +74,7 @@ export function LeaveBlockListsAdmin({
               type="checkbox"
               name="applies_to_all_departments"
               defaultChecked
-              className="h-4 w-4 rounded border-hairline text-ink-700"
+              className="h-4 w-4 rounded border-hairline text-ash-800"
             />
             All departments
           </label>
@@ -110,7 +110,7 @@ export function LeaveBlockListsAdmin({
                   type="date"
                   value={d}
                   onChange={(e) => setD(e.target.value)}
-                  className="h-9 rounded-md border border-hairline bg-white px-2 text-sm"
+                  className="h-9 rounded-md border border-hairline bg-surface px-2 text-sm"
                 />
               </label>
               <label className="flex flex-1 flex-col gap-1 text-xs">
@@ -119,14 +119,14 @@ export function LeaveBlockListsAdmin({
                   value={r}
                   onChange={(e) => setR(e.target.value)}
                   placeholder="Year-end close, product launch, exam period…"
-                  className="h-9 rounded-md border border-hairline bg-white px-2 text-sm"
+                  className="h-9 rounded-md border border-hairline bg-surface px-2 text-sm"
                 />
               </label>
               <button
                 type="button"
                 onClick={addBlock}
                 disabled={!d || !r.trim()}
-                className="inline-flex h-9 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 text-xs font-semibold text-ash-700 hover:border-ink-400 hover:text-ink-800 disabled:opacity-40"
+                className="inline-flex h-9 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 text-xs font-semibold text-ash-700 hover:border-ink-400 hover:text-ash-900 disabled:opacity-40"
               >
                 <Plus className="h-3.5 w-3.5" /> Add
               </button>
@@ -160,7 +160,7 @@ export function LeaveBlockListsAdmin({
             <tbody className="divide-y divide-hairline">
               {rows.map((r) => (
                 <tr key={r.name}>
-                  <td className="px-4 py-2 font-medium text-ink-800">{r.name}</td>
+                  <td className="px-4 py-2 font-medium text-ash-900">{r.name}</td>
                   <td className="px-4 py-2 text-ash-700">{r.company ?? "—"}</td>
                   <td className="px-4 py-2 text-ash-700">
                     {r.appliesToAllDepartments ? "Yes" : "No"}

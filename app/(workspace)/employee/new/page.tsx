@@ -36,7 +36,7 @@ export default async function NewEmployeePage() {
           <UserRoundPlus className="h-3.5 w-3.5" />
           Employee · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Add a new employee
         </h1>
         <p className="text-sm text-ash-600">

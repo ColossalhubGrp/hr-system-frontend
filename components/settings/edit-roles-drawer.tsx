@@ -88,7 +88,7 @@ export function EditRolesDrawer({
                 <p className="text-xs uppercase tracking-wide text-ash-500">
                   Edit roles
                 </p>
-                <h2 className="mt-0.5 text-lg font-semibold text-ink-900">
+                <h2 className="mt-0.5 text-lg font-semibold text-ash-900">
                   {fullName ?? userEmail}
                 </h2>
                 <p className="text-xs text-ash-500">{userEmail}</p>
@@ -123,11 +123,11 @@ export function EditRolesDrawer({
                           disabled={pending}
                           className="h-4 w-4 accent-ink-800"
                         />
-                        <span className="flex-1 font-medium text-ink-800">
+                        <span className="flex-1 font-medium text-ash-900">
                           {role}
                         </span>
                         {current.includes(role) && (
-                          <span className="rounded-chip bg-ink-50 px-1.5 py-0.5 text-[10px] font-medium uppercase text-ink-800">
+                          <span className="rounded-chip bg-ink-50 px-1.5 py-0.5 text-[10px] font-medium uppercase text-ash-900">
                             current
                           </span>
                         )}

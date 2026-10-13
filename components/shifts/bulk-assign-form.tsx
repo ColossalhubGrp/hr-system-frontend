@@ -297,7 +297,7 @@ export function BulkAssignForm({
                   value={e.id}
                   checked={checked}
                   onChange={() => toggleOne(e.id)}
-                  className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+                  className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
                 />
                 <label
                   htmlFor={`emp-${e.id}`}
@@ -382,7 +382,7 @@ function SelectAllHeader({
         checked={allFilteredSelected}
         disabled={filteredCount === 0}
         onChange={onToggle}
-        className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+        className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
       />
       <span>
         {allFilteredSelected

@@ -27,7 +27,7 @@ export default async function NewSkillAssessmentPage() {
           <Gauge className="h-3.5 w-3.5" />
           HR · Skill Assessments · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Log a skill assessment
         </h1>
       </header>

@@ -66,7 +66,7 @@ export default async function EmployeeDirectoryPage({
             <Users className="h-3.5 w-3.5" />
             Employee · Directory
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             Employees
           </h1>
           <p className="text-sm text-ash-600">
@@ -76,14 +76,14 @@ export default async function EmployeeDirectoryPage({
         <div className="flex flex-wrap gap-2">
           <Link
             href={"/employee/setup" as Route}
-            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
           >
             <Settings2 className="h-4 w-4" />
             Setup
           </Link>
           <Link
             href={"/employee/bulk-import" as Route}
-            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
             title="Import many employees at once from a CSV — for mass hires / intakes"
           >
             <Upload className="h-4 w-4" />

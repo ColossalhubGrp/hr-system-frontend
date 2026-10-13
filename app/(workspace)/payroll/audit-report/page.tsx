@@ -120,7 +120,7 @@ export default async function AuditReportPage({
       </div>
 
       {/* Printable article — everything below prints */}
-      <article className="report-page rounded-xl border bg-white p-8 text-[13px] leading-relaxed text-black print:rounded-none print:border-0 print:p-0 print:text-[10.5pt]">
+      <article className="report-page rounded-xl border bg-surface p-8 text-[13px] leading-relaxed text-black print:rounded-none print:border-0 print:p-0 print:text-[10.5pt]">
         {/* Cover block */}
         <header className="mb-6 border-b-2 border-black pb-5 report-avoid-break">
           <div className="flex items-start justify-between gap-6">
@@ -176,7 +176,7 @@ export default async function AuditReportPage({
             </section>
 
             {/* Highlighted statutory remittances */}
-            <section className="mb-6 report-avoid-break rounded-md border-2 border-black bg-neutral-50 p-4 print:bg-white">
+            <section className="mb-6 report-avoid-break rounded-md border-2 border-black bg-neutral-50 p-4 print:bg-surface">
               <h2 className="mb-3 text-[11px] font-bold uppercase tracking-widest">
                 Statutory remittances due
               </h2>
@@ -359,7 +359,7 @@ function KV({
   label: string; value: string; sub?: string; big?: boolean; highlight?: boolean;
 }) {
   return (
-    <div className={highlight ? "rounded-md border-2 border-black px-3 py-2 print:bg-white" : ""}>
+    <div className={highlight ? "rounded-md border-2 border-black px-3 py-2 print:bg-surface" : ""}>
       <div className="text-[10px] font-bold uppercase tracking-wide text-neutral-500">
         {label}
       </div>

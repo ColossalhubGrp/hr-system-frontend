@@ -51,7 +51,7 @@ export default async function EditTrainingProgramPage({
           <BookOpen className="h-3.5 w-3.5" />
           HR · Training · Edit program
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Edit {program.trainingProgramName}
         </h1>
       </header>

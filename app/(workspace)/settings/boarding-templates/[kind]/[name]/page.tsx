@@ -41,7 +41,7 @@ export default async function EditBoardingTemplatePage({
           Configuration · Boarding templates ·{" "}
           {kind === "onboarding" ? "Onboarding" : "Separation"} · {tpl.name}
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Edit template
         </h1>
       </header>

@@ -97,7 +97,7 @@ export function ConvertToAlumniButton({
               <div>
                 <h2
                   id="convert-alumni-title"
-                  className="text-base font-semibold text-ink-900"
+                  className="text-base font-semibold text-ash-900"
                 >
                   Convert {employeeName} to Alumni?
                 </h2>
@@ -141,7 +141,7 @@ export function ConvertToAlumniButton({
                           {linkedUser}
                         </code>{" "}
                         (Employee, Line Manager, HR, etc.) and grant only{" "}
-                        <span className="rounded-chip bg-ink-50 px-1.5 py-0.5 text-[11px] font-medium text-ink-800">
+                        <span className="rounded-chip bg-ink-50 px-1.5 py-0.5 text-[11px] font-medium text-ash-900">
                           Alumni
                         </span>
                         .

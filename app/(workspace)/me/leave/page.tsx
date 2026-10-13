@@ -70,7 +70,7 @@ export default async function MyLeavePage() {
                 <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
                   {b.leaveType}
                 </p>
-                <p className="mt-1 text-2xl font-semibold text-ink-900">
+                <p className="mt-1 text-2xl font-semibold text-ash-900">
                   {b.allocated.toFixed(1)} <span className="text-sm text-ash-500">days</span>
                 </p>
                 {!b.usable && (

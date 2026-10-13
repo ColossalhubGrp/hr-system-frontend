@@ -46,7 +46,7 @@ export async function TerminalRunDetail({ run }: { run: PayRunRow }) {
     },
     regular: {
       label: "Other taxable earning",
-      chip: "bg-slate-100 text-slate-700",
+      chip: "bg-canvas text-ash-700",
       hint: "Fully taxable",
     },
   };

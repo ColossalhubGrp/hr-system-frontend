@@ -51,7 +51,7 @@ export default async function EditFrameworkPage({
   if (!access.isHrAdmin) {
     return (
       <div className="card mx-auto max-w-xl p-8 text-center">
-        <h1 className="text-lg font-semibold text-ink-900">Forbidden</h1>
+        <h1 className="text-lg font-semibold text-ash-900">Forbidden</h1>
         <p className="mt-2 text-sm text-ash-700">
           Only HR Manager and System Manager roles can change the evaluation
           framework on an appraisal cycle.

@@ -541,7 +541,7 @@ function fieldsFor(
   const empLink = rec.employee ? (
     <Link
       href={`/employee/${encodeURIComponent(rec.employee)}` as Route}
-      className="font-medium text-ink-800 hover:underline"
+      className="font-medium text-ash-900 hover:underline"
     >
       {rec.employeeName ?? rec.employee}
     </Link>
@@ -625,7 +625,7 @@ function fieldsFor(
       const raisedByLink = raisedByRaw ? (
         <Link
           href={`/employee/${encodeURIComponent(raisedByRaw)}` as Route}
-          className="font-medium text-ink-800 hover:underline"
+          className="font-medium text-ash-900 hover:underline"
         >
           {raisedByRaw}
         </Link>

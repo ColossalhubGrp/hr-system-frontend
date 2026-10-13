@@ -95,7 +95,7 @@ export default async function ShiftAssignmentDetailPage({
                   href={
                     `/employee/${encodeURIComponent(a.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {a.employeeName ?? a.employee}
                 </Link>
@@ -108,7 +108,7 @@ export default async function ShiftAssignmentDetailPage({
                   href={
                     `/hr/shift-management/types/${encodeURIComponent(a.shiftType)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {a.shiftType}
                 </Link>

@@ -187,7 +187,7 @@ function Avatar({
             onError={onError}
           />
         ) : (
-          <div className="grid h-full w-full place-items-center text-ink-700">
+          <div className="grid h-full w-full place-items-center text-ash-800">
             {fallbackName ? (
               <span className="text-lg font-semibold">
                 {initials(fallbackName)}

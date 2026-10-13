@@ -139,7 +139,7 @@ export default async function MyWorkspacePage() {
       <div className="mx-auto max-w-xl py-12 text-center">
         <div className="card p-8">
           <UserRound className="mx-auto h-10 w-10 text-ash-400" />
-          <h1 className="mt-3 text-lg font-semibold text-ink-900">
+          <h1 className="mt-3 text-lg font-semibold text-ash-900">
             No employee record linked
           </h1>
           <p className="mt-2 text-sm text-ash-700">
@@ -307,7 +307,7 @@ function ActionsTable({ rows }: { rows: ActionRow[] }) {
                 <td className="px-4 py-3 align-top font-medium">
                   <Link
                     href={r.href as Route}
-                    className="flex items-center gap-2 text-ink-900 hover:underline"
+                    className="flex items-center gap-2 text-ash-900 hover:underline"
                   >
                     <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/10 text-primary">
                       <Icon className="h-3.5 w-3.5" />

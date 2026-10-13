@@ -57,7 +57,7 @@ export function AuthShell({ title, subtitle, features = DEFAULT_FEATURES, childr
 
                 <div className="relative">
                     <div className="mb-12 flex items-center gap-2.5">
-                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-white">
+                        <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-surface">
                             <Image
                                 src="/favicon-32x32.png"
                                 alt=""
@@ -96,7 +96,7 @@ export function AuthShell({ title, subtitle, features = DEFAULT_FEATURES, childr
                 </div>
 
                 <div className="relative space-y-3">
-                    <div className="flex items-center gap-2 rounded-lg bg-white/5 px-3 py-2 ring-1 ring-white/10">
+                    <div className="flex items-center gap-2 rounded-lg bg-surface/5 px-3 py-2 ring-1 ring-white/10">
                         <Lock className="h-3.5 w-3.5 text-[#7DD3FC]" />
                         <p className="text-[11px] text-white/70">
                             Your data is encrypted in transit and at rest.
@@ -109,7 +109,7 @@ export function AuthShell({ title, subtitle, features = DEFAULT_FEATURES, childr
             </div>
 
             {/* Right — form */}
-            <div className="flex w-full items-center justify-center bg-white px-6 py-10 md:w-1/2 md:py-16">
+            <div className="flex w-full items-center justify-center bg-surface px-6 py-10 md:w-1/2 md:py-16">
                 <div className="w-full max-w-sm">{children}</div>
             </div>
         </div>

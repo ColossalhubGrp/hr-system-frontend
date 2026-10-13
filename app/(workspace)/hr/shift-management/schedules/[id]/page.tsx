@@ -90,7 +90,7 @@ export default async function ShiftScheduleDetailPage({
                   href={
                     `/hr/shift-management/types/${encodeURIComponent(sched.shiftType)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {sched.shiftType}
                 </Link>

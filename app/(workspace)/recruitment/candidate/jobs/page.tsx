@@ -55,7 +55,7 @@ function StatTile({
     accent: string
 }) {
     return (
-        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                 {label}
             </p>
@@ -115,7 +115,7 @@ function JobCard({
             href={`/recruitment/candidate/jobs/${encodeURIComponent(job.name)}`}
             className="group block"
         >
-            <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5 transition-all hover:border-[#034078]/30 hover:shadow-md">
+            <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5 transition-all hover:border-[#034078]/30 hover:shadow-md">
                 <div className="flex items-start gap-4">
                     <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -167,7 +167,7 @@ function EmptyState({
     description: string
 }) {
     return (
-        <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-white p-10 text-center">
+        <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-surface p-10 text-center">
             <span
                 className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl text-[#A3A3A3]"
                 style={{ background: "#F5F5F5" }}
@@ -361,7 +361,7 @@ export default function CandidateJobsPage() {
                 </div>
 
                 {/* Search */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5 shadow-sm">
+                <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5 shadow-sm">
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                         <div className="relative md:col-span-2">
                             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A3A3A3]" />
@@ -411,13 +411,13 @@ export default function CandidateJobsPage() {
                 {/* Tabs */}
                 <Tabs defaultValue="recommended" className="space-y-4">
                     <TabsList className="bg-[#F5F5F5]">
-                        <TabsTrigger value="recommended" className="data-[state=active]:bg-white data-[state=active]:text-[#034078]">
+                        <TabsTrigger value="recommended" className="data-[state=active]:bg-surface data-[state=active]:text-[#034078]">
                             Recommended
                         </TabsTrigger>
-                        <TabsTrigger value="results" className="data-[state=active]:bg-white data-[state=active]:text-[#034078]">
+                        <TabsTrigger value="results" className="data-[state=active]:bg-surface data-[state=active]:text-[#034078]">
                             All & search results
                         </TabsTrigger>
-                        <TabsTrigger value="saved" className="data-[state=active]:bg-white data-[state=active]:text-[#034078]">
+                        <TabsTrigger value="saved" className="data-[state=active]:bg-surface data-[state=active]:text-[#034078]">
                             Saved searches
                         </TabsTrigger>
                     </TabsList>
@@ -484,7 +484,7 @@ export default function CandidateJobsPage() {
                                 {savedSearches.map((saved) => (
                                     <div
                                         key={saved.name}
-                                        className="rounded-2xl border border-[#E5E5E5] bg-white p-5 transition-all hover:border-[#034078]/30 hover:shadow-sm"
+                                        className="rounded-2xl border border-[#E5E5E5] bg-surface p-5 transition-all hover:border-[#034078]/30 hover:shadow-sm"
                                     >
                                         <div className="flex items-start gap-3">
                                             <div className="min-w-0 flex-1">

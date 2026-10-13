@@ -85,8 +85,8 @@ function Stat({
       </p>
       <p
         className={cn(
-          "mt-1 text-xl font-semibold text-ink-900",
-          accent && "text-ink-800",
+          "mt-1 text-xl font-semibold text-ash-900",
+          accent && "text-ash-900",
         )}
       >
         {value}

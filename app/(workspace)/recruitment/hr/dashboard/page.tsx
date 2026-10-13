@@ -51,7 +51,7 @@ function StatTile({
                         ? { fg: "#5B21B6", bg: "#F5F3FF" }
                         : { fg: "#525252", bg: "#F5F5F5" }
     const card = (
-        <div className="group h-full rounded-xl border border-[#E5E5E5] bg-white p-4 transition-shadow hover:shadow-md">
+        <div className="group h-full rounded-xl border border-[#E5E5E5] bg-surface p-4 transition-shadow hover:shadow-md">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span
@@ -95,7 +95,7 @@ function ActionTile({
     return (
         <Link
             href={href}
-            className="group relative flex items-start gap-3 rounded-xl border bg-white p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+            className="group relative flex items-start gap-3 rounded-xl border bg-surface p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
             style={{ borderColor: accent ? "#BFDBFE" : "#E5E5E5" }}
         >
             <span
@@ -213,7 +213,7 @@ export default function HrDashboardPage() {
         <MainLayout>
             <div className="mx-auto max-w-7xl space-y-6 pb-12">
                 {/* Hero */}
-                <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm">
+                <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm">
                     <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:gap-5">
                         <div className="flex-1">
                             <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -278,7 +278,7 @@ export default function HrDashboardPage() {
                 {/* 2-col: actions + activity */}
                 <div className="grid gap-5 lg:grid-cols-[2fr_1fr]">
                     {/* Quick actions */}
-                    <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                    <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                         <header className="flex items-center justify-between border-b border-[#E5E5E5] px-5 py-3">
                             <div>
                                 <h2 className="text-sm font-semibold text-[#0A1128]">Quick actions</h2>
@@ -330,7 +330,7 @@ export default function HrDashboardPage() {
                     {/* Activity */}
                     <aside className="space-y-5">
                         {/* Recent jobs */}
-                        <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                        <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                             <header className="flex items-center justify-between border-b border-[#E5E5E5] px-4 py-3">
                                 <div>
                                     <h2 className="text-sm font-semibold text-[#0A1128]">Recent postings</h2>
@@ -369,7 +369,7 @@ export default function HrDashboardPage() {
                         </section>
 
                         {/* Recent applications */}
-                        <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                        <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                             <header className="flex items-center justify-between border-b border-[#E5E5E5] px-4 py-3">
                                 <div>
                                     <h2 className="text-sm font-semibold text-[#0A1128]">Recent applications</h2>

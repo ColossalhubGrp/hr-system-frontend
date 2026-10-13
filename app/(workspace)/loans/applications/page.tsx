@@ -94,7 +94,7 @@ export default async function LoanApplicationsPage({
           },
           {
             header: "Amount",
-            className: "text-right font-medium text-ink-900",
+            className: "text-right font-medium text-ash-900",
             cell: (r) => formatMoney(r.loanAmount),
           },
           {

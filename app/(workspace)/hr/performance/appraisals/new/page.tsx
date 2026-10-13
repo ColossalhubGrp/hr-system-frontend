@@ -31,7 +31,7 @@ export default async function NewAppraisalPage() {
           <Target className="h-3.5 w-3.5" />
           HR · Performance · New appraisal
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Start an appraisal
         </h1>
       </header>

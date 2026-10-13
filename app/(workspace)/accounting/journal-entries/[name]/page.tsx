@@ -72,7 +72,7 @@ export default async function JournalEntryDetailPage({
               doc.amendedFrom ? (
                 <Link
                   href={`/accounting/journal-entries/${encodeURIComponent(doc.amendedFrom)}` as Route}
-                  className="font-mono text-sm text-ink-800 underline-offset-4 hover:underline"
+                  className="font-mono text-sm text-ash-900 underline-offset-4 hover:underline"
                 >
                   {doc.amendedFrom}
                 </Link>

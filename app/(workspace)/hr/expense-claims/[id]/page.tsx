@@ -112,7 +112,7 @@ export default async function ExpenseClaimDetailPage({
           HR · Expense Claims · {claim.id}
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             {claim.employeeName ?? claim.employee}
           </h1>
           <StatusPill status={claim.status} />
@@ -183,7 +183,7 @@ export default async function ExpenseClaimDetailPage({
                   href={
                     `/employee/${encodeURIComponent(claim.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {claim.employeeName ?? claim.employee}
                 </Link>

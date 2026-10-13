@@ -90,10 +90,10 @@ function AssignmentRow({
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5 text-sm">
       <div className="flex min-w-0 items-center gap-2">
-        <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+        <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
           {a.appliesTo}
         </span>
-        <span className="font-medium text-ink-800">
+        <span className="font-medium text-ash-900">
           {a.target ?? "Everyone"}
         </span>
         <span className="text-xs text-ash-500">

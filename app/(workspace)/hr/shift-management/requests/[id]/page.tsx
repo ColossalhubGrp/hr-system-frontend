@@ -108,7 +108,7 @@ export default async function ShiftRequestDetailPage({
                   href={
                     `/employee/${encodeURIComponent(r.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {r.employeeName ?? r.employee}
                 </Link>

@@ -85,7 +85,7 @@ function StatCard({
           ? '#DCFCE7'
           : '#F5F5F5'
   return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+    <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
         <span
@@ -364,7 +364,7 @@ export function InterviewsReviewClient({
 
         {/* List */}
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#F5F5F5]">
               <ListTodo className="h-5 w-5 text-[#A3A3A3]" />
             </div>
@@ -384,7 +384,7 @@ export function InterviewsReviewClient({
             </p>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+          <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
             {/* Table header — desktop */}
             <div className="hidden grid-cols-[1.6fr_1.4fr_140px_140px_110px_140px_80px] items-center gap-4 border-b border-[#E5E5E5] px-6 py-4 text-sm font-semibold text-[#0A1128] lg:grid">
               <div>Candidate</div>

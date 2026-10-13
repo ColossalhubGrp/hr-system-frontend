@@ -58,7 +58,7 @@ export default function PublicJobsPage() {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
-            <div className="border-b border-[#E5E5E5] bg-white">
+            <div className="border-b border-[#E5E5E5] bg-surface">
                 <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
                     <div>
                         <p className="text-sm text-[#1282A2] font-medium">RecrutAI</p>

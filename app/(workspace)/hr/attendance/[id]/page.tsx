@@ -26,7 +26,7 @@ const ATT_TONES: Record<string, string> = {
   Absent: "bg-fall/10 text-fall ring-fall/20",
   "On Leave": "bg-ash-100 text-ash-700 ring-ash-200",
   "Half Day": "bg-amber-100 text-amber-800 ring-amber-200",
-  "Work From Home": "bg-ink-50 text-ink-800 ring-ink-100",
+  "Work From Home": "bg-ink-50 text-ash-900 ring-ink-100",
 };
 
 export async function generateMetadata({
@@ -165,7 +165,7 @@ export default async function AttendanceDetailPage({
               <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
                 Regular hours
               </p>
-              <p className="mt-1 text-2xl font-semibold text-ink-900">
+              <p className="mt-1 text-2xl font-semibold text-ash-900">
                 {regularHours.toFixed(2)} h
               </p>
               <p className="mt-1 text-xs text-ash-600">
@@ -189,7 +189,7 @@ export default async function AttendanceDetailPage({
               <p
                 className={
                   "mt-1 text-2xl font-semibold " +
-                  (overtimeHours > 0 ? "text-amber-900" : "text-ink-900")
+                  (overtimeHours > 0 ? "text-amber-900" : "text-ash-900")
                 }
               >
                 {overtimeHours.toFixed(2)} h
@@ -220,7 +220,7 @@ export default async function AttendanceDetailPage({
                   href={
                     `/employee/${encodeURIComponent(a.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {a.employeeName ?? a.employee}
                 </Link>
@@ -275,7 +275,7 @@ function RateTile({
         {label}
       </p>
       <p
-        className={`mt-1 text-2xl font-semibold ${highlight ? "text-ink-800" : "text-ink-900"}`}
+        className={`mt-1 text-2xl font-semibold ${highlight ? "text-ash-900" : "text-ash-900"}`}
       >
         {value}
       </p>

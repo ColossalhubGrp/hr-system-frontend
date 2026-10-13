@@ -81,7 +81,7 @@ export function DesignationEditor({
               readOnly={mode === "edit"}
               placeholder="e.g. Software Engineer"
               className={cn(
-                "h-10 rounded-md border bg-white px-2 text-sm focus-ring",
+                "h-10 rounded-md border bg-surface px-2 text-sm focus-ring",
                 fe.name ? "border-fall" : "border-hairline",
                 mode === "edit" && "cursor-not-allowed bg-canvas/50 text-ash-600",
               )}
@@ -100,7 +100,7 @@ export function DesignationEditor({
               defaultValue={initial?.description ?? ""}
               rows={2}
               placeholder="Short summary of the role, its scope, what it's accountable for."
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
           </label>
         </div>
@@ -127,7 +127,7 @@ export function DesignationEditor({
             {skills.map((s) => (
               <li
                 key={s}
-                className="inline-flex items-center gap-1.5 rounded-chip border border-hairline bg-canvas/60 py-1 pl-3 pr-1 text-sm text-ink-800"
+                className="inline-flex items-center gap-1.5 rounded-chip border border-hairline bg-canvas/60 py-1 pl-3 pr-1 text-sm text-ash-900"
               >
                 {s}
                 <button
@@ -166,7 +166,7 @@ export function DesignationEditor({
                   ? "Pick from the pool or type a new one"
                   : "e.g. Python, Public speaking, Financial modelling"
               }
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
             <datalist id="skills-pool">
               {skillsPool
@@ -182,7 +182,7 @@ export function DesignationEditor({
             disabled={!newSkill.trim()}
             className={cn(
               "inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline px-3 text-xs font-semibold text-ash-700 transition focus-ring",
-              "hover:border-ink-400 hover:text-ink-800",
+              "hover:border-ink-400 hover:text-ash-900",
               "disabled:opacity-40 disabled:cursor-not-allowed",
             )}
           >

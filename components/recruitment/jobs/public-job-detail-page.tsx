@@ -122,7 +122,7 @@ export default function PublicJobDetailPage({ jobId }: { jobId: string }) {
 
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
-            <div className="border-b border-[#E5E5E5] bg-white">
+            <div className="border-b border-[#E5E5E5] bg-surface">
                 <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
                     <Link href="/recruitment/jobs">
                         <Button variant="outline">

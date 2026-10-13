@@ -103,7 +103,7 @@ export default async function ScheduleAssignmentDetailPage({
                   href={
                     `/employee/${encodeURIComponent(sa.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {sa.employeeName ?? sa.employee}
                 </Link>
@@ -116,7 +116,7 @@ export default async function ScheduleAssignmentDetailPage({
                   href={
                     `/hr/shift-management/schedules/${encodeURIComponent(sa.shiftSchedule)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {sa.shiftSchedule}
                 </Link>

@@ -55,7 +55,7 @@ export default async function PipDetailPage({
                   href={
                     `/employee/${encodeURIComponent(p.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {p.employeeName ?? p.employee}
                 </Link>

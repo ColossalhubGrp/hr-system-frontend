@@ -242,7 +242,7 @@ function StatChip({
     icon: React.ComponentType<{ className?: string }>
 }) {
     return (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#F5F5F5] text-[#525252]">
@@ -400,7 +400,7 @@ export default function ReportDetailPage() {
                     <Link href="/recruitment/reports" className="inline-flex items-center gap-1.5 text-sm text-[#034078] hover:underline">
                         <ArrowLeft className="h-4 w-4" /> Back to reports
                     </Link>
-                    <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#E5E5E5] bg-white p-5">
+                    <div className="mt-6 flex items-start gap-3 rounded-xl border border-[#E5E5E5] bg-surface p-5">
                         <FileText className="h-5 w-5 text-[#A3A3A3]" />
                         <p className="text-sm text-[#525252]">Report not found.</p>
                     </div>
@@ -449,7 +449,7 @@ export default function ReportDetailPage() {
                 </div>
 
                 {/* Hero */}
-                <header className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                <header className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                     <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-start sm:gap-6">
                         <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">Shortlist report</p>
@@ -492,7 +492,7 @@ export default function ReportDetailPage() {
                 </div>
 
                 {/* Toolbar */}
-                <div className="flex flex-col gap-3 rounded-2xl border border-[#E5E5E5] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between no-print">
+                <div className="flex flex-col gap-3 rounded-2xl border border-[#E5E5E5] bg-surface p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between no-print">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                         <div className="inline-flex overflow-hidden rounded-lg border border-[#E5E5E5]">
                             <ToggleButton
@@ -521,7 +521,7 @@ export default function ReportDetailPage() {
                                 onChange={(e) =>
                                     setCandidateLimit(Math.max(1, Number(e.target.value) || 1))
                                 }
-                                className="h-8 w-16 rounded-md border border-[#E5E5E5] bg-white px-2 text-center text-sm text-[#171717] outline-none focus:border-[#034078]"
+                                className="h-8 w-16 rounded-md border border-[#E5E5E5] bg-surface px-2 text-center text-sm text-[#171717] outline-none focus:border-[#034078]"
                             />
                             <span className="text-xs text-[#A3A3A3]">of {candidateCount}</span>
                         </div>
@@ -532,7 +532,7 @@ export default function ReportDetailPage() {
                             Fields ({Object.values(selectedFields).filter(Boolean).length})
                             <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
                         </summary>
-                        <div className="absolute right-0 top-full z-30 mt-2 w-[min(520px,calc(100vw-2rem))] rounded-xl border border-[#E5E5E5] bg-white p-4 shadow-xl">
+                        <div className="absolute right-0 top-full z-30 mt-2 w-[min(520px,calc(100vw-2rem))] rounded-xl border border-[#E5E5E5] bg-surface p-4 shadow-xl">
                             <div className="mb-3 flex items-center justify-between">
                                 <p className="text-sm font-semibold text-[#0A1128]">Fields to include</p>
                                 <button
@@ -584,13 +584,13 @@ export default function ReportDetailPage() {
 
                 {/* List / table */}
                 {candidateCount === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                         <Users className="h-8 w-8 text-[#A3A3A3]" />
                         <p className="text-sm font-semibold text-[#0A1128]">No candidates in this report</p>
                         <p className="text-sm text-[#A3A3A3]">The shortlist returned zero candidates.</p>
                     </div>
                 ) : viewMode === "table" ? (
-                    <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+                    <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
                         <div className="overflow-x-auto">
                             <Table>
                                 <TableHeader>
@@ -800,10 +800,10 @@ export default function ReportDetailPage() {
                             return (
                                 <article
                                     key={candidate.candidate}
-                                    className="break-inside-avoid overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white shadow-sm"
+                                    className="break-inside-avoid overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm"
                                 >
                                     <header className="flex items-center gap-3 border-b border-[#E5E5E5] bg-[#F9FAFB] px-5 py-4">
-                                        <span className="inline-flex h-7 min-w-[2rem] items-center justify-center rounded-full border border-[#E5E5E5] bg-white px-2 text-xs font-semibold text-[#525252]">
+                                        <span className="inline-flex h-7 min-w-[2rem] items-center justify-center rounded-full border border-[#E5E5E5] bg-surface px-2 text-xs font-semibold text-[#525252]">
                                             #{index + 1}
                                         </span>
                                         <div className="flex-1 min-w-0">

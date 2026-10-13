@@ -86,7 +86,7 @@ export function SetupModeOfPaymentInline({
               value={account}
               onChange={(e) => setAccount(e.target.value)}
               placeholder={`No accounts found for ${company}`}
-              className="rounded-md border border-amber-300 bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-amber-300 bg-surface px-2 py-1.5 text-sm focus-ring"
             />
           ) : (
             <select
@@ -94,7 +94,7 @@ export function SetupModeOfPaymentInline({
               name="account"
               value={account}
               onChange={(e) => setAccount(e.target.value)}
-              className="rounded-md border border-amber-300 bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-amber-300 bg-surface px-2 py-1.5 text-sm focus-ring"
             >
               <option value="">— pick one —</option>
               {cashOrBankAccounts.map((a) => (

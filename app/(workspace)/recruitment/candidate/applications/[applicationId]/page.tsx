@@ -122,7 +122,7 @@ function ScoreTile({
 }) {
     const value = typeof score === "number" ? Math.round(score) : null
     return (
-        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center gap-2 text-[#A3A3A3]">
                 <Icon className="h-4 w-4" />
                 <p className="text-[11px] font-semibold uppercase tracking-wide">{label}</p>
@@ -267,7 +267,7 @@ export default function CandidateApplicationDetailsPage() {
                 </Link>
 
                 {/* Hero */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
+                <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-6 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                         <div className="min-w-0 flex-1">
                             <p className="text-[11px] font-semibold uppercase tracking-wider text-[#A3A3A3]">
@@ -305,7 +305,7 @@ export default function CandidateApplicationDetailsPage() {
 
                 {/* CV */}
                 {application.cv_attachment && (
-                    <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5">
+                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5">
                         <div className="flex items-center gap-3">
                             <div className="min-w-0 flex-1">
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -358,7 +358,7 @@ export default function CandidateApplicationDetailsPage() {
                             overallFitDescription) && (
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                                 {skillsDescription && (
-                                    <div className="rounded-2xl border border-[#E5E5E5] bg-white p-4">
+                                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-4">
                                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                                             Skills assessment
                                         </p>
@@ -368,7 +368,7 @@ export default function CandidateApplicationDetailsPage() {
                                     </div>
                                 )}
                                 {experienceDescription && (
-                                    <div className="rounded-2xl border border-[#E5E5E5] bg-white p-4">
+                                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-4">
                                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                                             Experience evaluation
                                         </p>
@@ -378,7 +378,7 @@ export default function CandidateApplicationDetailsPage() {
                                     </div>
                                 )}
                                 {educationDescription && (
-                                    <div className="rounded-2xl border border-[#E5E5E5] bg-white p-4">
+                                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-4">
                                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                                             Education evaluation
                                         </p>
@@ -388,7 +388,7 @@ export default function CandidateApplicationDetailsPage() {
                                     </div>
                                 )}
                                 {overallFitDescription && (
-                                    <div className="rounded-2xl border border-[#E5E5E5] bg-white p-4">
+                                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-4">
                                         <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                                             Overall fit summary
                                         </p>

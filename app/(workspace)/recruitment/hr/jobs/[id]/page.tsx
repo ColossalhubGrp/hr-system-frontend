@@ -621,7 +621,7 @@ function HrJobDetailPage() {
         </div>
 
         {/* Hero */}
-        <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm">
+        <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm">
           <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:gap-6">
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">Job posting</p>
@@ -656,7 +656,7 @@ function HrJobDetailPage() {
                   <button
                     type="button"
                     onClick={copyShareUrl}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E5E5E5] bg-white px-3 py-1.5 text-xs font-medium text-[#525252] transition-colors hover:bg-[#F5F5F5]"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-[#E5E5E5] bg-surface px-3 py-1.5 text-xs font-medium text-[#525252] transition-colors hover:bg-[#F5F5F5]"
                   >
                     <Copy className="h-3.5 w-3.5" />
                     Copy
@@ -668,7 +668,7 @@ function HrJobDetailPage() {
                       void handleShareVia(value)
                     }}
                   >
-                    <SelectTrigger className="h-8 w-[140px] border-[#E5E5E5] bg-white text-xs text-[#525252] hover:bg-[#F5F5F5]">
+                    <SelectTrigger className="h-8 w-[140px] border-[#E5E5E5] bg-surface text-xs text-[#525252] hover:bg-[#F5F5F5]">
                       <SelectValue placeholder="Share via…" />
                     </SelectTrigger>
                     <SelectContent>
@@ -702,7 +702,7 @@ function HrJobDetailPage() {
               </div>
             </div>
           ) : (
-            <div className="border-t border-white/15 bg-white/5 px-6 py-3">
+            <div className="border-t border-white/15 bg-surface/5 px-6 py-3">
               <p className="text-xs text-white/70">Application link unavailable. Configure FRONTEND_URL.</p>
             </div>
           )}
@@ -728,7 +728,7 @@ function HrJobDetailPage() {
               icon: CheckCircle,
             },
           ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+            <div key={s.label} className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{s.label}</p>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: s.bg, color: s.fg }}>
@@ -836,7 +836,7 @@ function HrJobDetailPage() {
         </Dialog>
 
         {/* APPLICANTS SECTION */}
-        <section className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white shadow-sm">
+        <section className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm">
           <header className="flex flex-col gap-3 border-b border-[#E5E5E5] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-base font-semibold text-[#0A1128]">Applicants</h2>
@@ -893,7 +893,7 @@ function HrJobDetailPage() {
                         <TabsTrigger
                           key={stage.value}
                           value={stage.value}
-                          className="text-xs data-[state=active]:bg-white data-[state=active]:text-[#0A1128] data-[state=active]:shadow-sm"
+                          className="text-xs data-[state=active]:bg-surface data-[state=active]:text-[#0A1128] data-[state=active]:shadow-sm"
                         >
                           <span>{stage.label}</span>
                           <span
@@ -1048,7 +1048,7 @@ function HrJobDetailPage() {
                               type="button"
                               onClick={() => setApplicantsPage((p) => Math.max(1, p - 1))}
                               disabled={applicantsSafePage === 1}
-                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
+                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-surface px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
                               aria-label="Previous page"
                             >
                               <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -1059,7 +1059,7 @@ function HrJobDetailPage() {
                                 <button
                                   type="button"
                                   onClick={() => setApplicantsPage(1)}
-                                  className="h-7 w-7 rounded-lg border border-[#E5E5E5] bg-white text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
+                                  className="h-7 w-7 rounded-lg border border-[#E5E5E5] bg-surface text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
                                 >
                                   1
                                 </button>
@@ -1092,7 +1092,7 @@ function HrJobDetailPage() {
                                 <button
                                   type="button"
                                   onClick={() => setApplicantsPage(applicantsTotalPages)}
-                                  className="h-7 w-7 rounded-lg border border-[#E5E5E5] bg-white text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
+                                  className="h-7 w-7 rounded-lg border border-[#E5E5E5] bg-surface text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
                                 >
                                   {applicantsTotalPages}
                                 </button>
@@ -1102,7 +1102,7 @@ function HrJobDetailPage() {
                               type="button"
                               onClick={() => setApplicantsPage((p) => Math.min(applicantsTotalPages, p + 1))}
                               disabled={applicantsSafePage === applicantsTotalPages}
-                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
+                              className="inline-flex h-7 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-surface px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
                               aria-label="Next page"
                             >
                               Next

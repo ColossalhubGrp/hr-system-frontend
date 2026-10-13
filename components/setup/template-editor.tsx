@@ -164,7 +164,7 @@ export function TemplateEditor({
               readOnly={mode === "edit"}
               placeholder="e.g. Half Year — Standard"
               className={cn(
-                "h-10 rounded-md border bg-white px-2 text-sm focus-ring",
+                "h-10 rounded-md border bg-surface px-2 text-sm focus-ring",
                 fe.name ? "border-fall" : "border-hairline",
                 mode === "edit" && "cursor-not-allowed bg-canvas/50 text-ash-600",
               )}
@@ -188,7 +188,7 @@ export function TemplateEditor({
               defaultValue={initial?.description ?? ""}
               rows={2}
               placeholder="What this template is for. HR sees this on the cycle setup screen."
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
           </label>
         </div>
@@ -238,7 +238,7 @@ export function TemplateEditor({
                         min={0}
                         max={100}
                         step={1}
-                        className="w-24 rounded-md border border-hairline bg-white px-2 py-1.5 text-right text-sm focus-ring"
+                        className="w-24 rounded-md border border-hairline bg-surface px-2 py-1.5 text-right text-sm focus-ring"
                       />
                     </td>
                     <td className="px-3 py-3 text-right">
@@ -293,7 +293,7 @@ export function TemplateEditor({
                   ? "Pick from the pool or type a new one"
                   : "e.g. Sales targets, Product delivery, Team development"
               }
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
             <datalist id="tpl-kras-pool">
               {krasPool
@@ -315,7 +315,7 @@ export function TemplateEditor({
               min={0}
               max={100}
               step={1}
-              className="w-24 rounded-md border border-hairline bg-white px-2 py-1.5 text-right text-sm focus-ring"
+              className="w-24 rounded-md border border-hairline bg-surface px-2 py-1.5 text-right text-sm focus-ring"
             />
           </div>
           <button
@@ -324,7 +324,7 @@ export function TemplateEditor({
             disabled={!newKra.trim()}
             className={cn(
               "inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline px-3 text-xs font-semibold text-ash-700 transition focus-ring",
-              "hover:border-ink-400 hover:text-ink-800",
+              "hover:border-ink-400 hover:text-ash-900",
               "disabled:opacity-40 disabled:cursor-not-allowed",
             )}
           >
@@ -373,7 +373,7 @@ export function TemplateEditor({
                         min={0}
                         max={100}
                         step={1}
-                        className="w-24 rounded-md border border-hairline bg-white px-2 py-1.5 text-right text-sm focus-ring"
+                        className="w-24 rounded-md border border-hairline bg-surface px-2 py-1.5 text-right text-sm focus-ring"
                       />
                     </td>
                     <td className="px-3 py-3 text-right">
@@ -428,7 +428,7 @@ export function TemplateEditor({
                   ? "Pick from the pool or type a new one"
                   : "e.g. Communication, Ownership, Technical delivery"
               }
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
             <datalist id="tpl-criteria-pool">
               {criteriaPool
@@ -450,7 +450,7 @@ export function TemplateEditor({
               min={0}
               max={100}
               step={1}
-              className="w-24 rounded-md border border-hairline bg-white px-2 py-1.5 text-right text-sm focus-ring"
+              className="w-24 rounded-md border border-hairline bg-surface px-2 py-1.5 text-right text-sm focus-ring"
             />
           </div>
           <button
@@ -459,7 +459,7 @@ export function TemplateEditor({
             disabled={!newCriterion.trim()}
             className={cn(
               "inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline px-3 text-xs font-semibold text-ash-700 transition focus-ring",
-              "hover:border-ink-400 hover:text-ink-800",
+              "hover:border-ink-400 hover:text-ash-900",
               "disabled:opacity-40 disabled:cursor-not-allowed",
             )}
           >

@@ -112,7 +112,7 @@ export function LeaveForm({
               name="half_day"
               checked={halfDay}
               onChange={(e) => setHalfDay(e.target.checked)}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Half-day
           </label>

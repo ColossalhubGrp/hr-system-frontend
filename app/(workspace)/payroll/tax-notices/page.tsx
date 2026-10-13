@@ -20,11 +20,11 @@ import {
 export const metadata = { title: "Expected Tax Notices · Payroll · Colossal HR" };
 
 const STATUS_CLS: Record<string, string> = {
-  EXPECTED: "bg-slate-100 text-slate-700",
+  EXPECTED: "bg-canvas text-ash-700",
   ACTION_NEEDED: "bg-rose-100 text-rose-700",
   FILED: "bg-blue-100 text-blue-800",
   PAID: "bg-emerald-100 text-emerald-700",
-  DISMISSED: "bg-slate-100 text-slate-500",
+  DISMISSED: "bg-canvas text-ash-500",
 };
 
 export default async function TaxNoticesTab() {

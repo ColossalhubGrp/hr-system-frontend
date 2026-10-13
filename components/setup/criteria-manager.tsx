@@ -68,7 +68,7 @@ export function CriteriaManager({
             name="criteria"
             type="text"
             placeholder="e.g. Communication, Ownership, Technical delivery"
-            className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+            className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
           />
         </div>
         <AddBtn />
@@ -101,7 +101,7 @@ export function CriteriaManager({
             <tbody className="divide-y divide-hairline">
               {rows.map((r) => (
                 <tr key={r.name}>
-                  <td className="px-4 py-3 font-medium text-ink-800">{r.name}</td>
+                  <td className="px-4 py-3 font-medium text-ash-900">{r.name}</td>
                   <td className="px-4 py-3 text-right text-ash-700">
                     {r.usage === 0 ? (
                       <span className="text-ash-400">—</span>

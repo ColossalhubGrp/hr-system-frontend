@@ -88,7 +88,7 @@ export default async function FnfDetailPage({
                       fnf.employeeSeparation,
                     )}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {fnf.employeeSeparation}
                 </Link>
@@ -166,7 +166,7 @@ function ChildTable({
         <h2 className="text-sm font-semibold uppercase tracking-wide text-ash-500">
           {title}
         </h2>
-        <span className="text-sm font-semibold text-ink-900">{fmtMoney(total)}</span>
+        <span className="text-sm font-semibold text-ash-900">{fmtMoney(total)}</span>
       </div>
       {rows.length === 0 ? (
         <p className="rounded-md border border-dashed border-hairline bg-canvas/40 px-4 py-6 text-center text-sm text-ash-500">

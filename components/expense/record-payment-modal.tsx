@@ -91,7 +91,7 @@ export function RecordPaymentButton({
           >
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
-                <h2 id="record-payment-title" className="text-lg font-semibold text-ink-900">
+                <h2 id="record-payment-title" className="text-lg font-semibold text-ash-900">
                   Record payment
                 </h2>
                 <p className="mt-1 text-xs text-ash-600">
@@ -131,14 +131,14 @@ export function RecordPaymentButton({
                       type="text"
                       name="paid_from"
                       placeholder="Type the bank or cash account name"
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                      className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
                       required
                     />
                   ) : (
                     <select
                       name="paid_from"
                       required
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                      className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
                       defaultValue=""
                     >
                       <option value="" disabled>— pick an account —</option>
@@ -160,7 +160,7 @@ export function RecordPaymentButton({
                       step="0.01"
                       min="0"
                       required
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                      className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
                     />
                   </FieldLabel>
                   <FieldLabel label="Payment date" required>
@@ -169,7 +169,7 @@ export function RecordPaymentButton({
                       name="posting_date"
                       defaultValue={today}
                       required
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                      className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
                     />
                   </FieldLabel>
                 </div>
@@ -178,7 +178,7 @@ export function RecordPaymentButton({
                   <select
                     name="mode_of_payment"
                     defaultValue=""
-                    className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                    className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
                   >
                     <option value="">— optional —</option>
                     {modesOfPayment.map((m) => (
@@ -193,14 +193,14 @@ export function RecordPaymentButton({
                       type="text"
                       name="reference_no"
                       placeholder="Cheque no. / transfer ref"
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                      className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
                     />
                   </FieldLabel>
                   <FieldLabel label="Reference date">
                     <input
                       type="date"
                       name="reference_date"
-                      className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+                      className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
                     />
                   </FieldLabel>
                 </div>

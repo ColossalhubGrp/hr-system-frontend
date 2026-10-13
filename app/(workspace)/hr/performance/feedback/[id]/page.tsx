@@ -105,7 +105,7 @@ export default async function FeedbackDetailPage({
                   href={
                     `/employee/${encodeURIComponent(f.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {f.employeeName ?? f.employee}
                 </Link>

@@ -225,7 +225,7 @@ export function CandidateProfileClient({
                 </div>
 
                 {/* Hero */}
-                <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                     <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:gap-6">
                         <div className="flex-1 min-w-0">
                             <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">Candidate</p>
@@ -299,14 +299,14 @@ export function CandidateProfileClient({
                     </div>
 
                     {sortedApps.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                             <p className="mt-1 text-sm font-semibold text-[#0A1128]">No applications yet</p>
                             <p className="max-w-sm text-xs text-[#A3A3A3]">
                                 When this candidate applies to a job, the application will appear here.
                             </p>
                         </div>
                     ) : (
-                        <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+                        <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
                             <div className="hidden grid-cols-[2fr_140px_120px_140px_110px_80px] items-center gap-4 border-b border-[#E5E5E5] px-6 py-4 text-sm font-semibold text-[#0A1128] lg:grid">
                                 <div>Job</div>
                                 <div>Status</div>
@@ -374,7 +374,7 @@ export function CandidateProfileClient({
                 </section>
 
                 {!candidate?.cv_attachment && (
-                    <div className="flex items-center gap-3 rounded-xl border border-[#E5E5E5] bg-white p-4">
+                    <div className="flex items-center gap-3 rounded-xl border border-[#E5E5E5] bg-surface p-4">
                         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#F5F5F5] text-[#A3A3A3]">
                             <FileText className="h-4 w-4" />
                         </span>
@@ -408,7 +408,7 @@ function StatTile({
                     ? { fg: "#166534", bg: "#DCFCE7" }
                     : { fg: "#525252", bg: "#F5F5F5" }
     return (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span

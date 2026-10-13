@@ -30,7 +30,7 @@ export function AttendanceSettingsForm({
         </p>
       )}
       {state.success && (
-        <p className="flex items-center gap-2 rounded-card border border-rise/30 bg-rise/[0.06] px-4 py-3 text-sm text-ink-900">
+        <p className="flex items-center gap-2 rounded-card border border-rise/30 bg-rise/[0.06] px-4 py-3 text-sm text-ash-900">
           <CheckCircle2 className="h-4 w-4 text-rise" />
           Saved. New settings apply to the next check-in / shift assignment.
         </p>
@@ -42,10 +42,10 @@ export function AttendanceSettingsForm({
             type="checkbox"
             name="allow_geolocation_tracking"
             defaultChecked={initial.allowGeolocationTracking}
-            className="mt-1 h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            className="mt-1 h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
           />
           <span className="flex flex-col gap-1">
-            <span className="font-medium text-ink-900">
+            <span className="font-medium text-ash-900">
               Allow geolocation tracking on check-in
             </span>
             <span className="text-xs text-ash-600">
@@ -61,10 +61,10 @@ export function AttendanceSettingsForm({
             type="checkbox"
             name="allow_multiple_shift_assignments"
             defaultChecked={initial.allowMultipleShiftAssignments}
-            className="mt-1 h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+            className="mt-1 h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
           />
           <span className="flex flex-col gap-1">
-            <span className="font-medium text-ink-900">
+            <span className="font-medium text-ash-900">
               Allow overlapping Shift Assignments
             </span>
             <span className="text-xs text-ash-600">

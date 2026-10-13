@@ -89,7 +89,7 @@ export function CategorizedQuestionsEditor({ questions, onChange }: Props) {
           {questions.map((q, index) => (
             <div
               key={index}
-              className="rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
+              className="rounded-lg border border-gray-200 bg-surface p-3 shadow-sm"
             >
               <div className="flex items-start gap-2">
                 <div className="flex-shrink-0 mt-1.5 w-6 h-6 rounded-full bg-[#034078]/10 text-[#034078] text-xs font-semibold flex items-center justify-center">

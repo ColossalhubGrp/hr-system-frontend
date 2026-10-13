@@ -127,7 +127,7 @@ function StatTile({
     accent: string
 }) {
     return (
-        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-4">
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                 {label}
             </p>
@@ -247,7 +247,7 @@ export default function CandidateInterviewsPage() {
 
                 {/* List */}
                 {interviews.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-white p-12 text-center">
+                    <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-surface p-12 text-center">
                         <span
                             className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl text-[#A3A3A3]"
                             style={{ background: "#F5F5F5" }}
@@ -269,7 +269,7 @@ export default function CandidateInterviewsPage() {
                             return (
                                 <div
                                     key={interview.name}
-                                    className="rounded-2xl border border-[#E5E5E5] bg-white p-5"
+                                    className="rounded-2xl border border-[#E5E5E5] bg-surface p-5"
                                 >
                                     <div className="flex items-start gap-4">
                                         <div className="min-w-0 flex-1 space-y-3">

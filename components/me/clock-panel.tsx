@@ -160,8 +160,8 @@ export function ClockPanel({
           </p>
         ) : geoState === "ok" && coords ? (
           <div className="mt-1 flex flex-col gap-1">
-            <p className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-900">
-              <MapPin className="h-4 w-4 text-ink-700" />
+            <p className="inline-flex items-center gap-1.5 text-sm font-medium text-ash-900">
+              <MapPin className="h-4 w-4 text-ash-800" />
               {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
             </p>
             <p className="text-xs text-ash-500">
@@ -170,7 +170,7 @@ export function ClockPanel({
               <button
                 type="button"
                 onClick={recapture}
-                className="font-medium text-ink-700 underline-offset-2 hover:underline focus-ring"
+                className="font-medium text-ash-800 underline-offset-2 hover:underline focus-ring"
               >
                 Re-capture
               </button>

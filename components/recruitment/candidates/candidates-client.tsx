@@ -92,7 +92,7 @@ function StatChip({
                     ? { fg: "#166534", bg: "#DCFCE7" }
                     : { fg: "#525252", bg: "#F5F5F5" }
     return (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span
@@ -349,7 +349,7 @@ export function CandidatesClient({
                         <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#034078]">
                             <Users className="h-5 w-5" />
                         </div>
@@ -364,7 +364,7 @@ export function CandidatesClient({
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+                        <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
                             {/* Table header — desktop */}
                             <div className="hidden grid-cols-[2fr_1.6fr_160px_120px_140px_80px] items-center gap-4 border-b border-[#E5E5E5] px-6 py-4 text-sm font-semibold text-[#0A1128] lg:grid">
                                 <div>Candidate</div>
@@ -458,7 +458,7 @@ export function CandidatesClient({
                                         type="button"
                                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                                         disabled={safePage === 1}
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2 text-xs font-medium text-[#525252] transition-colors hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-surface px-2 text-xs font-medium text-[#525252] transition-colors hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
                                         aria-label="Previous page"
                                     >
                                         <ChevronLeft className="h-3.5 w-3.5" />
@@ -469,7 +469,7 @@ export function CandidatesClient({
                                             <button
                                                 type="button"
                                                 onClick={() => setPage(1)}
-                                                className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-white text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
+                                                className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-surface text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
                                             >
                                                 1
                                             </button>
@@ -502,7 +502,7 @@ export function CandidatesClient({
                                             <button
                                                 type="button"
                                                 onClick={() => setPage(totalPages)}
-                                                className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-white text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
+                                                className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-surface text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
                                             >
                                                 {totalPages}
                                             </button>
@@ -512,7 +512,7 @@ export function CandidatesClient({
                                         type="button"
                                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                                         disabled={safePage === totalPages}
-                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2 text-xs font-medium text-[#525252] transition-colors hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
+                                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-surface px-2 text-xs font-medium text-[#525252] transition-colors hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
                                         aria-label="Next page"
                                     >
                                         Next

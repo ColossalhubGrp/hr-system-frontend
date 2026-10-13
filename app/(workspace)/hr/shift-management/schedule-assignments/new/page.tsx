@@ -34,7 +34,7 @@ export default async function NewScheduleAssignmentPage() {
           <UserCog className="h-3.5 w-3.5" />
           HR · Shift Management · New schedule assignment
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Put an employee on a recurring schedule
         </h1>
       </header>

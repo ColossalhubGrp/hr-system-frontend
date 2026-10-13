@@ -201,7 +201,7 @@ function AllocationsTab({
                               onClick={() =>
                                 setAdjustFor(adjustFor === r.name ? null : r.name)
                               }
-                              className="rounded-chip border border-hairline px-2 py-1 text-[10px] font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800"
+                              className="rounded-chip border border-hairline px-2 py-1 text-[10px] font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900"
                             >
                               Adjust
                             </button>
@@ -239,7 +239,7 @@ function AdjustForm({ name, onClose }: { name: string; onClose: () => void }) {
         <select
           name="direction"
           defaultValue="add"
-          className="h-8 rounded-md border border-hairline bg-white px-2"
+          className="h-8 rounded-md border border-hairline bg-surface px-2"
         >
           <option value="add">Add (+)</option>
           <option value="deduct">Deduct (−)</option>
@@ -253,7 +253,7 @@ function AdjustForm({ name, onClose }: { name: string; onClose: () => void }) {
           min={0}
           step={0.5}
           required
-          className="h-8 w-24 rounded-md border border-hairline bg-white px-2"
+          className="h-8 w-24 rounded-md border border-hairline bg-surface px-2"
         />
       </label>
       <label className="flex flex-1 flex-col gap-1">
@@ -261,14 +261,14 @@ function AdjustForm({ name, onClose }: { name: string; onClose: () => void }) {
         <input
           name="reason"
           placeholder="Manual correction, court order, backfill…"
-          className="h-8 rounded-md border border-hairline bg-white px-2"
+          className="h-8 rounded-md border border-hairline bg-surface px-2"
         />
       </label>
       <Submit label="Adjust" small />
       <button
         type="button"
         onClick={onClose}
-        className="h-8 rounded-chip px-2 text-ash-500 hover:bg-canvas hover:text-ink-800"
+        className="h-8 rounded-chip px-2 text-ash-500 hover:bg-canvas hover:text-ash-900"
       >
         <X className="h-3.5 w-3.5" />
       </button>
@@ -312,7 +312,7 @@ function PolicyAssignmentsTab({
               name="leave_policy"
               required
               defaultValue=""
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
             >
               <option value="" disabled>
                 —
@@ -336,7 +336,7 @@ function PolicyAssignmentsTab({
                   e.target.value as "Leave Period" | "Joining Date" | "Manual",
                 )
               }
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
             >
               <option value="Leave Period">Leave Period</option>
               <option value="Joining Date">Joining Date</option>
@@ -352,7 +352,7 @@ function PolicyAssignmentsTab({
                 name="leave_period"
                 required
                 defaultValue=""
-                className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+                className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
               >
                 <option value="" disabled>
                   {periods.length === 0
@@ -520,7 +520,7 @@ function CompRequestsTab({
               <input
                 name="reason"
                 placeholder="Attended launch weekend / covered on-call…"
-                className="h-10 rounded-md border border-hairline bg-white px-2 text-sm"
+                className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm"
               />
             </label>
             <div className="sm:col-span-6 flex justify-end">
@@ -664,7 +664,7 @@ function ControlPanelTab({
                       return next;
                     })
                   }
-                  className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+                  className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
                 />
                 <span className="flex-1">{e.employeeName}</span>
                 <span className="text-xs text-ash-500">{e.department ?? "—"}</span>
@@ -778,7 +778,7 @@ function EmpSelect({
         name="employee"
         required
         defaultValue=""
-        className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
       >
         <option value="" disabled>
           Select employee
@@ -814,7 +814,7 @@ function SelectField({
         name={name}
         required={required}
         defaultValue=""
-        className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
       >
         <option value="" disabled={required}>
           —
@@ -848,7 +848,7 @@ function DateField({
         type="date"
         name={name}
         required={required}
-        className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
       />
     </label>
   );
@@ -877,7 +877,7 @@ function NumberField({
         step={step}
         min={0}
         required={required}
-        className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
       />
     </label>
   );
@@ -900,7 +900,7 @@ function CheckField({
         type="checkbox"
         name={name}
         defaultChecked={defaultChecked}
-        className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+        className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
       />
       {label}
     </label>
@@ -1023,7 +1023,7 @@ function SubmitTinyBtn({ label, tone }: { label: string; tone?: "fall" }) {
         "rounded-chip border border-hairline px-2 py-1 text-[10px] font-medium transition hover:border-ink-400",
         tone === "fall"
           ? "text-fall hover:bg-fall/10"
-          : "text-ash-700 hover:text-ink-800",
+          : "text-ash-700 hover:text-ash-900",
       )}
     >
       {pending ? <Loader2 className="h-3 w-3 animate-spin" /> : label}
@@ -1177,7 +1177,7 @@ function BalancesTab({
               rows.map((r) => (
                 <tr key={r.employee} className="border-b border-hairline last:border-b-0">
                   <td className="sticky left-0 z-[1] bg-surface px-3 py-2">
-                    <div className="font-medium text-ink-900">
+                    <div className="font-medium text-ash-900">
                       {r.employeeName ?? r.employee}
                     </div>
                     <div className="text-xs text-ash-500">{r.employee}</div>
@@ -1213,7 +1213,7 @@ function BalancesTab({
                       </td>
                     );
                   })}
-                  <td className="px-3 py-2 text-right font-semibold text-ink-900">
+                  <td className="px-3 py-2 text-right font-semibold text-ash-900">
                     {r.totalRemaining.toFixed(1)}
                   </td>
                 </tr>
@@ -1229,12 +1229,12 @@ function BalancesTab({
               {leaveTypes.map((t) => {
                 const p = totals.perType[t];
                 return (
-                  <td key={t} className="px-3 py-2 text-right font-semibold text-ink-900">
+                  <td key={t} className="px-3 py-2 text-right font-semibold text-ash-900">
                     {p ? p.remaining.toFixed(1) : "—"}
                   </td>
                 );
               })}
-              <td className="px-3 py-2 text-right font-semibold text-ink-900">
+              <td className="px-3 py-2 text-right font-semibold text-ash-900">
                 {totals.totalLiabilityDays.toFixed(1)}
               </td>
             </tr>
@@ -1280,7 +1280,7 @@ function StatTile({
       <p className="text-[10px] font-medium uppercase tracking-wide text-ash-500">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold text-ink-900">{value}</p>
+      <p className="mt-1 text-2xl font-semibold text-ash-900">{value}</p>
       {hint && <p className="mt-0.5 text-[11px] text-ash-500">{hint}</p>}
     </div>
   );

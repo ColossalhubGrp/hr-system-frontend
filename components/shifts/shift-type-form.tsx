@@ -148,7 +148,7 @@ export function ShiftTypeForm({
               type="checkbox"
               name="enable_auto_attendance"
               defaultChecked={initial?.enableAutoAttendance}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Enable auto-attendance for this shift
           </label>
@@ -157,7 +157,7 @@ export function ShiftTypeForm({
               type="checkbox"
               name="allow_check_out_after_shift_end_time"
               defaultChecked={initial?.allowCheckOutAfterShiftEndTime}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Allow check-out after the shift ends
           </label>
@@ -166,7 +166,7 @@ export function ShiftTypeForm({
               type="checkbox"
               name="mark_auto_attendance_on_holidays"
               defaultChecked={initial?.markAutoAttendanceOnHolidays}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Mark attendance even on holidays (retail / hospitals / call centres)
           </label>
@@ -175,7 +175,7 @@ export function ShiftTypeForm({
               type="checkbox"
               name="enable_late_entry_marking"
               defaultChecked={initial?.enableLateEntryMarking}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Flag late entries on the Attendance record
           </label>
@@ -184,7 +184,7 @@ export function ShiftTypeForm({
               type="checkbox"
               name="enable_early_exit_marking"
               defaultChecked={initial?.enableEarlyExitMarking}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Flag early exits on the Attendance record
           </label>
@@ -337,7 +337,7 @@ export function ShiftTypeForm({
                   name="allowed_locations"
                   value={loc}
                   defaultChecked={initial?.allowedLocations?.includes(loc) ?? false}
-                  className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+                  className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
                 />
                 {loc}
               </label>

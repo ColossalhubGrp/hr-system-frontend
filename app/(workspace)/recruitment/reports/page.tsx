@@ -87,7 +87,7 @@ function StatCard({
                     ? { fg: "#9A3412", bg: "#FFF7ED" }
                     : { fg: "#525252", bg: "#F5F5F5" }
     return (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span
@@ -260,7 +260,7 @@ export default function ReportsPage() {
 
                 {/* Empty / list */}
                 {reports.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-20 text-center">
+                    <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-20 text-center">
                         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#034078]">
                             <Sparkles className="h-6 w-6" />
                         </div>
@@ -277,13 +277,13 @@ export default function ReportsPage() {
                         </Button>
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                         <PieChart className="h-8 w-8 text-[#A3A3A3]" />
                         <p className="text-sm font-semibold text-[#0A1128]">No reports match your search</p>
                         <p className="text-sm text-[#A3A3A3]">Try a different keyword or clear the search.</p>
                     </div>
                 ) : (
-                    <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+                    <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
                         <div className="hidden grid-cols-[2.4fr_120px_120px_140px_140px_140px] items-center gap-4 border-b border-[#E5E5E5] px-6 py-4 text-sm font-semibold text-[#0A1128] lg:grid">
                             <div>Job</div>
                             <div>Applied</div>

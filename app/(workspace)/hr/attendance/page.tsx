@@ -39,7 +39,7 @@ const ATT_TONES: Record<string, string> = {
   Absent: "bg-fall/10 text-fall ring-fall/20",
   "On Leave": "bg-ash-100 text-ash-700 ring-ash-200",
   "Half Day": "bg-amber-100 text-amber-800 ring-amber-200",
-  "Work From Home": "bg-ink-50 text-ink-800 ring-ink-100",
+  "Work From Home": "bg-ink-50 text-ash-900 ring-ink-100",
 };
 
 const TABS = [
@@ -85,21 +85,21 @@ export default async function AttendancePage({
           <div className="flex flex-wrap gap-2">
             <Link
               href={"/hr/attendance/setup" as Route}
-              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
             >
               <Settings2 className="h-4 w-4" />
               Setup
             </Link>
             <Link
               href={"/hr/attendance/bulk" as Route}
-              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
             >
               <ClipboardList className="h-4 w-4" />
               Bulk mark
             </Link>
             <Link
               href={"/hr/attendance/upload" as Route}
-              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+              className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
             >
               <Upload className="h-4 w-4" />
               Upload CSV

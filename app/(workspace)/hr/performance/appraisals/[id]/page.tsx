@@ -110,7 +110,7 @@ export default async function AppraisalDetailPage({
                   href={
                     `/employee/${encodeURIComponent(a.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {a.employeeName ?? a.employee}
                 </Link>
@@ -166,7 +166,7 @@ function Score({
         {label}
       </p>
       <p
-        className={`mt-2 text-2xl font-semibold ${highlight ? "text-ink-800" : "text-ink-900"}`}
+        className={`mt-2 text-2xl font-semibold ${highlight ? "text-ash-900" : "text-ash-900"}`}
       >
         {value == null ? "—" : value.toFixed(2)}
       </p>

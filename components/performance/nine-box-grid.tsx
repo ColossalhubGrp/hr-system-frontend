@@ -86,7 +86,7 @@ function Cell({
             {cell.performance} perf · {cell.potential} pot
           </p>
         </div>
-        <span className="rounded-chip bg-surface px-2 py-0.5 text-[11px] font-semibold text-ink-800">
+        <span className="rounded-chip bg-surface px-2 py-0.5 text-[11px] font-semibold text-ash-900">
           {cell.entries.length}
         </span>
       </header>
@@ -101,7 +101,7 @@ function Cell({
             return (
               <span
                 key={e.appraisalId}
-                className="inline-flex items-center rounded-chip border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-ink-800"
+                className="inline-flex items-center rounded-chip border border-hairline bg-surface px-2 py-1 text-[11px] font-medium text-ash-900"
                 title={`${e.performance} performance · ${e.potential} potential`}
               >
                 <span className="truncate max-w-[120px]">
@@ -193,7 +193,7 @@ function toneFor(
       return {
         bg: "bg-canvas/80",
         border: "border-hairline",
-        text: "text-ink-800",
+        text: "text-ash-900",
       };
     case "Low-Medium":
       return {

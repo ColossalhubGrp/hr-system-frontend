@@ -68,7 +68,7 @@ function StatChip({
                 ? { fg: "#9A3412", bg: "#FFF7ED" }
                 : { fg: "#525252", bg: "#F5F5F5" }
     return (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span
@@ -231,7 +231,7 @@ export default function HrMessagesPage() {
 
                 {/* Compose */}
                 {composeOpen && (
-                    <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                    <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                         <header className="border-b border-[#E5E5E5] px-6 py-4">
                             <h2 className="text-base font-semibold text-[#0A1128]">Compose new message</h2>
                             <p className="text-xs text-[#525252]">
@@ -352,7 +352,7 @@ export default function HrMessagesPage() {
 
                 {/* Inbox */}
                 {filtered.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#034078]">
                             <Inbox className="h-5 w-5" />
                         </div>
@@ -376,7 +376,7 @@ export default function HrMessagesPage() {
                             return (
                                 <li
                                     key={m.name}
-                                    className="rounded-2xl border bg-white shadow-sm overflow-hidden"
+                                    className="rounded-2xl border bg-surface shadow-sm overflow-hidden"
                                     style={{
                                         borderColor: unread ? "#BFDBFE" : "#E5E5E5",
                                         boxShadow: unread ? "0 0 0 4px rgba(3, 64, 120, 0.04)" : undefined,

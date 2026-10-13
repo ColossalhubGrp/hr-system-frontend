@@ -21,7 +21,7 @@ export default function NewTemplatePage() {
           <FileText className="h-3.5 w-3.5" />
           HR · Performance · New appraisal template
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Create a template
         </h1>
       </header>

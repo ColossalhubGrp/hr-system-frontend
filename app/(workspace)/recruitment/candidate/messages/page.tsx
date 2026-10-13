@@ -323,7 +323,7 @@ export default function CandidateMessagesPage() {
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px,1fr]">
                     {/* Threads list */}
-                    <div className="rounded-2xl border border-[#E5E5E5] bg-white">
+                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface">
                         <div className="border-b border-[#E5E5E5] px-4 py-3">
                             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                                 Conversations
@@ -393,7 +393,7 @@ export default function CandidateMessagesPage() {
 
                     {/* Thread + Compose */}
                     <div className="space-y-4">
-                        <div className="rounded-2xl border border-[#E5E5E5] bg-white">
+                        <div className="rounded-2xl border border-[#E5E5E5] bg-surface">
                             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#E5E5E5] px-5 py-4">
                                 <div className="min-w-0">
                                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -473,7 +473,7 @@ export default function CandidateMessagesPage() {
                         </div>
 
                         {/* Compose */}
-                        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5">
+                        <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5">
                             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
                                 Compose
                             </p>

@@ -78,7 +78,7 @@ export default async function EditEmployeePage({
           <Pencil className="h-3.5 w-3.5" />
           HR · Employee · Edit
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Edit {emp.name}
         </h1>
         <p className="text-sm text-ash-600">

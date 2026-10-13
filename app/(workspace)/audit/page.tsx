@@ -347,7 +347,7 @@ export default async function AuditLogPage({
           <ShieldCheck className="h-3.5 w-3.5" />
           HR · Audit log
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Audit log
         </h1>
         <p className="text-sm text-ash-600">
@@ -455,7 +455,7 @@ export default async function AuditLogPage({
 function OpPill({ op }: { op: string }) {
   const colour =
     op === "Login" ? "bg-emerald-100 text-emerald-700"
-    : op === "Logout" ? "bg-slate-200 text-slate-700"
+    : op === "Logout" ? "bg-canvas text-ash-700"
     : op === "Created" ? "bg-primary/10 text-primary"
     : op === "Updated" ? "bg-amber-100 text-amber-800"
     : op === "Submitted" ? "bg-sky-100 text-sky-800"

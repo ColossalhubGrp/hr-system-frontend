@@ -29,7 +29,7 @@ export default async function NewAdvancePage() {
           <Wallet className="h-3.5 w-3.5" />
           HR · Advances · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Create an employee advance
         </h1>
       </header>

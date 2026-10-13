@@ -25,7 +25,7 @@ export default async function NewShiftLocationPage() {
           <MapPin className="h-3.5 w-3.5" />
           HR · Shift Management · New location
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Define a shift location
         </h1>
         <p className="text-sm text-ash-600">

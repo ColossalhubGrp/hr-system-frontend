@@ -155,14 +155,14 @@ export function ExpenseDecisionBar({
               value={payableAccount}
               onChange={(e) => setPayableAccount(e.target.value)}
               placeholder="Type the account name"
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
           ) : (
             <select
               value={payableAccount}
               onChange={(e) => setPayableAccount(e.target.value)}
               className={cn(
-                "rounded-md border bg-white px-2 py-1.5 text-sm focus-ring",
+                "rounded-md border bg-surface px-2 py-1.5 text-sm focus-ring",
                 missingPayable ? "border-amber-400" : "border-hairline",
               )}
             >
@@ -181,13 +181,13 @@ export function ExpenseDecisionBar({
               value={costCenter}
               onChange={(e) => setCostCenter(e.target.value)}
               placeholder="Type the cost center name"
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
           ) : (
             <select
               value={costCenter}
               onChange={(e) => setCostCenter(e.target.value)}
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             >
               <option value="">— use company default —</option>
               {costCenters.map((c) => (
@@ -198,12 +198,12 @@ export function ExpenseDecisionBar({
         </FieldLabel>
 
         <FieldLabel label="Paid on filing?">
-          <label className="flex h-9 items-center gap-2 rounded-md border border-hairline bg-white px-2 text-sm text-ash-700 focus-within:ring-2 focus-within:ring-ink-400/40">
+          <label className="flex h-9 items-center gap-2 rounded-md border border-hairline bg-surface px-2 text-sm text-ash-700 focus-within:ring-2 focus-within:ring-ink-400/40">
             <input
               type="checkbox"
               checked={isPaid}
               onChange={(e) => setIsPaid(e.target.checked)}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             <span className="text-xs">Employee already reimbursed</span>
           </label>
@@ -214,7 +214,7 @@ export function ExpenseDecisionBar({
             <select
               value={modeOfPayment}
               onChange={(e) => setModeOfPayment(e.target.value)}
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             >
               <option value="">— pick one —</option>
               {modesOfPayment.map((m) => (
@@ -231,7 +231,7 @@ export function ExpenseDecisionBar({
               onChange={(e) => setRemark(e.target.value)}
               rows={2}
               placeholder="Optional — visible on the claim"
-              className="rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+              className="rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
             />
           </FieldLabel>
         </div>

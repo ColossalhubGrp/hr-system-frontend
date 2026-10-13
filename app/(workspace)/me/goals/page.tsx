@@ -10,7 +10,7 @@ import { listMyGoals } from "@/lib/frappe/my-self-service";
 export const metadata = { title: "My goals · Colossal HR" };
 
 const TONES: Record<string, string> = {
-  "In Progress": "bg-ink-50 text-ink-800 ring-ink-100",
+  "In Progress": "bg-ink-50 text-ash-900 ring-ink-100",
   Completed: "bg-rise/10 text-rise ring-rise/20",
   Pending: "bg-amber-100 text-amber-800 ring-amber-200",
   Closed: "bg-ash-100 text-ash-700 ring-ash-200",

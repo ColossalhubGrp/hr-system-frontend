@@ -32,7 +32,7 @@ export default async function NewShiftRequestPage({
           <Clock className="h-3.5 w-3.5" />
           HR · Shift Management · New request
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           File a shift request
         </h1>
       </header>

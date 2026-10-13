@@ -47,7 +47,7 @@ export default async function EditScheduleAssignmentPage({
           <UserCog className="h-3.5 w-3.5" />
           HR · Shift Management · Edit schedule assignment
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Edit {sa.id}
         </h1>
       </header>

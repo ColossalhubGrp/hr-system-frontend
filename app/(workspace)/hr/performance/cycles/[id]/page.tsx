@@ -89,11 +89,11 @@ export default async function CycleDetailPage({
           HR · Performance · Cycle
         </div>
         <div className="flex flex-wrap items-baseline gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             {cycle.cycleName}
           </h1>
           {cycle.status && (
-            <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+            <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
               {cycle.status}
             </span>
           )}
@@ -125,7 +125,7 @@ export default async function CycleDetailPage({
             </h2>
             <Link
               href={"/settings/appraisal-templates" as Route}
-              className="text-xs text-ash-500 underline underline-offset-2 hover:text-ink-700"
+              className="text-xs text-ash-500 underline underline-offset-2 hover:text-ash-800"
             >
               Manage templates
             </Link>
@@ -173,7 +173,7 @@ export default async function CycleDetailPage({
                   href={`/hr/performance/goals/${encodeURIComponent(g.goal)}` as Route}
                   className="flex min-w-0 flex-1 flex-col focus-ring rounded-md"
                 >
-                  <span className="truncate font-medium text-ink-800">
+                  <span className="truncate font-medium text-ash-900">
                     {g.goalName ?? g.goal}
                   </span>
                   <span className="truncate text-xs text-ash-500">
@@ -181,7 +181,7 @@ export default async function CycleDetailPage({
                   </span>
                 </Link>
                 {g.weight > 0 && (
-                  <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+                  <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
                     {Math.round(g.weight)}%
                   </span>
                 )}

@@ -50,7 +50,7 @@ export default async function GoalDetailPage({
             <StatusPill status={g.status} />
             <span>· {displayProgress}% progress</span>
             {g.isGroup && (
-              <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+              <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
                 Group
               </span>
             )}
@@ -81,7 +81,7 @@ export default async function GoalDetailPage({
                 href={
                   `/hr/performance/goals/${encodeURIComponent(g.parentGoal)}` as Route
                 }
-                className="font-medium text-ink-800 hover:underline"
+                className="font-medium text-ash-900 hover:underline"
               >
                 {g.parentGoal}
               </Link>
@@ -95,10 +95,10 @@ export default async function GoalDetailPage({
                     href={`/hr/performance/goals/${encodeURIComponent(c.id)}` as Route}
                     className="flex min-w-0 flex-1 flex-col focus-ring rounded-md"
                   >
-                    <span className="truncate font-medium text-ink-800">
+                    <span className="truncate font-medium text-ash-900">
                       {c.name}
                       {c.isGroup && (
-                        <span className="ml-2 rounded-chip bg-ink-50 px-1.5 py-0.5 text-[10px] font-medium text-ink-800">
+                        <span className="ml-2 rounded-chip bg-ink-50 px-1.5 py-0.5 text-[10px] font-medium text-ash-900">
                           Group
                         </span>
                       )}
@@ -130,7 +130,7 @@ export default async function GoalDetailPage({
                   href={
                     `/employee/${encodeURIComponent(g.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {g.employeeName ?? g.employee}
                 </Link>
@@ -165,7 +165,7 @@ function Progress({ value }: { value: number }) {
         <span className="font-medium uppercase tracking-wide text-ash-500">
           Progress
         </span>
-        <span className="font-semibold text-ink-900">{v}%</span>
+        <span className="font-semibold text-ash-900">{v}%</span>
       </div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-hairline">
         <div

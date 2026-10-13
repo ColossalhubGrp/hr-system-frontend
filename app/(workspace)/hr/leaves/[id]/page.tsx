@@ -74,7 +74,7 @@ export default async function LeaveDetailPage({
           HR · Leaves · {app.id}
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             {app.employeeName ?? app.employee}
           </h1>
           <LeaveStatusBadge status={app.status} />
@@ -106,7 +106,7 @@ export default async function LeaveDetailPage({
                   href={
                     `/employee/${encodeURIComponent(app.employee)}` as Route
                   }
-                  className="font-medium text-ink-800 hover:underline"
+                  className="font-medium text-ash-900 hover:underline"
                 >
                   {app.employeeName ?? app.employee}
                 </Link>

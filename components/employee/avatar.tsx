@@ -33,7 +33,7 @@ export function EmployeeAvatar({
   return (
     <span
       className={cn(
-        "grid shrink-0 place-items-center overflow-hidden rounded-full bg-ink-100 font-semibold text-ink-700",
+        "grid shrink-0 place-items-center overflow-hidden rounded-full bg-ink-100 font-semibold text-ash-800",
         SIZES[size],
       )}
     >

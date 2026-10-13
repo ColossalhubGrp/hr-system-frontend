@@ -285,7 +285,7 @@ export default async function PerformancePage({
                       href={
                         `/employee/${encodeURIComponent(g.employee)}` as Route
                       }
-                      className="font-medium text-ink-800 hover:underline"
+                      className="font-medium text-ash-900 hover:underline"
                     >
                       {g.employeeName ?? g.employee}
                     </Link>

@@ -100,7 +100,7 @@ export function AttendanceRequestForm({
               name="half_day"
               checked={halfDay}
               onChange={(e) => setHalfDay(e.target.checked)}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Mark this request as a half-day
           </label>
@@ -117,7 +117,7 @@ export function AttendanceRequestForm({
             <input
               type="checkbox"
               name="include_holidays"
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Include holidays within the range
           </label>

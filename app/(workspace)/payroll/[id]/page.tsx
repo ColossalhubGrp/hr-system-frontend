@@ -314,7 +314,7 @@ export default async function PayRunDetail({
                 <ul className="mt-2 flex flex-wrap gap-1.5 text-xs">
                   {negativeSlips.slice(0, 12).map((s) => (
                     <li key={s.name}
-                        className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-white px-2 py-0.5 font-mono text-rose-800">
+                        className="inline-flex items-center gap-1 rounded-full border border-rose-300 bg-surface px-2 py-0.5 font-mono text-rose-800">
                       {s.employee_name} <span className="text-rose-500">({num(s.net_usd)})</span>
                     </li>
                   ))}

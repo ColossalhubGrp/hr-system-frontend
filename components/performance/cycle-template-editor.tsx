@@ -39,7 +39,7 @@ export function CycleTemplateEditor({
     return (
       <div className="flex flex-wrap items-center gap-2">
         {current ? (
-          <span className="rounded-chip bg-ink-50 px-2.5 py-1 text-xs font-medium text-ink-800">
+          <span className="rounded-chip bg-ink-50 px-2.5 py-1 text-xs font-medium text-ash-900">
             {current}
           </span>
         ) : (
@@ -58,7 +58,7 @@ export function CycleTemplateEditor({
         {templates.length === 0 && (
           <Link
             href={"/settings/appraisal-templates/new" as Route}
-            className="text-xs text-ink-700 underline underline-offset-2 hover:text-ink-900"
+            className="text-xs text-ash-800 underline underline-offset-2 hover:text-ash-900"
           >
             Create a template
           </Link>
@@ -82,7 +82,7 @@ export function CycleTemplateEditor({
       <select
         name="appraisal_template"
         defaultValue={current ?? ""}
-        className="h-9 w-full max-w-sm rounded-chip border border-hairline bg-surface px-3 text-sm text-ink-900 focus-ring"
+        className="h-9 w-full max-w-sm rounded-chip border border-hairline bg-surface px-3 text-sm text-ash-900 focus-ring"
       >
         <option value="">— none (clear) —</option>
         {templates.map((t) => (

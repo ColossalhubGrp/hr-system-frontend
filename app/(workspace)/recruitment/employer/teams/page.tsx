@@ -126,14 +126,14 @@ export default function EmployerTeamsPage() {
                             Create teams, assign managers, and group hiring needs by department.
                         </p>
                     </div>
-                    <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E5E5] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#525252]">
+                    <span className="inline-flex items-center gap-2 rounded-full border border-[#E5E5E5] bg-surface px-3 py-1.5 text-[11px] font-semibold text-[#525252]">
                         <Users className="h-3.5 w-3.5" />
                         {teams.length} {teams.length === 1 ? "team" : "teams"}
                     </span>
                 </div>
 
                 {/* Add team */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5">
+                <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5">
                     <div className="flex items-center gap-2">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -209,7 +209,7 @@ export default function EmployerTeamsPage() {
 
                 {/* Teams list */}
                 {teams.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-white p-12 text-center">
+                    <div className="rounded-2xl border border-dashed border-[#E5E5E5] bg-surface p-12 text-center">
                         <span
                             className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl text-[#A3A3A3]"
                             style={{ background: "#F5F5F5" }}
@@ -227,7 +227,7 @@ export default function EmployerTeamsPage() {
                         {teams.map((team) => (
                             <div
                                 key={team.name}
-                                className="rounded-2xl border border-[#E5E5E5] bg-white p-5"
+                                className="rounded-2xl border border-[#E5E5E5] bg-surface p-5"
                             >
                                 <div className="flex items-start gap-3">
                                     <div className="min-w-0 flex-1">

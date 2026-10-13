@@ -138,7 +138,7 @@ export function ShiftScheduleForm({
               type="checkbox"
               name="enabled"
               defaultChecked={initial?.enabled ?? true}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Enabled — allow this schedule to be assigned and materialised
           </label>
@@ -160,7 +160,7 @@ export function ShiftScheduleForm({
                 type="checkbox"
                 name={d.key}
                 defaultChecked={dayInitial(d.key, d.defaultOn)}
-                className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+                className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
               />
               {d.label}
             </label>

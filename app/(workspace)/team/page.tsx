@@ -43,7 +43,7 @@ export default async function MyTeamPage() {
           <Users className="h-3.5 w-3.5" />
           My Team · Directory
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           My team
         </h1>
         <p className="text-sm text-ash-600">
@@ -71,7 +71,7 @@ export default async function MyTeamPage() {
                   <td className="px-4 py-3">
                     <Link
                       href={`/employee/${encodeURIComponent(r.name)}` as Route}
-                      className="font-medium text-ink-800 hover:underline"
+                      className="font-medium text-ash-900 hover:underline"
                     >
                       {r.employee_name ?? r.name}
                     </Link>

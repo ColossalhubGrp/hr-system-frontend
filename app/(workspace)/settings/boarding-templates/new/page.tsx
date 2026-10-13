@@ -30,7 +30,7 @@ export default async function NewBoardingTemplatePage({
           Configuration · Boarding templates · New{" "}
           {kind === "onboarding" ? "onboarding" : "separation"} template
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           {kind === "onboarding"
             ? "Create an onboarding template"
             : "Create a separation template"}

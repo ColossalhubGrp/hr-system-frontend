@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider, NO_FLASH_SCRIPT } from "@/components/theme/theme-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -19,20 +20,30 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1E1B53",
+  // Theme-color is read by mobile browsers to tint the OS chrome.
+  // Pass both so dark-mode visitors see a dark address bar.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F8FAFC" },
+    { media: "(prefers-color-scheme: dark)",  color: "#0A0F20" },
+  ],
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <head>
+        {/* No-flash theme bootstrap. MUST run before React mounts
+            so <html class="dark"> is set on the very first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+      </head>
       <body className="font-sans">
-        {/* Radix Tooltip primitives require a TooltipProvider ancestor to
-            read open/close timing config from context. The recruitment-app
-            pages use bare <Tooltip> assuming this provider exists at the
-            root — installing it here once covers every page in the app. */}
-        <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+        <ThemeProvider>
+          {/* Radix Tooltip primitives require a TooltipProvider
+              ancestor; installing it here once covers every page. */}
+          <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

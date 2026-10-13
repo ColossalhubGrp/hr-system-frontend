@@ -117,7 +117,7 @@ export function DepartmentsAdmin({
                 <TableRow key={d.name} className="align-middle">
                   <TableCell className="px-5 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-base font-semibold text-ink-900">
+                      <span className="text-base font-semibold text-ash-900">
                         {d.department_name || d.name}
                       </span>
                       {d.is_group && (
@@ -137,13 +137,13 @@ export function DepartmentsAdmin({
                       </div>
                     )}
                   </TableCell>
-                  <TableCell className="px-5 text-sm text-ink-700">
+                  <TableCell className="px-5 text-sm text-ash-800">
                     {d.company ?? "—"}
                   </TableCell>
-                  <TableCell className="px-5 text-sm text-ink-700">
+                  <TableCell className="px-5 text-sm text-ash-800">
                     {d.parent_department ?? "—"}
                   </TableCell>
-                  <TableCell className="px-5 text-sm text-ink-700">
+                  <TableCell className="px-5 text-sm text-ash-800">
                     <span className="inline-flex items-center gap-1">
                       <Users className="h-3.5 w-3.5 text-ash-500" />
                       {d.leave_approver_count} · {d.expense_approver_count} ·{" "}

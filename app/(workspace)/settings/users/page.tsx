@@ -72,7 +72,7 @@ export default async function UsersAndRolesPage() {
             <UsersIcon className="h-3.5 w-3.5" />
             Settings · Users & Roles
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             Users & role assignments
           </h1>
           <p className="text-sm text-ash-600">
@@ -96,8 +96,8 @@ export default async function UsersAndRolesPage() {
                 key={role}
                 className="flex items-center justify-between rounded-card border border-hairline bg-surface px-3 py-2 text-sm shadow-card"
               >
-                <span className="font-medium text-ink-800">{role}</span>
-                <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+                <span className="font-medium text-ash-900">{role}</span>
+                <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
                   {ids.length}
                 </span>
               </div>
@@ -130,7 +130,7 @@ export default async function UsersAndRolesPage() {
             {users.map((u) => (
               <tr key={u.name} className="hover:bg-canvas/40">
                 <td className="px-4 py-3 align-top">
-                  <div className="font-medium text-ink-800">
+                  <div className="font-medium text-ash-900">
                     {u.full_name ?? u.name}
                   </div>
                   <div className="text-xs text-ash-500">{u.name}</div>
@@ -145,7 +145,7 @@ export default async function UsersAndRolesPage() {
                       u.roles.map((r) => (
                         <span
                           key={r}
-                          className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800"
+                          className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900"
                         >
                           {r}
                         </span>

@@ -56,7 +56,7 @@ export default async function NewAdjustmentPage({
               ? "retention bonus"
               : "incentive"}
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           {type === "additional"
             ? "Create an additional salary"
             : type === "retention"

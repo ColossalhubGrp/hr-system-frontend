@@ -33,7 +33,7 @@ export default async function MarkAttendancePage({
           <CalendarCheck className="h-3.5 w-3.5" />
           HR · Attendance · Mark
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Mark attendance
         </h1>
       </header>

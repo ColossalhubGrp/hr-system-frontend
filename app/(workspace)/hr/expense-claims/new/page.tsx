@@ -53,7 +53,7 @@ export default async function NewExpenseClaimPage() {
           <Receipt className="h-3.5 w-3.5" />
           HR · Expense Claims · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           File an expense claim
         </h1>
         <p className="text-sm text-ash-600">

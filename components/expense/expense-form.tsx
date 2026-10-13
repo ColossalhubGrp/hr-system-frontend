@@ -241,14 +241,14 @@ export function ExpenseClaimForm({
           />
         </Field>
         <Field label="Paid on filing?" htmlFor="is_paid">
-          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-white px-3 text-sm text-ash-700 focus-within:ring-2 focus-within:ring-ink-400/40">
+          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-surface px-3 text-sm text-ash-700 focus-within:ring-2 focus-within:ring-ink-400/40">
             <input
               id="is_paid"
               name="is_paid"
               type="checkbox"
               checked={isPaid}
               onChange={(e) => setIsPaid(e.target.checked)}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             <span>Employee already paid — mark as reimbursed</span>
           </label>

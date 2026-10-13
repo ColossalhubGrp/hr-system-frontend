@@ -55,7 +55,7 @@ const CLASS_META: Record<
   regular: {
     label: "Other taxable earning",
     hint: "Rarely used on terminal runs. Fully taxable.",
-    chip: "bg-slate-100 text-slate-700",
+    chip: "bg-canvas text-ash-700",
     fallbackCode: "OTHER_PAY",
   },
 };
@@ -376,7 +376,7 @@ export function TerminatePackageForm({
                         <select
                           value={r.code}
                           onChange={(e) => updateRow(r.rid, { code: e.target.value })}
-                          className="w-40 rounded-md border bg-white px-2 py-1 text-sm"
+                          className="w-40 rounded-md border bg-surface px-2 py-1 text-sm"
                         >
                           {validCodes.map((c) => (
                             <option key={c} value={c}>{c}</option>

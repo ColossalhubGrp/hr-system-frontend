@@ -39,7 +39,7 @@ export default async function EditShiftLocationPage({
           <MapPin className="h-3.5 w-3.5" />
           HR · Shift Management · Edit location
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Edit {loc.locationName}
         </h1>
       </header>

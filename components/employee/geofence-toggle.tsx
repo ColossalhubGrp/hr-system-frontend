@@ -34,7 +34,7 @@ export function GeofenceToggle({
         <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
           Geofence policy
         </p>
-        <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-ink-900">
+        <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-ash-900">
           {exempt ? (
             <>
               <ShieldCheck className="h-4 w-4 text-rise" />
@@ -42,7 +42,7 @@ export function GeofenceToggle({
             </>
           ) : (
             <>
-              <MapPin className="h-4 w-4 text-ink-700" />
+              <MapPin className="h-4 w-4 text-ash-800" />
               Follows shift policy — allowed anywhere if the shift has no
               location list
             </>
@@ -57,7 +57,7 @@ export function GeofenceToggle({
       action={dispatch}
       className="rounded-card border border-hairline bg-surface p-4 shadow-card"
     >
-      <p className="text-sm font-semibold text-ink-900">Geofence policy</p>
+      <p className="text-sm font-semibold text-ash-900">Geofence policy</p>
       <p className="mt-1 text-xs text-ash-600">
         Set by HR or Shift Manager. When exempt, this employee can clock in
         from anywhere — useful for field, sales, or remote staff.

@@ -36,7 +36,7 @@ export default async function NewCyclePage() {
           <RefreshCcw className="h-3.5 w-3.5" />
           HR · Performance · New appraisal cycle
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Define an appraisal cycle
         </h1>
         <p className="text-sm text-ash-600">

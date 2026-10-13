@@ -27,7 +27,7 @@ export default async function NewTravelPage() {
           <Plane className="h-3.5 w-3.5" />
           HR · Travel · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Request travel
         </h1>
       </header>

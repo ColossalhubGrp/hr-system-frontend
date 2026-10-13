@@ -48,7 +48,7 @@ export function LeavePeriodsAdmin({
               name="name"
               required
               placeholder="e.g. FY2026"
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -59,7 +59,7 @@ export function LeavePeriodsAdmin({
               type="date"
               name="from_date"
               required
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -70,7 +70,7 @@ export function LeavePeriodsAdmin({
               type="date"
               name="to_date"
               required
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
@@ -78,7 +78,7 @@ export function LeavePeriodsAdmin({
             <select
               name="company"
               defaultValue=""
-              className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+              className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
             >
               <option value="">—</option>
               {companies.map((c) => (
@@ -91,7 +91,7 @@ export function LeavePeriodsAdmin({
               type="checkbox"
               name="is_active"
               defaultChecked
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Active
           </label>
@@ -124,7 +124,7 @@ export function LeavePeriodsAdmin({
             <tbody className="divide-y divide-hairline">
               {rows.map((r) => (
                 <tr key={r.name}>
-                  <td className="px-4 py-2 font-medium text-ink-800">{r.name}</td>
+                  <td className="px-4 py-2 font-medium text-ash-900">{r.name}</td>
                   <td className="px-4 py-2 text-ash-700">{r.fromDate}</td>
                   <td className="px-4 py-2 text-ash-700">{r.toDate}</td>
                   <td className="px-4 py-2 text-ash-700">{r.company ?? "—"}</td>

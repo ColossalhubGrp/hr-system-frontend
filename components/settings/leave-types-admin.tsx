@@ -666,7 +666,7 @@ function LeaveTypeFields({
           id="earned_leave_frequency"
           name="earned_leave_frequency"
           defaultValue={initial?.earnedLeaveFrequency ?? ""}
-          className="h-10 w-full rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+          className="h-10 w-full rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
         >
           <option value="">—</option>
           <option value="Monthly">Monthly</option>
@@ -684,7 +684,7 @@ function LeaveTypeFields({
           id="allocate_on_day"
           name="allocate_on_day"
           defaultValue={initial?.allocateOnDay ?? ""}
-          className="h-10 w-full rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+          className="h-10 w-full rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
         >
           <option value="">—</option>
           <option value="Date of Joining">Date of Joining</option>
@@ -705,7 +705,7 @@ function LeaveTypeFields({
               ? String(initial.rounding === 1 ? "1.0" : initial.rounding)
               : "0.5"
           }
-          className="h-10 w-full rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+          className="h-10 w-full rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
         >
           <option value="0.25">0.25</option>
           <option value="0.5">0.5</option>

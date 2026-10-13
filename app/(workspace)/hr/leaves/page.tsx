@@ -37,7 +37,7 @@ export default async function LeavesPage({
             <Plane className="h-3.5 w-3.5" />
             HR · Leaves
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             Leave applications
           </h1>
           <p className="text-sm text-ash-600">
@@ -47,14 +47,14 @@ export default async function LeavesPage({
         <div className="flex flex-wrap gap-2">
           <Link
             href={"/hr/leaves/setup" as Route}
-            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
           >
             <Settings2 className="h-4 w-4" />
             Setup
           </Link>
           <Link
             href={"/hr/leaves/admin" as Route}
-            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
           >
             Leave admin
           </Link>
@@ -99,7 +99,7 @@ const TILE_TONES: Record<string, string> = {
   amber: "bg-amber-100/60 text-amber-800",
   rise: "bg-rise/10 text-rise",
   fall: "bg-fall/10 text-fall",
-  ink: "bg-ink-50/60 text-ink-800",
+  ink: "bg-ink-50/60 text-ash-900",
 };
 
 function SummaryTile({
@@ -116,7 +116,7 @@ function SummaryTile({
       <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-semibold text-ink-900">{value}</p>
+      <p className="mt-2 text-2xl font-semibold text-ash-900">{value}</p>
       <span
         className={`mt-3 inline-flex rounded-chip px-2 py-0.5 text-[10px] font-medium ${
           TILE_TONES[tone] ?? TILE_TONES.ink

@@ -1145,7 +1145,7 @@ function ClassStep({
                         { include_in_run: nextIncluded },
                       );
                     }}
-                    className="h-4 w-4 rounded border-slate-300"
+                    className="h-4 w-4 rounded border-hairline"
                   />
                 </TableCell>
                 <TableCell
@@ -2062,7 +2062,7 @@ function ReadOnlyHours({
             ? "bg-emerald-100 text-emerald-700"
             : source === "UPLOAD"
             ? "bg-purple-100 text-purple-700"
-            : "bg-slate-100 text-slate-700",
+            : "bg-canvas text-ash-700",
         )}
         title="Value from approved timesheet — edit on the Timesheets page"
       >
@@ -2196,7 +2196,7 @@ function ContractorPaymentCell({
 
       {open && (
         <div
-          className="absolute right-0 top-full z-30 mt-1 w-64 rounded-lg border bg-white p-3 shadow-xl"
+          className="absolute right-0 top-full z-30 mt-1 w-64 rounded-lg border bg-surface p-3 shadow-xl"
           onClick={(e) => e.stopPropagation()}
         >
           <input
@@ -2323,7 +2323,7 @@ function PreviewStep({
                 href={
                   `/employee/${encodeURIComponent(b.employee)}/edit?from=payroll&fix=${b.missing_fieldnames.join(",")}` as Route
                 }
-                className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-0.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
+                className="inline-flex items-center gap-1 rounded-full bg-surface px-2.5 py-0.5 text-xs font-semibold text-rose-700 hover:bg-rose-100"
               >
                 ⚠ {b.employee_name} · {b.missing.length} missing
               </Link>

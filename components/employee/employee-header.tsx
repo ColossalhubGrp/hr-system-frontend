@@ -72,7 +72,7 @@ export function EmployeeHeader({
           />
           <div className="min-w-0 flex flex-col gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+              <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
                 {emp.name}
               </h1>
               <StatusBadge status={emp.status} />

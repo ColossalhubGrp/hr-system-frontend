@@ -51,7 +51,7 @@ export default async function EditTrainingEventPage({
           <GraduationCap className="h-3.5 w-3.5" />
           HR · Training · Edit event
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Edit training event
         </h1>
       </header>

@@ -203,7 +203,7 @@ export function Sidebar() {
                 type="button"
                 onClick={() => setMobileOpen((v) => !v)}
                 aria-label={mobileOpen ? "Close menu" : "Open menu"}
-                className="fixed left-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#E5E5E5] bg-white shadow-sm hover:bg-[#F5F5F5] lg:hidden"
+                className="fixed left-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#E5E5E5] bg-surface shadow-sm hover:bg-[#F5F5F5] lg:hidden"
             >
                 {mobileOpen ? <X className="h-5 w-5 text-[#0A1128]" /> : <Menu className="h-5 w-5 text-[#0A1128]" />}
             </button>
@@ -220,7 +220,7 @@ export function Sidebar() {
             {/* Sidebar */}
             <aside
                 className={cn(
-                    "fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-[#E5E5E5] bg-white transition-transform",
+                    "fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-[#E5E5E5] bg-surface transition-transform",
                     "lg:translate-x-0",
                     mobileOpen ? "translate-x-0" : "-translate-x-full"
                 )}
@@ -228,7 +228,7 @@ export function Sidebar() {
                 {/* Brand */}
                 <div className="flex items-center gap-3 border-b border-[#E5E5E5] px-5 py-4">
                     <div
-                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-[#E5E5E5]"
+                        className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface ring-1 ring-[#E5E5E5]"
                         aria-hidden="true"
                     >
                         <Image
@@ -319,7 +319,7 @@ export function Sidebar() {
                             type="button"
                             onClick={() => setLogoutConfirmOpen(true)}
                             aria-label="Sign out"
-                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[#A3A3A3] transition-colors hover:bg-white hover:text-red-600"
+                            className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg text-[#A3A3A3] transition-colors hover:bg-surface hover:text-red-600"
                         >
                             <LogOut className="h-4 w-4" />
                         </button>

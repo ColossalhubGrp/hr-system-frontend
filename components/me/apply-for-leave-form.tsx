@@ -88,7 +88,7 @@ export function ApplyForLeaveForm({
             <input
               type="checkbox"
               name="half_day"
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Apply as half day
           </label>

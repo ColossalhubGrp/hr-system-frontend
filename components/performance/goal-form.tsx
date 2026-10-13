@@ -161,13 +161,13 @@ export function GoalForm({
           />
         </Field>
         <Field label="Group goal" htmlFor="is_group" hint="Container that aggregates child progress. Its own progress is read-only.">
-          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-white px-3 text-sm text-ash-700">
+          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-surface px-3 text-sm text-ash-700">
             <input
               type="checkbox"
               id="is_group"
               name="is_group"
               defaultChecked={Boolean(initial?.isGroup)}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             <span>Treat this as a group / parent goal</span>
           </label>

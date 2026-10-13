@@ -49,7 +49,7 @@ export default async function NewLeavePage({
           <Plane className="h-3.5 w-3.5" />
           HR · Leaves · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           File a leave application
         </h1>
         <p className="text-sm text-ash-600">

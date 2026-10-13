@@ -75,7 +75,7 @@ export default async function AppraisalCyclesPage() {
                       }
                       className="group flex flex-col focus-ring rounded-md"
                     >
-                      <span className="font-medium text-ink-800 group-hover:underline">
+                      <span className="font-medium text-ash-900 group-hover:underline">
                         {r.cycleName}
                       </span>
                       <span className="text-xs text-ash-500">
@@ -101,7 +101,7 @@ export default async function AppraisalCyclesPage() {
                   </td>
                   <td className="px-4 py-3">
                     {r.status ? (
-                      <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+                      <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
                         {r.status}
                       </span>
                     ) : (

@@ -229,7 +229,7 @@ function Card({
             <Building2 className="h-4 w-4" />
           </span>
           <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-sm font-semibold text-ink-900">
+            <span className="truncate text-sm font-semibold text-ash-900">
               {node.employeeName}
             </span>
             <span className="text-[10px] uppercase tracking-wide text-ash-500">
@@ -244,7 +244,7 @@ function Card({
             onClick={() => onToggle(node.id)}
             className={cn(
               "mt-2 inline-flex items-center justify-center gap-1 rounded-full border border-hairline bg-surface px-2 py-0.5 text-[10px] font-medium text-ash-600",
-              "hover:bg-canvas hover:text-ink-800 focus-ring",
+              "hover:bg-canvas hover:text-ash-900 focus-ring",
             )}
             title={isCollapsed ? "Expand" : "Collapse"}
           >
@@ -272,7 +272,7 @@ function Card({
         <div className="flex min-w-0 flex-1 flex-col">
           <Link
             href={`/employee/${encodeURIComponent(node.id)}` as Route}
-            className="truncate text-sm font-semibold text-ink-900 hover:underline"
+            className="truncate text-sm font-semibold text-ash-900 hover:underline"
             title={node.employeeName}
           >
             {node.employeeName}
@@ -298,7 +298,7 @@ function Card({
           onClick={() => onToggle(node.id)}
           className={cn(
             "mt-2 inline-flex items-center justify-center gap-1 rounded-full border border-hairline px-2 py-0.5 text-[10px] font-medium text-ash-600",
-            "hover:bg-canvas hover:text-ink-800 focus-ring",
+            "hover:bg-canvas hover:text-ash-900 focus-ring",
           )}
           title={isCollapsed ? "Expand direct reports" : "Collapse direct reports"}
         >

@@ -98,7 +98,7 @@ export default async function LoansPage({
           },
           {
             header: "Paid",
-            className: "text-right font-semibold text-ink-900",
+            className: "text-right font-semibold text-ash-900",
             cell: (r) => formatMoney(r.totalPaid),
           },
           { header: "Status", cell: (r) => <StatusPill status={r.status} /> },

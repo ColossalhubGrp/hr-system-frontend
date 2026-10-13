@@ -26,7 +26,7 @@ export default async function NewOvertimeRulePage() {
           <Clock className="h-3.5 w-3.5" />
           Settings · Overtime rules · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           New overtime rule
         </h1>
         <p className="text-sm text-ash-600">

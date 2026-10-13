@@ -64,7 +64,7 @@ export const WelcomeView = ({
         </p>
 
         {/* Important Notice card */}
-        <div className="mt-4 w-full overflow-hidden rounded-xl border border-[#E5E5E5] bg-white text-left shadow-sm">
+        <div className="mt-4 w-full overflow-hidden rounded-xl border border-[#E5E5E5] bg-surface text-left shadow-sm">
           {/* Notice header */}
           <div className="flex items-start gap-3 border-b border-[#E5E5E5] px-5 py-3">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#F97316]/10">

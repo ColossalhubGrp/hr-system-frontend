@@ -51,7 +51,7 @@ export default async function CalibrationPage({
           <Grid3X3 className="h-3.5 w-3.5" />
           HR · Performance · Calibration (9-box)
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           9-box calibration
         </h1>
         <p className="text-sm text-ash-600">
@@ -147,7 +147,7 @@ function Tile({
       ? "border-amber-300/40 bg-amber-50/60 text-amber-800"
       : tone === "ok"
         ? "border-rise/30 bg-rise/[0.06] text-rise"
-        : "border-hairline bg-surface text-ink-800";
+        : "border-hairline bg-surface text-ash-900";
   return (
     <div
       className={`flex flex-col gap-1 rounded-card border px-4 py-3 shadow-card ${toneCls}`}

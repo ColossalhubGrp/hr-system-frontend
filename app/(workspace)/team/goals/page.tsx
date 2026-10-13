@@ -48,7 +48,7 @@ export default async function TeamGoalsPage() {
           <Target className="h-3.5 w-3.5" />
           My Team · Goals
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Team goals
         </h1>
         <p className="text-sm text-ash-600">
@@ -77,7 +77,7 @@ export default async function TeamGoalsPage() {
                 const pct = Math.max(0, Math.min(100, Number(r.progress ?? 0)));
                 return (
                   <tr key={r.name} className="hover:bg-canvas/40">
-                    <td className="px-4 py-3 font-medium text-ink-800">
+                    <td className="px-4 py-3 font-medium text-ash-900">
                       <Link
                         href={`/hr/performance/goals/${encodeURIComponent(r.name)}` as Route}
                         className="hover:underline"

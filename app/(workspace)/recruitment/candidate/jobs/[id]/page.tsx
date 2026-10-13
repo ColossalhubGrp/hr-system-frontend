@@ -522,7 +522,7 @@ export default function CandidateJobDetailPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2 space-y-4">
                         {/* Hero */}
-                        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
+                        <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-6 shadow-sm">
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div className="min-w-0">
                                     <p className="text-[11px] font-semibold uppercase tracking-wider text-[#A3A3A3]">

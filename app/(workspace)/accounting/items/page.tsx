@@ -57,7 +57,7 @@ export default async function ItemsPage() {
             cell: (r) => (
               <Link
                 href={`/accounting/items/${encodeURIComponent(r.name)}` as Route}
-                className="font-mono text-sm text-ink-800 underline-offset-4 hover:underline"
+                className="font-mono text-sm text-ash-900 underline-offset-4 hover:underline"
               >
                 {r.itemCode}
               </Link>

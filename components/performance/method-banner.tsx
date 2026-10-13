@@ -25,7 +25,7 @@ export function PerformanceMethodBanner({
     return (
       <div className="flex items-center gap-3 rounded-card border border-amber-200 bg-amber-50/60 p-4 shadow-card">
         <Sparkles className="h-4 w-4 text-amber-700" />
-        <p className="text-sm text-ink-900">
+        <p className="text-sm text-ash-900">
           No active appraisal cycle for your company yet. Create one to choose
           the evaluation framework (KRA &amp; Goals / OKR / Balanced Scorecard).
         </p>
@@ -47,16 +47,16 @@ export function PerformanceMethodBanner({
     <div className="flex items-center gap-3 rounded-card border border-hairline bg-canvas px-4 py-2.5 text-xs text-ash-700">
       {icon}
       <span>
-        Active cycle <span className="font-medium text-ink-900">{cycle.cycleName}</span>{" "}
+        Active cycle <span className="font-medium text-ash-900">{cycle.cycleName}</span>{" "}
         evaluates against{" "}
-        <span className="font-semibold text-ink-900">
+        <span className="font-semibold text-ash-900">
           {labelFor(cycle.framework)}
         </span>
       </span>
       {canEdit && (
         <Link
           href={editHref}
-          className="ml-auto text-xs font-medium text-ink-700 underline-offset-2 hover:underline focus-ring"
+          className="ml-auto text-xs font-medium text-ash-800 underline-offset-2 hover:underline focus-ring"
         >
           Change
         </Link>
@@ -66,7 +66,7 @@ export function PerformanceMethodBanner({
 }
 
 function iconFor(f: EvaluationFramework) {
-  const cls = "h-4 w-4 text-ink-700";
+  const cls = "h-4 w-4 text-ash-800";
   if (f === "OKR") return <Target className={cls} />;
   if (f === "Balanced Scorecard") return <Compass className={cls} />;
   return <Layers3 className={cls} />;

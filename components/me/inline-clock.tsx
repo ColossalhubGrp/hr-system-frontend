@@ -188,7 +188,7 @@ function SideInfo({
     return (
       <p className="text-xs text-ash-700">
         <span className="inline-flex items-center gap-1">
-          <Crosshair className="h-3.5 w-3.5 text-ink-700" />
+          <Crosshair className="h-3.5 w-3.5 text-ash-800" />
           Located (±{Math.round(coords.accuracy)} m)
         </span>
         {defaultShift && (

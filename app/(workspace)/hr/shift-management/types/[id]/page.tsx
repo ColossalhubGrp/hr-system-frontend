@@ -17,7 +17,7 @@ import {
 const TONE: Record<DayType, string> = {
   Regular: "bg-ash-100 text-ash-700 ring-ash-200",
   Saturday: "bg-amber-100 text-amber-800 ring-amber-200",
-  Sunday: "bg-ink-50 text-ink-800 ring-ink-100",
+  Sunday: "bg-ink-50 text-ash-900 ring-ink-100",
   Holiday: "bg-rise/10 text-rise ring-rise/20",
 };
 
@@ -200,7 +200,7 @@ export default async function ShiftTypeDetailPage({
             <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
               Past shift end
             </p>
-            <p className="mt-1 text-2xl font-semibold text-ink-900">
+            <p className="mt-1 text-2xl font-semibold text-ash-900">
               ×{shift.overtimeMultiplier.toFixed(2)}
             </p>
           </div>
@@ -275,7 +275,7 @@ export default async function ShiftTypeDetailPage({
                           href={
                             `/employee/${encodeURIComponent(e.employee)}` as Route
                           }
-                          className="font-medium text-ink-900 hover:underline underline-offset-2"
+                          className="font-medium text-ash-900 hover:underline underline-offset-2"
                         >
                           {e.employeeName ?? e.employee}
                         </Link>
@@ -323,7 +323,7 @@ export default async function ShiftTypeDetailPage({
                           href={
                             `/hr/shift-management/assignments/${encodeURIComponent(a.id)}` as Route
                           }
-                          className="font-medium text-ink-900 hover:underline underline-offset-2"
+                          className="font-medium text-ash-900 hover:underline underline-offset-2"
                         >
                           {a.employeeName ?? a.employee}
                         </Link>
@@ -374,7 +374,7 @@ function RateTile({
       <p className="text-xs font-medium uppercase tracking-wide text-ash-500">
         {label}
       </p>
-      <p className="mt-1 text-2xl font-semibold text-ink-900">
+      <p className="mt-1 text-2xl font-semibold text-ash-900">
         ×{multiplier.toFixed(2)}
       </p>
       <span

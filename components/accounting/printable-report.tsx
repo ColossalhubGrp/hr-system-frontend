@@ -47,7 +47,7 @@ export function PrintableReport({
   return (
     <>
       <article
-        className="report-page rounded-xl border bg-white p-6 text-[12.5px] leading-relaxed text-black print:rounded-none print:border-0 print:p-0 print:text-[10.5pt]"
+        className="report-page rounded-xl border bg-surface p-6 text-[12.5px] leading-relaxed text-black print:rounded-none print:border-0 print:p-0 print:text-[10.5pt]"
       >
         <header className="mb-5 border-b-2 border-black pb-4 report-avoid-break">
           <div className="flex items-start justify-between gap-6">

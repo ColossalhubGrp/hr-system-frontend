@@ -133,7 +133,7 @@ function CandidateHero({
 }) {
   const tone = statusTone(interview.status)
   return (
-    <div className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+    <div className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
       <div className="flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:gap-6">
         <div className="flex-1 min-w-0">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
@@ -183,7 +183,7 @@ function StepStrip({
   const resolvedCurrent = currentIdx === -1 ? steps.length - 1 : currentIdx
 
   return (
-    <ol className="flex items-stretch gap-1.5 overflow-x-auto rounded-xl border border-[#E5E5E5] bg-white p-1.5">
+    <ol className="flex items-stretch gap-1.5 overflow-x-auto rounded-xl border border-[#E5E5E5] bg-surface p-1.5">
       {steps.map((step, i) => {
         const isDone = step.done
         const isActive = !isDone && i === resolvedCurrent
@@ -233,7 +233,7 @@ function StepCard({
 }) {
   return (
     <section
-      className="rounded-2xl border bg-white shadow-sm overflow-hidden transition-shadow"
+      className="rounded-2xl border bg-surface shadow-sm overflow-hidden transition-shadow"
       style={{
         borderColor: active ? '#BFDBFE' : '#E5E5E5',
         boxShadow: active ? '0 0 0 4px rgba(3, 64, 120, 0.06)' : undefined,
@@ -324,7 +324,7 @@ function InlineVideoPlayer({ sessionId, recordingUrl, onPlayed }: RecordingPlaye
           aria-label="Play recording"
           className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity hover:bg-black/40"
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-white/95 shadow-xl ring-4 ring-white/20 transition-transform group-hover:scale-105">
+          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-surface/95 shadow-xl ring-4 ring-white/20 transition-transform group-hover:scale-105">
             <Play className="h-7 w-7 fill-[#034078] text-[#034078]" />
           </span>
         </button>
@@ -409,7 +409,7 @@ function TranscriptPanel({ transcript }: { transcript?: string | null }) {
   }
 
   return (
-    <div className="rounded-xl border border-[#E5E5E5] bg-white overflow-hidden">
+    <div className="rounded-xl border border-[#E5E5E5] bg-surface overflow-hidden">
       <header className="flex items-center justify-between border-b border-[#E5E5E5] bg-[#F5F5F5] px-4 py-2.5">
         <div className="flex items-center gap-2 text-sm font-semibold text-[#0A1128]">
           <Sparkles className="h-3.5 w-3.5 text-[#1282A2]" />
@@ -515,7 +515,7 @@ function AiAnalysisCard({ interview }: { interview: InterviewSession }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 rounded-xl border border-[#E5E5E5] bg-white p-5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+      <div className="grid gap-4 rounded-xl border border-[#E5E5E5] bg-surface p-5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
         {typeof overall === 'number' && <ScoreRing score={overall} />}
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -541,7 +541,7 @@ function AiAnalysisCard({ interview }: { interview: InterviewSession }) {
       </div>
 
       {initial && !final && (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-5">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-5">
           <EvaluationDisplay evaluation={initial} variant="initial" />
         </div>
       )}
@@ -569,7 +569,7 @@ function AiAnalysisCard({ interview }: { interview: InterviewSession }) {
       )}
 
       {(interview.ai_feedback || interview.summary || interview.interviewer_notes) && (
-        <details className="group rounded-xl border border-[#E5E5E5] bg-white">
+        <details className="group rounded-xl border border-[#E5E5E5] bg-surface">
           <summary className="cursor-pointer list-none px-5 py-3 text-sm font-semibold text-[#0A1128] flex items-center justify-between">
             More AI notes
             <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
@@ -930,7 +930,7 @@ export default function InterviewReviewDetailPage() {
 
         {/* Non-completed states */}
         {!isCompleted && (
-          <div className="rounded-xl border border-[#E5E5E5] bg-white p-6 text-sm text-[#525252]">
+          <div className="rounded-xl border border-[#E5E5E5] bg-surface p-6 text-sm text-[#525252]">
             This interview is currently <strong>{interview.status}</strong>. Review tools become available once the
             session is completed.
           </div>

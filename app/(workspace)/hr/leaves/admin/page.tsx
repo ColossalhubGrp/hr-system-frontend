@@ -116,7 +116,7 @@ export default async function LeaveAdminPage({
         actions={
           <Link
             href={"/hr/leaves/admin/ledger" as Route}
-            className="inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-xs font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            className="inline-flex h-9 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-xs font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
           >
             <FileClock className="h-3.5 w-3.5" />
             Audit ledger

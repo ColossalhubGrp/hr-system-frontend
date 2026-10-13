@@ -40,7 +40,7 @@ export default async function EmployeeLettersIndex({
           <FileText className="h-3.5 w-3.5" />
           HR · Letters
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Generate a letter for {emp.name}
         </h1>
         <p className="text-sm text-ash-600">
@@ -64,8 +64,8 @@ export default async function EmployeeLettersIndex({
                 }`}
               >
                 <div className="mb-3 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-ink-700" />
-                  <h3 className="font-semibold text-ink-800">{t.label}</h3>
+                  <FileText className="h-4 w-4 text-ash-800" />
+                  <h3 className="font-semibold text-ash-900">{t.label}</h3>
                 </div>
                 <p className="mb-4 flex-1 text-sm text-ash-600">
                   {t.description}

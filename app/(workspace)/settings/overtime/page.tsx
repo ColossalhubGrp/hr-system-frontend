@@ -31,7 +31,7 @@ export default async function OvertimeRulesPage() {
             <Clock className="h-3.5 w-3.5" />
             Settings · Overtime rules
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             Overtime rules
           </h1>
           <p className="text-sm text-ash-600">
@@ -75,7 +75,7 @@ export default async function OvertimeRulesPage() {
                     <td className="px-4 py-3 align-top">
                       <Link
                         href={href}
-                        className="block font-medium text-ink-800 hover:underline"
+                        className="block font-medium text-ash-900 hover:underline"
                       >
                         {r.ruleName}
                       </Link>

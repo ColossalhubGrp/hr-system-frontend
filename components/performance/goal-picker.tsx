@@ -71,7 +71,7 @@ export function GoalPicker({
 
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
         <div className="flex items-center gap-2 text-ash-700">
-          <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-semibold text-ink-800">
+          <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-semibold text-ash-900">
             {selected.size}
           </span>
           <span>
@@ -144,7 +144,7 @@ export function GoalPicker({
                       {isOn && <Check className="h-3 w-3" />}
                     </span>
                     <span className="flex flex-1 flex-col gap-0.5 min-w-0">
-                      <span className="truncate font-medium text-ink-800">
+                      <span className="truncate font-medium text-ash-900">
                         {g.goalName}
                       </span>
                       <span className="truncate text-xs text-ash-500">
@@ -152,7 +152,7 @@ export function GoalPicker({
                         {g.status} · {Math.round(g.progress)}%
                       </span>
                     </span>
-                    <span className="rounded-chip bg-ink-50 px-1.5 py-0.5 text-[10px] font-medium text-ink-800">
+                    <span className="rounded-chip bg-ink-50 px-1.5 py-0.5 text-[10px] font-medium text-ash-900">
                       {g.id}
                     </span>
                   </button>

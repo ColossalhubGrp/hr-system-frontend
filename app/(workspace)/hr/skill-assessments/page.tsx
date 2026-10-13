@@ -74,7 +74,7 @@ export default async function SkillAssessmentsPage({
             header: "Proficiency",
             className: "text-right",
             cell: (r) => (
-              <span className="inline-flex h-6 w-16 items-center justify-center rounded-full bg-ink-50 text-xs font-semibold text-ink-800">
+              <span className="inline-flex h-6 w-16 items-center justify-center rounded-full bg-ink-50 text-xs font-semibold text-ash-900">
                 {r.proficiency.toFixed(1)} / 5
               </span>
             ),

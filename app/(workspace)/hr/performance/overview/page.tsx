@@ -140,7 +140,7 @@ export default async function AppraisalOverviewPage({
           },
           {
             header: "Final",
-            className: "text-right font-semibold text-ink-900",
+            className: "text-right font-semibold text-ash-900",
             cell: (r) => r.finalScore.toFixed(2),
           },
           {

@@ -709,7 +709,7 @@ export function EmployeeForm({
                   name="has_tax_clearance"
                   value="1"
                   defaultChecked={v.has_tax_clearance === "1"}
-                  className="h-4 w-4 rounded border-slate-300"
+                  className="h-4 w-4 rounded border-hairline"
                 />
                 <span className="text-xs text-ash-500">
                   When checked, no WHT is withheld on 1099 payments.

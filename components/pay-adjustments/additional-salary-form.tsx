@@ -94,7 +94,7 @@ export function AdditionalSalaryForm({
           htmlFor="is_recurring"
           hint="Repeats every payroll between From and To dates."
         >
-          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-white px-3 text-sm text-ash-700">
+          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-surface px-3 text-sm text-ash-700">
             <input
               type="checkbox"
               id="is_recurring"
@@ -121,7 +121,7 @@ export function AdditionalSalaryForm({
           htmlFor="overwrite"
           hint="Replaces the same component's amount from the Salary Structure instead of adding to it."
         >
-          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-white px-3 text-sm text-ash-700">
+          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-surface px-3 text-sm text-ash-700">
             <input
               type="checkbox"
               id="overwrite"
@@ -135,7 +135,7 @@ export function AdditionalSalaryForm({
           label="Deduct full tax on this payroll date"
           htmlFor="deduct_full_tax"
         >
-          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-white px-3 text-sm text-ash-700">
+          <label className="flex h-10 items-center gap-2 rounded-md border border-hairline bg-surface px-3 text-sm text-ash-700">
             <input
               type="checkbox"
               id="deduct_full_tax"

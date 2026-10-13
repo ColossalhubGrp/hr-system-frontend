@@ -164,7 +164,7 @@ function NewButton({ tab }: { tab: Tab }) {
       <div className="flex flex-wrap gap-2">
         <Link
           href={"/hr/shift-management/assignments/bulk" as Route}
-          className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+          className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
         >
           <Layers className="h-4 w-4" />
           Bulk assign
@@ -222,7 +222,7 @@ async function Types() {
               href={
                 `/hr/shift-management/types/${encodeURIComponent(t.name)}` as Route
               }
-              className="font-medium text-ash-900 hover:text-ink-900 hover:underline underline-offset-2 focus-ring rounded-sm"
+              className="font-medium text-ash-900 hover:text-ash-900 hover:underline underline-offset-2 focus-ring rounded-sm"
             >
               {t.name}
             </Link>
@@ -654,7 +654,7 @@ async function Roster({ searchParams }: { searchParams: SP }) {
             {days.map((d) => (
               <th
                 key={d.toISOString()}
-                className={`px-2 py-3 text-center ${isWeekend(d) ? "text-ink-700" : ""}`}
+                className={`px-2 py-3 text-center ${isWeekend(d) ? "text-ash-800" : ""}`}
               >
                 <p>{d.toLocaleDateString("en-GB", { weekday: "short" })}</p>
                 <p className="text-ash-500">
@@ -709,7 +709,7 @@ async function Roster({ searchParams }: { searchParams: SP }) {
                       href={
                         `/hr/shift-management/assignments/new?employee=${encodeURIComponent(r.employee)}&start_date=${isoDate(days[i]!)}` as Route
                       }
-                      className={`group mx-auto flex h-12 items-center justify-center rounded-lg border border-dashed border-hairline text-[10px] text-ash-400 transition hover:border-ink-400 hover:bg-canvas hover:text-ink-800 focus-ring ${
+                      className={`group mx-auto flex h-12 items-center justify-center rounded-lg border border-dashed border-hairline text-[10px] text-ash-400 transition hover:border-ink-400 hover:bg-canvas hover:text-ash-900 focus-ring ${
                         isWeekend(days[i]!) ? "bg-canvas/60" : ""
                       }`}
                       title={`Assign a shift on ${isoDate(days[i]!)}`}
@@ -816,7 +816,7 @@ function RosterFilters({
           <select
             name={String(c.key)}
             defaultValue={String(searchParams[c.key] ?? "")}
-            className="bg-transparent text-xs text-ink-900 focus-ring outline-none"
+            className="bg-transparent text-xs text-ash-900 focus-ring outline-none"
           >
             <option value="">Any</option>
             {c.options.map((o) => (
@@ -829,14 +829,14 @@ function RosterFilters({
       ))}
       <button
         type="submit"
-        className="rounded-chip border border-hairline bg-surface px-2.5 py-1 text-xs font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+        className="rounded-chip border border-hairline bg-surface px-2.5 py-1 text-xs font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900 focus-ring"
       >
         Apply
       </button>
       {activeCount > 0 && (
         <Link
           href={"/hr/shift-management?tab=roster" as Route}
-          className="rounded-chip px-2 py-1 text-xs text-ash-500 hover:bg-canvas hover:text-ink-800 focus-ring"
+          className="rounded-chip px-2 py-1 text-xs text-ash-500 hover:bg-canvas hover:text-ash-900 focus-ring"
         >
           Clear
         </Link>
@@ -879,27 +879,27 @@ function RosterDateNav({
     <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
       <Link
         href={hrefWithStart(isoDate(prev))}
-        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900 focus-ring"
         aria-label="Previous window"
       >
         ← Prev {ROSTER_DAYS} days
       </Link>
       <Link
         href={hrefWithStart(isoDate(new Date()))}
-        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900 focus-ring"
       >
         Today
       </Link>
       <Link
         href={hrefWithStart(isoDate(next))}
-        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+        className="inline-flex h-8 items-center gap-1 rounded-chip border border-hairline bg-surface px-3 font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900 focus-ring"
         aria-label="Next window"
       >
         Next {ROSTER_DAYS} days →
       </Link>
       <span className="mx-1 text-ash-500">
-        Showing <strong className="text-ink-900">{fmt(anchor)}</strong> →{" "}
-        <strong className="text-ink-900">{fmt(rangeEnd)}</strong>
+        Showing <strong className="text-ash-900">{fmt(anchor)}</strong> →{" "}
+        <strong className="text-ash-900">{fmt(rangeEnd)}</strong>
       </span>
       {/* Jump-to-date via a GET form so no client JS is needed. */}
       <form
@@ -919,11 +919,11 @@ function RosterDateNav({
           type="date"
           name="start"
           defaultValue={isoDate(anchor)}
-          className="h-8 rounded-chip border border-hairline bg-surface px-2 text-xs text-ink-900 focus-ring"
+          className="h-8 rounded-chip border border-hairline bg-surface px-2 text-xs text-ash-900 focus-ring"
         />
         <button
           type="submit"
-          className="h-8 rounded-chip border border-hairline bg-surface px-2 font-medium text-ash-700 hover:border-ink-400 hover:text-ink-800 focus-ring"
+          className="h-8 rounded-chip border border-hairline bg-surface px-2 font-medium text-ash-700 hover:border-ink-400 hover:text-ash-900 focus-ring"
         >
           Go
         </button>

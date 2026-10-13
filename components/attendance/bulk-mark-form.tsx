@@ -102,7 +102,7 @@ export function BulkMarkForm({
             defaultValue={today}
             max={today}
             className={cn(
-              "h-10 rounded-md border bg-white px-2 text-sm focus-ring",
+              "h-10 rounded-md border bg-surface px-2 text-sm focus-ring",
               state.fieldErrors?.date ? "border-fall" : "border-hairline",
             )}
           />
@@ -145,7 +145,7 @@ export function BulkMarkForm({
             key={s}
             type="button"
             onClick={() => applyToAll(s)}
-            className="rounded-chip border border-hairline px-2.5 py-1 text-[11px] font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+            className="rounded-chip border border-hairline px-2.5 py-1 text-[11px] font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
           >
             {s}
           </button>
@@ -163,7 +163,7 @@ export function BulkMarkForm({
               type="checkbox"
               name="skip_holidays"
               defaultChecked
-              className="h-3.5 w-3.5 rounded border-hairline text-ink-700 focus-ring"
+              className="h-3.5 w-3.5 rounded border-hairline text-ash-800 focus-ring"
             />
             Skip holidays
           </label>
@@ -172,7 +172,7 @@ export function BulkMarkForm({
               type="checkbox"
               name="skip_on_leave"
               defaultChecked
-              className="h-3.5 w-3.5 rounded border-hairline text-ink-700 focus-ring"
+              className="h-3.5 w-3.5 rounded border-hairline text-ash-800 focus-ring"
             />
             Skip approved leave
           </label>
@@ -203,7 +203,7 @@ export function BulkMarkForm({
                     <span className="flex items-center gap-2">
                       <EmployeeAvatar name={e.employeeName} imageUrl={e.image} size="sm" />
                       <span className="flex min-w-0 flex-col">
-                        <span className="truncate font-medium text-ink-900">
+                        <span className="truncate font-medium text-ash-900">
                           {e.employeeName}
                         </span>
                         <span className="truncate text-[11px] text-ash-500">
@@ -225,7 +225,7 @@ export function BulkMarkForm({
                     <select
                       value={statuses[e.id] ?? ""}
                       onChange={(ev) => setStatus(e.id, ev.target.value as Status)}
-                      className="h-8 rounded-md border border-hairline bg-white px-2 text-xs focus-ring"
+                      className="h-8 rounded-md border border-hairline bg-surface px-2 text-xs focus-ring"
                     >
                       <option value="">— skip —</option>
                       {STATUSES.map((s) => (
@@ -246,7 +246,7 @@ export function BulkMarkForm({
 
       <div className="-mx-1 mt-2 flex items-center justify-between gap-2 rounded-card border border-hairline bg-surface/95 p-3 shadow-rail backdrop-blur">
         <span className="text-xs text-ash-600">
-          <strong className="text-ink-900">{markedCount}</strong> of {employees.length} marked
+          <strong className="text-ash-900">{markedCount}</strong> of {employees.length} marked
         </span>
         <SaveBtn disabled={markedCount === 0} />
       </div>
@@ -271,7 +271,7 @@ function FilterSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+        className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
       >
         <option value="">— any —</option>
         {options.map((o) => (
@@ -314,7 +314,7 @@ function ResultBanner({ result }: { result: BulkMarkState["result"] }) {
   if (!result) return null;
   const { created, skipped, errored } = result.totals;
   return (
-    <div className="flex flex-col gap-2 rounded-card border border-rise/30 bg-rise/[0.06] px-4 py-3 text-sm text-ink-900">
+    <div className="flex flex-col gap-2 rounded-card border border-rise/30 bg-rise/[0.06] px-4 py-3 text-sm text-ash-900">
       <p className="flex items-center gap-2 font-medium">
         <CheckCircle2 className="h-4 w-4 text-rise" />
         Saved <strong>{created}</strong> · Skipped {skipped} · Errored{" "}

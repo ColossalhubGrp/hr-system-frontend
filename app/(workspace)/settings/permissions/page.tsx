@@ -79,7 +79,7 @@ export default async function PermissionsPage() {
             <ShieldCheck className="h-3.5 w-3.5" />
             Settings · Permissions
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
             DocPerm matrix
           </h1>
           <p className="text-sm text-ash-600">
@@ -99,7 +99,7 @@ export default async function PermissionsPage() {
               className="rounded-card border border-hairline bg-surface shadow-card"
               open={false}
             >
-              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-ink-800">
+              <summary className="flex cursor-pointer items-center justify-between px-4 py-3 text-sm font-semibold text-ash-900">
                 <span>{role}</span>
                 <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium">
                   {perms.length} grant{perms.length === 1 ? "" : "s"}
@@ -136,7 +136,7 @@ export default async function PermissionsPage() {
                   <tbody className="divide-y divide-hairline">
                     {perms.map((p, i) => (
                       <tr key={`${p.parent}-${p.permlevel}-${i}`}>
-                        <td className="px-4 py-2 font-medium text-ink-800">
+                        <td className="px-4 py-2 font-medium text-ash-900">
                           {p.parent}
                         </td>
                         <Cell on={p.read} />

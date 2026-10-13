@@ -41,7 +41,7 @@ export function SetupExpenseAccountsButton({
         type="button"
         onClick={onClick}
         disabled={pending || !company}
-        className="inline-flex w-fit items-center gap-1.5 rounded-chip border border-hairline bg-canvas px-2.5 py-1 text-xs font-medium text-ash-800 transition hover:border-ink-400 hover:text-ink-800 focus-ring disabled:opacity-60"
+        className="inline-flex w-fit items-center gap-1.5 rounded-chip border border-hairline bg-canvas px-2.5 py-1 text-xs font-medium text-ash-800 transition hover:border-ink-400 hover:text-ash-900 focus-ring disabled:opacity-60"
       >
         <Sparkles className="h-3 w-3" />
         {pending ? "Setting up…" : "Auto-set up expense accounts"}

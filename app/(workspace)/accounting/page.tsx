@@ -102,7 +102,7 @@ function HeroCta({
   return (
     <Link
       href={href as Route}
-      className="inline-flex h-9 items-center gap-1.5 rounded-chip bg-white/15 px-3 text-xs font-semibold text-primary-foreground backdrop-blur-sm transition hover:bg-white/25"
+      className="inline-flex h-9 items-center gap-1.5 rounded-chip bg-surface/15 px-3 text-xs font-semibold text-primary-foreground backdrop-blur-sm transition hover:bg-surface/25"
     >
       <Icon className="h-3.5 w-3.5" />
       {label}

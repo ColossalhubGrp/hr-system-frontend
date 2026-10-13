@@ -31,7 +31,7 @@ export default async function NewAttendanceRequestPage({
           <ClipboardList className="h-3.5 w-3.5" />
           HR · Attendance · New request
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           File an attendance request
         </h1>
       </header>

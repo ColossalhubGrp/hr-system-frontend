@@ -40,7 +40,7 @@ function QuotaCard({
                 : { fg: "#166534", bg: "#DCFCE7", border: "#BBF7D0", bar: "#16A34A", label: "Healthy" }
 
     return (
-        <div className="rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-6 shadow-sm">
             <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-[#EFF6FF] text-[#034078]">
@@ -231,7 +231,7 @@ export function BillingClient({
                 {plan && (
                     <>
                         {/* Plan hero */}
-                        <section className="rounded-2xl border border-[#E5E5E5] bg-white p-6 shadow-sm">
+                        <section className="rounded-2xl border border-[#E5E5E5] bg-surface p-6 shadow-sm">
                             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                 <div>
                                     <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -284,7 +284,7 @@ export function BillingClient({
                             See all →
                         </Link>
                     </div>
-                    <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+                    <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
                         <Table>
                             <TableHeader>
                                 <TableRow>

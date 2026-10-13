@@ -28,7 +28,7 @@ export default async function DataStewardPage() {
           <Database className="h-3.5 w-3.5" />
           Data Steward
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Data Steward workspace
         </h1>
         <p className="text-sm text-ash-600">
@@ -116,7 +116,7 @@ function Tile({
         ? "border-amber-300/40 bg-amber-50 text-amber-800"
         : tone === "ok"
           ? "border-rise/30 bg-rise/[0.06] text-rise"
-          : "border-hairline bg-surface text-ink-800";
+          : "border-hairline bg-surface text-ash-900";
   return (
     <div
       className={`flex flex-col gap-1 rounded-card border px-4 py-3 shadow-card ${toneCls}`}
@@ -163,7 +163,7 @@ function MetricCatalog({
             {rows.map((m) => (
               <tr key={m.id} className="hover:bg-canvas/40">
                 <td className="px-4 py-3 align-top">
-                  <div className="font-medium text-ink-800">{m.label}</div>
+                  <div className="font-medium text-ash-900">{m.label}</div>
                   <div className="text-xs text-ash-500">{m.description}</div>
                 </td>
                 <td className="px-4 py-3 align-top text-xs uppercase tracking-wide text-ash-600">
@@ -175,7 +175,7 @@ function MetricCatalog({
                   </code>
                 </td>
                 <td className="px-4 py-3 text-right align-top">
-                  <span className="inline-flex items-center gap-1 text-base font-semibold text-ink-800">
+                  <span className="inline-flex items-center gap-1 text-base font-semibold text-ash-900">
                     {m.format === "percent" ? (
                       <Percent className="h-3 w-3 text-ash-500" />
                     ) : (
@@ -190,7 +190,7 @@ function MetricCatalog({
                   {m.drilldown && (
                     <Link
                       href={m.drilldown as Route}
-                      className="inline-flex items-center gap-1 text-xs text-ink-700 hover:underline"
+                      className="inline-flex items-center gap-1 text-xs text-ash-800 hover:underline"
                     >
                       View
                       <ExternalLink className="h-3 w-3" />
@@ -235,15 +235,15 @@ function ReferenceData({
                 <p className="text-xs uppercase tracking-wide text-ash-500">
                   {r.doctype}
                 </p>
-                <p className="text-sm font-semibold text-ink-800">{r.label}</p>
+                <p className="text-sm font-semibold text-ash-900">{r.label}</p>
               </div>
-              <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+              <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
                 {r.count.toLocaleString()}
               </span>
             </div>
             <Link
               href={r.drilldown as Route}
-              className="mt-3 inline-flex items-center gap-1 text-xs text-ink-700 hover:underline"
+              className="mt-3 inline-flex items-center gap-1 text-xs text-ash-800 hover:underline"
             >
               Manage
               <ExternalLink className="h-3 w-3" />
@@ -303,7 +303,7 @@ function DataQualityPanel({
               className={`flex items-start justify-between gap-3 rounded-card border px-4 py-3 shadow-card ${sevTone}`}
             >
               <div className="flex min-w-0 flex-col">
-                <span className="font-medium text-ink-800">{q.label}</span>
+                <span className="font-medium text-ash-900">{q.label}</span>
                 <span className="text-xs text-ash-600">{q.description}</span>
               </div>
               <div className="flex items-center gap-2">

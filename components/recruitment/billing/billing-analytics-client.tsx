@@ -75,7 +75,7 @@ function StatChip({
                     ? { fg: "#166534", bg: "#DCFCE7" }
                     : { fg: "#525252", bg: "#F5F5F5" }
     return (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span
@@ -101,7 +101,7 @@ function ChartCard({
     children: React.ReactNode
 }) {
     return (
-        <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+        <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
             <header className="border-b border-[#E5E5E5] px-5 py-3">
                 <h3 className="text-sm font-semibold text-[#0A1128]">{title}</h3>
                 {subtitle && <p className="text-xs text-[#A3A3A3]">{subtitle}</p>}
@@ -122,7 +122,7 @@ function CustomTooltip({
 }) {
     if (!active || !payload?.length) return null
     return (
-        <div className="min-w-[180px] rounded-lg border border-[#E5E5E5] bg-white p-3 text-sm shadow-md">
+        <div className="min-w-[180px] rounded-lg border border-[#E5E5E5] bg-surface p-3 text-sm shadow-md">
             {label && (
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">
                     {formatDateLabel(label)}
@@ -474,7 +474,7 @@ export function BillingAnalyticsClient({
                                 <h2 className="text-lg font-semibold text-[#0A1128]">Activity log</h2>
                                 <span className="text-xs text-[#A3A3A3]">{activity.length} entries</span>
                             </div>
-                            <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+                            <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
                                 <Table>
                                     <TableHeader>
                                         <TableRow>
@@ -548,7 +548,7 @@ export function BillingAnalyticsClient({
                     </>
                 ) : (
                     !error && (
-                        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                             <LineChart className="h-8 w-8 text-[#A3A3A3]" />
                             <p className="text-sm font-semibold text-[#0A1128]">No analytics data for this window</p>
                             <p className="text-xs text-[#A3A3A3]">Try a wider range above.</p>

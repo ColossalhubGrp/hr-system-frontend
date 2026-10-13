@@ -39,7 +39,7 @@ export function CurrencyPickerField({
         autoComplete="off"
         spellCheck={false}
         className={
-          "h-10 w-full rounded-md border border-hairline bg-white px-3 text-sm uppercase tracking-wider focus-ring" +
+          "h-10 w-full rounded-md border border-hairline bg-surface px-3 text-sm uppercase tracking-wider focus-ring" +
           (error ? " border-fall" : "")
         }
       />

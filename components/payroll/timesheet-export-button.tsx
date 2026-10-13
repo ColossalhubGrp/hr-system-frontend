@@ -25,7 +25,7 @@ export function TimesheetExportButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+        className="inline-flex h-10 items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 text-sm font-medium text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
       >
         <Download className="h-4 w-4" />
         Export timesheets
@@ -37,10 +37,10 @@ export function TimesheetExportButton() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl"
+            className="w-full max-w-sm rounded-xl bg-surface p-5 shadow-xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="mb-1 text-base font-bold text-ink-900">
+            <h3 className="mb-1 text-base font-bold text-ash-900">
               Export timesheets
             </h3>
             <p className="mb-4 text-xs text-ash-600">

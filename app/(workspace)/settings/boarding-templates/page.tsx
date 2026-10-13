@@ -71,7 +71,7 @@ export default async function BoardingTemplatesPage({
                 href={
                   `/settings/boarding-templates/${kind}/${encodeURIComponent(r.name)}` as Route
                 }
-                className="font-medium text-ink-800 hover:underline"
+                className="font-medium text-ash-900 hover:underline"
               >
                 {r.name}
               </Link>

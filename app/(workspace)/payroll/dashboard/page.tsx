@@ -207,7 +207,7 @@ export default async function PayrollDashboardPage({
           <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
             <span className="inline-flex h-2 w-2 rounded-full bg-emerald-600" />
             Processed
-            <span className="ml-3 inline-flex h-2 w-2 rounded-full border-2 border-emerald-600 bg-white" />
+            <span className="ml-3 inline-flex h-2 w-2 rounded-full border-2 border-emerald-600 bg-surface" />
             No run this month
           </p>
         </div>

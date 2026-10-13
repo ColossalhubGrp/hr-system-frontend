@@ -73,7 +73,7 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
           aria-label={f.label}
           value={String(row[f.key] ?? "")}
           onChange={(e) => update(i, f.key, e.target.value)}
-          className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+          className="w-full rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
         >
           <option value="">—</option>
           {(f.options ?? []).map((o) => (
@@ -98,7 +98,7 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
           max={f.max}
           step={f.step}
           placeholder={f.placeholder}
-          className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+          className="w-full rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
         />
       );
     }
@@ -109,7 +109,7 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
           type="date"
           value={String(row[f.key] ?? "")}
           onChange={(e) => update(i, f.key, e.target.value)}
-          className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+          className="w-full rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
         />
       );
     }
@@ -120,7 +120,7 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
         value={String(row[f.key] ?? "")}
         onChange={(e) => update(i, f.key, e.target.value)}
         placeholder={f.placeholder}
-        className="w-full rounded-md border border-hairline bg-white px-2 py-1.5 text-sm focus-ring"
+        className="w-full rounded-md border border-hairline bg-surface px-2 py-1.5 text-sm focus-ring"
       />
     );
   };
@@ -132,7 +132,7 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
           {emptyLabel}
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-card border border-hairline bg-white">
+        <div className="overflow-x-auto rounded-card border border-hairline bg-surface">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-hairline bg-canvas/50 text-left text-[11px] font-medium uppercase tracking-wide text-ash-500">
@@ -173,7 +173,7 @@ export function ChildTableEditor<Row extends Record<string, unknown>>({
       <button
         type="button"
         onClick={addRow}
-        className="inline-flex w-fit items-center gap-1.5 rounded-chip border border-hairline bg-white px-3 py-1.5 text-sm text-ash-700 transition hover:border-ink-400 hover:text-ink-800 focus-ring"
+        className="inline-flex w-fit items-center gap-1.5 rounded-chip border border-hairline bg-surface px-3 py-1.5 text-sm text-ash-700 transition hover:border-ink-400 hover:text-ash-900 focus-ring"
       >
         <Plus className="h-4 w-4" />
         {addLabel}

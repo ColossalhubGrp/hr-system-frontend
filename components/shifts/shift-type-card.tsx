@@ -13,7 +13,7 @@ export function ShiftTypeCard({ shift }: { shift: ShiftType }) {
             style={{ background: swatch }}
           />
           <div>
-            <p className="text-sm font-semibold text-ink-900">{shift.name}</p>
+            <p className="text-sm font-semibold text-ash-900">{shift.name}</p>
             <p className="text-xs text-ash-500">
               {fmtRange(shift.startTime, shift.endTime)}
             </p>

@@ -23,7 +23,7 @@ export default async function NewExitInterviewPage() {
           <DoorOpen className="h-3.5 w-3.5" />
           HR · Exit Interviews · New
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Schedule an exit interview
         </h1>
       </header>

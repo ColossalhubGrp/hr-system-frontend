@@ -27,7 +27,7 @@ export default async function NewTrainingProgramPage() {
           <BookOpen className="h-3.5 w-3.5" />
           HR · Training · New program
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Add a training program
         </h1>
       </header>

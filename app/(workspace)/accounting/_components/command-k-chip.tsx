@@ -26,12 +26,12 @@ export function CommandKChip() {
     <button
       type="button"
       onClick={open}
-      className="inline-flex h-9 items-center gap-2 rounded-chip bg-white/15 px-3 text-xs font-semibold text-primary-foreground backdrop-blur-sm transition hover:bg-white/25"
+      className="inline-flex h-9 items-center gap-2 rounded-chip bg-surface/15 px-3 text-xs font-semibold text-primary-foreground backdrop-blur-sm transition hover:bg-surface/25"
       aria-label="Open accounting search"
     >
       <Search className="h-3.5 w-3.5" />
       Search accounts, invoices, parties
-      <kbd className="ml-1 inline-flex items-center rounded border border-white/20 bg-white/10 px-1.5 py-0.5 font-mono text-[10px]">
+      <kbd className="ml-1 inline-flex items-center rounded border border-white/20 bg-surface/10 px-1.5 py-0.5 font-mono text-[10px]">
         {isMac ? "⌘K" : "Ctrl K"}
       </kbd>
     </button>

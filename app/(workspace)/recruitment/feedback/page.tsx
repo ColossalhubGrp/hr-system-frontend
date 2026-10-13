@@ -93,7 +93,7 @@ function StatChip({
                     ? { fg: "#166534", bg: "#DCFCE7" }
                     : { fg: "#525252", bg: "#F5F5F5" }
     return (
-        <div className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+        <div className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
             <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{label}</p>
                 <span
@@ -230,7 +230,7 @@ export default function FeedbackPage() {
                 </div>
 
                 {/* Compose */}
-                <section className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                     <header className="flex items-start gap-3 border-b border-[#E5E5E5] px-6 py-4">
                         <div className="flex-1">
                             <h2 className="text-base font-semibold text-[#0A1128]">Send new feedback</h2>
@@ -340,7 +340,7 @@ export default function FeedbackPage() {
                             <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
                         </div>
                     ) : filtered.length === 0 ? (
-                        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#034078]">
                                 <MessageSquare className="h-5 w-5" />
                             </div>
@@ -358,7 +358,7 @@ export default function FeedbackPage() {
                             {filtered.map((f) => (
                                 <li
                                     key={f.name}
-                                    className="rounded-2xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden"
+                                    className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden"
                                 >
                                     <div className="flex items-start gap-4 px-5 py-4">
                                         <div className="flex-1 min-w-0">

@@ -45,7 +45,7 @@ export default async function EditShiftSchedulePage({
           <CalendarRange className="h-3.5 w-3.5" />
           HR · Shift Management · Edit schedule
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Edit {sched.scheduleName}
         </h1>
       </header>

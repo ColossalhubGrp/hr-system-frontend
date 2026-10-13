@@ -140,7 +140,7 @@ export function ShiftLocationForm({
               type="checkbox"
               name="is_active"
               defaultChecked={initial?.isActive ?? true}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Active — allow this location for check-ins
           </label>

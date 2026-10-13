@@ -96,7 +96,7 @@ function Choice({
         pending && "opacity-60 cursor-not-allowed",
       )}
     >
-      <div className="flex items-center gap-2 text-ink-800">
+      <div className="flex items-center gap-2 text-ash-900">
         <Icon className="h-4 w-4" />
         <span className="text-sm font-semibold">{value}</span>
         {active && (

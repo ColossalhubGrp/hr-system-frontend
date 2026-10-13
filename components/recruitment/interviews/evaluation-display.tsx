@@ -117,7 +117,7 @@ export function EvaluationDisplay({ evaluation, variant = "initial" }: Props) {
             const notAssessed = !entry || score === 0
             const tone = scoreTone(score)
             return (
-              <div key={category} className={`px-4 py-3 ${notAssessed ? "bg-gray-50/50" : "bg-white"}`}>
+              <div key={category} className={`px-4 py-3 ${notAssessed ? "bg-gray-50/50" : "bg-surface"}`}>
                 <div className="flex items-center justify-between gap-4 mb-1.5">
                   <p className={`text-sm font-semibold ${notAssessed ? "text-gray-400" : "text-[#0A1128]"}`}>
                     {category}
@@ -185,7 +185,7 @@ export function EvaluationDisplay({ evaluation, variant = "initial" }: Props) {
       )}
 
       {parsed.rationale && (
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <div className="rounded-lg border border-gray-200 bg-surface p-4">
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-4 h-4 text-[#034078]" />
             <p className="text-xs font-semibold text-gray-700 uppercase tracking-wide">

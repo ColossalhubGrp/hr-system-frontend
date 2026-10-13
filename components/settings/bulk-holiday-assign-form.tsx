@@ -50,7 +50,7 @@ export function BulkHolidayAssignForm({
             name="holiday_list"
             required
             defaultValue=""
-            className="h-10 rounded-md border border-hairline bg-white px-2 text-sm focus-ring"
+            className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm focus-ring"
           >
             <option value="" disabled>
               Pick a holiday list
@@ -68,7 +68,7 @@ export function BulkHolidayAssignForm({
           <input
             name="employment_type"
             placeholder="e.g. Full Time"
-            className="h-10 rounded-md border border-hairline bg-white px-2 text-sm"
+            className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -76,7 +76,7 @@ export function BulkHolidayAssignForm({
           <input
             name="grade"
             placeholder="e.g. Band 3"
-            className="h-10 rounded-md border border-hairline bg-white px-2 text-sm"
+            className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm"
           />
         </label>
         <p className="sm:col-span-3 text-xs text-ash-500">
@@ -107,7 +107,7 @@ function F({
       <select
         name={name}
         defaultValue=""
-        className="h-10 rounded-md border border-hairline bg-white px-2 text-sm"
+        className="h-10 rounded-md border border-hairline bg-surface px-2 text-sm"
       >
         <option value="">— any —</option>
         {opts.map((o) => (

@@ -50,7 +50,7 @@ export function FrameworkDefaultForm({
                 className="mt-1 h-4 w-4 accent-ink-800"
               />
               <div>
-                <p className="font-semibold text-ink-800">{f}</p>
+                <p className="font-semibold text-ash-900">{f}</p>
                 <p className="text-xs text-ash-600">{COPY[f]}</p>
               </div>
             </label>

@@ -302,7 +302,7 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
             { label: "Drafts", value: counts.drafts, icon: FileText, fg: "#9A3412", bg: "#FFF7ED" },
             { label: "Filled", value: counts.filled, icon: CheckCircle2, fg: "#034078", bg: "#EFF6FF" },
           ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-[#E5E5E5] bg-white p-4">
+            <div key={s.label} className="rounded-xl border border-[#E5E5E5] bg-surface p-4">
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#A3A3A3]">{s.label}</p>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: s.bg, color: s.fg }}>
@@ -368,7 +368,7 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
 
         {/* List */}
         {filteredJobs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-6 py-16 text-center">
+          <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#034078]">
               <Briefcase className="h-5 w-5" />
             </div>
@@ -387,7 +387,7 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
             )}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white">
+          <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface">
             <div className="hidden grid-cols-[2fr_160px_160px_180px] items-center gap-4 border-b border-[#E5E5E5] px-6 py-4 text-sm font-semibold text-[#0A1128] lg:grid">
               <div>Job title</div>
               <div>Status</div>
@@ -469,7 +469,7 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={safePage === 1}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-surface px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Previous page"
                 >
                   <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
@@ -480,7 +480,7 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
                     <button
                       type="button"
                       onClick={() => setPage(1)}
-                      className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-white text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
+                      className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-surface text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
                     >
                       1
                     </button>
@@ -513,7 +513,7 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
                     <button
                       type="button"
                       onClick={() => setPage(totalPages)}
-                      className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-white text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
+                      className="h-8 w-8 rounded-lg border border-[#E5E5E5] bg-surface text-xs font-medium text-[#525252] hover:bg-[#F5F5F5]"
                     >
                       {totalPages}
                     </button>
@@ -523,7 +523,7 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={safePage === totalPages}
-                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-white px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E5E5E5] bg-surface px-2 text-xs font-medium text-[#525252] hover:bg-[#F5F5F5] disabled:cursor-not-allowed disabled:opacity-40"
                   aria-label="Next page"
                 >
                   Next

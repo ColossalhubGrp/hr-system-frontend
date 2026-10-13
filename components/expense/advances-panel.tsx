@@ -118,7 +118,7 @@ export function AdvancesPanel({
                 <td className="px-3 py-2">
                   <Link
                     href={`/hr/employee-advances/${encodeURIComponent(r.employee_advance)}` as Route}
-                    className="text-ink-800 hover:underline"
+                    className="text-ash-900 hover:underline"
                   >
                     {r.employee_advance}
                   </Link>
@@ -132,7 +132,7 @@ export function AdvancesPanel({
                 <td className="px-3 py-2 text-right text-ash-800">
                   {fmtMoney(r.unclaimed_amount, currency)}
                 </td>
-                <td className="px-3 py-2 text-right font-medium text-ink-900">
+                <td className="px-3 py-2 text-right font-medium text-ash-900">
                   {fmtMoney(r.allocated_amount, currency)}
                 </td>
                 {editable && (
@@ -196,7 +196,7 @@ export function AdvancesPanel({
       {editable && availableToShow.length === 0 && linked.length === 0 && (
         <p className="mt-3 text-xs text-ash-500">
           This employee has no unclaimed advances.{" "}
-          <Link href={"/hr/employee-advances/new" as Route} className="text-ink-800 underline">
+          <Link href={"/hr/employee-advances/new" as Route} className="text-ash-900 underline">
             Create one
           </Link>
           .

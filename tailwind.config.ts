@@ -26,43 +26,54 @@ const config: Config = {
         //    exact brand navy and `ink-700` a slightly darker shade for
         //    hover. 50-600 fill in a ramp around the brand navy; 900
         //    is the deepest for sidebar / high-contrast surfaces.
+        // Brand `ink` scale — stays constant across themes (navy is
+        // navy in light + dark). Backed by CSS vars so if we ever
+        // need a theme-specific tweak, it's one file. Alpha works
+        // via the slash-syntax: `bg-ink-800/40`.
         ink: {
-          50:  "#E8ECF4",   // palest navy tint — subtle accent bg
-          100: "#C8D0E0",
-          200: "#9AA6C4",
-          300: "#6B7CA8",
-          400: "#4C5F8E",
-          500: "#334678",
-          600: "#243666",   // just below primary
-          700: "#1A2850",   // brand primary-dark (hover state)
-          800: "#203060",   // BRAND PRIMARY — official navy
-          900: "#141E42",   // deepest; sidebar + high-contrast surfaces
+          50:  "rgb(var(--ink-50) / <alpha-value>)",
+          100: "rgb(var(--ink-100) / <alpha-value>)",
+          200: "rgb(var(--ink-200) / <alpha-value>)",
+          300: "rgb(var(--ink-300) / <alpha-value>)",
+          400: "rgb(var(--ink-400) / <alpha-value>)",
+          500: "rgb(var(--ink-500) / <alpha-value>)",
+          600: "rgb(var(--ink-600) / <alpha-value>)",
+          700: "rgb(var(--ink-700) / <alpha-value>)",
+          800: "rgb(var(--ink-800) / <alpha-value>)",   // brand primary
+          900: "rgb(var(--ink-900) / <alpha-value>)",
         },
-        // Mint accent — new in the 2026-10-12 rebrand. Used for
-        // "live" indicator dots, subtle hover accents, and anywhere
-        // we want a soft callout that isn't the primary brand navy.
+        // Mint accent — also constant across themes.
         mint: {
-          50:  "#F0FAF5",
-          100: "#DAF2E6",
-          200: "#BDE6D1",
-          300: "#9FDAC0",
-          400: "#88D0B8",   // BRAND ACCENT — mint green from the C
-          500: "#6CBFA4",
-          600: "#4FA98B",
-          700: "#3C8E73",
-          800: "#2C6D59",
-          900: "#1F4F40",
+          50:  "rgb(var(--mint-50) / <alpha-value>)",
+          100: "rgb(var(--mint-100) / <alpha-value>)",
+          200: "rgb(var(--mint-200) / <alpha-value>)",
+          300: "rgb(var(--mint-300) / <alpha-value>)",
+          400: "rgb(var(--mint-400) / <alpha-value>)",   // brand accent
+          500: "rgb(var(--mint-500) / <alpha-value>)",
+          600: "rgb(var(--mint-600) / <alpha-value>)",
+          700: "rgb(var(--mint-700) / <alpha-value>)",
+          800: "rgb(var(--mint-800) / <alpha-value>)",
+          900: "rgb(var(--mint-900) / <alpha-value>)",
         },
-        // Neutral surfaces — slate ramp (unchanged from Oct-06).
-        canvas: "#F8FAFC",   // slate-50
-        surface: "#FFFFFF",
-        hairline: "#E2E8F0", // slate-200
+        // Semantic surfaces — FLIP in dark mode. `bg-canvas` is
+        // slate-50 in light / near-black navy in dark. `bg-surface`
+        // is the raised card ground. `border-hairline` is the
+        // subdued divider that works on both.
+        canvas:   "rgb(var(--canvas) / <alpha-value>)",
+        surface:  "rgb(var(--surface) / <alpha-value>)",
+        hairline: "rgb(var(--hairline) / <alpha-value>)",
+        // Ash text scale — FLIPS in dark mode. ash-500 stays "the
+        // muted body-copy colour on this ground" in either theme.
         ash: {
-          400: "#94A3B8",    // slate-400
-          500: "#64748B",    // slate-500
-          600: "#475569",    // slate-600
-          700: "#334155",    // slate-700
-          900: "#0F172A",    // slate-900
+          100: "rgb(var(--ash-100) / <alpha-value>)",
+          200: "rgb(var(--ash-200) / <alpha-value>)",
+          300: "rgb(var(--ash-300) / <alpha-value>)",
+          400: "rgb(var(--ash-400) / <alpha-value>)",
+          500: "rgb(var(--ash-500) / <alpha-value>)",
+          600: "rgb(var(--ash-600) / <alpha-value>)",
+          700: "rgb(var(--ash-700) / <alpha-value>)",
+          800: "rgb(var(--ash-800) / <alpha-value>)",
+          900: "rgb(var(--ash-900) / <alpha-value>)",
         },
         // Trend semantics — unchanged. Green = up, red = down.
         rise: "#22C55E",

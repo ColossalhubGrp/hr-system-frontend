@@ -19,7 +19,7 @@ export default async function ClockPage() {
       <div className="mx-auto max-w-xl py-12 text-center">
         <div className="card p-8">
           <Clock className="mx-auto h-10 w-10 text-ash-400" />
-          <h1 className="mt-3 text-lg font-semibold text-ink-900">
+          <h1 className="mt-3 text-lg font-semibold text-ash-900">
             Can't clock in
           </h1>
           <p className="mt-2 text-sm text-ash-700">

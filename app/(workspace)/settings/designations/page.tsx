@@ -74,7 +74,7 @@ export default async function DesignationsPage() {
                       }
                       className="group flex flex-col focus-ring rounded-md"
                     >
-                      <span className="font-medium text-ink-800 group-hover:underline">
+                      <span className="font-medium text-ash-900 group-hover:underline">
                         {r.name}
                       </span>
                       {r.description && (

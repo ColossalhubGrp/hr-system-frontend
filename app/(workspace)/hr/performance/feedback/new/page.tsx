@@ -27,7 +27,7 @@ export default async function NewFeedbackPage() {
           <MessageSquare className="h-3.5 w-3.5" />
           HR · Performance · New feedback
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-ink-900">
+        <h1 className="text-2xl font-semibold tracking-tight text-ash-900">
           Leave feedback
         </h1>
       </header>

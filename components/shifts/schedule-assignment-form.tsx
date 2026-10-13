@@ -133,7 +133,7 @@ export function ScheduleAssignmentForm({
               type="checkbox"
               name="enabled"
               defaultChecked={initial?.enabled ?? true}
-              className="h-4 w-4 rounded border-hairline text-ink-700 focus-ring"
+              className="h-4 w-4 rounded border-hairline text-ash-800 focus-ring"
             />
             Enabled
           </label>

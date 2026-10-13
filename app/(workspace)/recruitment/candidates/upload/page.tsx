@@ -305,7 +305,7 @@ function UploadCVContent() {
                 </div>
 
                 {/* Job posting — compact single row */}
-                <section className="rounded-xl border border-[#E5E5E5] bg-white p-3 shadow-sm">
+                <section className="rounded-xl border border-[#E5E5E5] bg-surface p-3 shadow-sm">
                     <div className="flex flex-wrap items-center gap-3">
                         <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#EFF6FF] text-[#034078]">
                             <Briefcase className="h-4 w-4" />
@@ -389,7 +389,7 @@ function UploadCVContent() {
 
                 {/* File list */}
                 {files.length > 0 && (
-                    <section className="rounded-xl border border-[#E5E5E5] bg-white shadow-sm overflow-hidden">
+                    <section className="rounded-xl border border-[#E5E5E5] bg-surface shadow-sm overflow-hidden">
                         <header className="flex items-center justify-between border-b border-[#E5E5E5] px-4 py-2.5">
                             <div className="min-w-0">
                                 <h2 className="text-xs font-semibold text-[#0A1128]">

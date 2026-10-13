@@ -264,7 +264,7 @@ export default function CandidateApplicationPage() {
                 </div>
 
                 {/* Main Card */}
-                <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white shadow-sm">
+                <div className="overflow-hidden rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm">
                     {/* Candidate Header */}
                     <div className="p-6">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -319,7 +319,7 @@ export default function CandidateApplicationPage() {
                     </div>
 
                     {/* Candidate Details */}
-                    <div className="p-6 space-y-5 bg-white">
+                    <div className="p-6 space-y-5 bg-surface">
                         {/* Contact Information */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-5 border-b border-[#E5E5E5]">
                             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -661,7 +661,7 @@ export default function CandidateApplicationPage() {
                                     )}
 
                                     {interviewAiVisible && interview.ai_evaluation && (
-                                        <div className="rounded-lg border border-[#E5E5E5] bg-white p-4">
+                                        <div className="rounded-lg border border-[#E5E5E5] bg-surface p-4">
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Award className="h-5 w-5 text-[#1282A2]" />
                                                 <h4 className="text-sm font-bold text-[#0A1128]">AI Evaluation</h4>
@@ -690,7 +690,7 @@ export default function CandidateApplicationPage() {
                                                 <h4 className="text-sm font-bold text-[#0A1128]">HR Comment</h4>
                                             </div>
                                             {interview.hr_comment ? (
-                                                <div className="bg-white rounded-lg p-3 border border-[#E5E5E5] text-sm text-[#525252] leading-relaxed whitespace-pre-wrap">
+                                                <div className="bg-surface rounded-lg p-3 border border-[#E5E5E5] text-sm text-[#525252] leading-relaxed whitespace-pre-wrap">
                                                     {interview.hr_comment}
                                                 </div>
                                             ) : (
@@ -740,7 +740,7 @@ export default function CandidateApplicationPage() {
                                                 <FileText className="h-5 w-5 text-[#525252]" />
                                                 <h4 className="text-sm font-bold text-[#0A1128]">Transcript</h4>
                                             </div>
-                                            <div className="text-xs bg-white p-3 rounded max-h-64 overflow-auto border border-[#E5E5E5]">
+                                            <div className="text-xs bg-surface p-3 rounded max-h-64 overflow-auto border border-[#E5E5E5]">
                                                 <pre className="whitespace-pre-wrap text-[#525252]">{interview.transcript}</pre>
                                             </div>
                                         </div>

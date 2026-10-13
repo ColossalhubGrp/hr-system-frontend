@@ -31,7 +31,7 @@ import {
 } from "@/app/(workspace)/payroll/payruns-actions";
 
 const SOURCE_STYLE: Record<string, { label: string; cls: string }> = {
-  MANUAL:     { label: "Manual",     cls: "bg-slate-100 text-slate-700" },
+  MANUAL:     { label: "Manual",     cls: "bg-canvas text-ash-700" },
   ATTENDANCE: { label: "Attendance", cls: "bg-emerald-100 text-emerald-700" },
   UPLOAD:     { label: "CSV",        cls: "bg-purple-100 text-purple-700" },
 };
@@ -567,7 +567,7 @@ function ApproveToggle({
         "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold transition",
         value
           ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-          : "bg-slate-100 text-slate-600 hover:bg-slate-200",
+          : "bg-canvas text-ash-600 hover:bg-canvas",
         pending ? "opacity-60" : "",
       )}
     >

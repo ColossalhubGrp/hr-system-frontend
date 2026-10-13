@@ -482,13 +482,13 @@ export const SessionView = ({
         <h2 className="text-2xl font-bold mb-4">Interview Ended</h2>
         <p className="mb-4">This interview session has ended. Thank you for participating.</p>
         {sessionSummary && (
-          <div className="bg-white rounded-lg shadow p-4 mb-4 w-full max-w-xl mx-auto">
+          <div className="bg-surface rounded-lg shadow p-4 mb-4 w-full max-w-xl mx-auto">
             <h3 className="text-lg font-semibold mb-2">AI Summary</h3>
             <div className="text-left whitespace-pre-line">{sessionSummary}</div>
           </div>
         )}
         {aiEvaluation && (
-          <div className="bg-white rounded-lg shadow p-4 w-full max-w-xl mx-auto">
+          <div className="bg-surface rounded-lg shadow p-4 w-full max-w-xl mx-auto">
             <h3 className="text-lg font-semibold mb-2">AI Evaluation</h3>
             <pre className="text-left whitespace-pre-line">{JSON.stringify(aiEvaluation, null, 2)}</pre>
           </div>

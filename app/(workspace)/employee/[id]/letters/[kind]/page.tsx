@@ -95,7 +95,7 @@ export default async function LetterPreviewPage({
             <FileText className="h-3.5 w-3.5" />
             HR · Letter preview · {t.label}
           </div>
-          <h1 className="text-xl font-semibold tracking-tight text-ink-900">
+          <h1 className="text-xl font-semibold tracking-tight text-ash-900">
             {letter.subject}
           </h1>
           <p className="text-xs text-ash-500">

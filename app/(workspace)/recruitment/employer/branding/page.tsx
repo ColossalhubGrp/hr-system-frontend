@@ -102,7 +102,7 @@ export default function EmployerBrandingPage() {
                 </div>
 
                 {/* Brand story */}
-                <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5">
+                <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5">
                     <div className="flex items-center gap-2">
                         <div>
                             <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -140,7 +140,7 @@ export default function EmployerBrandingPage() {
 
                 {/* Payloads */}
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                    <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5">
+                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5">
                         <div className="flex items-center gap-2">
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">
@@ -154,7 +154,7 @@ export default function EmployerBrandingPage() {
                         </pre>
                     </div>
 
-                    <div className="rounded-2xl border border-[#E5E5E5] bg-white p-5">
+                    <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-5">
                         <div className="flex items-center gap-2">
                             <div>
                                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[#A3A3A3]">

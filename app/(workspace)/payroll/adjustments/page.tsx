@@ -104,7 +104,7 @@ async function AdditionalSalaryList() {
           className: "hidden md:table-cell",
           cell: (r) =>
             r.isRecurring ? (
-              <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ink-800">
+              <span className="rounded-chip bg-ink-50 px-2 py-0.5 text-[11px] font-medium text-ash-900">
                 Recurring · {r.fromDate ?? "—"} → {r.toDate ?? "—"}
               </span>
             ) : (

@@ -76,7 +76,7 @@ export default async function TaxExemptionsTab() {
                         "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
                         x.scope === "COMPANY"
                           ? "bg-purple-100 text-purple-700"
-                          : "bg-slate-100 text-slate-700",
+                          : "bg-canvas text-ash-700",
                       )}
                     >
                       {x.scope === "COMPANY" ? "Company" : "Employee"}
@@ -97,7 +97,7 @@ export default async function TaxExemptionsTab() {
                         "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
                         x.active
                           ? "bg-emerald-100 text-emerald-700"
-                          : "bg-slate-100 text-slate-500",
+                          : "bg-canvas text-ash-500",
                       )}
                     >
                       {x.active ? "Active" : "Inactive"}

@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 import { submitDoc } from "../submit-doc";
 export { TRANSFER_TYPES } from "./share-transfer-constants";
 
-/** ERPNext "Share Transfer" — issue, buy-back or transfer of shares. */
+/** ERPNext "Colossal Share Transfer" — issue, buy-back or transfer of shares. */
 
 export type ShareTransfer = {
   name: string;
@@ -32,7 +32,7 @@ export async function listShareTransfers(): Promise<ShareTransfer[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Share Transfer",
+      doctype: "Colossal Share Transfer",
       fields: [
         "name", "transfer_type", "date", "from_shareholder", "to_shareholder",
         "share_type", "no_of_shares", "rate", "amount", "company", "docstatus",
@@ -61,7 +61,7 @@ export async function getShareTransfer(name: string): Promise<ShareTransferDetai
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Share Transfer", name },
+      args: { doctype: "Colossal Share Transfer", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -126,7 +126,7 @@ export async function createShareTransfer(input: ShareTransferInput): Promise<{ 
     method: "frappe.client.insert",
     as: "user",
     verb: "POST",
-    args: { doc: { doctype: "Share Transfer", ...payload(input) } },
+    args: { doc: { doctype: "Colossal Share Transfer", ...payload(input) } },
   });
   return { name: created.name };
 }
@@ -136,12 +136,12 @@ export async function updateShareTransfer(name: string, input: ShareTransferInpu
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Share Transfer", name, fieldname: payload(input) },
+    args: { doctype: "Colossal Share Transfer", name, fieldname: payload(input) },
   });
 }
 
 export async function submitShareTransfer(name: string): Promise<void> {
-  await submitDoc("Share Transfer", name);
+  await submitDoc("Colossal Share Transfer", name);
 }
 
 export async function cancelShareTransfer(name: string): Promise<void> {
@@ -149,7 +149,7 @@ export async function cancelShareTransfer(name: string): Promise<void> {
     method: "frappe.client.cancel",
     as: "user",
     verb: "POST",
-    args: { doctype: "Share Transfer", name },
+    args: { doctype: "Colossal Share Transfer", name },
   });
 }
 
@@ -158,6 +158,6 @@ export async function deleteShareTransfer(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Share Transfer", name },
+    args: { doctype: "Colossal Share Transfer", name },
   });
 }

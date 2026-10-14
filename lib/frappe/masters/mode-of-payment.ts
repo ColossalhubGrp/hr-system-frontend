@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
 /**
- * ERPNext "Mode of Payment" master — Cash, Bank Draft, Credit Card,
+ * ERPNext "Colossal Mode of Payment" master — Cash, Bank Draft, Credit Card,
  * Wire Transfer, etc. Payment Entry and Sales Invoice both link here.
  */
 
@@ -31,7 +31,7 @@ export async function listModesOfPayment(): Promise<ModeOfPayment[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Mode of Payment",
+      doctype: "Colossal Mode of Payment",
       fields: ["name", "mode_of_payment", "type", "enabled"],
       order_by: "mode_of_payment asc",
       limit_page_length: 0,
@@ -50,7 +50,7 @@ export async function getModeOfPayment(name: string): Promise<ModeOfPaymentDetai
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Mode of Payment", name },
+      args: { doctype: "Colossal Mode of Payment", name },
     });
     const accounts = (doc.accounts as Array<Record<string, unknown>>) ?? [];
     return {
@@ -79,7 +79,7 @@ export type ModeOfPaymentInput = {
 
 export async function createModeOfPayment(input: ModeOfPaymentInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Mode of Payment",
+    doctype: "Colossal Mode of Payment",
     mode_of_payment: input.modeOfPayment,
     type: input.type,
     enabled: input.enabled ? 1 : 0,
@@ -103,7 +103,7 @@ export async function updateModeOfPayment(name: string, input: ModeOfPaymentInpu
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Mode of Payment",
+      doctype: "Colossal Mode of Payment",
       name,
       fieldname: {
         mode_of_payment: input.modeOfPayment,
@@ -119,7 +119,7 @@ export async function updateModeOfPayment(name: string, input: ModeOfPaymentInpu
     verb: "POST",
     args: {
       doc: {
-        doctype: "Mode of Payment",
+        doctype: "Colossal Mode of Payment",
         name,
         accounts: input.accounts.map((a) => ({
           company: a.company,
@@ -135,6 +135,6 @@ export async function deleteModeOfPayment(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Mode of Payment", name },
+    args: { doctype: "Colossal Mode of Payment", name },
   });
 }

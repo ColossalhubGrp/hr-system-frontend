@@ -2,7 +2,7 @@ import "server-only";
 import { frappeCall } from "../client";
 
 /**
- * ERPNext "Payment Terms Template" — the parent doctype that groups
+ * ERPNext "Colossal Payment Terms Template" — the parent doctype that groups
  * one or more Payment Term rows. Customer.payment_terms and
  * Supplier.payment_terms both link to THIS, not to Payment Term
  * directly. Loading Payment Term rows into a Customer/Supplier form
@@ -20,7 +20,7 @@ export async function listPaymentTermsTemplates(): Promise<PaymentTermsTemplate[
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Payment Terms Template",
+        doctype: "Colossal Payment Terms Template",
         fields: ["name", "template_name"],
         order_by: "template_name asc",
         limit_page_length: 0,

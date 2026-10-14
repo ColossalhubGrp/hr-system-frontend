@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
 /**
- * ERPNext "Fiscal Year" — the accounting calendar. Reports use this to
+ * ERPNext "Colossal Fiscal Year" — the accounting calendar. Reports use this to
  * compute opening balances and year-to-date columns.
  */
 
@@ -23,7 +23,7 @@ export async function listFiscalYears(): Promise<FiscalYear[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Fiscal Year",
+      doctype: "Colossal Fiscal Year",
       // `disabled` + `auto_created` aren't in Fiscal Year's queryable field
       // allowlist under Frappe v15. Fetched per-detail if we need the flag.
       fields: ["name", "year_start_date", "year_end_date"],
@@ -45,7 +45,7 @@ export async function getFiscalYear(name: string): Promise<FiscalYearDetail | nu
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Fiscal Year", name },
+      args: { doctype: "Colossal Fiscal Year", name },
     });
     const companies = (doc.companies as Array<Record<string, unknown>>) ?? [];
     return {
@@ -72,7 +72,7 @@ export type FiscalYearInput = {
 
 export async function createFiscalYear(input: FiscalYearInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Fiscal Year",
+    doctype: "Colossal Fiscal Year",
     year: input.name,
     year_start_date: input.yearStartDate,
     year_end_date: input.yearEndDate,
@@ -94,7 +94,7 @@ export async function updateFiscalYear(name: string, input: Omit<FiscalYearInput
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Fiscal Year",
+      doctype: "Colossal Fiscal Year",
       name,
       fieldname: {
         year_start_date: input.yearStartDate,
@@ -110,7 +110,7 @@ export async function updateFiscalYear(name: string, input: Omit<FiscalYearInput
     verb: "POST",
     args: {
       doc: {
-        doctype: "Fiscal Year",
+        doctype: "Colossal Fiscal Year",
         name,
         companies: input.companies.map((c) => ({ company: c })),
       },
@@ -123,6 +123,6 @@ export async function deleteFiscalYear(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Fiscal Year", name },
+    args: { doctype: "Colossal Fiscal Year", name },
   });
 }

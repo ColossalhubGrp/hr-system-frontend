@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 export { BUDGET_AGAINST, ACTIONS } from "./budget-constants";
 
 /**
- * ERPNext "Budget" — cap spending against an account, per Cost
+ * ERPNext "Colossal Budget" — cap spending against an account, per Cost
  * Center / Project / Accounting Dimension. Sales orders, POs and
  * actual GL postings can be stopped/warned when the cap is hit.
  */
@@ -44,7 +44,7 @@ export async function listBudgets(): Promise<BudgetRow[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Budget",
+      doctype: "Colossal Budget",
       fields: [
         "name", "budget_against", "company", "fiscal_year",
         "cost_center", "project", "monthly_distribution", "docstatus",
@@ -55,7 +55,7 @@ export async function listBudgets(): Promise<BudgetRow[]> {
   });
   return rows.map((r) => ({
     name: String(r.name ?? ""),
-    budgetAgainst: String(r.budget_against ?? "Cost Center"),
+    budgetAgainst: String(r.budget_against ?? "Colossal Cost Center"),
     company: String(r.company ?? ""),
     fiscalYear: String(r.fiscal_year ?? ""),
     costCenter: (r.cost_center as string | null) ?? null,
@@ -70,12 +70,12 @@ export async function getBudget(name: string): Promise<BudgetDetail | null> {
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Budget", name },
+      args: { doctype: "Colossal Budget", name },
     });
     const accounts = (doc.accounts as Array<Record<string, unknown>>) ?? [];
     return {
       name: String(doc.name ?? name),
-      budgetAgainst: String(doc.budget_against ?? "Cost Center"),
+      budgetAgainst: String(doc.budget_against ?? "Colossal Cost Center"),
       company: String(doc.company ?? ""),
       fiscalYear: String(doc.fiscal_year ?? ""),
       costCenter: (doc.cost_center as string | null) ?? null,
@@ -129,9 +129,9 @@ function payload(input: BudgetInput): Record<string, unknown> {
     budget_against: input.budgetAgainst,
     company: input.company,
     fiscal_year: input.fiscalYear,
-    cost_center: input.budgetAgainst === "Cost Center" ? input.costCenter || null : null,
+    cost_center: input.budgetAgainst === "Colossal Cost Center" ? input.costCenter || null : null,
     project: input.budgetAgainst === "Project" ? input.project || null : null,
-    accounting_dimension: input.budgetAgainst === "Accounting Dimension" ? input.accountingDimension || null : null,
+    accounting_dimension: input.budgetAgainst === "Colossal Accounting Dimension" ? input.accountingDimension || null : null,
     monthly_distribution: input.monthlyDistribution || null,
     applicable_on_material_request: input.applicableOnMaterialRequest ? 1 : 0,
     applicable_on_purchase_order: input.applicableOnPurchaseOrder ? 1 : 0,
@@ -147,7 +147,7 @@ function payload(input: BudgetInput): Record<string, unknown> {
 
 export async function createBudget(input: BudgetInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Budget",
+    doctype: "Colossal Budget",
     ...payload(input),
     accounts: input.accounts.map((a) => ({ account: a.account, budget_amount: a.budgetAmount })),
   };
@@ -165,7 +165,7 @@ export async function updateBudget(name: string, input: BudgetInput): Promise<vo
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Budget", name, fieldname: payload(input) },
+    args: { doctype: "Colossal Budget", name, fieldname: payload(input) },
   });
   await frappeCall({
     method: "frappe.client.save",
@@ -173,7 +173,7 @@ export async function updateBudget(name: string, input: BudgetInput): Promise<vo
     verb: "POST",
     args: {
       doc: {
-        doctype: "Budget",
+        doctype: "Colossal Budget",
         name,
         accounts: input.accounts.map((a) => ({ account: a.account, budget_amount: a.budgetAmount })),
       },
@@ -186,7 +186,7 @@ export async function submitBudget(name: string): Promise<void> {
     method: "frappe.client.submit",
     as: "user",
     verb: "POST",
-    args: { doc: { doctype: "Budget", name } },
+    args: { doc: { doctype: "Colossal Budget", name } },
   });
 }
 
@@ -195,7 +195,7 @@ export async function cancelBudget(name: string): Promise<void> {
     method: "frappe.client.cancel",
     as: "user",
     verb: "POST",
-    args: { doctype: "Budget", name },
+    args: { doctype: "Colossal Budget", name },
   });
 }
 
@@ -204,6 +204,6 @@ export async function deleteBudget(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Budget", name },
+    args: { doctype: "Colossal Budget", name },
   });
 }

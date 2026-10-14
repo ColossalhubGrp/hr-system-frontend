@@ -1,7 +1,7 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
-/** ERPNext "Shareholder" master. */
+/** ERPNext "Colossal Shareholder" master. */
 
 export type Shareholder = {
   name: string;
@@ -15,7 +15,7 @@ export async function listShareholders(): Promise<Shareholder[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Shareholder",
+      doctype: "Colossal Shareholder",
       fields: ["name", "title", "folio_no", "company"],
       order_by: "title asc",
       limit_page_length: 0,
@@ -34,7 +34,7 @@ export async function getShareholder(name: string): Promise<Shareholder | null> 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Shareholder", name },
+      args: { doctype: "Colossal Shareholder", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -55,7 +55,7 @@ export async function createShareholder(input: ShareholderInput): Promise<{ name
     method: "frappe.client.insert",
     as: "user",
     verb: "POST",
-    args: { doc: { doctype: "Shareholder", title: input.title, folio_no: input.folioNo || undefined, company: input.company } },
+    args: { doc: { doctype: "Colossal Shareholder", title: input.title, folio_no: input.folioNo || undefined, company: input.company } },
   });
   return { name: created.name };
 }
@@ -65,7 +65,7 @@ export async function updateShareholder(name: string, input: ShareholderInput): 
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Shareholder", name, fieldname: { title: input.title, folio_no: input.folioNo || null, company: input.company } },
+    args: { doctype: "Colossal Shareholder", name, fieldname: { title: input.title, folio_no: input.folioNo || null, company: input.company } },
   });
 }
 
@@ -74,6 +74,6 @@ export async function deleteShareholder(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Shareholder", name },
+    args: { doctype: "Colossal Shareholder", name },
   });
 }

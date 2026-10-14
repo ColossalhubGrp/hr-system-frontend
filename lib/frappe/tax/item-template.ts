@@ -1,7 +1,7 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
-/** ERPNext "Item Tax Template" — overrides the sales/purchase tax rate for a specific item. */
+/** ERPNext "Colossal Item Tax Template" — overrides the sales/purchase tax rate for a specific item. */
 
 export type ItemTaxTemplate = {
   name: string;
@@ -19,7 +19,7 @@ export async function listItemTaxTemplates(): Promise<ItemTaxTemplate[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Item Tax Template",
+      doctype: "Colossal Item Tax Template",
       // `disabled` not queryable via get_list under Frappe v15 field
       // permissions. Only fetched on the detail form.
       fields: ["name", "title", "company"],
@@ -40,7 +40,7 @@ export async function getItemTaxTemplate(name: string): Promise<ItemTaxTemplateD
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Item Tax Template", name },
+      args: { doctype: "Colossal Item Tax Template", name },
     });
     const taxes = (doc.taxes as Array<Record<string, unknown>>) ?? [];
     return {
@@ -69,7 +69,7 @@ export type ItemTaxTemplateInput = {
 
 export async function createItemTaxTemplate(input: ItemTaxTemplateInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Item Tax Template",
+    doctype: "Colossal Item Tax Template",
     title: input.title,
     company: input.company,
     disabled: input.disabled ? 1 : 0,
@@ -90,7 +90,7 @@ export async function updateItemTaxTemplate(name: string, input: ItemTaxTemplate
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Item Tax Template",
+      doctype: "Colossal Item Tax Template",
       name,
       fieldname: {
         title: input.title,
@@ -105,7 +105,7 @@ export async function updateItemTaxTemplate(name: string, input: ItemTaxTemplate
     verb: "POST",
     args: {
       doc: {
-        doctype: "Item Tax Template",
+        doctype: "Colossal Item Tax Template",
         name,
         taxes: input.taxes.map((t) => ({ tax_type: t.taxType, tax_rate: t.taxRate })),
       },
@@ -118,6 +118,6 @@ export async function deleteItemTaxTemplate(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Item Tax Template", name },
+    args: { doctype: "Colossal Item Tax Template", name },
   });
 }

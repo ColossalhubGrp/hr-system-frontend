@@ -32,4 +32,4 @@ export const listIndustries = () => listNames("Industry Type");
 export const listMarketSegments = () => listNames("Market Segment");
 export const listLanguages = () => listNames("Language");
 export const listPriceLists = () => listNames("Price List");
-export const listTaxCategories = () => listNames("Tax Category");
+export const listTaxCategories = () => listNames("Colossal Tax Category");

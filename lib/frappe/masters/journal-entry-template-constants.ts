@@ -1,6 +1,6 @@
 /** Client-safe voucher types for Journal Entry Template. */
 export const VOUCHER_TYPES = [
-  "Journal Entry",
+  "Colossal Journal Entry",
   "Inter Company Journal Entry",
   "Bank Entry",
   "Cash Entry",
@@ -12,7 +12,7 @@ export const VOUCHER_TYPES = [
   "Write Off Entry",
   "Opening Entry",
   "Depreciation Entry",
-  "Exchange Rate Revaluation",
+  "Colossal Exchange Rate Revaluation",
   "Deferred Revenue",
   "Deferred Expense",
 ] as const;

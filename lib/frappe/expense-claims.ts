@@ -559,7 +559,7 @@ export async function listPayableAccounts(
     const rows = await frappeCall<Array<{ name: string; account_name: string }>>({
       method: "frappe.client.get_list",
       args: {
-        doctype: "Account",
+        doctype: "Colossal Account",
         fields: ["name", "account_name"],
         filters: JSON.stringify([
           ["company", "=", company],
@@ -586,7 +586,7 @@ export async function listCostCenters(
     const rows = await frappeCall<Array<{ name: string; cost_center_name: string }>>({
       method: "frappe.client.get_list",
       args: {
-        doctype: "Cost Center",
+        doctype: "Colossal Cost Center",
         fields: ["name", "cost_center_name"],
         filters: JSON.stringify([
           ["company", "=", company],
@@ -614,7 +614,7 @@ export async function listCashOrBankAccounts(
     const rows = await frappeCall<Array<{ name: string; account_name: string }>>({
       method: "frappe.client.get_list",
       args: {
-        doctype: "Account",
+        doctype: "Colossal Account",
         fields: ["name", "account_name"],
         filters: JSON.stringify([
           ["company", "=", company],
@@ -706,7 +706,7 @@ export async function listModesOfPayment(): Promise<string[]> {
     const rows = await frappeCall<Array<{ name: string }>>({
       method: "frappe.client.get_list",
       args: {
-        doctype: "Mode of Payment",
+        doctype: "Colossal Mode of Payment",
         fields: ["name"],
         filters: JSON.stringify([["enabled", "=", 1]]),
         order_by: "name asc",

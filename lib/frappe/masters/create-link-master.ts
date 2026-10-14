@@ -39,17 +39,17 @@ const RECIPES: Record<string, { doctype: string; recipe: Recipe }> = {
     }),
   },
   "tax-category": {
-    doctype: "Tax Category",
-    recipe: (n) => ({ doctype: "Tax Category", title: n }),
+    doctype: "Colossal Tax Category",
+    recipe: (n) => ({ doctype: "Colossal Tax Category", title: n }),
   },
   "payment-terms-template": {
-    doctype: "Payment Terms Template",
+    doctype: "Colossal Payment Terms Template",
     recipe: (n) => ({
-      doctype: "Payment Terms Template",
+      doctype: "Colossal Payment Terms Template",
       template_name: n,
       terms: [
         {
-          doctype: "Payment Terms Template Detail",
+          doctype: "Colossal Payment Terms Template Detail",
           description: "Net 30",
           invoice_portion: 100,
           due_date_based_on: "Day(s) after invoice date",

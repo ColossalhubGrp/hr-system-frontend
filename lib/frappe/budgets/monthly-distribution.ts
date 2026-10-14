@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 import { MONTHS } from "./monthly-distribution-constants";
 
 /**
- * ERPNext "Monthly Distribution" — 12 percentages that add up to 100.
+ * ERPNext "Colossal Monthly Distribution" — 12 percentages that add up to 100.
  * Used to spread a budget or a target across months (e.g. seasonal
  * sales targets: heavy in Q4, light in Q1).
  */
@@ -23,7 +23,7 @@ export async function listMonthlyDistributions(): Promise<MonthlyDistribution[]>
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Monthly Distribution",
+      doctype: "Colossal Monthly Distribution",
       fields: ["name", "distribution_id", "fiscal_year"],
       order_by: "distribution_id asc",
       limit_page_length: 0,
@@ -41,7 +41,7 @@ export async function getMonthlyDistribution(name: string): Promise<MonthlyDistr
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Monthly Distribution", name },
+      args: { doctype: "Colossal Monthly Distribution", name },
     });
     const pcts = (doc.percentages as Array<Record<string, unknown>>) ?? [];
     return {
@@ -68,7 +68,7 @@ export type MonthlyDistributionInput = {
 
 export async function createMonthlyDistribution(input: MonthlyDistributionInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Monthly Distribution",
+    doctype: "Colossal Monthly Distribution",
     distribution_id: input.distributionId,
     fiscal_year: input.fiscalYear || undefined,
     percentages: input.percentages.map((p) => ({ month: p.month, percentage_allocation: p.percentageAllocation })),
@@ -88,7 +88,7 @@ export async function updateMonthlyDistribution(name: string, input: Omit<Monthl
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Monthly Distribution",
+      doctype: "Colossal Monthly Distribution",
       name,
       fieldname: { fiscal_year: input.fiscalYear || null },
     },
@@ -99,7 +99,7 @@ export async function updateMonthlyDistribution(name: string, input: Omit<Monthl
     verb: "POST",
     args: {
       doc: {
-        doctype: "Monthly Distribution",
+        doctype: "Colossal Monthly Distribution",
         name,
         percentages: input.percentages.map((p) => ({ month: p.month, percentage_allocation: p.percentageAllocation })),
       },
@@ -112,7 +112,7 @@ export async function deleteMonthlyDistribution(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Monthly Distribution", name },
+    args: { doctype: "Colossal Monthly Distribution", name },
   });
 }
 

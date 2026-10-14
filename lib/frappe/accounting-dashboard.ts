@@ -21,29 +21,29 @@ export type PnlPoint = { period: string; income: number; expense: number; net: n
 
 export async function getAccountingDashboardTotals(company: string): Promise<DashboardTotals> {
   const [pi, si, pePaid, peReceived, arOs, apOs] = await Promise.all([
-    sumField("Purchase Invoice", "grand_total", [
+    sumField("Colossal Purchase Invoice", "grand_total", [
       ["company", "=", company],
       ["docstatus", "=", 1],
     ]),
-    sumField("Sales Invoice", "grand_total", [
+    sumField("Colossal Sales Invoice", "grand_total", [
       ["company", "=", company],
       ["docstatus", "=", 1],
     ]),
-    sumField("Payment Entry", "paid_amount", [
+    sumField("Colossal Payment Entry", "paid_amount", [
       ["company", "=", company],
       ["docstatus", "=", 1],
       ["payment_type", "=", "Pay"],
     ]),
-    sumField("Payment Entry", "received_amount", [
+    sumField("Colossal Payment Entry", "received_amount", [
       ["company", "=", company],
       ["docstatus", "=", 1],
       ["payment_type", "=", "Receive"],
     ]),
-    sumField("Sales Invoice", "outstanding_amount", [
+    sumField("Colossal Sales Invoice", "outstanding_amount", [
       ["company", "=", company],
       ["docstatus", "=", 1],
     ]),
-    sumField("Purchase Invoice", "outstanding_amount", [
+    sumField("Colossal Purchase Invoice", "outstanding_amount", [
       ["company", "=", company],
       ["docstatus", "=", 1],
     ]),

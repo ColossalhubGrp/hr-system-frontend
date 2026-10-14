@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 import { submitDoc } from "../submit-doc";
 
 /**
- * ERPNext "Period Closing Voucher" — the year-end voucher that moves
+ * ERPNext "Colossal Period Closing Voucher" — the year-end voucher that moves
  * income and expense balances into a closing (retained earnings)
  * account so the next fiscal year starts clean.
  */
@@ -34,7 +34,7 @@ export async function listPeriodClosings(): Promise<PeriodClosingVoucher[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Period Closing Voucher",
+      doctype: "Colossal Period Closing Voucher",
       fields: [
         "name", "company", "fiscal_year", "period_end_date",
         "closing_account_head", "docstatus", "transaction_date",
@@ -59,7 +59,7 @@ export async function getPeriodClosing(name: string): Promise<PeriodClosingVouch
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Period Closing Voucher", name },
+      args: { doctype: "Colossal Period Closing Voucher", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -94,7 +94,7 @@ export async function createPeriodClosing(input: PeriodClosingInput): Promise<{ 
     verb: "POST",
     args: {
       doc: {
-        doctype: "Period Closing Voucher",
+        doctype: "Colossal Period Closing Voucher",
         company: input.company,
         fiscal_year: input.fiscalYear,
         period_start_date: input.periodStartDate,
@@ -109,7 +109,7 @@ export async function createPeriodClosing(input: PeriodClosingInput): Promise<{ 
 }
 
 export async function submitPeriodClosing(name: string): Promise<void> {
-  await submitDoc("Period Closing Voucher", name);
+  await submitDoc("Colossal Period Closing Voucher", name);
 }
 
 export async function cancelPeriodClosing(name: string): Promise<void> {
@@ -117,7 +117,7 @@ export async function cancelPeriodClosing(name: string): Promise<void> {
     method: "frappe.client.cancel",
     as: "user",
     verb: "POST",
-    args: { doctype: "Period Closing Voucher", name },
+    args: { doctype: "Colossal Period Closing Voucher", name },
   });
 }
 
@@ -126,6 +126,6 @@ export async function deletePeriodClosing(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Period Closing Voucher", name },
+    args: { doctype: "Colossal Period Closing Voucher", name },
   });
 }

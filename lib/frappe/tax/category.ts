@@ -1,7 +1,7 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
-/** ERPNext "Tax Category" — a bucket that lets Tax Rules pick the right tax template per party/region. */
+/** ERPNext "Colossal Tax Category" — a bucket that lets Tax Rules pick the right tax template per party/region. */
 
 export type TaxCategory = { name: string; title: string; disabled: boolean };
 
@@ -10,7 +10,7 @@ export async function listTaxCategories(): Promise<TaxCategory[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Tax Category",
+      doctype: "Colossal Tax Category",
       // `disabled` not queryable via get_list under Frappe v15 field
       // permissions. Only fetched on the detail form.
       fields: ["name", "title"],
@@ -30,7 +30,7 @@ export async function getTaxCategory(name: string): Promise<TaxCategory | null> 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Tax Category", name },
+      args: { doctype: "Colossal Tax Category", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -48,7 +48,7 @@ export async function createTaxCategory(input: { title: string; disabled: boolea
     method: "frappe.client.insert",
     as: "user",
     verb: "POST",
-    args: { doc: { doctype: "Tax Category", title: input.title, disabled: input.disabled ? 1 : 0 } },
+    args: { doc: { doctype: "Colossal Tax Category", title: input.title, disabled: input.disabled ? 1 : 0 } },
   });
   return { name: created.name };
 }
@@ -59,7 +59,7 @@ export async function updateTaxCategory(name: string, input: { title: string; di
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Tax Category",
+      doctype: "Colossal Tax Category",
       name,
       fieldname: { title: input.title, disabled: input.disabled ? 1 : 0 },
     },
@@ -71,6 +71,6 @@ export async function deleteTaxCategory(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Tax Category", name },
+    args: { doctype: "Colossal Tax Category", name },
   });
 }

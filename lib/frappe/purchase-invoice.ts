@@ -105,7 +105,7 @@ export async function listPurchaseInvoices(opts: {
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Purchase Invoice",
+        doctype: "Colossal Purchase Invoice",
         fields: [
           "name",
           "supplier",
@@ -128,7 +128,7 @@ export async function listPurchaseInvoices(opts: {
     frappeCall<{ count?: number } | number>({
       method: "frappe.client.get_count",
       as: "user",
-      args: { doctype: "Purchase Invoice", filters },
+      args: { doctype: "Colossal Purchase Invoice", filters },
     }),
     fetchPurchaseInvoiceCounts(opts.company, opts.supplier),
   ]);
@@ -181,7 +181,7 @@ async function countPI(filters: [string, string, unknown][]): Promise<number> {
   const raw = await frappeCall<{ count?: number } | number>({
     method: "frappe.client.get_count",
     as: "user",
-    args: { doctype: "Purchase Invoice", filters },
+    args: { doctype: "Colossal Purchase Invoice", filters },
   });
   return typeof raw === "number" ? raw : (raw?.count ?? 0);
 }
@@ -195,7 +195,7 @@ async function sumPI(
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Purchase Invoice",
+        doctype: "Colossal Purchase Invoice",
         fields: [field],
         filters,
         limit_page_length: 0,
@@ -212,7 +212,7 @@ export async function getPurchaseInvoice(name: string): Promise<PurchaseInvoiceD
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Purchase Invoice", name },
+      args: { doctype: "Colossal Purchase Invoice", name },
     });
     const items = (doc.items as Array<Record<string, unknown>>) ?? [];
     const taxes = (doc.taxes as Array<Record<string, unknown>>) ?? [];
@@ -285,7 +285,7 @@ export type PurchaseInvoiceCreateInput = {
 
 export async function createPurchaseInvoice(input: PurchaseInvoiceCreateInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Purchase Invoice",
+    doctype: "Colossal Purchase Invoice",
     supplier: input.supplier,
     posting_date: input.postingDate,
     due_date: input.dueDate || undefined,
@@ -314,7 +314,7 @@ export async function createPurchaseInvoice(input: PurchaseInvoiceCreateInput): 
 }
 
 export async function submitPurchaseInvoice(name: string): Promise<void> {
-  await submitDoc("Purchase Invoice", name);
+  await submitDoc("Colossal Purchase Invoice", name);
 }
 
 /** Draft-only overwrite — same pattern as updateJournalEntry. */
@@ -325,7 +325,7 @@ export async function updatePurchaseInvoice(
   const existing = await frappeCall<Record<string, unknown>>({
     method: "frappe.client.get",
     as: "user",
-    args: { doctype: "Purchase Invoice", name },
+    args: { doctype: "Colossal Purchase Invoice", name },
   });
   if (Number(existing.docstatus ?? 0) !== 0) {
     throw new Error("This invoice is no longer a draft, so it can't be edited. Reload the page.");
@@ -333,7 +333,7 @@ export async function updatePurchaseInvoice(
 
   const doc = {
     ...existing,
-    doctype: "Purchase Invoice",
+    doctype: "Colossal Purchase Invoice",
     supplier: input.supplier,
     posting_date: input.postingDate,
     due_date: input.dueDate || null,
@@ -366,7 +366,7 @@ export async function cancelPurchaseInvoice(name: string): Promise<void> {
     method: "frappe.client.cancel",
     as: "user",
     verb: "POST",
-    args: { doctype: "Purchase Invoice", name },
+    args: { doctype: "Colossal Purchase Invoice", name },
   });
 }
 

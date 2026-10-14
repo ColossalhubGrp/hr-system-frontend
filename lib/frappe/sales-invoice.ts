@@ -109,7 +109,7 @@ export async function listSalesInvoices(opts: {
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Sales Invoice",
+        doctype: "Colossal Sales Invoice",
         fields: [
           "name",
           "customer",
@@ -132,7 +132,7 @@ export async function listSalesInvoices(opts: {
     frappeCall<{ count?: number } | number>({
       method: "frappe.client.get_count",
       as: "user",
-      args: { doctype: "Sales Invoice", filters },
+      args: { doctype: "Colossal Sales Invoice", filters },
     }),
     fetchSalesInvoiceCounts(opts.company, opts.customer),
   ]);
@@ -185,7 +185,7 @@ async function countSI(filters: [string, string, unknown][]): Promise<number> {
   const raw = await frappeCall<{ count?: number } | number>({
     method: "frappe.client.get_count",
     as: "user",
-    args: { doctype: "Sales Invoice", filters },
+    args: { doctype: "Colossal Sales Invoice", filters },
   });
   return typeof raw === "number" ? raw : (raw?.count ?? 0);
 }
@@ -199,7 +199,7 @@ async function sumSI(
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Sales Invoice",
+        doctype: "Colossal Sales Invoice",
         fields: [field],
         filters,
         limit_page_length: 0,
@@ -216,7 +216,7 @@ export async function getSalesInvoice(name: string): Promise<SalesInvoiceDetail 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Sales Invoice", name },
+      args: { doctype: "Colossal Sales Invoice", name },
     });
     const items = (doc.items as Array<Record<string, unknown>>) ?? [];
     const taxes = (doc.taxes as Array<Record<string, unknown>>) ?? [];
@@ -289,7 +289,7 @@ export type SalesInvoiceCreateInput = {
 
 export async function createSalesInvoice(input: SalesInvoiceCreateInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Sales Invoice",
+    doctype: "Colossal Sales Invoice",
     customer: input.customer,
     posting_date: input.postingDate,
     due_date: input.dueDate || undefined,
@@ -318,7 +318,7 @@ export async function createSalesInvoice(input: SalesInvoiceCreateInput): Promis
 }
 
 export async function submitSalesInvoice(name: string): Promise<void> {
-  await submitDoc("Sales Invoice", name);
+  await submitDoc("Colossal Sales Invoice", name);
 }
 
 /** Draft-only overwrite — same pattern as updateJournalEntry. */
@@ -329,7 +329,7 @@ export async function updateSalesInvoice(
   const existing = await frappeCall<Record<string, unknown>>({
     method: "frappe.client.get",
     as: "user",
-    args: { doctype: "Sales Invoice", name },
+    args: { doctype: "Colossal Sales Invoice", name },
   });
   if (Number(existing.docstatus ?? 0) !== 0) {
     throw new Error("This invoice is no longer a draft, so it can't be edited. Reload the page.");
@@ -337,7 +337,7 @@ export async function updateSalesInvoice(
 
   const doc = {
     ...existing,
-    doctype: "Sales Invoice",
+    doctype: "Colossal Sales Invoice",
     customer: input.customer,
     posting_date: input.postingDate,
     due_date: input.dueDate || null,
@@ -370,7 +370,7 @@ export async function cancelSalesInvoice(name: string): Promise<void> {
     method: "frappe.client.cancel",
     as: "user",
     verb: "POST",
-    args: { doctype: "Sales Invoice", name },
+    args: { doctype: "Colossal Sales Invoice", name },
   });
 }
 

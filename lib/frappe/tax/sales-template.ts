@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 export { CHARGE_TYPES } from "./sales-template-constants";
 
 /**
- * ERPNext "Sales Taxes and Charges Template" — the reusable tax block
+ * ERPNext "Colossal Sales Taxes and Charges Template" — the reusable tax block
  * applied to Sales Invoices, Quotes and Sales Orders.
  */
 
@@ -32,7 +32,7 @@ export async function listSalesTaxTemplates(): Promise<SalesTaxTemplate[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Sales Taxes and Charges Template",
+      doctype: "Colossal Sales Taxes and Charges Template",
       // `disabled` not queryable via get_list under Frappe v15 field
       // permissions. Only fetched on the detail form.
       fields: ["name", "title", "company", "is_default"],
@@ -54,7 +54,7 @@ export async function getSalesTaxTemplate(name: string): Promise<SalesTaxTemplat
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Sales Taxes and Charges Template", name },
+      args: { doctype: "Colossal Sales Taxes and Charges Template", name },
     });
     const taxes = (doc.taxes as Array<Record<string, unknown>>) ?? [];
     return {
@@ -89,7 +89,7 @@ export type SalesTaxTemplateInput = {
 
 export async function createSalesTaxTemplate(input: SalesTaxTemplateInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Sales Taxes and Charges Template",
+    doctype: "Colossal Sales Taxes and Charges Template",
     title: input.title,
     company: input.company,
     is_default: input.isDefault ? 1 : 0,
@@ -118,7 +118,7 @@ export async function updateSalesTaxTemplate(name: string, input: SalesTaxTempla
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Sales Taxes and Charges Template",
+      doctype: "Colossal Sales Taxes and Charges Template",
       name,
       fieldname: {
         title: input.title,
@@ -134,7 +134,7 @@ export async function updateSalesTaxTemplate(name: string, input: SalesTaxTempla
     verb: "POST",
     args: {
       doc: {
-        doctype: "Sales Taxes and Charges Template",
+        doctype: "Colossal Sales Taxes and Charges Template",
         name,
         taxes: input.taxes.map((t) => ({
           charge_type: t.chargeType,
@@ -154,6 +154,6 @@ export async function deleteSalesTaxTemplate(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Sales Taxes and Charges Template", name },
+    args: { doctype: "Colossal Sales Taxes and Charges Template", name },
   });
 }

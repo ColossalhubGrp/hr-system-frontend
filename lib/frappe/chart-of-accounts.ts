@@ -39,7 +39,7 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Account",
+      doctype: "Colossal Account",
       // Frappe v15 restricts which fields get_list will accept. `disabled`
       // isn't in the Account doctype's `in_list_view`/`in_standard_filter`
       // set, so asking for it 417s. We fetch the row without it and treat
@@ -71,7 +71,7 @@ export async function listAccountTree(company: string): Promise<AccountNode[]> {
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "GL Entry",
+        doctype: "Colossal GL Entry",
         fields: ["account", "sum(debit) as debit_sum", "sum(credit) as credit_sum"],
         filters: [["company", "=", company], ["is_cancelled", "=", 0]],
         group_by: "account",
@@ -158,7 +158,7 @@ export async function getAccount(name: string): Promise<Account | null> {
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Account", name },
+      args: { doctype: "Colossal Account", name },
     });
     return {
       name: String(doc.name ?? name),

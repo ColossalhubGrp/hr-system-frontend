@@ -16,7 +16,7 @@ import { submitDoc, cancelDoc } from "./submit-doc";
 // ── Types ────────────────────────────────────────────────────────
 
 export type VoucherType =
-  | "Journal Entry"
+  | "Colossal Journal Entry"
   | "Bank Entry"
   | "Cash Entry"
   | "Credit Card Entry"
@@ -27,10 +27,10 @@ export type VoucherType =
   | "Write Off Entry"
   | "Opening Entry"
   | "Depreciation Entry"
-  | "Exchange Rate Revaluation";
+  | "Colossal Exchange Rate Revaluation";
 
 export const VOUCHER_TYPES: VoucherType[] = [
-  "Journal Entry",
+  "Colossal Journal Entry",
   "Bank Entry",
   "Cash Entry",
   "Credit Card Entry",
@@ -40,7 +40,7 @@ export const VOUCHER_TYPES: VoucherType[] = [
   "Write Off Entry",
   "Opening Entry",
   "Depreciation Entry",
-  "Exchange Rate Revaluation",
+  "Colossal Exchange Rate Revaluation",
 ];
 
 export type JournalEntryRow = {
@@ -137,7 +137,7 @@ export async function listJournalEntries(opts: {
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Journal Entry",
+        doctype: "Colossal Journal Entry",
         fields: [
           "name",
           "voucher_type",
@@ -159,7 +159,7 @@ export async function listJournalEntries(opts: {
     frappeCall<{ count?: number } | number>({
       method: "frappe.client.get_count",
       as: "user",
-      args: { doctype: "Journal Entry", filters },
+      args: { doctype: "Colossal Journal Entry", filters },
     }),
     fetchCounts(opts.company, opts.voucherType),
   ]);
@@ -168,7 +168,7 @@ export async function listJournalEntries(opts: {
 
   const rows: JournalEntryRow[] = rowsRaw.map((r) => ({
     name: String(r.name ?? ""),
-    voucherType: String(r.voucher_type ?? "Journal Entry"),
+    voucherType: String(r.voucher_type ?? "Colossal Journal Entry"),
     postingDate: String(r.posting_date ?? ""),
     company: String(r.company ?? ""),
     totalDebit: Number(r.total_debit ?? 0),
@@ -203,7 +203,7 @@ async function countBy(filters: [string, string, unknown][]): Promise<number> {
   const raw = await frappeCall<{ count?: number } | number>({
     method: "frappe.client.get_count",
     as: "user",
-    args: { doctype: "Journal Entry", filters },
+    args: { doctype: "Colossal Journal Entry", filters },
   });
   return typeof raw === "number" ? raw : (raw?.count ?? 0);
 }
@@ -215,7 +215,7 @@ async function sumSubmittedDebit(baseFilters: [string, string, unknown][]): Prom
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Journal Entry",
+        doctype: "Colossal Journal Entry",
         fields: ["total_debit"],
         filters: [...baseFilters, ["docstatus", "=", 1]],
         limit_page_length: 0,
@@ -234,13 +234,13 @@ export async function getJournalEntry(name: string): Promise<JournalEntryDetail 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Journal Entry", name },
+      args: { doctype: "Colossal Journal Entry", name },
     });
 
     const linesRaw = (doc.accounts as Array<Record<string, unknown>>) ?? [];
     return {
       name: String(doc.name ?? name),
-      voucherType: String(doc.voucher_type ?? "Journal Entry"),
+      voucherType: String(doc.voucher_type ?? "Colossal Journal Entry"),
       postingDate: String(doc.posting_date ?? ""),
       company: String(doc.company ?? ""),
       chequeNo: (doc.cheque_no as string | null) ?? null,
@@ -300,7 +300,7 @@ export type JournalEntryCreateInput = {
 
 export async function createJournalEntry(input: JournalEntryCreateInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Journal Entry",
+    doctype: "Colossal Journal Entry",
     voucher_type: input.voucherType,
     posting_date: input.postingDate,
     company: input.company,
@@ -330,11 +330,11 @@ export async function createJournalEntry(input: JournalEntryCreateInput): Promis
 }
 
 export async function submitJournalEntry(name: string): Promise<void> {
-  await submitDoc("Journal Entry", name);
+  await submitDoc("Colossal Journal Entry", name);
 }
 
 export async function cancelJournalEntry(name: string): Promise<void> {
-  await cancelDoc("Journal Entry", name);
+  await cancelDoc("Colossal Journal Entry", name);
 }
 
 /** Draft-only overwrite. Loads the current doc, re-maps the input onto
@@ -350,7 +350,7 @@ export async function updateJournalEntry(
   const existing = await frappeCall<Record<string, unknown>>({
     method: "frappe.client.get",
     as: "user",
-    args: { doctype: "Journal Entry", name },
+    args: { doctype: "Colossal Journal Entry", name },
   });
   if (Number(existing.docstatus ?? 0) !== 0) {
     throw new Error("This voucher is no longer a draft, so it can't be edited. Reload the page.");
@@ -361,7 +361,7 @@ export async function updateJournalEntry(
   // instead of inserting a new row.
   const doc = {
     ...existing,
-    doctype: "Journal Entry",
+    doctype: "Colossal Journal Entry",
     voucher_type: input.voucherType,
     posting_date: input.postingDate,
     company: input.company,
@@ -432,8 +432,8 @@ export async function listCompanies(): Promise<Array<{ name: string; abbr: strin
 export type PaymentType = "Receive" | "Pay" | "Internal Transfer";
 export const PAYMENT_TYPES: PaymentType[] = ["Receive", "Pay", "Internal Transfer"];
 
-export type PartyType = "Customer" | "Supplier" | "Employee" | "Shareholder" | "Student" | "Donor";
-export const PARTY_TYPES: PartyType[] = ["Customer", "Supplier", "Employee", "Shareholder"];
+export type PartyType = "Customer" | "Supplier" | "Employee" | "Colossal Shareholder" | "Student" | "Donor";
+export const PARTY_TYPES: PartyType[] = ["Customer", "Supplier", "Employee", "Colossal Shareholder"];
 
 export type PaymentEntryRow = {
   name: string;
@@ -520,7 +520,7 @@ export async function listPaymentEntries(opts: {
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Payment Entry",
+        doctype: "Colossal Payment Entry",
         fields: [
           "name",
           "payment_type",
@@ -547,7 +547,7 @@ export async function listPaymentEntries(opts: {
     frappeCall<{ count?: number } | number>({
       method: "frappe.client.get_count",
       as: "user",
-      args: { doctype: "Payment Entry", filters },
+      args: { doctype: "Colossal Payment Entry", filters },
     }),
     fetchPaymentCounts(opts.company, opts.paymentType),
   ]);
@@ -603,7 +603,7 @@ async function countPayments(filters: [string, string, unknown][]): Promise<numb
   const raw = await frappeCall<{ count?: number } | number>({
     method: "frappe.client.get_count",
     as: "user",
-    args: { doctype: "Payment Entry", filters },
+    args: { doctype: "Colossal Payment Entry", filters },
   });
   return typeof raw === "number" ? raw : (raw?.count ?? 0);
 }
@@ -617,7 +617,7 @@ async function sumPaymentField(
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Payment Entry",
+        doctype: "Colossal Payment Entry",
         fields: [field],
         filters,
         limit_page_length: 0,
@@ -634,7 +634,7 @@ export async function getPaymentEntry(name: string): Promise<PaymentEntryDetail 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Payment Entry", name },
+      args: { doctype: "Colossal Payment Entry", name },
     });
     const refs = (doc.references as Array<Record<string, unknown>>) ?? [];
     return {
@@ -693,7 +693,7 @@ export type PaymentEntryCreateInput = {
 
 export async function createPaymentEntry(input: PaymentEntryCreateInput): Promise<{ name: string }> {
   const doc: Record<string, unknown> = {
-    doctype: "Payment Entry",
+    doctype: "Colossal Payment Entry",
     payment_type: input.paymentType,
     posting_date: input.postingDate,
     company: input.company,
@@ -721,11 +721,11 @@ export async function createPaymentEntry(input: PaymentEntryCreateInput): Promis
 }
 
 export async function submitPaymentEntry(name: string): Promise<void> {
-  await submitDoc("Payment Entry", name);
+  await submitDoc("Colossal Payment Entry", name);
 }
 
 export async function cancelPaymentEntry(name: string): Promise<void> {
-  await cancelDoc("Payment Entry", name);
+  await cancelDoc("Colossal Payment Entry", name);
 }
 
 /** Draft-only overwrite — see updateJournalEntry for the pattern. */
@@ -736,7 +736,7 @@ export async function updatePaymentEntry(
   const existing = await frappeCall<Record<string, unknown>>({
     method: "frappe.client.get",
     as: "user",
-    args: { doctype: "Payment Entry", name },
+    args: { doctype: "Colossal Payment Entry", name },
   });
   if (Number(existing.docstatus ?? 0) !== 0) {
     throw new Error("This voucher is no longer a draft, so it can't be edited. Reload the page.");
@@ -744,7 +744,7 @@ export async function updatePaymentEntry(
 
   const doc: Record<string, unknown> = {
     ...existing,
-    doctype: "Payment Entry",
+    doctype: "Colossal Payment Entry",
     payment_type: input.paymentType,
     posting_date: input.postingDate,
     company: input.company,
@@ -773,7 +773,7 @@ export async function listModesOfPayment(): Promise<Array<{ name: string; type: 
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Mode of Payment",
+      doctype: "Colossal Mode of Payment",
       fields: ["name", "type"],
       filters: [["enabled", "=", 1]],
       order_by: "name asc",
@@ -835,7 +835,7 @@ export async function listAccounts(company: string, opts: { search?: string; lim
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Account",
+        doctype: "Colossal Account",
         fields: RICH_FIELDS,
         filters,
         order_by: "account_name asc",
@@ -851,7 +851,7 @@ export async function listAccounts(company: string, opts: { search?: string; lim
         method: "frappe.client.get_list",
         as: "user",
         args: {
-          doctype: "Account",
+          doctype: "Colossal Account",
           fields: SAFE_FIELDS,
           filters,
           order_by: "account_name asc",

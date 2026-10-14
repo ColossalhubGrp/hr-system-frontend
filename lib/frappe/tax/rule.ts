@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
 /**
- * ERPNext "Tax Rule" — routes an invoice to the right tax template
+ * ERPNext "Colossal Tax Rule" — routes an invoice to the right tax template
  * based on party, party group, item, item group, tax category, or
  * shipping/billing geography.
  */
@@ -43,7 +43,7 @@ export async function listTaxRules(): Promise<TaxRuleRow[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Tax Rule",
+      doctype: "Colossal Tax Rule",
       fields: [
         "name", "tax_type", "tax_category", "sales_tax_template",
         "purchase_tax_template", "customer", "supplier", "priority",
@@ -73,7 +73,7 @@ export async function getTaxRule(name: string): Promise<TaxRuleDetail | null> {
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Tax Rule", name },
+      args: { doctype: "Colossal Tax Rule", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -161,7 +161,7 @@ export async function createTaxRule(input: TaxRuleInput): Promise<{ name: string
     method: "frappe.client.insert",
     as: "user",
     verb: "POST",
-    args: { doc: { doctype: "Tax Rule", ...payload(input) } },
+    args: { doc: { doctype: "Colossal Tax Rule", ...payload(input) } },
   });
   return { name: created.name };
 }
@@ -171,7 +171,7 @@ export async function updateTaxRule(name: string, input: TaxRuleInput): Promise<
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Tax Rule", name, fieldname: payload(input) },
+    args: { doctype: "Colossal Tax Rule", name, fieldname: payload(input) },
   });
 }
 
@@ -180,6 +180,6 @@ export async function deleteTaxRule(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Tax Rule", name },
+    args: { doctype: "Colossal Tax Rule", name },
   });
 }

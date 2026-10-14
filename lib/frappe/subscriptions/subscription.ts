@@ -1,7 +1,7 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
-/** ERPNext "Subscription" — one party, one or more plans, on a recurring schedule. */
+/** ERPNext "Colossal Subscription" — one party, one or more plans, on a recurring schedule. */
 
 export type SubscriptionRow = {
   name: string;
@@ -32,7 +32,7 @@ export async function listSubscriptions(): Promise<SubscriptionRow[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Subscription",
+      doctype: "Colossal Subscription",
       fields: [
         "name", "party_type", "party", "company", "status",
         "start_date", "end_date", "current_invoice_start", "current_invoice_end",
@@ -59,7 +59,7 @@ export async function getSubscription(name: string): Promise<SubscriptionDetail 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Subscription", name },
+      args: { doctype: "Colossal Subscription", name },
     });
     const plans = (doc.plans as Array<Record<string, unknown>>) ?? [];
     return {
@@ -126,7 +126,7 @@ export async function createSubscription(input: SubscriptionInput): Promise<{ na
     verb: "POST",
     args: {
       doc: {
-        doctype: "Subscription",
+        doctype: "Colossal Subscription",
         ...payload(input),
         plans: input.plans.map((p) => ({ plan: p.plan, qty: p.qty })),
       },
@@ -140,7 +140,7 @@ export async function updateSubscription(name: string, input: SubscriptionInput)
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Subscription", name, fieldname: payload(input) },
+    args: { doctype: "Colossal Subscription", name, fieldname: payload(input) },
   });
   await frappeCall({
     method: "frappe.client.save",
@@ -148,7 +148,7 @@ export async function updateSubscription(name: string, input: SubscriptionInput)
     verb: "POST",
     args: {
       doc: {
-        doctype: "Subscription",
+        doctype: "Colossal Subscription",
         name,
         plans: input.plans.map((p) => ({ plan: p.plan, qty: p.qty })),
       },
@@ -161,7 +161,7 @@ export async function cancelSubscription(name: string): Promise<void> {
     method: "frappe.client.run_doc_method",
     as: "user",
     verb: "POST",
-    args: { dt: "Subscription", dn: name, method: "cancel_subscription" },
+    args: { dt: "Colossal Subscription", dn: name, method: "cancel_subscription" },
   });
 }
 
@@ -170,6 +170,6 @@ export async function deleteSubscription(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Subscription", name },
+    args: { doctype: "Colossal Subscription", name },
   });
 }

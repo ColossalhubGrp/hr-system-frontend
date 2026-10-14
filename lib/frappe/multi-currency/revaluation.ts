@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 import { submitDoc } from "../submit-doc";
 
 /**
- * ERPNext "Exchange Rate Revaluation" — periodic FX revaluation of
+ * ERPNext "Colossal Exchange Rate Revaluation" — periodic FX revaluation of
  * foreign-currency GL balances. Posts a Journal Entry recording the
  * unrealized gain/loss.
  */
@@ -41,7 +41,7 @@ export async function listRevaluations(): Promise<Revaluation[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Exchange Rate Revaluation",
+      doctype: "Colossal Exchange Rate Revaluation",
       fields: ["name", "company", "posting_date", "gain_loss_account", "docstatus", "total_gain_loss"],
       order_by: "posting_date desc",
       limit_page_length: 0,
@@ -62,7 +62,7 @@ export async function getRevaluation(name: string): Promise<RevaluationDetail | 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Exchange Rate Revaluation", name },
+      args: { doctype: "Colossal Exchange Rate Revaluation", name },
     });
     const accts = (doc.accounts as Array<Record<string, unknown>>) ?? [];
     return {
@@ -100,7 +100,7 @@ export async function createRevaluation(input: { company: string; postingDate: s
     verb: "POST",
     args: {
       doc: {
-        doctype: "Exchange Rate Revaluation",
+        doctype: "Colossal Exchange Rate Revaluation",
         company: input.company,
         posting_date: input.postingDate,
         gain_loss_account: input.gainLossAccount,
@@ -117,7 +117,7 @@ export async function fetchRevaluationBalances(name: string): Promise<void> {
     as: "user",
     verb: "POST",
     args: {
-      dt: "Exchange Rate Revaluation",
+      dt: "Colossal Exchange Rate Revaluation",
       dn: name,
       method: "get_accounts_data",
     },
@@ -125,7 +125,7 @@ export async function fetchRevaluationBalances(name: string): Promise<void> {
 }
 
 export async function submitRevaluation(name: string): Promise<void> {
-  await submitDoc("Exchange Rate Revaluation", name);
+  await submitDoc("Colossal Exchange Rate Revaluation", name);
 }
 
 export async function cancelRevaluation(name: string): Promise<void> {
@@ -133,7 +133,7 @@ export async function cancelRevaluation(name: string): Promise<void> {
     method: "frappe.client.cancel",
     as: "user",
     verb: "POST",
-    args: { doctype: "Exchange Rate Revaluation", name },
+    args: { doctype: "Colossal Exchange Rate Revaluation", name },
   });
 }
 
@@ -142,6 +142,6 @@ export async function deleteRevaluation(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Exchange Rate Revaluation", name },
+    args: { doctype: "Colossal Exchange Rate Revaluation", name },
   });
 }

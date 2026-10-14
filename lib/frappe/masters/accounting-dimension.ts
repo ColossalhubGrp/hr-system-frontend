@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
 /**
- * ERPNext "Accounting Dimension" master — extra tags (Branch, Project,
+ * ERPNext "Colossal Accounting Dimension" master — extra tags (Branch, Project,
  * Region…) that GL entries carry alongside Account + Cost Center for
  * sliced reporting.
  */
@@ -33,7 +33,7 @@ export async function listAccountingDimensions(): Promise<AccountingDimension[]>
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Accounting Dimension",
+      doctype: "Colossal Accounting Dimension",
       // `disabled` not queryable via get_list under Frappe v15 field
       // permissions. Only fetched on the detail form.
       fields: ["name", "label", "document_type", "fieldname"],
@@ -55,7 +55,7 @@ export async function getAccountingDimension(name: string): Promise<AccountingDi
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Accounting Dimension", name },
+      args: { doctype: "Colossal Accounting Dimension", name },
     });
     const defs = (doc.dimension_defaults as Array<Record<string, unknown>>) ?? [];
     return {
@@ -93,7 +93,7 @@ export async function createAccountingDimension(input: AccountingDimensionInput)
     verb: "POST",
     args: {
       doc: {
-        doctype: "Accounting Dimension",
+        doctype: "Colossal Accounting Dimension",
         label: input.label,
         document_type: input.documentType,
         fieldname: input.fieldname,
@@ -110,7 +110,7 @@ export async function updateAccountingDimension(name: string, input: AccountingD
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Accounting Dimension",
+      doctype: "Colossal Accounting Dimension",
       name,
       fieldname: {
         label: input.label,
@@ -127,6 +127,6 @@ export async function deleteAccountingDimension(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Accounting Dimension", name },
+    args: { doctype: "Colossal Accounting Dimension", name },
   });
 }

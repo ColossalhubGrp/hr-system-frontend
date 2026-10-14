@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 export { INTERVALS, PRICE_MODES } from "./plan-constants";
 
-/** ERPNext "Subscription Plan" — the priced offering that a Subscription bills. */
+/** ERPNext "Colossal Subscription Plan" — the priced offering that a Subscription bills. */
 
 export type SubscriptionPlan = {
   name: string;
@@ -20,7 +20,7 @@ export async function listSubscriptionPlans(): Promise<SubscriptionPlan[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Subscription Plan",
+      doctype: "Colossal Subscription Plan",
       fields: [
         "name", "plan_name", "item", "cost", "currency",
         "billing_interval", "billing_interval_count", "price_determination",
@@ -46,7 +46,7 @@ export async function getSubscriptionPlan(name: string): Promise<SubscriptionPla
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Subscription Plan", name },
+      args: { doctype: "Colossal Subscription Plan", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -91,7 +91,7 @@ export async function createSubscriptionPlan(input: SubscriptionPlanInput): Prom
     method: "frappe.client.insert",
     as: "user",
     verb: "POST",
-    args: { doc: { doctype: "Subscription Plan", ...payload(input) } },
+    args: { doc: { doctype: "Colossal Subscription Plan", ...payload(input) } },
   });
   return { name: created.name };
 }
@@ -101,7 +101,7 @@ export async function updateSubscriptionPlan(name: string, input: SubscriptionPl
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Subscription Plan", name, fieldname: payload(input) },
+    args: { doctype: "Colossal Subscription Plan", name, fieldname: payload(input) },
   });
 }
 
@@ -110,6 +110,6 @@ export async function deleteSubscriptionPlan(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Subscription Plan", name },
+    args: { doctype: "Colossal Subscription Plan", name },
   });
 }

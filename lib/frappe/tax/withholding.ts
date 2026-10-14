@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
 /**
- * ERPNext "Tax Withholding Category" — the master for WHT/TDS rates,
+ * ERPNext "Colossal Tax Withholding Category" — the master for WHT/TDS rates,
  * account heads, and thresholds. Applied against a supplier so the
  * right amount is withheld at payment time.
  */
@@ -39,7 +39,7 @@ export async function listTaxWithholding(): Promise<TaxWithholdingCategory[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Tax Withholding Category",
+      doctype: "Colossal Tax Withholding Category",
       fields: ["name", "category_name", "round_off_tax_amount", "consider_party_ledger_amount"],
       order_by: "category_name asc",
       limit_page_length: 0,
@@ -58,7 +58,7 @@ export async function getTaxWithholding(name: string): Promise<TaxWithholdingDet
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Tax Withholding Category", name },
+      args: { doctype: "Colossal Tax Withholding Category", name },
     });
     const rates = (doc.rates as Array<Record<string, unknown>>) ?? [];
     const accounts = (doc.accounts as Array<Record<string, unknown>>) ?? [];
@@ -97,7 +97,7 @@ export type TaxWithholdingInput = {
 
 export async function createTaxWithholding(input: TaxWithholdingInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Tax Withholding Category",
+    doctype: "Colossal Tax Withholding Category",
     category_name: input.category,
     round_off_tax_amount: input.roundOff ? 1 : 0,
     consider_party_ledger_amount: input.considerPartyLedgerAmount ? 1 : 0,
@@ -125,7 +125,7 @@ export async function updateTaxWithholding(name: string, input: TaxWithholdingIn
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Tax Withholding Category",
+      doctype: "Colossal Tax Withholding Category",
       name,
       fieldname: {
         category_name: input.category,
@@ -140,7 +140,7 @@ export async function updateTaxWithholding(name: string, input: TaxWithholdingIn
     verb: "POST",
     args: {
       doc: {
-        doctype: "Tax Withholding Category",
+        doctype: "Colossal Tax Withholding Category",
         name,
         rates: input.rates.map((r) => ({
           from_date: r.fromDate,
@@ -160,6 +160,6 @@ export async function deleteTaxWithholding(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Tax Withholding Category", name },
+    args: { doctype: "Colossal Tax Withholding Category", name },
   });
 }

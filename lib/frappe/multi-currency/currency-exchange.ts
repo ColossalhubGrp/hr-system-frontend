@@ -1,7 +1,7 @@
 import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
-/** ERPNext "Currency Exchange" — the FX rate on a date. */
+/** ERPNext "Colossal Currency Exchange" — the FX rate on a date. */
 
 export type CurrencyExchange = {
   name: string;
@@ -18,7 +18,7 @@ export async function listCurrencyExchanges(): Promise<CurrencyExchange[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Currency Exchange",
+      doctype: "Colossal Currency Exchange",
       fields: ["name", "date", "from_currency", "to_currency", "exchange_rate", "for_buying", "for_selling"],
       order_by: "date desc",
       limit_page_length: 500,
@@ -40,7 +40,7 @@ export async function getCurrencyExchange(name: string): Promise<CurrencyExchang
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Currency Exchange", name },
+      args: { doctype: "Colossal Currency Exchange", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -82,7 +82,7 @@ export async function createCurrencyExchange(input: CurrencyExchangeInput): Prom
     method: "frappe.client.insert",
     as: "user",
     verb: "POST",
-    args: { doc: { doctype: "Currency Exchange", ...payload(input) } },
+    args: { doc: { doctype: "Colossal Currency Exchange", ...payload(input) } },
   });
   return { name: created.name };
 }
@@ -92,7 +92,7 @@ export async function updateCurrencyExchange(name: string, input: CurrencyExchan
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Currency Exchange", name, fieldname: payload(input) },
+    args: { doctype: "Colossal Currency Exchange", name, fieldname: payload(input) },
   });
 }
 
@@ -101,6 +101,6 @@ export async function deleteCurrencyExchange(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Currency Exchange", name },
+    args: { doctype: "Colossal Currency Exchange", name },
   });
 }

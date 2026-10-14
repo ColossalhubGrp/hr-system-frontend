@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
 /**
- * ERPNext "Payment Term" master — Net 30, Advance 50%, etc. Sales
+ * ERPNext "Colossal Payment Term" master — Net 30, Advance 50%, etc. Sales
  * Invoice and Purchase Invoice apply these to compute the due date.
  */
 
@@ -29,7 +29,7 @@ export async function listPaymentTerms(): Promise<PaymentTerm[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Payment Term",
+      doctype: "Colossal Payment Term",
       fields: [
         "name",
         "payment_term_name",
@@ -61,7 +61,7 @@ export async function getPaymentTerm(name: string): Promise<PaymentTermDetail | 
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Payment Term", name },
+      args: { doctype: "Colossal Payment Term", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -93,7 +93,7 @@ export type PaymentTermInput = {
 
 export async function createPaymentTerm(input: PaymentTermInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Payment Term",
+    doctype: "Colossal Payment Term",
     payment_term_name: input.paymentTermName,
     description: input.description || undefined,
     invoice_portion: input.invoicePortion,
@@ -118,7 +118,7 @@ export async function updatePaymentTerm(name: string, input: PaymentTermInput): 
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Payment Term",
+      doctype: "Colossal Payment Term",
       name,
       fieldname: {
         payment_term_name: input.paymentTermName,
@@ -139,6 +139,6 @@ export async function deletePaymentTerm(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Payment Term", name },
+    args: { doctype: "Colossal Payment Term", name },
   });
 }

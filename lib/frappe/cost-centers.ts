@@ -47,7 +47,7 @@ export async function listCostCenterTree(company: string): Promise<CostCenterNod
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "Cost Center",
+        doctype: "Colossal Cost Center",
         fields,
         filters: [["company", "=", company]],
         order_by: orderBy,
@@ -100,7 +100,7 @@ export async function getCostCenter(name: string): Promise<CostCenter | null> {
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Cost Center", name },
+      args: { doctype: "Colossal Cost Center", name },
     });
     return {
       name: String(doc.name ?? name),
@@ -133,7 +133,7 @@ export async function createCostCenter(input: CostCenterCreateInput): Promise<{ 
     verb: "POST",
     args: {
       doc: {
-        doctype: "Cost Center",
+        doctype: "Colossal Cost Center",
         cost_center_name: input.costCenterName,
         company: input.company,
         parent_cost_center: input.parentCostCenter,
@@ -155,7 +155,7 @@ export async function updateCostCenter(
   const existing = await frappeCall<Record<string, unknown>>({
     method: "frappe.client.get",
     as: "user",
-    args: { doctype: "Cost Center", name },
+    args: { doctype: "Colossal Cost Center", name },
   });
 
   // Field-level updates (is_group, disabled). cost_center_name needs
@@ -171,7 +171,7 @@ export async function updateCostCenter(
       method: "frappe.client.set_value",
       as: "user",
       verb: "POST",
-      args: { doctype: "Cost Center", name, fieldname: fieldPatch },
+      args: { doctype: "Colossal Cost Center", name, fieldname: fieldPatch },
     });
   }
 
@@ -186,7 +186,7 @@ export async function updateCostCenter(
         as: "user",
         verb: "POST",
         args: {
-          doctype: "Cost Center",
+          doctype: "Colossal Cost Center",
           old_name: name,
           new_name: newId,
           merge: 0,
@@ -212,7 +212,7 @@ async function resolveNewId(oldName: string, newLabel: string): Promise<string> 
   const existing = await frappeCall<Record<string, unknown>>({
     method: "frappe.client.get",
     as: "user",
-    args: { doctype: "Cost Center", name: oldName },
+    args: { doctype: "Colossal Cost Center", name: oldName },
   });
   const company = String(existing.company ?? "");
   if (!company) return newLabel;
@@ -234,7 +234,7 @@ export async function setCostCenterDisabled(name: string, disabled: boolean): Pr
     method: "frappe.client.set_value",
     as: "user",
     verb: "POST",
-    args: { doctype: "Cost Center", name, fieldname: "disabled", value: disabled ? 1 : 0 },
+    args: { doctype: "Colossal Cost Center", name, fieldname: "disabled", value: disabled ? 1 : 0 },
   });
 }
 
@@ -246,7 +246,7 @@ async function hasGlEntries(name: string): Promise<boolean> {
       method: "frappe.client.get_list",
       as: "user",
       args: {
-        doctype: "GL Entry",
+        doctype: "Colossal GL Entry",
         fields: ["name"],
         filters: [["cost_center", "=", name]],
         limit_page_length: 1,
@@ -270,7 +270,7 @@ export async function smartDeleteCostCenter(
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Cost Center",
+      doctype: "Colossal Cost Center",
       fields: ["name"],
       filters: [["parent_cost_center", "=", name]],
       limit_page_length: 1,
@@ -290,7 +290,7 @@ export async function smartDeleteCostCenter(
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Cost Center", name },
+    args: { doctype: "Colossal Cost Center", name },
   });
   return { action: "deleted" };
 }

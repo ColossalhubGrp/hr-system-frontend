@@ -19,7 +19,7 @@ export async function fiscalYearForDate(date: string): Promise<FiscalYear | null
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Fiscal Year",
+      doctype: "Colossal Fiscal Year",
       fields: ["name", "year_start_date", "year_end_date"],
       filters: [
         ["year_start_date", "<=", date],
@@ -35,7 +35,7 @@ export async function fiscalYearForDate(date: string): Promise<FiscalYear | null
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Fiscal Year",
+      doctype: "Colossal Fiscal Year",
       fields: ["name", "year_start_date", "year_end_date"],
       order_by: "year_end_date desc",
       limit_page_length: 1,
@@ -254,7 +254,7 @@ export async function shareLedger(opts: { company: string; shareholder?: string;
 }
 
 export async function shareBalance(opts: { company: string; asOfDate: string }) {
-  return runReport("Share Balance", {
+  return runReport("Colossal Share Balance", {
     company: opts.company,
     as_on_date: opts.asOfDate,
   });
@@ -273,10 +273,10 @@ export async function budgetVariance(opts: { company: string; fiscalYear: string
     company: opts.company,
     fiscal_year: opts.fiscalYear,
     period: opts.period ?? "Monthly",
-    budget_against: opts.budgetAgainst ?? "Cost Center",
+    budget_against: opts.budgetAgainst ?? "Colossal Cost Center",
     from_fiscal_year: opts.fiscalYear,
     to_fiscal_year: opts.fiscalYear,
-    filter_based_on: "Fiscal Year",
+    filter_based_on: "Colossal Fiscal Year",
   });
 }
 

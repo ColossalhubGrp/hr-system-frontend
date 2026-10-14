@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 export { VOUCHER_TYPES } from "./journal-entry-template-constants";
 
 /**
- * ERPNext "Journal Entry Template" master — a saved template of an
+ * ERPNext "Colossal Journal Entry Template" master — a saved template of an
  * accounts child table + voucher type. Speeds up recurring postings
  * (payroll runs, month-end accruals, etc.).
  */
@@ -41,7 +41,7 @@ export async function listJournalTemplates(): Promise<JournalEntryTemplate[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Journal Entry Template",
+      doctype: "Colossal Journal Entry Template",
       fields: ["name", "template_title", "voucher_type", "company"],
       order_by: "template_title asc",
       limit_page_length: 0,
@@ -50,7 +50,7 @@ export async function listJournalTemplates(): Promise<JournalEntryTemplate[]> {
   return rows.map((r) => ({
     name: String(r.name ?? ""),
     templateTitle: String(r.template_title ?? r.name ?? ""),
-    voucherType: String(r.voucher_type ?? "Journal Entry"),
+    voucherType: String(r.voucher_type ?? "Colossal Journal Entry"),
     company: (r.company as string | null) ?? null,
   }));
 }
@@ -60,13 +60,13 @@ export async function getJournalTemplate(name: string): Promise<JournalEntryTemp
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Journal Entry Template", name },
+      args: { doctype: "Colossal Journal Entry Template", name },
     });
     const accounts = (doc.accounts as Array<Record<string, unknown>>) ?? [];
     return {
       name: String(doc.name ?? name),
       templateTitle: String(doc.template_title ?? doc.name ?? ""),
-      voucherType: String(doc.voucher_type ?? "Journal Entry"),
+      voucherType: String(doc.voucher_type ?? "Colossal Journal Entry"),
       company: (doc.company as string | null) ?? null,
       namingSeries: (doc.naming_series as string | null) ?? null,
       accounts: accounts.map((r, i) => ({
@@ -94,7 +94,7 @@ export type JournalTemplateInput = {
 
 export async function createJournalTemplate(input: JournalTemplateInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Journal Entry Template",
+    doctype: "Colossal Journal Entry Template",
     template_title: input.templateTitle,
     voucher_type: input.voucherType,
     company: input.company || undefined,
@@ -120,7 +120,7 @@ export async function updateJournalTemplate(name: string, input: JournalTemplate
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Journal Entry Template",
+      doctype: "Colossal Journal Entry Template",
       name,
       fieldname: {
         template_title: input.templateTitle,
@@ -135,7 +135,7 @@ export async function updateJournalTemplate(name: string, input: JournalTemplate
     verb: "POST",
     args: {
       doc: {
-        doctype: "Journal Entry Template",
+        doctype: "Colossal Journal Entry Template",
         name,
         accounts: input.accounts.map((a) => ({
           account: a.account,
@@ -153,6 +153,6 @@ export async function deleteJournalTemplate(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Journal Entry Template", name },
+    args: { doctype: "Colossal Journal Entry Template", name },
   });
 }

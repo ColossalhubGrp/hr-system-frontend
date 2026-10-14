@@ -2,7 +2,7 @@ import "server-only";
 import { FrappeRequestError, frappeCall } from "../client";
 
 /**
- * ERPNext "Accounting Period" — a locked window of dates (usually a
+ * ERPNext "Colossal Accounting Period" — a locked window of dates (usually a
  * month or quarter) inside which certain doctypes can no longer be
  * posted or edited. Used to keep audit trails clean after a
  * close.
@@ -31,7 +31,7 @@ export async function listAccountingPeriods(): Promise<AccountingPeriod[]> {
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Accounting Period",
+      doctype: "Colossal Accounting Period",
       fields: ["name", "period_name", "start_date", "end_date", "company"],
       order_by: "start_date desc",
       limit_page_length: 0,
@@ -51,7 +51,7 @@ export async function getAccountingPeriod(name: string): Promise<AccountingPerio
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Accounting Period", name },
+      args: { doctype: "Colossal Accounting Period", name },
     });
     const closed = (doc.closed_documents as Array<Record<string, unknown>>) ?? [];
     return {
@@ -81,7 +81,7 @@ export type AccountingPeriodInput = {
 
 export async function createAccountingPeriod(input: AccountingPeriodInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Accounting Period",
+    doctype: "Colossal Accounting Period",
     period_name: input.periodName,
     start_date: input.startDate,
     end_date: input.endDate,
@@ -102,7 +102,7 @@ export async function updateAccountingPeriod(name: string, input: AccountingPeri
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Accounting Period",
+      doctype: "Colossal Accounting Period",
       name,
       fieldname: {
         period_name: input.periodName,
@@ -119,6 +119,6 @@ export async function deleteAccountingPeriod(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Accounting Period", name },
+    args: { doctype: "Colossal Accounting Period", name },
   });
 }

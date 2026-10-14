@@ -3,7 +3,7 @@ import { FrappeRequestError, frappeCall } from "../client";
 export { CHARGE_TYPES, CATEGORY, ADD_DEDUCT } from "./purchase-template-constants";
 
 /**
- * ERPNext "Purchase Taxes and Charges Template" — mirror of the sales
+ * ERPNext "Colossal Purchase Taxes and Charges Template" — mirror of the sales
  * template, applied to Purchase Invoices, Purchase Orders and RFQ.
  */
 
@@ -34,7 +34,7 @@ export async function listPurchaseTaxTemplates(): Promise<PurchaseTaxTemplate[]>
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Purchase Taxes and Charges Template",
+      doctype: "Colossal Purchase Taxes and Charges Template",
       // `disabled` not queryable via get_list under Frappe v15 field
       // permissions. Only fetched on the detail form.
       fields: ["name", "title", "company", "is_default"],
@@ -56,7 +56,7 @@ export async function getPurchaseTaxTemplate(name: string): Promise<PurchaseTaxT
     const doc = await frappeCall<Record<string, unknown>>({
       method: "frappe.client.get",
       as: "user",
-      args: { doctype: "Purchase Taxes and Charges Template", name },
+      args: { doctype: "Colossal Purchase Taxes and Charges Template", name },
     });
     const taxes = (doc.taxes as Array<Record<string, unknown>>) ?? [];
     return {
@@ -102,7 +102,7 @@ export type PurchaseTaxTemplateInput = {
 
 export async function createPurchaseTaxTemplate(input: PurchaseTaxTemplateInput): Promise<{ name: string }> {
   const doc = {
-    doctype: "Purchase Taxes and Charges Template",
+    doctype: "Colossal Purchase Taxes and Charges Template",
     title: input.title,
     company: input.company,
     is_default: input.isDefault ? 1 : 0,
@@ -133,7 +133,7 @@ export async function updatePurchaseTaxTemplate(name: string, input: PurchaseTax
     as: "user",
     verb: "POST",
     args: {
-      doctype: "Purchase Taxes and Charges Template",
+      doctype: "Colossal Purchase Taxes and Charges Template",
       name,
       fieldname: {
         title: input.title,
@@ -149,7 +149,7 @@ export async function updatePurchaseTaxTemplate(name: string, input: PurchaseTax
     verb: "POST",
     args: {
       doc: {
-        doctype: "Purchase Taxes and Charges Template",
+        doctype: "Colossal Purchase Taxes and Charges Template",
         name,
         taxes: input.taxes.map((t) => ({
           charge_type: t.chargeType,
@@ -171,6 +171,6 @@ export async function deletePurchaseTaxTemplate(name: string): Promise<void> {
     method: "frappe.client.delete",
     as: "user",
     verb: "POST",
-    args: { doctype: "Purchase Taxes and Charges Template", name },
+    args: { doctype: "Colossal Purchase Taxes and Charges Template", name },
   });
 }

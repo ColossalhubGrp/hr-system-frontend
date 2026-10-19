@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -101,20 +102,21 @@ export function ShiftScheduleForm({
           required
           error={fe.shift_type}
         >
-          <SelectInput
+          <LinkField
             id="shift_type"
             name="shift_type"
-            options={shiftTypes}
+            doctype="Shift Type"
             defaultValue={initial?.shiftType ?? ""}
-            placeholder="Select shift"
+            placeholder="Search shift"
+            required
             invalid={Boolean(fe.shift_type)}
           />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             defaultValue={initial?.company ?? ""}
             placeholder="—"
           />
@@ -124,10 +126,10 @@ export function ShiftScheduleForm({
           htmlFor="holiday_list"
           hint="Dates on this list are skipped when materialising."
         >
-          <SelectInput
+          <LinkField
             id="holiday_list"
             name="holiday_list"
-            options={holidayLists}
+            doctype="Holiday List"
             defaultValue={initial?.holidayList ?? ""}
             placeholder="—"
           />

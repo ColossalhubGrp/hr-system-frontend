@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/training/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -84,32 +85,31 @@ export function TrainingProgramForm({
           required
           error={fe.company}
         >
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             defaultValue={
               initial?.company ?? (companies.length === 1 ? companies[0] : undefined)
             }
-            placeholder="Select company"
+            placeholder="Search company"
+            required
             invalid={Boolean(fe.company)}
           />
         </Field>
-        {suppliers.length > 0 && (
-          <Field
-            label="Supplier"
-            htmlFor="supplier"
-            hint="External provider, if applicable."
-          >
-            <SelectInput
-              id="supplier"
-              name="supplier"
-              options={suppliers}
-              defaultValue={initial?.supplier ?? undefined}
-              placeholder="— none —"
-            />
-          </Field>
-        )}
+        <Field
+          label="Supplier"
+          htmlFor="supplier"
+          hint="External provider, if applicable."
+        >
+          <LinkField
+            id="supplier"
+            name="supplier"
+            doctype="Supplier"
+            defaultValue={initial?.supplier ?? undefined}
+            placeholder="— none —"
+          />
+        </Field>
         {hasVisibilityField && (
           <Field
             label="Visibility"

@@ -223,6 +223,19 @@ export const LINK_REGISTRY: Record<string, LinkEntry> = {
       { name: "end_time", label: "End Time", type: "text", required: true, placeholder: "HH:MM:SS" },
     ],
   },
+  "Shift Schedule": {
+    label: "Shift Schedule",
+    search: ["name", "schedule_name"],
+    fields: [
+      { name: "schedule_name", label: "Schedule Name", type: "text", required: true },
+      { name: "shift_type", label: "Shift Type", type: "link", required: true, linkDoctype: "Shift Type" },
+    ],
+  },
+  "Shift Location": {
+    label: "Shift Location",
+    search: ["name"],
+    fields: [{ name: "name", label: "Location Name", type: "text", required: true }],
+  },
   "Pay Grade": {
     label: "Pay Grade",
     search: ["name"],
@@ -235,6 +248,11 @@ export const LINK_REGISTRY: Record<string, LinkEntry> = {
     label: "NEC Industry",
     search: ["name", "industry_name"],
     fields: [{ name: "industry_name", label: "Industry", type: "text", required: true }],
+  },
+  Skill: {
+    label: "Skill",
+    search: ["name"],
+    fields: [{ name: "name", label: "Skill", type: "text", required: true }],
   },
   "Training Program": {
     label: "Training Program",

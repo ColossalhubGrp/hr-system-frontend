@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "@/components/employee/form-bits";
 import { ColorPickerField } from "@/components/shifts/color-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -128,10 +129,10 @@ export function ShiftTypeForm({
           />
         </Field>
         <Field label="Holiday list" htmlFor="holiday_list">
-          <SelectInput
+          <LinkField
             id="holiday_list"
             name="holiday_list"
-            options={holidayLists}
+            doctype="Holiday List"
             defaultValue={initial?.holidayList ?? ""}
             placeholder="—"
           />

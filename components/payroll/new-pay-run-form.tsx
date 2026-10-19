@@ -9,6 +9,7 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createPayRunAction,
   type FormState,
@@ -134,27 +135,15 @@ export function NewPayRunForm({
           hint="GL liability account where net pay sits between run-approval and bank settlement"
           wide
         >
-          {payableAccounts.length === 0 ? (
-            <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
-              No liability accounts found on this company's chart of
-              accounts. Ask an accounts admin to create a "Payroll
-              Payable" account before running payroll.
-            </p>
-          ) : (
-            <select
-              id="payroll_payable_account"
-              name="payroll_payable_account"
-              defaultValue={defaultPayableAccount ?? ""}
-              className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <option value="">— select an account —</option>
-              {payableAccounts.map((a) => (
-                <option key={a.name} value={a.name}>
-                  {a.account_name} — {a.name}
-                </option>
-              ))}
-            </select>
-          )}
+          <LinkField
+            id="payroll_payable_account"
+            name="payroll_payable_account"
+            doctype="Colossal Account"
+            defaultValue={defaultPayableAccount ?? ""}
+            placeholder="— search an account —"
+            required
+            invalid={Boolean(fe.payroll_payable_account)}
+          />
         </Field>
       </FormSection>
 

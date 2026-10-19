@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -72,10 +73,10 @@ export function ShiftLocationForm({
           />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             defaultValue={initial?.company ?? ""}
             placeholder="—"
           />

@@ -18,6 +18,7 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type { BulkAssignState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (
@@ -157,19 +158,20 @@ export function BulkAssignForm({
           required
           error={fe.shift_type}
         >
-          <SelectInput
+          <LinkField
             id="shift_type"
             name="shift_type"
-            options={shiftTypes}
-            placeholder="Select shift"
+            doctype="Shift Type"
+            placeholder="Search shift"
+            required
             invalid={Boolean(fe.shift_type)}
           />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             placeholder="—"
           />
         </Field>

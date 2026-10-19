@@ -17,6 +17,7 @@ import {
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
 import { ApproverPickerField } from "@/components/common/approver-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 // Client mirror — kept in sync with lib/frappe/performance.ts.
@@ -81,10 +82,10 @@ export function PipForm({
           />
         </Field>
         <Field label="Appraisal cycle" htmlFor="appraisal_cycle">
-          <SelectInput
+          <LinkField
             id="appraisal_cycle"
             name="appraisal_cycle"
-            options={cycles}
+            doctype="Appraisal Cycle"
             placeholder="—"
           />
         </Field>

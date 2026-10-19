@@ -15,6 +15,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/full-and-final/actions";
 
 const EMPTY: FormState = {};
@@ -65,7 +66,7 @@ export function FnfForm({
           />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput id="company" name="company" options={companies} placeholder="— default —" />
+          <LinkField id="company" name="company" doctype="Company" placeholder="— default —" />
         </Field>
       </FormSection>
 

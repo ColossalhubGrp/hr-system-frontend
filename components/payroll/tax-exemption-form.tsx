@@ -10,6 +10,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createTaxExemptionAction,
   type FormState,
@@ -42,11 +43,13 @@ export function TaxExemptionForm() {
 
       {scope === "EMPLOYEE" && (
         <Field label="Employee" htmlFor="employee" required error={fe.employee} wide>
-          <TextInput
+          <LinkField
             id="employee"
             name="employee"
+            doctype="Employee"
+            required
             invalid={Boolean(fe.employee)}
-            placeholder="HR-EMP-00001"
+            placeholder="Search employee…"
           />
         </Field>
       )}

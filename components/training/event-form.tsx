@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/training/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -120,10 +121,10 @@ export function TrainingEventForm({
               : "Optional — group this event under a program."
           }
         >
-          <SelectInput
+          <LinkField
             id="training_program"
             name="training_program"
-            options={programs.map((p) => ({ value: p.id, label: p.label }))}
+            doctype="Training Program"
             defaultValue={initial?.trainingProgram ?? undefined}
             placeholder="— none —"
           />
@@ -174,22 +175,13 @@ export function TrainingEventForm({
               : "External training provider, if any."
           }
         >
-          {suppliers.length > 0 ? (
-            <SelectInput
-              id="supplier"
-              name="supplier"
-              options={suppliers}
-              defaultValue={initial?.supplier ?? undefined}
-              placeholder="— none —"
-            />
-          ) : (
-            <TextInput
-              id="supplier"
-              name="supplier"
-              placeholder="Supplier name (must exist in the system)"
-              defaultValue={initial?.supplier ?? undefined}
-            />
-          )}
+          <LinkField
+            id="supplier"
+            name="supplier"
+            doctype="Supplier"
+            defaultValue={initial?.supplier ?? undefined}
+            placeholder="— none —"
+          />
         </Field>
         <Field
           label="Description"

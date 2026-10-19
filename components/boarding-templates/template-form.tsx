@@ -12,6 +12,7 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type {
   BoardingKind,
   FormState,
@@ -82,24 +83,35 @@ export function BoardingTemplateForm({
           </Field>
         )}
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             defaultValue={initial?.company ?? undefined}
             placeholder="— any —"
           />
         </Field>
         <Field label="Department" htmlFor="department">
-          <TextInput id="department" name="department" defaultValue={initial?.department ?? undefined} />
+          <LinkField
+            id="department"
+            name="department"
+            doctype="Department"
+            defaultValue={initial?.department ?? undefined}
+          />
         </Field>
         <Field label="Designation" htmlFor="designation">
-          <TextInput id="designation" name="designation" defaultValue={initial?.designation ?? undefined} />
+          <LinkField
+            id="designation"
+            name="designation"
+            doctype="Designation"
+            defaultValue={initial?.designation ?? undefined}
+          />
         </Field>
         <Field label="Grade" htmlFor="employee_grade">
-          <TextInput
+          <LinkField
             id="employee_grade"
             name="employee_grade"
+            doctype="Pay Grade"
             defaultValue={initial?.employeeGrade ?? undefined}
           />
         </Field>

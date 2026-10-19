@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "@/components/employee/form-bits";
 import { GoalPicker, type PickableGoal } from "./goal-picker";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/performance/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -86,10 +87,10 @@ export function CycleForm({
           />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             placeholder="—"
           />
         </Field>
@@ -126,10 +127,10 @@ export function CycleForm({
               : "Rating criteria + weightages new appraisals + feedback under this cycle will inherit. Leave blank to pick per-feedback."
           }
         >
-          <SelectInput
+          <LinkField
             id="appraisal_template"
             name="appraisal_template"
-            options={templates}
+            doctype="Appraisal Template"
             placeholder={templates.length === 0 ? "None defined" : "— none —"}
             disabled={templates.length === 0}
           />

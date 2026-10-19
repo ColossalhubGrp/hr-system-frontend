@@ -9,6 +9,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   upsertGLMappingAction,
   type FormState,
@@ -40,11 +41,13 @@ export function GLMappingForm({ categories }: { categories: string[] }) {
         wide
         hint="Pick the chart-of-accounts node this category posts to (e.g. '2110 - Payroll Liabilities')."
       >
-        <TextInput
+        <LinkField
           id="account"
           name="account"
+          doctype="Colossal Account"
+          required
           invalid={Boolean(fe.account)}
-          placeholder="2110 - Payroll Liabilities - YourCo"
+          placeholder="Search account…"
         />
       </Field>
 

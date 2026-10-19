@@ -16,6 +16,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/shift-management/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -70,12 +71,13 @@ export function ScheduleAssignmentForm({
           required
           error={fe.shift_schedule}
         >
-          <SelectInput
+          <LinkField
             id="shift_schedule"
             name="shift_schedule"
-            options={schedules}
+            doctype="Shift Schedule"
             defaultValue={initial?.shiftSchedule ?? ""}
-            placeholder="Select schedule"
+            placeholder="Search schedule"
+            required
             invalid={Boolean(fe.shift_schedule)}
           />
         </Field>
@@ -151,10 +153,10 @@ export function ScheduleAssignmentForm({
           />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             defaultValue={initial?.company ?? ""}
             placeholder="—"
           />

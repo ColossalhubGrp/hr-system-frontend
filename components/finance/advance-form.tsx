@@ -17,6 +17,7 @@ import {
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
 import { CurrencyPickerField } from "@/components/common/currency-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/employee-advances/actions";
 
 const EMPTY: FormState = {};
@@ -100,10 +101,10 @@ export function AdvanceForm({
 
       <FormSection title="Accounting (optional)">
         <Field label="Mode of payment" htmlFor="mode_of_payment">
-          <SelectInput
+          <LinkField
             id="mode_of_payment"
             name="mode_of_payment"
-            options={modesOfPayment}
+            doctype="Colossal Mode of Payment"
             placeholder="— none —"
           />
         </Field>
@@ -112,7 +113,12 @@ export function AdvanceForm({
           htmlFor="advance_account"
           hint="Leave blank to use the company default."
         >
-          <TextInput id="advance_account" name="advance_account" placeholder="e.g. 1310 - Employee Advances" />
+          <LinkField
+            id="advance_account"
+            name="advance_account"
+            doctype="Colossal Account"
+            placeholder="Search account…"
+          />
         </Field>
       </FormSection>
 

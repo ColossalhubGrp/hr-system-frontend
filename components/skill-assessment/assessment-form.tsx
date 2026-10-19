@@ -16,6 +16,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/skill-assessments/actions";
 
 const EMPTY: FormState = {};
@@ -55,11 +56,14 @@ export function SkillAssessmentForm({
           directory={employeeDirectory}
         />
         <Field label="Skill" htmlFor="skill" required error={fe.skill}>
-          {skills.length > 0 ? (
-            <SelectInput id="skill" name="skill" options={skills} placeholder="Pick a skill" />
-          ) : (
-            <TextInput id="skill" name="skill" placeholder="Skill name" />
-          )}
+          <LinkField
+            id="skill"
+            name="skill"
+            doctype="Skill"
+            placeholder="Search a skill"
+            required
+            invalid={Boolean(fe.skill)}
+          />
         </Field>
         <Field
           label="Proficiency (0–5)"

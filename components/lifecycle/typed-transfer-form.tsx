@@ -14,6 +14,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { createTypedTransferAction } from "@/app/(workspace)/employee/lifecycle/actions";
 import type { FormState } from "@/app/(workspace)/employee/lifecycle/actions";
 import type { TransferTypeSummary } from "@/lib/frappe/transfer-types";
@@ -116,13 +117,14 @@ export function TypedTransferForm({
 
       <FormSection title={type.label}>
         <Field label="Employee" htmlFor="employee" required error={fe.employee}>
-          <SelectInput
+          <LinkField
             id="employee"
             name="employee"
-            options={employeeOptions}
+            doctype="Employee"
             value={selectedEmployeeId}
-            onChange={(e) => setSelectedEmployeeId(e.target.value)}
-            placeholder="Select employee"
+            onChange={(next) => setSelectedEmployeeId(next)}
+            placeholder="Search employee"
+            required
             invalid={Boolean(fe.employee)}
           />
         </Field>

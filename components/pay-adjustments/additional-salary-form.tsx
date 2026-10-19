@@ -16,6 +16,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/payroll/adjustments/actions";
 
 const EMPTY: FormState = {};
@@ -63,25 +64,23 @@ export function AdditionalSalaryForm({
           required
           error={fe.salary_component}
         >
-          {components.length > 0 ? (
-            <SelectInput
-              id="salary_component"
-              name="salary_component"
-              options={components}
-              placeholder="Pick a component"
-            />
-          ) : (
-            <TextInput id="salary_component" name="salary_component" placeholder="Component name" />
-          )}
+          <LinkField
+            id="salary_component"
+            name="salary_component"
+            doctype="Salary Component"
+            required
+            invalid={Boolean(fe.salary_component)}
+            placeholder="Search a component"
+          />
         </Field>
         <Field label="Amount" htmlFor="amount" required error={fe.amount}>
           <TextInput id="amount" name="amount" type="number" step="0.01" min="0" />
         </Field>
         <Field label="Currency" htmlFor="currency" hint="Defaults to company currency if blank.">
-          <SelectInput id="currency" name="currency" options={currencies} placeholder="— default —" />
+          <LinkField id="currency" name="currency" doctype="Currency" placeholder="— default —" />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput id="company" name="company" options={companies} placeholder="— default —" />
+          <LinkField id="company" name="company" doctype="Company" placeholder="— default —" />
         </Field>
         <Field label="Payroll date" htmlFor="payroll_date" required error={fe.payroll_date}>
           <TextInput id="payroll_date" name="payroll_date" type="date" />
@@ -207,16 +206,14 @@ export function SimpleWrapperForm({
           directory={employeeDirectory}
         />
         <Field label="Salary component" htmlFor="salary_component" required error={fe.salary_component}>
-          {components.length > 0 ? (
-            <SelectInput
-              id="salary_component"
-              name="salary_component"
-              options={components}
-              placeholder="Pick a component"
-            />
-          ) : (
-            <TextInput id="salary_component" name="salary_component" placeholder="Component name" />
-          )}
+          <LinkField
+            id="salary_component"
+            name="salary_component"
+            doctype="Salary Component"
+            required
+            invalid={Boolean(fe.salary_component)}
+            placeholder="Search a component"
+          />
         </Field>
         <Field label={amountLabel} htmlFor={amountName} required error={fe[amountName]}>
           <TextInput id={amountName} name={amountName} type="number" step="0.01" min="0" />
@@ -225,7 +222,7 @@ export function SimpleWrapperForm({
           <TextInput id={dateName} name={dateName} type="date" />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput id="company" name="company" options={companies} placeholder="— default —" />
+          <LinkField id="company" name="company" doctype="Company" placeholder="— default —" />
         </Field>
       </FormSection>
 

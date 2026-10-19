@@ -18,6 +18,7 @@ import {
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
 import { ApproverPickerField } from "@/components/common/approver-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import { SetupExpenseAccountsButton } from "@/components/expense/setup-accounts-button";
 import type { FormState } from "@/app/(workspace)/hr/expense-claims/actions";
 import { cn } from "@/lib/cn";
@@ -101,13 +102,14 @@ export function ExpenseClaimForm({
           <input type="hidden" name="company" value={company} />
         ) : (
           <Field label="Company" htmlFor="company" required error={fe.company}>
-            <SelectInput
+            <LinkField
               id="company"
               name="company"
+              doctype="Company"
               value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              options={companies}
-              placeholder="Select company"
+              onChange={(next) => setCompany(next)}
+              placeholder="Search company"
+              required
               invalid={Boolean(fe.company)}
             />
           </Field>
@@ -216,12 +218,14 @@ export function ExpenseClaimForm({
               : undefined
           }
         >
-          <SelectInput
+          <LinkField
             id="payable_account"
             name="payable_account"
-            options={payableAccounts.map((a) => ({ value: a.value, label: a.label }))}
+            doctype="Colossal Account"
             placeholder={payableAccounts.length ? "Use company default" : "—"}
             invalid={Boolean(fe.payable_account)}
+            seed={company ? { company } : undefined}
+            filters={company ? [["company", "=", company]] : undefined}
           />
           {company && payableAccounts.length === 0 && (
             <SetupExpenseAccountsButton company={company} />
@@ -232,12 +236,14 @@ export function ExpenseClaimForm({
           htmlFor="cost_center"
           error={fe.cost_center}
         >
-          <SelectInput
+          <LinkField
             id="cost_center"
             name="cost_center"
-            options={costCenters.map((c) => ({ value: c.value, label: c.label }))}
+            doctype="Colossal Cost Center"
             placeholder={costCenters.length ? "Use company default" : "—"}
             invalid={Boolean(fe.cost_center)}
+            seed={company ? { company } : undefined}
+            filters={company ? [["company", "=", company]] : undefined}
           />
         </Field>
         <Field label="Paid on filing?" htmlFor="is_paid">
@@ -259,11 +265,11 @@ export function ExpenseClaimForm({
             htmlFor="mode_of_payment"
             error={fe.mode_of_payment}
           >
-            <SelectInput
+            <LinkField
               id="mode_of_payment"
               name="mode_of_payment"
-              options={modesOfPayment}
-              placeholder="Select mode"
+              doctype="Colossal Mode of Payment"
+              placeholder="Search mode"
               invalid={Boolean(fe.mode_of_payment)}
             />
           </Field>

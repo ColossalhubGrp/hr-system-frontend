@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type { ApplyForLeaveState } from "@/app/(workspace)/me/leave/actions";
 
 type Action = (
@@ -49,11 +50,12 @@ export function ApplyForLeaveForm({
           required
           error={fe.leave_type}
         >
-          <SelectInput
+          <LinkField
             id="leave_type"
             name="leave_type"
-            options={leaveTypes}
-            placeholder="Select leave type"
+            doctype="Leave Type"
+            placeholder="Search leave type"
+            required
             invalid={Boolean(fe.leave_type)}
           />
         </Field>

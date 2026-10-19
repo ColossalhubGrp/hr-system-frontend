@@ -15,6 +15,7 @@ import {
 } from "@/app/(workspace)/accounting/masters/journal-templates/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
 import { VOUCHER_TYPES } from "@/lib/frappe/masters/journal-entry-template-constants";
+import { LinkField } from "@/components/common/link-field";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};
@@ -47,6 +48,7 @@ export function JournalTemplateForm({
   const fe = state.fieldErrors ?? {};
 
   const [lines, setLines] = useState<Line[]>(initial?.accounts && initial.accounts.length > 0 ? initial.accounts : [EMPTY_LINE(), EMPTY_LINE()]);
+  const [company, setCompany] = useState(initial?.company ?? "");
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -73,11 +75,12 @@ export function JournalTemplateForm({
             />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company}>
-            <ThemedSelect
+            <LinkField
               id="company"
               name="company"
-              defaultValue={initial?.company ?? ""}
-              options={[{ value: "", label: "Any company" }, ...companies.map((c) => ({ value: c.name, label: c.name }))]}
+              doctype="Company"
+              value={company}
+              onChange={(next) => setCompany(next)}
               placeholder="Any company"
               invalid={!!fe.company}
             />
@@ -91,10 +94,12 @@ export function JournalTemplateForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-5">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account #{idx + 1}</label>
-                <SelectInput
+                <LinkField
+                  doctype="Colossal Account"
                   value={line.account}
-                  options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]}
-                  onChange={(e) => setLines((p) => p.map((l, i) => (i === idx ? { ...l, account: e.target.value } : l)))}
+                  onChange={(next) => setLines((p) => p.map((l, i) => (i === idx ? { ...l, account: next } : l)))}
+                  seed={company ? { company } : undefined}
+                  filters={company ? [["company", "=", company]] : undefined}
                 />
               </div>
               <div className="col-span-4 md:col-span-2">
@@ -121,9 +126,12 @@ export function JournalTemplateForm({
               </div>
               <div className="col-span-3 md:col-span-2">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Cost centre</label>
-                <TextInput
+                <LinkField
+                  doctype="Colossal Cost Center"
                   value={line.cost_center}
-                  onChange={(e) => setLines((p) => p.map((l, i) => (i === idx ? { ...l, cost_center: e.target.value } : l)))}
+                  onChange={(next) => setLines((p) => p.map((l, i) => (i === idx ? { ...l, cost_center: next } : l)))}
+                  seed={company ? { company } : undefined}
+                  filters={company ? [["company", "=", company]] : undefined}
                 />
               </div>
               <div className="col-span-1 flex justify-end">

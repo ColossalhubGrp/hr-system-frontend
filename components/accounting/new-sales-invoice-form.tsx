@@ -17,6 +17,7 @@ import {
   updateSalesInvoiceAction,
   type FormState,
 } from "@/app/(workspace)/accounting/sales-invoices/actions";
+import { LinkField } from "@/components/common/link-field";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};
@@ -127,22 +128,24 @@ export function NewSalesInvoiceForm({
       <FormSection title="Invoice" description="Which customer, on what dates, in which company.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Customer" htmlFor="customer" error={fe.customer} required>
-            <SelectInput
+            <LinkField
               id="customer"
               name="customer"
+              doctype="Customer"
               defaultValue={initial?.customer ?? ""}
-              placeholder="Select a customer…"
-              options={[
-                ...customers.map((c) => ({ value: c.name, label: c.label })),
-              ]}
+              placeholder="Search a customer…"
+              required
+              invalid={Boolean(fe.customer)}
             />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput
+            <LinkField
               id="company"
               name="company"
+              doctype="Company"
               defaultValue={initial?.company ?? defaultCompany}
-              options={companies.map((c) => ({ value: c.name, label: c.name }))}
+              required
+              invalid={Boolean(fe.company)}
             />
           </Field>
           <Field label="Posting Date" htmlFor="posting_date" error={fe.posting_date} required>
@@ -197,13 +200,11 @@ export function NewSalesInvoiceForm({
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">
                   Item #{idx + 1}
                 </label>
-                <SelectInput
+                <LinkField
+                  doctype="Item"
                   value={line.item_code}
-                  placeholder="Select an item…"
-                  options={[
-                    ...items.map((it) => ({ value: it.code, label: `${it.name} (${it.code})` })),
-                  ]}
-                  onChange={(e) => onItemChange(idx, e.target.value)}
+                  placeholder="Search an item…"
+                  onChange={(next) => onItemChange(idx, next)}
                 />
               </div>
               <div className="col-span-4 md:col-span-2">

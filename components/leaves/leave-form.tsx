@@ -18,6 +18,7 @@ import {
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
 import { ApproverPickerField } from "@/components/common/approver-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type {
   FormState as LeaveFormState,
 } from "@/app/(workspace)/hr/leaves/actions";
@@ -71,11 +72,12 @@ export function LeaveForm({
           required
           error={fe.leave_type}
         >
-          <SelectInput
+          <LinkField
             id="leave_type"
             name="leave_type"
-            options={leaveTypes}
-            placeholder="Select leave type"
+            doctype="Leave Type"
+            placeholder="Search leave type"
+            required
             invalid={Boolean(fe.leave_type)}
           />
         </Field>

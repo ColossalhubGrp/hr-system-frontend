@@ -15,6 +15,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/attendance/actions";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
@@ -89,10 +90,10 @@ export function AttendanceForm({
           />
         </Field>
         <Field label="Shift" htmlFor="shift">
-          <SelectInput
+          <LinkField
             id="shift"
             name="shift"
-            options={shiftTypes}
+            doctype="Shift Type"
             placeholder="—"
           />
         </Field>
@@ -107,10 +108,10 @@ export function AttendanceForm({
           <TextInput id="out_time" name="out_time" type="datetime-local" />
         </Field>
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             placeholder="—"
           />
         </Field>

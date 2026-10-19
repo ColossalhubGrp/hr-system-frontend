@@ -13,6 +13,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { toast } from "@/components/ui/sonner";
 import type { FormState } from "@/app/(workspace)/employee/lifecycle/actions";
 
@@ -165,12 +166,13 @@ function CompanyField({
   }
   return (
     <Field label={label} htmlFor={name} required={required} error={error} hint={hint}>
-      <SelectInput
+      <LinkField
         id={name}
         name={name}
-        options={companies}
+        doctype="Company"
         defaultValue={defaultValue}
-        placeholder={required ? "Select company" : "—"}
+        placeholder={required ? "Search company" : "—"}
+        required={required}
         invalid={Boolean(error)}
       />
     </Field>
@@ -254,13 +256,14 @@ export function OnboardingForm({
       <ErrorBanner msg={state.error} />
       <FormSection title="Onboarding">
         <Field label="Employee" htmlFor="employee" required error={fe.employee}>
-          <SelectInput
+          <LinkField
             id="employee"
             name="employee"
-            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            doctype="Employee"
             value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-            placeholder="Select employee"
+            onChange={(next) => setSelected(next)}
+            placeholder="Search employee"
+            required
             invalid={Boolean(fe.employee)}
           />
         </Field>
@@ -270,33 +273,30 @@ export function OnboardingForm({
         <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
         <Field label="Department" htmlFor="department"
                hint={selected ? "Pre-filled from the employee — override if this onboarding is for a different one." : undefined}>
-          <SelectInput
+          <LinkField
             id="department"
             name="department"
-            options={opts.departments}
+            doctype="Department"
             value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            placeholder="—"
+            onChange={(next) => setDepartment(next)}
           />
         </Field>
         <Field label="Designation" htmlFor="designation">
-          <SelectInput
+          <LinkField
             id="designation"
             name="designation"
-            options={opts.designations}
+            doctype="Designation"
             value={designation}
-            onChange={(e) => setDesignation(e.target.value)}
-            placeholder="—"
+            onChange={(next) => setDesignation(next)}
           />
         </Field>
         <Field label="Grade" htmlFor="employee_grade">
-          <SelectInput
+          <LinkField
             id="employee_grade"
             name="employee_grade"
-            options={opts.payGrades}
+            doctype="Pay Grade"
             value={grade}
-            onChange={(e) => setGrade(e.target.value)}
-            placeholder="—"
+            onChange={(next) => setGrade(next)}
           />
         </Field>
       </FormSection>
@@ -327,13 +327,14 @@ export function SeparationForm({
       <FormSection title="Separation">
         <Field label="Employee" htmlFor="employee" required error={fe.employee}
                hint="Who is leaving.">
-          <SelectInput
+          <LinkField
             id="employee"
             name="employee"
-            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            doctype="Employee"
             value={selected}
-            onChange={(e) => setSelected(e.target.value)}
-            placeholder="Select employee"
+            onChange={(next) => setSelected(next)}
+            placeholder="Search employee"
+            required
             invalid={Boolean(fe.employee)}
           />
         </Field>
@@ -344,23 +345,21 @@ export function SeparationForm({
         <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
         <Field label="Department" htmlFor="department"
                hint={selected ? "Pre-filled from the employee — override if leaving from a different one." : undefined}>
-          <SelectInput
+          <LinkField
             id="department"
             name="department"
-            options={opts.departments}
+            doctype="Department"
             value={department}
-            onChange={(e) => setDepartment(e.target.value)}
-            placeholder="—"
+            onChange={(next) => setDepartment(next)}
           />
         </Field>
         <Field label="Designation" htmlFor="designation">
-          <SelectInput
+          <LinkField
             id="designation"
             name="designation"
-            options={opts.designations}
+            doctype="Designation"
             value={designation}
-            onChange={(e) => setDesignation(e.target.value)}
-            placeholder="—"
+            onChange={(next) => setDesignation(next)}
           />
         </Field>
         <Field label="Resignation letter date" htmlFor="resignation_letter_date">
@@ -395,12 +394,13 @@ export function TransferForm({
       <ErrorBanner msg={state.error} />
       <FormSection title="Transfer">
         <Field label="Employee" htmlFor="employee" required error={fe.employee}>
-          <SelectInput
+          <LinkField
             id="employee"
             name="employee"
-            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            doctype="Employee"
             defaultValue={opts.defaultEmployee}
-            placeholder="Select employee"
+            placeholder="Search employee"
+            required
             invalid={Boolean(fe.employee)}
           />
         </Field>
@@ -417,14 +417,14 @@ export function TransferForm({
         {multiCompany && (
           <Field label="New company" htmlFor="new_company"
                  hint="Leave blank if the transfer stays within the same company.">
-            <SelectInput id="new_company" name="new_company" options={opts.companies} placeholder="—" />
+            <LinkField id="new_company" name="new_company" doctype="Company" placeholder="—" />
           </Field>
         )}
         <Field label="New department" htmlFor="new_department">
-          <SelectInput id="new_department" name="new_department" options={opts.departments} placeholder="—" />
+          <LinkField id="new_department" name="new_department" doctype="Department" placeholder="—" />
         </Field>
         <Field label="New designation" htmlFor="new_designation">
-          <SelectInput id="new_designation" name="new_designation" options={opts.designations} placeholder="—" />
+          <LinkField id="new_designation" name="new_designation" doctype="Designation" placeholder="—" />
         </Field>
         <Field label="Reason" htmlFor="reason" wide>
           <TextArea id="reason" name="reason" rows={3} />
@@ -454,12 +454,13 @@ export function PromotionForm({
       <ErrorBanner msg={state.error} />
       <FormSection title="Promotion">
         <Field label="Employee" htmlFor="employee" required error={fe.employee}>
-          <SelectInput
+          <LinkField
             id="employee"
             name="employee"
-            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            doctype="Employee"
             defaultValue={opts.defaultEmployee}
-            placeholder="Select employee"
+            placeholder="Search employee"
+            required
             invalid={Boolean(fe.employee)}
           />
         </Field>
@@ -468,10 +469,10 @@ export function PromotionForm({
         </Field>
         <CompanyField companies={opts.companies} name="company" label="Company" required error={fe.company} />
         <Field label="New designation" htmlFor="new_designation">
-          <SelectInput id="new_designation" name="new_designation" options={opts.designations} placeholder="—" />
+          <LinkField id="new_designation" name="new_designation" doctype="Designation" placeholder="—" />
         </Field>
         <Field label="New grade" htmlFor="new_grade">
-          <SelectInput id="new_grade" name="new_grade" options={opts.payGrades} placeholder="—" />
+          <LinkField id="new_grade" name="new_grade" doctype="Pay Grade" placeholder="—" />
         </Field>
         <Field label="Reason" htmlFor="reason" wide>
           <TextArea id="reason" name="reason" rows={3} />
@@ -520,12 +521,13 @@ export function GrievanceForm({
         </Field>
         <Field label="Raised by" htmlFor="raised_by" required error={fe.raised_by}
                hint="Who is raising it.">
-          <SelectInput
+          <LinkField
             id="raised_by"
             name="raised_by"
-            options={employeeOptions(opts.employeeDirectory, opts.defaultEmployee)}
+            doctype="Employee"
             defaultValue={opts.defaultEmployee}
-            placeholder="Select employee"
+            placeholder="Search employee"
+            required
             invalid={Boolean(fe.raised_by)}
           />
         </Field>
@@ -560,13 +562,14 @@ export function GrievanceForm({
                    ? `No ${againstType.toLowerCase()}s available on this tenant.`
                    : `Pick the ${againstType.toLowerCase()} this grievance is against.`
                }>
-          <SelectInput
+          <LinkField
             id="grievance_against"
             name="grievance_against"
-            options={targetOptions}
+            doctype={againstType}
             value={target}
-            onChange={(e) => setTarget(e.target.value)}
-            placeholder={`— pick a ${againstType.toLowerCase()} —`}
+            onChange={(next) => setTarget(next)}
+            placeholder={`— search a ${againstType.toLowerCase()} —`}
+            required
             invalid={Boolean(fe.grievance_against)}
           />
         </Field>

@@ -18,6 +18,7 @@ import {
   type FormState,
 } from "@/app/(workspace)/accounting/payment-entries/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
+import { LinkField } from "@/components/common/link-field";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};
@@ -70,11 +71,14 @@ export function NewPaymentEntryForm({
 
   const [paymentType, setPaymentType] = useState(initial?.paymentType ?? "Receive");
   const [partyType, setPartyType] = useState(initial?.partyType ?? "Customer");
+  const [company, setCompany] = useState(initial?.company ?? defaultCompany ?? "");
   const [paidAmount, setPaidAmount] = useState(
     initial?.paidAmount ? String(initial.paidAmount) : "",
   );
 
   const isInternal = paymentType === "Internal Transfer";
+
+  const partyDoctype = partyType === "Supplier" ? "Supplier" : partyType === "Employee" ? "Employee" : "Customer";
 
   const accountOptions = useMemo(
     () => accounts.map((a) => ({ value: a.name, label: a.name })),
@@ -102,11 +106,14 @@ export function NewPaymentEntryForm({
             />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput
+            <LinkField
               id="company"
               name="company"
-              defaultValue={initial?.company ?? defaultCompany}
-              options={companies.map((c) => ({ value: c.name, label: c.name }))}
+              doctype="Company"
+              value={company}
+              onChange={(next) => setCompany(next)}
+              required
+              invalid={Boolean(fe.company)}
             />
           </Field>
           <Field label="Posting Date" htmlFor="posting_date" error={fe.posting_date} required>
@@ -118,13 +125,12 @@ export function NewPaymentEntryForm({
             />
           </Field>
           <Field label="Mode of Payment" htmlFor="mode_of_payment" error={fe.mode_of_payment}>
-            <SelectInput
+            <LinkField
               id="mode_of_payment"
               name="mode_of_payment"
+              doctype="Colossal Mode of Payment"
               defaultValue={initial?.modeOfPayment ?? ""}
-              options={[
-                ...modes.map((m) => ({ value: m.name, label: `${m.name} (${m.type})` })),
-              ]}
+              invalid={Boolean(fe.mode_of_payment)}
             />
           </Field>
         </div>
@@ -143,11 +149,14 @@ export function NewPaymentEntryForm({
               />
             </Field>
             <Field label="Party" htmlFor="party" error={fe.party} required>
-              <TextInput
+              <LinkField
                 id="party"
                 name="party"
+                doctype={partyDoctype}
                 defaultValue={initial?.party ?? ""}
-                placeholder={`Enter ${partyType} ID`}
+                required
+                invalid={Boolean(fe.party)}
+                placeholder={`Search ${partyType}…`}
               />
             </Field>
           </div>
@@ -157,19 +166,25 @@ export function NewPaymentEntryForm({
       <FormSection title="Accounts" description="Money flows from paid-from to paid-to. Bank/cash on one side, receivable/payable on the other.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Paid From" htmlFor="paid_from" error={fe.paid_from}>
-            <SelectInput
+            <LinkField
               id="paid_from"
               name="paid_from"
+              doctype="Colossal Account"
               defaultValue={initial?.paidFrom ?? ""}
-              options={[...accountOptions]}
+              invalid={Boolean(fe.paid_from)}
+              seed={company ? { company } : undefined}
+              filters={company ? [["company", "=", company]] : undefined}
             />
           </Field>
           <Field label="Paid To" htmlFor="paid_to" error={fe.paid_to}>
-            <SelectInput
+            <LinkField
               id="paid_to"
               name="paid_to"
+              doctype="Colossal Account"
               defaultValue={initial?.paidTo ?? ""}
-              options={[...accountOptions]}
+              invalid={Boolean(fe.paid_to)}
+              seed={company ? { company } : undefined}
+              filters={company ? [["company", "=", company]] : undefined}
             />
           </Field>
           <Field label="Paid Amount" htmlFor="paid_amount" error={fe.paid_amount} required>

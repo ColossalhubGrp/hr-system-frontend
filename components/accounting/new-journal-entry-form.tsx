@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createJournalEntryAction,
   updateJournalEntryAction,
@@ -143,14 +144,16 @@ export function NewJournalEntryForm({
       <FormSection title="Voucher" description="Company, date and voucher type all post-forward to the ledger.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput
+            <LinkField
               id="company"
               name="company"
+              doctype="Company"
               value={company}
               placeholder="Select a company…"
-              options={companies.map((c) => ({ value: c.name, label: c.name }))}
-              onChange={(e) => {
-                setCompany(e.target.value);
+              invalid={!!fe.company}
+              required
+              onChange={(next) => {
+                setCompany(next);
                 // Blow away accounts when the company changes — the picker
                 // will refetch on next open. Simple and correct; a warm
                 // cache per company is a later optimisation.
@@ -230,6 +233,7 @@ export function NewJournalEntryForm({
               key={idx}
               idx={idx}
               line={line}
+              company={company}
               accounts={accounts}
               canRemove={lines.length > 2}
               multiCurrency={multiCurrency}
@@ -302,6 +306,7 @@ export function NewJournalEntryForm({
 function LineRow({
   idx,
   line,
+  company,
   accounts,
   canRemove,
   multiCurrency,
@@ -311,6 +316,7 @@ function LineRow({
 }: {
   idx: number;
   line: Line;
+  company: string;
   accounts: AccountOption[];
   canRemove: boolean;
   multiCurrency: boolean;
@@ -338,11 +344,13 @@ function LineRow({
             </span>
           )}
         </label>
-        <SelectInput
+        <LinkField
+          doctype="Colossal Account"
           value={line.account}
           placeholder="Select an account…"
-          options={accounts.map((a) => ({ value: a.name, label: a.name }))}
-          onChange={(e) => onChange({ account: e.target.value })}
+          seed={company ? { company } : undefined}
+          filters={company ? [["company", "=", company]] : undefined}
+          onChange={(next) => onChange({ account: next })}
         />
       </div>
       <div className={multiCurrency ? "col-span-6 md:col-span-2" : "col-span-6 md:col-span-2"}>
@@ -407,10 +415,13 @@ function LineRow({
       )}
       <div className={cn(multiCurrency ? "col-span-5 md:col-span-1" : "col-span-11 md:col-span-3")}>
         <label className="mb-1 block text-xs font-semibold text-muted-foreground">Cost Center</label>
-        <TextInput
+        <LinkField
+          doctype="Colossal Cost Center"
           value={line.cost_center}
-          onChange={(e) => onChange({ cost_center: e.target.value })}
           placeholder="Optional"
+          seed={company ? { company } : undefined}
+          filters={company ? [["company", "=", company]] : undefined}
+          onChange={(next) => onChange({ cost_center: next })}
         />
       </div>
       <div className="col-span-1 flex items-end justify-end">

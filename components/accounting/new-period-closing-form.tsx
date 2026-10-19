@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import type { Route } from "next";
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save } from "lucide-react";
 import { Field, FormSection, SelectInput, TextArea, TextInput } from "@/components/employee/form-bits";
 import { createPeriodClosingAction, type FormState } from "@/app/(workspace)/accounting/tools/period-close/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
+import { LinkField } from "@/components/common/link-field";
 import { cn } from "@/lib/cn";
 
 const EMPTY: FormState = {};
@@ -24,6 +26,7 @@ export function NewPeriodClosingForm({
 }) {
   const [state, dispatch] = useFormState(createPeriodClosingAction, EMPTY);
   const fe = state.fieldErrors ?? {};
+  const [company, setCompany] = useState(companies[0] ?? "");
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -36,10 +39,25 @@ export function NewPeriodClosingForm({
       <FormSection title="Voucher" description="Company + year to close + the retained-earnings account to sweep P&L into.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={companies[0] ?? ""} options={companies} />
+            <LinkField
+              id="company"
+              name="company"
+              doctype="Company"
+              value={company}
+              onChange={(next) => setCompany(next)}
+              required
+              invalid={Boolean(fe.company)}
+            />
           </Field>
           <Field label="Fiscal year" htmlFor="fiscal_year" error={fe.fiscal_year} required>
-            <SelectInput id="fiscal_year" name="fiscal_year" defaultValue={fiscalYears[0] ?? ""} options={fiscalYears} />
+            <LinkField
+              id="fiscal_year"
+              name="fiscal_year"
+              doctype="Colossal Fiscal Year"
+              defaultValue={fiscalYears[0] ?? ""}
+              required
+              invalid={Boolean(fe.fiscal_year)}
+            />
           </Field>
           <Field label="Period start" htmlFor="period_start_date" error={fe.period_start_date} required>
             <TextInput id="period_start_date" name="period_start_date" type="date" />
@@ -48,7 +66,15 @@ export function NewPeriodClosingForm({
             <TextInput id="period_end_date" name="period_end_date" type="date" defaultValue={defaultDate} />
           </Field>
           <Field label="Closing account (retained earnings)" htmlFor="closing_account_head" error={fe.closing_account_head} required>
-            <SelectInput id="closing_account_head" name="closing_account_head" defaultValue="" options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <LinkField
+              id="closing_account_head"
+              name="closing_account_head"
+              doctype="Colossal Account"
+              required
+              invalid={Boolean(fe.closing_account_head)}
+              seed={company ? { company } : undefined}
+              filters={company ? [["company", "=", company]] : undefined}
+            />
           </Field>
           <Field label="Remarks" htmlFor="remarks" wide>
             <TextArea id="remarks" name="remarks" rows={2} />

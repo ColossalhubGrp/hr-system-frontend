@@ -20,6 +20,7 @@ import { toast } from "@/components/ui/sonner";
 import { Field, SelectInput, TextArea, TextInput } from "./form-bits";
 import { ProfileImagePicker } from "./profile-image-picker";
 import { ChildTableEditor } from "./child-table-editor";
+import { LinkField } from "@/components/common/link-field";
 
 type Action = (prev: FormState, form: FormData) => Promise<FormState>;
 
@@ -579,41 +580,40 @@ export function EmployeeForm({
             />
           </Field>
           <Field label="Company" htmlFor="company" required error={fe.company}>
-            <SelectInput
+            <LinkField
               id="company"
               name="company"
+              doctype="Company"
               value={company}
-              onChange={(e) => setCompany(e.target.value)}
-              options={options.companies}
-              placeholder="Select company"
+              onChange={(next) => setCompany(next)}
+              placeholder="Search company"
+              required
               invalid={Boolean(fe.company)}
             />
           </Field>
           <Field label="Department" htmlFor="department">
-            <SelectInput
+            <LinkField
               id="department"
               name="department"
+              doctype="Department"
               defaultValue={v.department}
-              options={options.departments}
-              placeholder="—"
+              seed={company ? { company } : undefined}
             />
           </Field>
           <Field label="Designation" htmlFor="designation">
-            <SelectInput
+            <LinkField
               id="designation"
               name="designation"
+              doctype="Designation"
               defaultValue={v.designation}
-              options={options.designations}
-              placeholder="—"
             />
           </Field>
           <Field label="Branch" htmlFor="branch">
-            <SelectInput
+            <LinkField
               id="branch"
               name="branch"
+              doctype="Branch"
               defaultValue={v.branch}
-              options={options.branches}
-              placeholder="—"
             />
           </Field>
         </Grid>
@@ -636,12 +636,11 @@ export function EmployeeForm({
             />
           </Field>
           <Field label="Employment type" htmlFor="employment_type">
-            <SelectInput
+            <LinkField
               id="employment_type"
               name="employment_type"
+              doctype="Employment Type"
               defaultValue={v.employment_type}
-              options={options.employmentTypes}
-              placeholder="—"
             />
           </Field>
           <Field
@@ -733,13 +732,12 @@ export function EmployeeForm({
                 : undefined
             }
           >
-            <SelectInput
+            <LinkField
               id="pay_grade"
               name="pay_grade"
+              doctype="Pay Grade"
               value={payGrade}
-              onChange={(e) => setPayGrade(e.target.value)}
-              options={options.payGrades}
-              placeholder="—"
+              onChange={(next) => setPayGrade(next)}
             />
           </Field>
           <Field
@@ -751,13 +749,12 @@ export function EmployeeForm({
                 : "Sectoral classification — used for statutory returns."
             }
           >
-            <SelectInput
+            <LinkField
               id="nec_industry"
               name="nec_industry"
+              doctype="Nec Industry"
               value={necIndustry}
-              onChange={(e) => setNecIndustry(e.target.value)}
-              options={options.necIndustries}
-              placeholder="—"
+              onChange={(next) => setNecIndustry(next)}
             />
           </Field>
           <Field
@@ -1116,21 +1113,19 @@ export function EmployeeForm({
       <TabPane active={tab} id="attendance">
         <Grid>
           <Field label="Holiday list" htmlFor="holiday_list">
-            <SelectInput
+            <LinkField
               id="holiday_list"
               name="holiday_list"
+              doctype="Holiday List"
               defaultValue={v.holiday_list}
-              options={options.holidayLists}
-              placeholder="—"
             />
           </Field>
           <Field label="Default shift" htmlFor="default_shift">
-            <SelectInput
+            <LinkField
               id="default_shift"
               name="default_shift"
+              doctype="Shift Type"
               defaultValue={v.default_shift}
-              options={options.shifts}
-              placeholder="—"
             />
           </Field>
           <Field
@@ -1159,12 +1154,11 @@ export function EmployeeForm({
             htmlFor="reports_to"
             hint="Manager (employee record)."
           >
-            <SelectInput
+            <LinkField
               id="reports_to"
               name="reports_to"
+              doctype="Employee"
               defaultValue={v.reports_to}
-              options={reportsToOptions}
-              placeholder="—"
             />
           </Field>
           <Field
@@ -1172,12 +1166,11 @@ export function EmployeeForm({
             htmlFor="leave_approver"
             hint="Employee who approves this person's leave."
           >
-            <SelectInput
+            <LinkField
               id="leave_approver"
               name="leave_approver"
+              doctype="Employee"
               defaultValue={v.leave_approver}
-              options={approverOptions}
-              placeholder="—"
             />
           </Field>
           <Field
@@ -1185,12 +1178,11 @@ export function EmployeeForm({
             htmlFor="expense_approver"
             hint="Employee who approves expense claims."
           >
-            <SelectInput
+            <LinkField
               id="expense_approver"
               name="expense_approver"
+              doctype="Employee"
               defaultValue={v.expense_approver}
-              options={approverOptions}
-              placeholder="—"
             />
           </Field>
           <Field
@@ -1198,12 +1190,11 @@ export function EmployeeForm({
             htmlFor="shift_request_approver"
             hint="Employee who approves shift-change requests."
           >
-            <SelectInput
+            <LinkField
               id="shift_request_approver"
               name="shift_request_approver"
+              doctype="Employee"
               defaultValue={v.shift_request_approver}
-              options={approverOptions}
-              placeholder="—"
             />
           </Field>
         </Grid>

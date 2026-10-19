@@ -17,6 +17,7 @@ import {
   EmployeePickerField,
   type EmployeeDirectoryEntry,
 } from "@/components/common/employee-picker-field";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/hr/attendance/actions";
 
 // Mirror of the server-side ATTENDANCE_REQUEST_REASONS list — inlined so this
@@ -123,10 +124,10 @@ export function AttendanceRequestForm({
           </label>
         </div>
         <Field label="Company" htmlFor="company">
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies}
+            doctype="Company"
             placeholder="—"
           />
         </Field>

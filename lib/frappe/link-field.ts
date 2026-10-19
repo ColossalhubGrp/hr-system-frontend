@@ -113,9 +113,37 @@ export async function createLinkOption(
     });
     return { ok: true, name: created.name };
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Create failed.";
-    return { ok: false, error: msg };
+    return { ok: false, error: humaniseCreateError(err, entry.label) };
   }
+}
+
+/**
+ * Translate a backend create failure into a sentence a non-technical
+ * user can act on. Keeps every Frappe/HTTP/stack detail out of the UI
+ * (we never surface things like "frappe.client.insert", "403
+ * FORBIDDEN", or Python tracebacks in strings an HR user will read).
+ */
+function humaniseCreateError(err: unknown, label: string): string {
+  const raw = err instanceof Error ? err.message : "";
+  const s = raw.toLowerCase();
+  if (!raw) return `Couldn't add this ${label.toLowerCase()}. Please try again.`;
+  if (s.includes("403") || s.includes("forbidden") || s.includes("permission")) {
+    return `You don't have permission to add a new ${label} from here — ask an admin to grant you Create access.`;
+  }
+  if (s.includes("duplicate") || s.includes("already exists") || s.includes("409")) {
+    return `A ${label.toLowerCase()} with that name already exists — pick it from the list instead.`;
+  }
+  if (s.includes("mandatory") || s.includes("required")) {
+    return "Fill in the required fields and try again.";
+  }
+  if (s.includes("401") || s.includes("unauthorized") || s.includes("login")) {
+    return "Your session has expired — refresh the page and sign in again.";
+  }
+  if (s.includes("validation")) {
+    return `That ${label.toLowerCase()} couldn't be saved — check the values and try again.`;
+  }
+  // Last resort: generic sentence that still names the thing we tried to add.
+  return `Couldn't add this ${label.toLowerCase()}. Please try again or add it from the full form.`;
 }
 
 /** Expose the field spec to the client for building the quick-create dialog. */

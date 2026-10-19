@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createItemTaxTemplateAction,
   updateItemTaxTemplateAction,
@@ -54,7 +55,7 @@ export function ItemTaxTemplateForm({
             <TextInput id="title" name="title" defaultValue={initial?.title ?? ""} placeholder="e.g. VAT 15% Standard" />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} options={companies.map((c) => c.name)} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Disabled" htmlFor="disabled">
             <label className="flex items-center gap-2 text-sm">
@@ -71,7 +72,7 @@ export function ItemTaxTemplateForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-8">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Tax account #{idx + 1}</label>
-                <SelectInput value={l.tax_type} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, tax_type: e.target.value } : x)))} />
+                <LinkField doctype="Colossal Account" value={l.tax_type} onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, tax_type: next } : x)))} />
               </div>
               <div className="col-span-11 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Rate (%)</label>

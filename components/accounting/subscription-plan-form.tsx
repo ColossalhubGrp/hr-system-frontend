@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createPlanAction,
   updatePlanAction,
@@ -46,7 +47,7 @@ export function SubscriptionPlanForm({
             <TextInput id="plan_name" name="plan_name" defaultValue={initial?.planName ?? ""} placeholder="e.g. Premium Monthly" />
           </Field>
           <Field label="Item (optional)" htmlFor="item">
-            <TextInput id="item" name="item" defaultValue={initial?.item ?? ""} placeholder="Item code" />
+            <LinkField id="item" name="item" doctype="Item" defaultValue={initial?.item ?? ""} placeholder="Search item" />
           </Field>
           <Field label="Pricing mode" htmlFor="price_determination" error={fe.price_determination} required>
             <SelectInput id="price_determination" name="price_determination" defaultValue={initial?.priceDetermination ?? "Fixed Rate"} options={[...PRICE_MODES]} />
@@ -55,7 +56,7 @@ export function SubscriptionPlanForm({
             <TextInput id="cost" name="cost" type="number" step="0.01" min="0" defaultValue={String(initial?.cost ?? 0)} className="tabular-nums" />
           </Field>
           <Field label="Currency" htmlFor="currency" error={fe.currency} required>
-            <SelectInput id="currency" name="currency" defaultValue={initial?.currency ?? "USD"} options={currencies} />
+            <LinkField id="currency" name="currency" doctype="Currency" defaultValue={initial?.currency ?? "USD"} required invalid={Boolean(fe.currency)} />
           </Field>
           <Field label="Billing every" htmlFor="billing_interval_count">
             <div className="flex gap-2">

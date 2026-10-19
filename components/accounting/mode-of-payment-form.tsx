@@ -11,6 +11,7 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createModeOfPaymentAction,
   updateModeOfPaymentAction,
@@ -106,26 +107,24 @@ export function ModeOfPaymentForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-5">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Company #{idx + 1}</label>
-                <SelectInput
+                <LinkField
+                  doctype="Company"
                   value={row.company}
-                  options={[
-                    ...companies.map((c) => ({ value: c.name, label: c.name })),
-                  ]}
-                  onChange={(e) =>
-                    setRows((p) => p.map((r, i) => (i === idx ? { ...r, company: e.target.value } : r)))
+                  onChange={(next) =>
+                    setRows((p) => p.map((r, i) => (i === idx ? { ...r, company: next } : r)))
                   }
                 />
               </div>
               <div className="col-span-11 md:col-span-6">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Default account</label>
-                <SelectInput
+                <LinkField
+                  doctype="Colossal Account"
                   value={row.default_account}
-                  options={[
-                    ...accounts.map((a) => ({ value: a.name, label: a.name })),
-                  ]}
-                  onChange={(e) =>
-                    setRows((p) => p.map((r, i) => (i === idx ? { ...r, default_account: e.target.value } : r)))
+                  onChange={(next) =>
+                    setRows((p) => p.map((r, i) => (i === idx ? { ...r, default_account: next } : r)))
                   }
+                  seed={row.company ? { company: row.company } : undefined}
+                  filters={row.company ? [["company", "=", row.company]] : undefined}
                 />
               </div>
               <div className="col-span-1 flex justify-end">

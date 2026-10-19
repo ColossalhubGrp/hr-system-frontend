@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createCustomerGroupAction,
   updateCustomerGroupAction,
@@ -44,11 +45,12 @@ export function CustomerGroupForm({
             <TextInput id="customer_group_name" name="customer_group_name" defaultValue={initial?.customerGroupName ?? ""} placeholder="e.g. Retail, Wholesale" />
           </Field>
           <Field label="Parent group" htmlFor="parent_customer_group">
-            <SelectInput
+            <LinkField
               id="parent_customer_group"
               name="parent_customer_group"
+              doctype="Customer Group"
               defaultValue={initial?.parent ?? ""}
-              options={[{ value: "", label: "— (top level)" }, ...parents.map((p) => ({ value: p, label: p }))]}
+              placeholder="— (top level)"
             />
           </Field>
           <Field label="Is a container" htmlFor="is_group">

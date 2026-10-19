@@ -6,6 +6,7 @@ import { useState, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createMonthlyDistributionAction,
   updateMonthlyDistributionAction,
@@ -61,7 +62,7 @@ export function MonthlyDistributionForm({
             </div>
           )}
           <Field label="Fiscal year" htmlFor="fiscal_year" error={fe.fiscal_year}>
-            <SelectInput id="fiscal_year" name="fiscal_year" defaultValue={initial?.fiscalYear ?? ""} options={[...fiscalYears.map((y) => ({ value: y, label: y }))]} />
+            <LinkField id="fiscal_year" name="fiscal_year" doctype="Colossal Fiscal Year" defaultValue={initial?.fiscalYear ?? ""} />
           </Field>
         </div>
       </FormSection>

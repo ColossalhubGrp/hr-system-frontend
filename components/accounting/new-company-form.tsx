@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { createCompanyMasterAction, type FormState } from "@/app/(workspace)/accounting/masters/companies/actions";
 import { cn } from "@/lib/cn";
 
@@ -33,10 +34,10 @@ export function NewCompanyForm({ currencies, countries }: { currencies: string[]
             <TextInput id="abbr" name="abbr" placeholder="e.g. CH" maxLength={5} />
           </Field>
           <Field label="Default currency" htmlFor="default_currency" error={fe.default_currency} required>
-            <SelectInput id="default_currency" name="default_currency" defaultValue="USD" options={currencies} />
+            <LinkField id="default_currency" name="default_currency" doctype="Currency" defaultValue="USD" required invalid={Boolean(fe.default_currency)} />
           </Field>
           <Field label="Country" htmlFor="country" error={fe.country} required>
-            <SelectInput id="country" name="country" defaultValue="" options={[...countries.map((c) => ({ value: c, label: c }))]} />
+            <LinkField id="country" name="country" doctype="Country" required invalid={Boolean(fe.country)} />
           </Field>
           <Field label="Tax ID" htmlFor="tax_id">
             <TextInput id="tax_id" name="tax_id" placeholder="e.g. ZIMRA BP number" />

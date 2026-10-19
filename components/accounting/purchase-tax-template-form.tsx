@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createPurchaseTaxTemplateAction,
   updatePurchaseTaxTemplateAction,
@@ -79,7 +80,7 @@ export function PurchaseTaxTemplateForm({
             <TextInput id="title" name="title" defaultValue={initial?.title ?? ""} placeholder="e.g. Zimbabwe VAT 15% (Purchase)" />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} options={companies.map((c) => c.name)} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Flags" htmlFor="is_default">
             <div className="flex flex-col gap-2 text-sm">
@@ -106,7 +107,7 @@ export function PurchaseTaxTemplateForm({
               </div>
               <div className="col-span-12 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account head</label>
-                <SelectInput value={l.account_head} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: e.target.value } : x)))} />
+                <LinkField doctype="Colossal Account" value={l.account_head} onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: next } : x)))} />
               </div>
               <div className="col-span-8 md:col-span-2">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Description</label>

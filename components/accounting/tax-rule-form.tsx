@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createTaxRuleAction,
   updateTaxRuleAction,
@@ -73,18 +74,18 @@ export function TaxRuleForm({
             <SelectInput id="tax_type" name="tax_type" value={taxType} options={["Sales", "Purchase"]} onChange={(e) => setTaxType(e.target.value)} />
           </Field>
           <Field label="Tax category" htmlFor="tax_category">
-            <SelectInput id="tax_category" name="tax_category" defaultValue={initial?.taxCategory ?? ""} options={[{ value: "", label: "Any" }, ...categories.map((c) => ({ value: c, label: c }))]} />
+            <LinkField id="tax_category" name="tax_category" doctype="Colossal Tax Category" defaultValue={initial?.taxCategory ?? ""} placeholder="Any" />
           </Field>
           <Field label="Priority" htmlFor="priority">
             <TextInput id="priority" name="priority" type="number" min="0" defaultValue={String(initial?.priority ?? 1)} className="tabular-nums" />
           </Field>
           {taxType === "Sales" ? (
             <Field label="Sales tax template" htmlFor="sales_tax_template" required>
-              <SelectInput id="sales_tax_template" name="sales_tax_template" defaultValue={initial?.salesTaxTemplate ?? ""} options={[...salesTemplates.map((c) => ({ value: c, label: c }))]} />
+              <LinkField id="sales_tax_template" name="sales_tax_template" doctype="Sales Taxes and Charges Template" defaultValue={initial?.salesTaxTemplate ?? ""} required />
             </Field>
           ) : (
             <Field label="Purchase tax template" htmlFor="purchase_tax_template" required>
-              <SelectInput id="purchase_tax_template" name="purchase_tax_template" defaultValue={initial?.purchaseTaxTemplate ?? ""} options={[...purchaseTemplates.map((c) => ({ value: c, label: c }))]} />
+              <LinkField id="purchase_tax_template" name="purchase_tax_template" doctype="Purchase Taxes and Charges Template" defaultValue={initial?.purchaseTaxTemplate ?? ""} required />
             </Field>
           )}
           <Field label="Shopping cart" htmlFor="use_for_shopping_cart">
@@ -100,17 +101,17 @@ export function TaxRuleForm({
         <div className="grid gap-4 sm:grid-cols-2">
           {taxType === "Sales" ? (
             <>
-              <Field label="Customer" htmlFor="customer"><TextInput id="customer" name="customer" defaultValue={initial?.customer ?? ""} placeholder="Specific customer" /></Field>
-              <Field label="Customer group" htmlFor="customer_group"><TextInput id="customer_group" name="customer_group" defaultValue={initial?.customerGroup ?? ""} /></Field>
+              <Field label="Customer" htmlFor="customer"><LinkField id="customer" name="customer" doctype="Customer" defaultValue={initial?.customer ?? ""} placeholder="Specific customer" /></Field>
+              <Field label="Customer group" htmlFor="customer_group"><LinkField id="customer_group" name="customer_group" doctype="Customer Group" defaultValue={initial?.customerGroup ?? ""} /></Field>
             </>
           ) : (
             <>
-              <Field label="Supplier" htmlFor="supplier"><TextInput id="supplier" name="supplier" defaultValue={initial?.supplier ?? ""} placeholder="Specific supplier" /></Field>
-              <Field label="Supplier group" htmlFor="supplier_group"><TextInput id="supplier_group" name="supplier_group" defaultValue={initial?.supplierGroup ?? ""} /></Field>
+              <Field label="Supplier" htmlFor="supplier"><LinkField id="supplier" name="supplier" doctype="Supplier" defaultValue={initial?.supplier ?? ""} placeholder="Specific supplier" /></Field>
+              <Field label="Supplier group" htmlFor="supplier_group"><LinkField id="supplier_group" name="supplier_group" doctype="Supplier Group" defaultValue={initial?.supplierGroup ?? ""} /></Field>
             </>
           )}
-          <Field label="Item" htmlFor="item"><TextInput id="item" name="item" defaultValue={initial?.item ?? ""} /></Field>
-          <Field label="Item group" htmlFor="item_group"><TextInput id="item_group" name="item_group" defaultValue={initial?.itemGroup ?? ""} /></Field>
+          <Field label="Item" htmlFor="item"><LinkField id="item" name="item" doctype="Item" defaultValue={initial?.item ?? ""} /></Field>
+          <Field label="Item group" htmlFor="item_group"><LinkField id="item_group" name="item_group" doctype="Item Group" defaultValue={initial?.itemGroup ?? ""} /></Field>
         </div>
       </FormSection>
 
@@ -125,10 +126,10 @@ export function TaxRuleForm({
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Billing city" htmlFor="billing_city"><TextInput id="billing_city" name="billing_city" defaultValue={initial?.billingCity ?? ""} /></Field>
           <Field label="Billing state" htmlFor="billing_state"><TextInput id="billing_state" name="billing_state" defaultValue={initial?.billingState ?? ""} /></Field>
-          <Field label="Billing country" htmlFor="billing_country"><TextInput id="billing_country" name="billing_country" defaultValue={initial?.billingCountry ?? ""} /></Field>
+          <Field label="Billing country" htmlFor="billing_country"><LinkField id="billing_country" name="billing_country" doctype="Country" defaultValue={initial?.billingCountry ?? ""} /></Field>
           <Field label="Shipping city" htmlFor="shipping_city"><TextInput id="shipping_city" name="shipping_city" defaultValue={initial?.shippingCity ?? ""} /></Field>
           <Field label="Shipping state" htmlFor="shipping_state"><TextInput id="shipping_state" name="shipping_state" defaultValue={initial?.shippingState ?? ""} /></Field>
-          <Field label="Shipping country" htmlFor="shipping_country"><TextInput id="shipping_country" name="shipping_country" defaultValue={initial?.shippingCountry ?? ""} /></Field>
+          <Field label="Shipping country" htmlFor="shipping_country"><LinkField id="shipping_country" name="shipping_country" doctype="Country" defaultValue={initial?.shippingCountry ?? ""} /></Field>
         </div>
       </FormSection>
 

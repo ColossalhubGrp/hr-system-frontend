@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus, Ban } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createSubscriptionAction,
   updateSubscriptionAction,
@@ -53,6 +54,7 @@ export function SubscriptionForm({
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   const [rows, setRows] = useState<PlanRow[]>(initial?.plans && initial.plans.length ? initial.plans : [{ plan: "", qty: "1" }]);
+  const [partyType, setPartyType] = useState(initial?.partyType ?? "Customer");
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -65,13 +67,13 @@ export function SubscriptionForm({
       <FormSection title="Subscription" description="Who is subscribed, in which company, from when.">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Party type" htmlFor="party_type" required>
-            <SelectInput id="party_type" name="party_type" defaultValue={initial?.partyType ?? "Customer"} options={["Customer", "Supplier"]} />
+            <SelectInput id="party_type" name="party_type" value={partyType} onChange={(e) => setPartyType(e.target.value)} options={["Customer", "Supplier"]} />
           </Field>
           <Field label="Party" htmlFor="party" error={fe.party} required>
-            <TextInput id="party" name="party" defaultValue={initial?.party ?? ""} placeholder="Party ID" />
+            <LinkField id="party" name="party" doctype={partyType === "Supplier" ? "Supplier" : "Customer"} defaultValue={initial?.party ?? ""} required invalid={Boolean(fe.party)} placeholder={`Search ${partyType.toLowerCase()}`} />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0] ?? ""} options={companies} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0] ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Start date" htmlFor="start_date" error={fe.start_date} required>
             <TextInput id="start_date" name="start_date" type="date" defaultValue={initial?.startDate ?? defaultDate} />
@@ -101,7 +103,7 @@ export function SubscriptionForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-8">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Plan #{idx + 1}</label>
-                <SelectInput value={r.plan} options={[...plans.map((p) => ({ value: p, label: p }))]} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, plan: e.target.value } : x)))} />
+                <LinkField doctype="Subscription Plan" value={r.plan} onChange={(next) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, plan: next } : x)))} />
               </div>
               <div className="col-span-11 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Qty</label>

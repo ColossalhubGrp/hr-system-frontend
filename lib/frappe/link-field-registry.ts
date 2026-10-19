@@ -379,6 +379,76 @@ export const LINK_REGISTRY: Record<string, LinkEntry> = {
       { name: "label", label: "Label", type: "text", required: true },
     ],
   },
+  Bank: {
+    label: "Bank",
+    search: ["name", "bank_name"],
+    fields: [{ name: "bank_name", label: "Bank Name", type: "text", required: true }],
+  },
+  "Bank Account": {
+    label: "Bank Account",
+    search: ["name", "account_name"],
+    fields: [
+      { name: "account_name", label: "Account Name", type: "text", required: true },
+      { name: "bank", label: "Bank", type: "link", required: true, linkDoctype: "Bank" },
+    ],
+    seedFields: ["company"],
+  },
+  "Colossal Monthly Distribution": {
+    label: "Monthly Distribution",
+    search: ["name", "distribution_id"],
+    fields: [{ name: "distribution_id", label: "Distribution ID", type: "text", required: true }],
+  },
+  "Monthly Distribution": {
+    label: "Monthly Distribution",
+    search: ["name", "distribution_id"],
+    fields: [{ name: "distribution_id", label: "Distribution ID", type: "text", required: true }],
+  },
+  "Colossal Shareholder": {
+    label: "Shareholder",
+    search: ["name", "title"],
+    fields: [{ name: "title", label: "Shareholder Name", type: "text", required: true }],
+    seedFields: ["company"],
+  },
+  Shareholder: {
+    label: "Shareholder",
+    search: ["name", "title"],
+    fields: [{ name: "title", label: "Shareholder Name", type: "text", required: true }],
+    seedFields: ["company"],
+  },
+  "Subscription Plan": {
+    label: "Subscription Plan",
+    search: ["name", "plan_name"],
+    fields: [{ name: "plan_name", label: "Plan Name", type: "text", required: true }],
+  },
+  "Colossal Subscription Plan": {
+    label: "Subscription Plan",
+    search: ["name", "plan_name"],
+    fields: [{ name: "plan_name", label: "Plan Name", type: "text", required: true }],
+  },
+  "Sales Taxes and Charges Template": {
+    label: "Sales Tax Template",
+    search: ["name", "title"],
+    fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
+    seedFields: ["company"],
+  },
+  "Purchase Taxes and Charges Template": {
+    label: "Purchase Tax Template",
+    search: ["name", "title"],
+    fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
+    seedFields: ["company"],
+  },
+  "Colossal Sales Taxes and Charges Template": {
+    label: "Sales Tax Template",
+    search: ["name", "title"],
+    fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
+    seedFields: ["company"],
+  },
+  "Colossal Purchase Taxes and Charges Template": {
+    label: "Purchase Tax Template",
+    search: ["name", "title"],
+    fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
+    seedFields: ["company"],
+  },
   "Price List": {
     label: "Price List",
     search: ["name", "price_list_name"],

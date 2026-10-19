@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextArea, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createTransferAction,
   updateTransferAction,
@@ -76,7 +77,7 @@ export function ShareTransferForm({
             <TextInput id="date" name="date" type="date" defaultValue={initial?.date ?? defaultDate} />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0] ?? ""} options={companies} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0] ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Share type" htmlFor="share_type" required>
             <SelectInput id="share_type" name="share_type" defaultValue={initial?.shareType ?? "Equity"} options={["Equity", "Preference"]} />
@@ -96,10 +97,10 @@ export function ShareTransferForm({
       <FormSection title="Parties" description="Issue leaves From blank, Purchase (buy-back) leaves To blank.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="From shareholder" htmlFor="from_shareholder">
-            <SelectInput id="from_shareholder" name="from_shareholder" defaultValue={initial?.fromShareholder ?? ""} options={[...shareholders.map((s) => ({ value: s, label: s }))]} disabled={type === "Issue"} />
+            <LinkField id="from_shareholder" name="from_shareholder" doctype="Shareholder" defaultValue={initial?.fromShareholder ?? ""} disabled={type === "Issue"} />
           </Field>
           <Field label="To shareholder" htmlFor="to_shareholder">
-            <SelectInput id="to_shareholder" name="to_shareholder" defaultValue={initial?.toShareholder ?? ""} options={[...shareholders.map((s) => ({ value: s, label: s }))]} disabled={type === "Purchase"} />
+            <LinkField id="to_shareholder" name="to_shareholder" doctype="Shareholder" defaultValue={initial?.toShareholder ?? ""} disabled={type === "Purchase"} />
           </Field>
           <Field label="From folio no." htmlFor="from_folio_no">
             <TextInput id="from_folio_no" name="from_folio_no" defaultValue={initial?.fromFolioNo ?? ""} />
@@ -113,10 +114,10 @@ export function ShareTransferForm({
       <FormSection title="Accounts" description="Which accounts the equity movement posts to.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Asset account (cash/bank)" htmlFor="asset_account">
-            <SelectInput id="asset_account" name="asset_account" defaultValue={initial?.assetAccount ?? ""} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <LinkField id="asset_account" name="asset_account" doctype="Colossal Account" defaultValue={initial?.assetAccount ?? ""} />
           </Field>
           <Field label="Equity / liability account" htmlFor="equity_or_liability_account">
-            <SelectInput id="equity_or_liability_account" name="equity_or_liability_account" defaultValue={initial?.equityOrLiabilityAccount ?? ""} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <LinkField id="equity_or_liability_account" name="equity_or_liability_account" doctype="Colossal Account" defaultValue={initial?.equityOrLiabilityAccount ?? ""} />
           </Field>
           <Field label="Remarks" htmlFor="remarks" wide>
             <TextArea id="remarks" name="remarks" rows={2} defaultValue={initial?.remarks ?? ""} />

@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Upload } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { importCoaAction, type FormState } from "@/app/(workspace)/accounting/tools/coa-importer/actions";
 import { cn } from "@/lib/cn";
 
@@ -25,7 +26,7 @@ export function CoaImporterForm({ companies }: { companies: string[] }) {
       <FormSection title="Upload" description="A CSV or JSON template that describes the account hierarchy — one row per account with parent/is-group/root-type columns.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={companies[0] ?? ""} options={companies} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={companies[0] ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Chart name (optional)" htmlFor="chart_name" error={fe.chart_name}>
             <TextInput id="chart_name" name="chart_name" placeholder="e.g. Standard" />

@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createShareholderAction,
   updateShareholderAction,
@@ -47,7 +48,7 @@ export function ShareholderForm({
             <TextInput id="folio_no" name="folio_no" defaultValue={initial?.folioNo ?? ""} />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0] ?? ""} options={companies} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0] ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
         </div>
       </FormSection>

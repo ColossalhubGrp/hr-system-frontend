@@ -30,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Field, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   employeeOptions,
   type EmployeeDirectoryEntry,
@@ -456,13 +457,14 @@ function DepartmentForm({
           required
           error={fieldErrors.company}
         >
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companies.map((c) => ({ value: c.name, label: c.label }))}
+            doctype="Company"
             value={company}
-            onChange={(e) => setCompany(e.target.value)}
+            onChange={(next) => setCompany(next)}
             placeholder="— pick a company —"
+            required
             invalid={Boolean(fieldErrors.company)}
           />
         </Field>
@@ -471,12 +473,12 @@ function DepartmentForm({
           htmlFor="parent_department"
           hint="Leaves this at the top level when blank."
         >
-          <SelectInput
+          <LinkField
             id="parent_department"
             name="parent_department"
-            options={parentOptions}
+            doctype="Department"
             value={parent}
-            onChange={(e) => setParent(e.target.value)}
+            onChange={(next) => setParent(next)}
             placeholder="— top level —"
           />
         </Field>
@@ -604,15 +606,15 @@ function ApproverListEditor({
               <span className="w-6 text-xs text-muted-foreground">
                 {i === 0 ? "★" : `#${i + 1}`}
               </span>
-              <SelectInput
+              <LinkField
                 id={`${label}-row-${i}`}
                 name={`${label}-row-${i}`}
-                options={employeeOptions(directory, employeeId)}
+                doctype="Employee"
                 value={employeeId}
-                onChange={(e) => {
-                  const next = [...rows];
-                  next[i] = e.target.value;
-                  setRows(next);
+                onChange={(next) => {
+                  const nextRows = [...rows];
+                  nextRows[i] = next;
+                  setRows(nextRows);
                 }}
                 placeholder="— pick employee —"
               />

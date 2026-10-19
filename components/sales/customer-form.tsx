@@ -6,6 +6,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
 import { CreatableSelect } from "@/components/common/creatable-select";
+import { LinkField } from "@/components/common/link-field";
 import {
   createCustomerAction,
   updateCustomerAction,
@@ -65,19 +66,19 @@ export function CustomerForm({
             <SelectInput id="customer_type" name="customer_type" defaultValue={initial?.customerType ?? "Company"} options={["Company", "Individual"]} />
           </Field>
           <Field label="Group" htmlFor="customer_group">
-            <SelectInput
+            <LinkField
               id="customer_group"
               name="customer_group"
+              doctype="Customer Group"
               defaultValue={initial?.customerGroup ?? ""}
-              options={[...customerGroups.map((g) => ({ value: g, label: g }))]}
             />
           </Field>
           <Field label="Territory" htmlFor="territory">
-            <SelectInput
+            <LinkField
               id="territory"
               name="territory"
+              doctype="Territory"
               defaultValue={initial?.territory ?? ""}
-              options={[...territories.map((t) => ({ value: t, label: t }))]}
             />
           </Field>
           <Field label="Industry" htmlFor="industry">
@@ -92,11 +93,11 @@ export function CustomerForm({
       <FormSection title="Billing" description="Currency, tax and payment defaults that flow onto new sales invoices.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Default currency" htmlFor="default_currency">
-            <SelectInput
+            <LinkField
               id="default_currency"
               name="default_currency"
+              doctype="Currency"
               defaultValue={initial?.defaultCurrency ?? ""}
-              options={[...currencies.map((c) => ({ value: c, label: c }))]}
             />
           </Field>
           <Field label="Default price list" htmlFor="default_price_list">

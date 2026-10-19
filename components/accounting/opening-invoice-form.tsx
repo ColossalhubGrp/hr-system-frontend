@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, CheckCircle2, Save, Trash2, Plus } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { createOpeningInvoicesAction, type FormState } from "@/app/(workspace)/accounting/tools/opening-invoices/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
 import { cn } from "@/lib/cn";
@@ -39,6 +40,7 @@ export function OpeningInvoiceForm({
   const [state, dispatch] = useFormState(createOpeningInvoicesAction, EMPTY);
   const fe = state.fieldErrors ?? {};
   const [rows, setRows] = useState<Row[]>([EMPTY_ROW(defaultDate)]);
+  const [invoiceType, setInvoiceType] = useState<"Sales" | "Purchase">("Sales");
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -58,10 +60,10 @@ export function OpeningInvoiceForm({
       <FormSection title="Batch" description="Every row here becomes one invoice at submit time.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={companies[0] ?? ""} options={companies} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={companies[0] ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Invoice type" htmlFor="invoice_type" error={fe.invoice_type} required>
-            <SelectInput id="invoice_type" name="invoice_type" defaultValue="Sales" options={["Sales", "Purchase"]} />
+            <SelectInput id="invoice_type" name="invoice_type" value={invoiceType} onChange={(e) => setInvoiceType(e.target.value as "Sales" | "Purchase")} options={["Sales", "Purchase"]} />
           </Field>
         </div>
       </FormSection>
@@ -76,10 +78,11 @@ export function OpeningInvoiceForm({
             <div key={idx} className="flex flex-wrap items-end gap-3 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="min-w-[200px] flex-1">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Party #{idx + 1}</label>
-                <TextInput
+                <LinkField
+                  doctype={invoiceType === "Sales" ? "Customer" : "Supplier"}
                   value={r.party}
-                  onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, party: e.target.value } : x)))}
-                  placeholder="Customer or Supplier ID"
+                  onChange={(next) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, party: next } : x)))}
+                  placeholder={`Search ${invoiceType === "Sales" ? "customer" : "supplier"}`}
                 />
               </div>
               <div className="min-w-[140px] flex-[0_0_auto]">
@@ -95,10 +98,10 @@ export function OpeningInvoiceForm({
               </div>
               <div className="min-w-[240px] flex-1">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Opening account</label>
-                <SelectInput
+                <LinkField
+                  doctype="Colossal Account"
                   value={r.temporary_opening_account}
-                  options={[...openingAccounts.map((a) => ({ value: a.name, label: a.name }))]}
-                  onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, temporary_opening_account: e.target.value } : x)))}
+                  onChange={(next) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, temporary_opening_account: next } : x)))}
                 />
               </div>
               <div className="min-w-[170px] flex-[0_0_auto]">

@@ -4,7 +4,9 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save } from "lucide-react";
+import { useState } from "react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { createRevaluationAction, type FormState } from "@/app/(workspace)/accounting/multi-currency/revaluation/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
 import { cn } from "@/lib/cn";
@@ -22,6 +24,7 @@ export function NewRevaluationForm({
 }) {
   const [state, dispatch] = useFormState(createRevaluationAction, EMPTY);
   const fe = state.fieldErrors ?? {};
+  const [company, setCompany] = useState(companies[0] ?? "");
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -34,13 +37,13 @@ export function NewRevaluationForm({
       <FormSection title="Revaluation" description="Company + posting date + where to land the unrealized gain/loss.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={companies[0] ?? ""} options={companies} />
+            <LinkField id="company" name="company" doctype="Company" value={company} onChange={(next) => setCompany(next)} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Posting date" htmlFor="posting_date" error={fe.posting_date} required>
             <TextInput id="posting_date" name="posting_date" type="date" defaultValue={defaultDate} />
           </Field>
           <Field label="Gain/loss account" htmlFor="gain_loss_account" error={fe.gain_loss_account} required>
-            <SelectInput id="gain_loss_account" name="gain_loss_account" defaultValue="" options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <LinkField id="gain_loss_account" name="gain_loss_account" doctype="Colossal Account" required invalid={Boolean(fe.gain_loss_account)} seed={company ? { company } : undefined} filters={company ? [["company", "=", company]] : undefined} />
           </Field>
           <Field label="Rounding loss allowance" htmlFor="rounding_loss_allowance">
             <TextInput id="rounding_loss_allowance" name="rounding_loss_allowance" type="number" step="0.01" min="0" defaultValue="0.05" className="tabular-nums" />

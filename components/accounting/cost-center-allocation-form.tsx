@@ -6,6 +6,7 @@ import { useState, useMemo } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createAllocationAction,
   updateAllocationAction,
@@ -51,10 +52,10 @@ export function CostCenterAllocationForm({
       <FormSection title="Allocation" description="Which main cost centre gets split, from when, in which company.">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} options={companies.map((c) => c.name)} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Main cost centre" htmlFor="main_cost_center" error={fe.main_cost_center} required>
-            <TextInput id="main_cost_center" name="main_cost_center" defaultValue={initial?.mainCostCenter ?? ""} placeholder="Cost Center to split" />
+            <LinkField id="main_cost_center" name="main_cost_center" doctype="Colossal Cost Center" defaultValue={initial?.mainCostCenter ?? ""} required invalid={Boolean(fe.main_cost_center)} />
           </Field>
           <Field label="Valid from" htmlFor="valid_from" error={fe.valid_from} required>
             <TextInput id="valid_from" name="valid_from" type="date" defaultValue={initial?.validFrom ?? ""} />
@@ -68,7 +69,7 @@ export function CostCenterAllocationForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-8">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Cost centre #{idx + 1}</label>
-                <TextInput value={r.cost_center} onChange={(e) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, cost_center: e.target.value } : x)))} />
+                <LinkField doctype="Colossal Cost Center" value={r.cost_center} onChange={(next) => setRows((p) => p.map((x, i) => (i === idx ? { ...x, cost_center: next } : x)))} />
               </div>
               <div className="col-span-11 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Percentage</label>

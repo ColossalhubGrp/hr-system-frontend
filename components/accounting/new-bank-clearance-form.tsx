@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { createClearanceAction, type FormState } from "@/app/(workspace)/accounting/banking/clearance/actions";
 import type { AccountOption } from "@/lib/frappe/accounting";
 import { cn } from "@/lib/cn";
@@ -34,10 +35,10 @@ export function NewBankClearanceForm({
       <FormSection title="Batch" description="Pick the GL account (typically a bank asset) + date range, then load the payments to clear.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="GL account" htmlFor="account" error={fe.account} required>
-            <SelectInput id="account" name="account" defaultValue="" options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} />
+            <LinkField id="account" name="account" doctype="Colossal Account" required invalid={Boolean(fe.account)} />
           </Field>
           <Field label="Bank Account (optional)" htmlFor="bank_account">
-            <SelectInput id="bank_account" name="bank_account" defaultValue="" options={[...bankAccounts.map((b) => ({ value: b, label: b }))]} />
+            <LinkField id="bank_account" name="bank_account" doctype="Bank Account" />
           </Field>
           <Field label="From date" htmlFor="from_date" error={fe.from_date} required>
             <TextInput id="from_date" name="from_date" type="date" defaultValue={defaultDate} />

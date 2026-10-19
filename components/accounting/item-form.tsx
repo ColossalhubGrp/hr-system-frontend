@@ -12,6 +12,7 @@ import {
   TextArea,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createItemAction,
   updateItemAction,
@@ -126,20 +127,24 @@ export function ItemForm({
             />
           </Field>
           <Field label="Item Group" htmlFor="item_group" error={fe.item_group} required>
-            <SelectInput
+            <LinkField
               id="item_group"
               name="item_group"
+              doctype="Item Group"
               defaultValue={initial?.itemGroup ?? ""}
-              placeholder="Select a group…"
-              options={itemGroups.map((g) => ({ value: g.name, label: g.name }))}
+              placeholder="Search a group…"
+              required
+              invalid={Boolean(fe.item_group)}
             />
           </Field>
           <Field label="Unit of Measure" htmlFor="stock_uom" error={fe.stock_uom} required>
-            <SelectInput
+            <LinkField
               id="stock_uom"
               name="stock_uom"
+              doctype="UOM"
               defaultValue={initial?.stockUom ?? "Nos"}
-              options={uoms.map((u) => ({ value: u.name, label: u.name }))}
+              required
+              invalid={Boolean(fe.stock_uom)}
             />
           </Field>
           <Field label="Standard Rate" htmlFor="standard_rate" error={fe.standard_rate} hint="Default selling price; invoice lines inherit this.">
@@ -239,11 +244,11 @@ export function ItemForm({
             />
           </Field>
           <Field label="Weight UOM" htmlFor="weight_uom" error={fe.weight_uom}>
-            <SelectInput
+            <LinkField
               id="weight_uom"
               name="weight_uom"
+              doctype="UOM"
               defaultValue={initial?.weightUom ?? ""}
-              options={[{ value: "", label: "—" }, ...uoms.map((u) => ({ value: u.name, label: u.name }))]}
             />
           </Field>
         </div>
@@ -258,12 +263,12 @@ export function ItemForm({
             <div key={idx} className="grid grid-cols-12 items-start gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Company</label>
-                <SelectInput
+                <LinkField
+                  doctype="Company"
                   value={row.company}
-                  placeholder="Select…"
-                  options={companies.map((c) => ({ value: c.name, label: c.name }))}
-                  onChange={(e) =>
-                    setDefaults((p) => p.map((r, i) => (i === idx ? { ...r, company: e.target.value } : r)))
+                  placeholder="Search…"
+                  onChange={(next) =>
+                    setDefaults((p) => p.map((r, i) => (i === idx ? { ...r, company: next } : r)))
                   }
                 />
               </div>

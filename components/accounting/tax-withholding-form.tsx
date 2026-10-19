@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createTaxWithholdingAction,
   updateTaxWithholdingAction,
@@ -106,11 +107,11 @@ export function TaxWithholdingForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-5">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Company #{idx + 1}</label>
-                <SelectInput value={a.company} options={[...companies.map((c) => ({ value: c.name, label: c.name }))]} onChange={(e) => setAccts((p) => p.map((x, i) => (i === idx ? { ...x, company: e.target.value } : x)))} />
+                <LinkField doctype="Company" value={a.company} onChange={(next) => setAccts((p) => p.map((x, i) => (i === idx ? { ...x, company: next } : x)))} />
               </div>
               <div className="col-span-11 md:col-span-6">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account</label>
-                <TextInput value={a.account} onChange={(e) => setAccts((p) => p.map((x, i) => (i === idx ? { ...x, account: e.target.value } : x)))} placeholder="e.g. Withholding Tax Payable - CH" />
+                <LinkField doctype="Colossal Account" value={a.account} onChange={(next) => setAccts((p) => p.map((x, i) => (i === idx ? { ...x, account: next } : x)))} seed={a.company ? { company: a.company } : undefined} filters={a.company ? [["company", "=", a.company]] : undefined} />
               </div>
               <div className="col-span-1 flex justify-end">
                 {accts.length > 1 && (

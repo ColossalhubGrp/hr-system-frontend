@@ -31,6 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Field, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import { toast } from "@/components/ui/sonner";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import {
@@ -536,12 +537,12 @@ function PolicyFields({
                     className="border-t border-input first:border-t-0"
                   >
                     <td className="px-3 py-2">
-                      <SelectInput
+                      <LinkField
                         name={`detail_type_${idx}`}
-                        options={leaveTypeOptions}
+                        doctype="Leave Type"
                         value={d.leaveType}
-                        onChange={(e) =>
-                          updateRow(idx, { leaveType: e.target.value })
+                        onChange={(next) =>
+                          updateRow(idx, { leaveType: next })
                         }
                       />
                     </td>
@@ -726,12 +727,12 @@ function AssignInner({
           htmlFor="company"
           hint="Leave blank to allocate across every company."
         >
-          <SelectInput
+          <LinkField
             id="company"
             name="company"
-            options={companyOptions}
+            doctype="Company"
             value={company}
-            onChange={(e) => setCompany(e.target.value)}
+            onChange={(next) => setCompany(next)}
             placeholder="— all companies —"
           />
         </Field>

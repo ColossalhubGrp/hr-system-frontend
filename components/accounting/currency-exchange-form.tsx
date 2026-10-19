@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createExchangeAction,
   updateExchangeAction,
@@ -47,10 +48,10 @@ export function CurrencyExchangeForm({
             <TextInput id="date" name="date" type="date" defaultValue={initial?.date ?? defaultDate} />
           </Field>
           <Field label="From currency" htmlFor="from_currency" error={fe.from_currency} required>
-            <SelectInput id="from_currency" name="from_currency" defaultValue={initial?.fromCurrency ?? ""} options={[...currencies.map((c) => ({ value: c, label: c }))]} />
+            <LinkField id="from_currency" name="from_currency" doctype="Currency" defaultValue={initial?.fromCurrency ?? ""} required invalid={Boolean(fe.from_currency)} />
           </Field>
           <Field label="To currency" htmlFor="to_currency" error={fe.to_currency} required>
-            <SelectInput id="to_currency" name="to_currency" defaultValue={initial?.toCurrency ?? ""} options={[...currencies.map((c) => ({ value: c, label: c }))]} />
+            <LinkField id="to_currency" name="to_currency" doctype="Currency" defaultValue={initial?.toCurrency ?? ""} required invalid={Boolean(fe.to_currency)} />
           </Field>
           <Field label="Exchange rate" htmlFor="exchange_rate" error={fe.exchange_rate} required>
             <TextInput id="exchange_rate" name="exchange_rate" type="number" step="0.000001" min="0" defaultValue={String(initial?.exchangeRate ?? "")} placeholder="1 from = X to" className="tabular-nums" />

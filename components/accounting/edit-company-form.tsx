@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   updateCompanyMasterAction,
   deleteCompanyMasterAction,
@@ -54,7 +55,7 @@ export function EditCompanyForm({ initial, accounts }: { initial: CompanyDetail;
             <TextInput id="domain" name="domain" defaultValue={initial.domain ?? ""} />
           </Field>
           <Field label="Default holiday list" htmlFor="default_holiday_list">
-            <TextInput id="default_holiday_list" name="default_holiday_list" defaultValue={initial.defaultHolidayList ?? ""} placeholder="Holiday List name" />
+            <LinkField id="default_holiday_list" name="default_holiday_list" doctype="Holiday List" defaultValue={initial.defaultHolidayList ?? ""} />
           </Field>
         </div>
       </FormSection>
@@ -62,22 +63,22 @@ export function EditCompanyForm({ initial, accounts }: { initial: CompanyDetail;
       <FormSection title="Default accounts" description="Which ledger accounts Sales/Purchase Invoices and payments post to when the user doesn't override.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Default receivable" htmlFor="default_receivable_account">
-            <SelectInput id="default_receivable_account" name="default_receivable_account" defaultValue={initial.defaultReceivableAccount ?? ""} options={acctOptions} />
+            <LinkField id="default_receivable_account" name="default_receivable_account" doctype="Colossal Account" defaultValue={initial.defaultReceivableAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Default payable" htmlFor="default_payable_account">
-            <SelectInput id="default_payable_account" name="default_payable_account" defaultValue={initial.defaultPayableAccount ?? ""} options={acctOptions} />
+            <LinkField id="default_payable_account" name="default_payable_account" doctype="Colossal Account" defaultValue={initial.defaultPayableAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Default income" htmlFor="default_income_account">
-            <SelectInput id="default_income_account" name="default_income_account" defaultValue={initial.defaultIncomeAccount ?? ""} options={acctOptions} />
+            <LinkField id="default_income_account" name="default_income_account" doctype="Colossal Account" defaultValue={initial.defaultIncomeAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Default expense" htmlFor="default_expense_account">
-            <SelectInput id="default_expense_account" name="default_expense_account" defaultValue={initial.defaultExpenseAccount ?? ""} options={acctOptions} />
+            <LinkField id="default_expense_account" name="default_expense_account" doctype="Colossal Account" defaultValue={initial.defaultExpenseAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Default cash" htmlFor="default_cash_account">
-            <SelectInput id="default_cash_account" name="default_cash_account" defaultValue={initial.defaultCashAccount ?? ""} options={acctOptions} />
+            <LinkField id="default_cash_account" name="default_cash_account" doctype="Colossal Account" defaultValue={initial.defaultCashAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Default bank" htmlFor="default_bank_account">
-            <SelectInput id="default_bank_account" name="default_bank_account" defaultValue={initial.defaultBankAccount ?? ""} options={acctOptions} />
+            <LinkField id="default_bank_account" name="default_bank_account" doctype="Colossal Account" defaultValue={initial.defaultBankAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
         </div>
       </FormSection>
@@ -85,19 +86,19 @@ export function EditCompanyForm({ initial, accounts }: { initial: CompanyDetail;
       <FormSection title="Rounding & FX" description="Where currency and rounding gains/losses land.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Round-off account" htmlFor="round_off_account">
-            <SelectInput id="round_off_account" name="round_off_account" defaultValue={initial.roundOffAccount ?? ""} options={acctOptions} />
+            <LinkField id="round_off_account" name="round_off_account" doctype="Colossal Account" defaultValue={initial.roundOffAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Round-off cost centre" htmlFor="round_off_cost_center">
-            <TextInput id="round_off_cost_center" name="round_off_cost_center" defaultValue={initial.roundOffCostCenter ?? ""} placeholder="Cost Center name" />
+            <LinkField id="round_off_cost_center" name="round_off_cost_center" doctype="Colossal Cost Center" defaultValue={initial.roundOffCostCenter ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Write-off account" htmlFor="write_off_account">
-            <SelectInput id="write_off_account" name="write_off_account" defaultValue={initial.writeOffAccount ?? ""} options={acctOptions} />
+            <LinkField id="write_off_account" name="write_off_account" doctype="Colossal Account" defaultValue={initial.writeOffAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Exchange gain/loss" htmlFor="exchange_gain_loss_account">
-            <SelectInput id="exchange_gain_loss_account" name="exchange_gain_loss_account" defaultValue={initial.exchangeGainLossAccount ?? ""} options={acctOptions} />
+            <LinkField id="exchange_gain_loss_account" name="exchange_gain_loss_account" doctype="Colossal Account" defaultValue={initial.exchangeGainLossAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
           <Field label="Default cost centre" htmlFor="cost_center">
-            <TextInput id="cost_center" name="cost_center" defaultValue={initial.costCenter ?? ""} placeholder="Cost Center name" />
+            <LinkField id="cost_center" name="cost_center" doctype="Colossal Cost Center" defaultValue={initial.costCenter ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
           </Field>
         </div>
       </FormSection>

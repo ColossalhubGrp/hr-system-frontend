@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createBankAccountAction,
   updateBankAccountAction,
@@ -72,7 +73,7 @@ export function BankAccountForm({
             <TextInput id="account_name" name="account_name" defaultValue={initial?.accountName ?? ""} placeholder="e.g. CBZ Payroll USD" />
           </Field>
           <Field label="Bank" htmlFor="bank" error={fe.bank} required>
-            <SelectInput id="bank" name="bank" defaultValue={initial?.bank ?? banks[0] ?? ""} options={[...banks.map((b) => ({ value: b, label: b }))]} />
+            <LinkField id="bank" name="bank" doctype="Bank" defaultValue={initial?.bank ?? banks[0] ?? ""} required invalid={Boolean(fe.bank)} />
           </Field>
           <Field label="Account type" htmlFor="account_type">
             <SelectInput id="account_type" name="account_type" defaultValue={initial?.accountType ?? ""} options={ACCOUNT_TYPES} />
@@ -84,7 +85,7 @@ export function BankAccountForm({
             <TextInput id="iban" name="iban" defaultValue={initial?.iban ?? ""} />
           </Field>
           <Field label="Currency" htmlFor="currency">
-            <SelectInput id="currency" name="currency" defaultValue={initial?.currency ?? ""} options={[...currencies.map((c) => ({ value: c, label: c }))]} />
+            <LinkField id="currency" name="currency" doctype="Currency" defaultValue={initial?.currency ?? ""} />
           </Field>
           <Field label="Kind" htmlFor="is_company_account">
             <div className="flex flex-col gap-2 text-sm">
@@ -108,15 +109,15 @@ export function BankAccountForm({
       {isCompany ? (
         <FormSection title="Company link" description="Which company owns it and which ledger account it posts to.">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Company" htmlFor="company"><SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} options={companies.map((c) => c.name)} /></Field>
-            <Field label="Ledger account" htmlFor="account"><SelectInput id="account" name="account" defaultValue={initial?.account ?? ""} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} /></Field>
+            <Field label="Company" htmlFor="company"><LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} /></Field>
+            <Field label="Ledger account" htmlFor="account"><LinkField id="account" name="account" doctype="Colossal Account" defaultValue={initial?.account ?? ""} /></Field>
           </div>
         </FormSection>
       ) : (
         <FormSection title="Party" description="The customer/supplier/employee this account belongs to.">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Party type" htmlFor="party_type"><SelectInput id="party_type" name="party_type" defaultValue={initial?.partyType ?? ""} options={PARTY_TYPES} /></Field>
-            <Field label="Party" htmlFor="party"><TextInput id="party" name="party" defaultValue={initial?.party ?? ""} placeholder="Party ID" /></Field>
+            <Field label="Party" htmlFor="party"><TextInput id="party" name="party" defaultValue={initial?.party ?? ""} placeholder="Party ID (type-sensitive)" /></Field>
           </div>
         </FormSection>
       )}

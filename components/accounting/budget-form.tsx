@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createBudgetAction,
   updateBudgetAction,
@@ -78,10 +79,10 @@ export function BudgetForm({
             <SelectInput id="budget_against" name="budget_against" value={against} options={[...BUDGET_AGAINST]} onChange={(e) => setAgainst(e.target.value)} />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} options={companies.map((c) => c.name)} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Fiscal year" htmlFor="fiscal_year" error={fe.fiscal_year} required>
-            <SelectInput id="fiscal_year" name="fiscal_year" defaultValue={initial?.fiscalYear ?? fiscalYears[0] ?? ""} options={fiscalYears} />
+            <LinkField id="fiscal_year" name="fiscal_year" doctype="Colossal Fiscal Year" defaultValue={initial?.fiscalYear ?? fiscalYears[0] ?? ""} required invalid={Boolean(fe.fiscal_year)} />
           </Field>
           {against === "Cost Center" && (
             <Field label="Cost centre" htmlFor="cost_center" error={fe.cost_center} required>
@@ -99,7 +100,7 @@ export function BudgetForm({
             </Field>
           )}
           <Field label="Monthly distribution" htmlFor="monthly_distribution">
-            <SelectInput id="monthly_distribution" name="monthly_distribution" defaultValue={initial?.monthlyDistribution ?? ""} options={[...monthlyDistributions.map((m) => ({ value: m, label: m }))]} />
+            <LinkField id="monthly_distribution" name="monthly_distribution" doctype="Monthly Distribution" defaultValue={initial?.monthlyDistribution ?? ""} />
           </Field>
         </div>
       </FormSection>
@@ -138,7 +139,7 @@ export function BudgetForm({
             <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
               <div className="col-span-12 md:col-span-8">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account #{idx + 1}</label>
-                <SelectInput value={l.account} options={[...accounts.map((a) => ({ value: a.name, label: a.name }))]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account: e.target.value } : x)))} />
+                <LinkField doctype="Colossal Account" value={l.account} onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account: next } : x)))} />
               </div>
               <div className="col-span-11 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Budget amount</label>

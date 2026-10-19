@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createSupplierGroupAction,
   updateSupplierGroupAction,
@@ -44,11 +45,12 @@ export function SupplierGroupForm({
             <TextInput id="supplier_group_name" name="supplier_group_name" defaultValue={initial?.supplierGroupName ?? ""} placeholder="e.g. Materials, Utilities" />
           </Field>
           <Field label="Parent group" htmlFor="parent_supplier_group">
-            <SelectInput
+            <LinkField
               id="parent_supplier_group"
               name="parent_supplier_group"
+              doctype="Supplier Group"
               defaultValue={initial?.parent ?? ""}
-              options={[{ value: "", label: "— (top level)" }, ...parents.map((p) => ({ value: p, label: p }))]}
+              placeholder="— (top level)"
             />
           </Field>
           <Field label="Is a container" htmlFor="is_group">

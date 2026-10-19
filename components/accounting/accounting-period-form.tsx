@@ -5,6 +5,7 @@ import type { Route } from "next";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2 } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createAccountingPeriodAction,
   updateAccountingPeriodAction,
@@ -46,7 +47,7 @@ export function AccountingPeriodForm({
             <TextInput id="period_name" name="period_name" defaultValue={initial?.periodName ?? ""} placeholder="e.g. January 2026" />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <SelectInput id="company" name="company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} options={companies.map((c) => c.name)} />
+            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} required invalid={Boolean(fe.company)} />
           </Field>
           <Field label="Start date" htmlFor="start_date" error={fe.start_date} required>
             <TextInput id="start_date" name="start_date" type="date" defaultValue={initial?.startDate ?? ""} />

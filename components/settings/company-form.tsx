@@ -13,6 +13,7 @@ import {
   SelectInput,
   TextInput,
 } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import type { FormState } from "@/app/(workspace)/settings/company/actions";
 import type { CompanyFull } from "@/lib/frappe/companies";
 
@@ -115,12 +116,14 @@ export function CompanyForm({
           error={fe.country}
           hint="Drives Holiday List defaults and the country-level overtime rule cascade."
         >
-          <SelectInput
+          <LinkField
             id="country"
             name="country"
-            options={countries}
+            doctype="Country"
             defaultValue={initial?.country ?? "Zimbabwe"}
             placeholder="—"
+            required
+            invalid={Boolean(fe.country)}
           />
         </Field>
         <Field
@@ -129,12 +132,14 @@ export function CompanyForm({
           required
           error={fe.default_currency}
         >
-          <SelectInput
+          <LinkField
             id="default_currency"
             name="default_currency"
-            options={currencies}
+            doctype="Currency"
             defaultValue={initial?.defaultCurrency ?? "USD"}
             placeholder="—"
+            required
+            invalid={Boolean(fe.default_currency)}
           />
         </Field>
       </FormSection>
@@ -145,10 +150,10 @@ export function CompanyForm({
           htmlFor="default_holiday_list"
           hint="Used by attendance + the overtime engine's public-holiday modifier."
         >
-          <SelectInput
+          <LinkField
             id="default_holiday_list"
             name="default_holiday_list"
-            options={holidayLists}
+            doctype="Holiday List"
             defaultValue={initial?.defaultHolidayList ?? ""}
             placeholder="—"
           />

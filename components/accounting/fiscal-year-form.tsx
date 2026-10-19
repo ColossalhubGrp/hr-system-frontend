@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { AlertCircle, Save, Trash2, Plus, X } from "lucide-react";
 import { Field, FormSection, SelectInput, TextInput } from "@/components/employee/form-bits";
+import { LinkField } from "@/components/common/link-field";
 import {
   createFiscalYearAction,
   updateFiscalYearAction,
@@ -104,13 +105,11 @@ export function FiscalYearForm({
             </span>
           ))}
           <div className="flex items-center gap-2">
-            <SelectInput
+            <LinkField
+              doctype="Company"
               value={picker}
-              options={[
-                { value: "", label: "Add a company…" },
-                ...companies.filter((c) => !linked.includes(c.name)).map((c) => ({ value: c.name, label: c.name })),
-              ]}
-              onChange={(e) => setPicker(e.target.value)}
+              placeholder="Add a company…"
+              onChange={(next) => setPicker(next)}
             />
             <button type="button" onClick={addCompany} className="inline-flex items-center gap-1 rounded-chip border border-input px-3 py-1.5 text-sm font-semibold hover:bg-muted/40">
               <Plus className="h-3.5 w-3.5" />

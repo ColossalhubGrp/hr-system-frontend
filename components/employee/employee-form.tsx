@@ -757,6 +757,16 @@ export function EmployeeForm({
               onChange={(next) => setNecIndustry(next)}
             />
           </Field>
+          {!isNecLocked && (
+            <SalarySplitCalculator
+              basicUsd={basicUsd}
+              basicZig={basicZig}
+              onApply={(usd, zig) => {
+                setBasicUsd(usd);
+                setBasicZig(zig);
+              }}
+            />
+          )}
           <Field
             label="Basic (USD)"
             htmlFor="basic_usd"
@@ -1614,4 +1624,123 @@ function splitFirst(fullName: string) {
 function splitLast(fullName: string) {
   const parts = fullName.trim().split(/\s+/);
   return parts.length > 1 ? parts[parts.length - 1]! : "";
+}
+
+/**
+ * Lightweight split-currency calculator. The engine ultimately pays
+ * `basic_usd` in USD and `basic_zig` in ZiG as two independent amounts
+ * — this helper lets the user express the common Zimbabwean workflow
+ * ("80% USD + 20% ZWG of a total basic") in one place and writes the
+ * two amounts into the real fields. Toggle hidden until the user ticks
+ * "Split by %" so the normal workflow (type amounts directly) is
+ * unaffected.
+ */
+function SalarySplitCalculator({
+  basicUsd,
+  basicZig,
+  onApply,
+}: {
+  basicUsd: number;
+  basicZig: number;
+  onApply: (usd: number, zig: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [total, setTotal] = useState<number>(() => Math.max(0, basicUsd || 0));
+  const [usdPct, setUsdPct] = useState<number>(100);
+  const [rate, setRate] = useState<number>(26);
+  const previewUsd = +(total * (usdPct / 100)).toFixed(2);
+  const previewZwg = +(total * (1 - usdPct / 100) * rate).toFixed(2);
+  if (!open) {
+    return (
+      <div className="sm:col-span-2">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="text-[12px] font-semibold text-primary hover:underline"
+        >
+          Split by percentage (e.g. 80 % USD + 20 % ZWG)
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="sm:col-span-2 rounded-xl border border-border bg-muted/30 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <div className="text-[12px] font-semibold text-foreground">Split calculator</div>
+        <button
+          type="button"
+          onClick={() => setOpen(false)}
+          className="text-[11px] text-muted-foreground hover:text-foreground"
+        >
+          Hide
+        </button>
+      </div>
+      <p className="mb-3 text-[11.5px] text-muted-foreground">
+        Enter the total basic + USD share. Clicking <strong>Apply</strong> writes the two
+        amounts into Basic (USD) and Basic (ZiG) above. Current values stay saved.
+      </p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            Total basic (USD)
+          </span>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            value={total || ""}
+            onChange={(e) => setTotal(Number(e.target.value) || 0)}
+            className="h-8 rounded-md border border-input bg-card px-2 text-[13px] focus-ring"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            USD share %
+          </span>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            value={usdPct}
+            onChange={(e) => setUsdPct(Math.max(0, Math.min(100, Number(e.target.value) || 0)))}
+            className="h-8 rounded-md border border-input bg-card px-2 text-[13px] focus-ring"
+          />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+            USD→ZiG rate
+          </span>
+          <input
+            type="number"
+            min={0}
+            step={0.01}
+            value={rate}
+            onChange={(e) => setRate(Number(e.target.value) || 0)}
+            className="h-8 rounded-md border border-input bg-card px-2 text-[13px] focus-ring"
+          />
+        </label>
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={() => onApply(previewUsd, previewZwg)}
+            disabled={total <= 0}
+            className="h-8 w-full rounded-md bg-primary px-3 text-[12.5px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            Apply
+          </button>
+        </div>
+      </div>
+      <p className="mt-2 text-[11.5px] text-muted-foreground">
+        Preview: <strong className="tabular-nums">US$ {previewUsd.toLocaleString()}</strong>
+        {" + "}
+        <strong className="tabular-nums">ZiG {previewZwg.toLocaleString()}</strong>
+        {basicUsd || basicZig ? (
+          <span className="ml-2">
+            (currently stored: US$ {basicUsd.toLocaleString()} + ZiG {basicZig.toLocaleString()})
+          </span>
+        ) : null}
+      </p>
+    </div>
+  );
 }

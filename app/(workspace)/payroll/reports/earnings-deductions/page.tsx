@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { ChevronLeft, LineChart, Search, Download } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
 import { FrappeRequestError } from "@/lib/frappe/client";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 
 export const metadata = { title: "Earnings & Deductions · Payroll · Colossal Suite" };
 export const dynamic = "force-dynamic";
@@ -69,8 +70,7 @@ export default async function EarningsDeductionsReportPage({ searchParams }: { s
       </div>
 
       <form action="/payroll/reports/earnings-deductions" className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-3">
-        <Field label="From" name="from" type="date" value={from} />
-        <Field label="To" name="to" type="date" value={to} />
+        <DateRangeFields fromName="from" toName="to" defaultFrom={from} defaultTo={to} />
         <Field label="Show" name="kind" type="select" value={kindFilter} options={["BOTH", "EARNING", "DEDUCTION"]} />
         <div className="ml-auto flex items-end gap-2">
           <a

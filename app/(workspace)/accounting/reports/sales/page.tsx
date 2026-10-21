@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, LineChart, Search, Download } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { frappeCall } from "@/lib/frappe/client";
 import { FrappeRequestError } from "@/lib/frappe/client";
@@ -96,8 +97,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
         className="flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-3"
       >
         <Field label="Company" name="company" type="select" value={company} options={companies.map((c) => c.name)} />
-        <Field label="From" name="from" type="date" value={from} />
-        <Field label="To" name="to" type="date" value={to} />
+        <DateRangeFields fromName="from" toName="to" defaultFrom={from} defaultTo={to} />
         <div className="ml-auto flex items-end gap-2">
           <a
             href={csvHref}

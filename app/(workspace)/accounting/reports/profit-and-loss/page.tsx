@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { LineChart, ChevronLeft, Search } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { PrintButton } from "@/components/common/print-button";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { profitAndLoss } from "@/lib/frappe/accounting-reports";
 import { ReportTable } from "@/components/accounting/report-table";
@@ -59,8 +60,14 @@ export default async function ProfitAndLossPage({ searchParams }: { searchParams
 
         <form action="/accounting/reports/profit-and-loss" className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/60 bg-card p-3">
           <FSelect label="Company" name="company" value={company} options={companies.map((c) => c.name)} />
-          <FDate label="From" name="from" value={from} />
-          <FDate label="To" name="to" value={to} />
+          <DateRangeFields
+            fromName="from"
+            toName="to"
+            defaultFrom={from}
+            defaultTo={to}
+            inputClassName="h-9 rounded-chip border border-input bg-transparent px-3 text-sm focus-ring"
+            labelClassName="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          />
           <FSelect label="Periodicity" name="periodicity" value={periodicity} options={PERIODICITIES} />
           <div className="ml-auto flex items-end gap-2">
             {report && <PrintButton />}

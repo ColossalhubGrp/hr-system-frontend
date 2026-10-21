@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SectionBack } from "../../_lib/section-back";
 import { BookText, Search } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { listShareholders } from "@/lib/frappe/shares/shareholder";
 import { shareLedger } from "@/lib/frappe/accounting-reports";
@@ -48,8 +49,14 @@ export default async function ShareLedgerPage({ searchParams }: { searchParams: 
       <form action="/accounting/shares/ledger" className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/60 bg-card p-3">
         <FSel label="Company" name="company" value={company} options={companies.map((c) => c.name)} />
         <FSel label="Shareholder" name="shareholder" value={shareholder} options={[""].concat(shareholders.map((s) => s.name))} />
-        <FDate label="From" name="from" value={from} />
-        <FDate label="To" name="to" value={to} />
+        <DateRangeFields
+          fromName="from"
+          toName="to"
+          defaultFrom={from}
+          defaultTo={to}
+          inputClassName="h-9 rounded-chip border border-input bg-transparent px-3 text-sm focus-ring"
+          labelClassName="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        />
         <button type="submit" className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring">
           <Search className="h-3.5 w-3.5" />
           Run report

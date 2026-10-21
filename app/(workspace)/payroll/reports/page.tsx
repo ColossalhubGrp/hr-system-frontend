@@ -1,4 +1,5 @@
 import { Card } from "@/components/ui/card";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 import {
   Table,
   TableBody,
@@ -95,30 +96,14 @@ export default async function ReportsTab({
       </header>
 
       <form className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">
-        <div className="flex flex-col gap-1">
-          <label htmlFor="from" className="text-xs font-medium text-muted-foreground">
-            From
-          </label>
-          <input
-            type="date"
-            id="from"
-            name="from"
-            defaultValue={from}
-            className="h-9 rounded-md border px-3 text-sm"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label htmlFor="to" className="text-xs font-medium text-muted-foreground">
-            To
-          </label>
-          <input
-            type="date"
-            id="to"
-            name="to"
-            defaultValue={to}
-            className="h-9 rounded-md border px-3 text-sm"
-          />
-        </div>
+        <DateRangeFields
+          fromName="from"
+          toName="to"
+          defaultFrom={from}
+          defaultTo={to}
+          inputClassName="h-9 rounded-md border px-3 text-sm"
+          labelClassName="text-xs font-medium text-muted-foreground"
+        />
         <div className="flex flex-col gap-1">
           <label htmlFor="status" className="text-xs font-medium text-muted-foreground">
             Status

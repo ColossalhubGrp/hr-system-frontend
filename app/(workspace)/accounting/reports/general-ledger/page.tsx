@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { BookText, ChevronLeft, Search } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { PrintButton } from "@/components/common/print-button";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { generalLedger } from "@/lib/frappe/accounting-reports";
 import { ReportTable } from "@/components/accounting/report-table";
@@ -115,8 +116,14 @@ function FiltersBar({
   return (
     <form action="/accounting/reports/general-ledger" className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/60 bg-card p-3">
       <FilterField label="Company" name="company" type="select" value={company} options={companies} />
-      <FilterField label="From" name="from" type="date" value={from} />
-      <FilterField label="To" name="to" type="date" value={to} />
+      <DateRangeFields
+        fromName="from"
+        toName="to"
+        defaultFrom={from}
+        defaultTo={to}
+        inputClassName="h-9 rounded-chip border border-input bg-transparent px-3 text-sm focus-ring"
+        labelClassName="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+      />
       <FilterField label="Account (optional)" name="account" type="text" value={account} placeholder="Bank - CH" />
       <div className="ml-auto flex items-end gap-2">
         {canPrint && <PrintButton />}

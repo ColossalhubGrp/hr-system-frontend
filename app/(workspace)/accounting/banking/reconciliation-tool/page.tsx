@@ -4,6 +4,7 @@ import type { Route } from "next";
 import { ArrowLeftRight, Search, ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listBankAccounts } from "@/lib/frappe/banking/bank-account";
 import { listBankTransactions } from "@/lib/frappe/banking/bank-transaction";
 import { FrappeRequestError } from "@/lib/frappe/client";
@@ -55,8 +56,14 @@ export default async function BankReconciliationToolPage({ searchParams }: { sea
 
       <form action="/accounting/banking/reconciliation-tool" className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/60 bg-card p-3">
         <FSel label="Bank account" name="account" value={account} options={banks.map((b) => b.name)} />
-        <FDate label="From" name="from" value={fromDate} />
-        <FDate label="To" name="to" value={toDate} />
+        <DateRangeFields
+          fromName="from"
+          toName="to"
+          defaultFrom={fromDate}
+          defaultTo={toDate}
+          inputClassName="h-9 rounded-chip border border-input bg-transparent px-3 text-sm focus-ring"
+          labelClassName="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+        />
         <FSel label="Status" name="status" value={status} options={STATUSES} />
         <button type="submit" className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring">
           <Search className="h-3.5 w-3.5" />

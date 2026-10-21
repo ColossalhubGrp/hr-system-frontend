@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { Ratio, ChevronLeft, Search } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { PrintButton } from "@/components/common/print-button";
+import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { trialBalance } from "@/lib/frappe/accounting-reports";
 import { ReportTable } from "@/components/accounting/report-table";
@@ -56,8 +57,14 @@ export default async function TrialBalancePage({ searchParams }: { searchParams:
 
         <form action="/accounting/reports/trial-balance" className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/60 bg-card p-3">
           <FilterSelect label="Company" name="company" value={company} options={companies.map((c) => c.name)} />
-          <FilterDate label="From" name="from" value={from} />
-          <FilterDate label="To" name="to" value={to} />
+          <DateRangeFields
+            fromName="from"
+            toName="to"
+            defaultFrom={from}
+            defaultTo={to}
+            inputClassName="h-9 rounded-chip border border-input bg-transparent px-3 text-sm focus-ring"
+            labelClassName="text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+          />
           <div className="ml-auto flex items-end gap-2">
             {report && <PrintButton />}
             <button type="submit" className="inline-flex h-9 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white transition hover:bg-ink-700 focus-ring">

@@ -166,6 +166,7 @@ export const SECTIONS: Section[] = [
       { label: "Cash Flow", href: "/accounting/reports/cash-flow", icon: ArrowLeftRight, desc: "Operating, investing and financing cash movement over the period." },
       { label: "Accounts Receivable", href: "/accounting/reports/accounts-receivable", icon: FileOutput, desc: "Money owed to us, aged into 30/60/90/120-day buckets." },
       { label: "Accounts Payable", href: "/accounting/reports/accounts-payable", icon: FileInput, desc: "Money we owe suppliers, aged into 30/60/90/120-day buckets." },
+      { label: "Sales Report", href: "/accounting/reports/sales", icon: LineChart, desc: "Every sales invoice in a date range, with totals, paid and outstanding. CSV export." },
     ],
   },
 ];

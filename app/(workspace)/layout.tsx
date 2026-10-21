@@ -2,13 +2,11 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
-import { ContextStrip } from "@/components/layout/context-strip";
 import { NavProgress } from "@/components/layout/nav-progress";
 import { Toaster } from "@/components/ui/sonner";
 import { isAuthenticated, readSession, resolveAvatarUrl } from "@/lib/frappe/session";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { getMySubscription } from "@/lib/subscriptions/server";
-import { frappeCall } from "@/lib/frappe/client";
 
 /**
  * Workspace shell: full-height purple rail on the left, scrollable canvas on
@@ -28,10 +26,9 @@ export default async function WorkspaceLayout({
   }
 
   const session = readSession();
-  const [access, subscription, companyName] = await Promise.all([
+  const [access, subscription] = await Promise.all([
     getMyAccess(),
     getMySubscription(),
-    resolveWorkingCompanyName(),
   ]);
 
   // App codes the user's company is subscribed to. Always-on apps (core)
@@ -79,7 +76,6 @@ export default async function WorkspaceLayout({
       />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar user={user} notifications={0} />
-        <ContextStrip companyName={companyName} />
         <main className="flex-1 overflow-y-auto px-6 pb-8 pt-4">
           {children}
         </main>
@@ -87,40 +83,4 @@ export default async function WorkspaceLayout({
       <Toaster position="top-right" />
     </div>
   );
-}
-
-/**
- * Best-effort fetch of the company label shown in the context strip.
- * Tries the signed-in user's default_company first; falls back to the
- * global default company; returns null on failure so the strip renders
- * a neutral "Workspace" label rather than throwing.
- */
-async function resolveWorkingCompanyName(): Promise<string | null> {
-  try {
-    const defaults = await frappeCall<Record<string, string>>({
-      method: "frappe.client.get_value",
-      as: "user",
-      args: {
-        doctype: "User",
-        filters: { name: readSession().userId ?? "" },
-        fieldname: "default_company",
-      },
-    });
-    const own = (defaults as unknown as { default_company?: string })?.default_company;
-    if (own) return own;
-  } catch {
-    /* non-fatal — fall through to global default */
-  }
-  try {
-    const global = await frappeCall<{ default_company?: string }>({
-      method: "frappe.client.get_single_value",
-      as: "user",
-      args: { doctype: "Global Defaults", field: "default_company" },
-    });
-    if (typeof global === "string") return global;
-    if (global?.default_company) return global.default_company;
-  } catch {
-    /* non-fatal */
-  }
-  return null;
 }

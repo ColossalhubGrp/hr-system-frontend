@@ -34,25 +34,28 @@ export default function AccountingLandingPage({
       {/* Hero only on Overview — on section views the breadcrumb +
           section header carries enough context. */}
       {isOverview && (
-        <header className="rounded-xl bg-gradient-to-br from-primary via-primary to-primary/80 px-4 py-3 text-primary-foreground shadow-sm">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[10px] font-bold uppercase tracking-widest text-primary-foreground/70">
-                Finance
-              </div>
-              <h1 className="mt-0.5 text-lg font-bold leading-tight">Accounting</h1>
-              <p className="mt-0.5 max-w-xl text-xs text-primary-foreground/80">
-                Live view of the ledger — invoices, payments, tax and cash.
-              </p>
+        // Hero — FCGS-inspired "— SECTION / Big Title / short lede"
+        // on the canvas itself, with primary CTAs living inline as
+        // chips on the right.
+        <header className="flex flex-wrap items-end justify-between gap-3 pb-1 pt-2">
+          <div className="min-w-0">
+            <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              — Finance
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <CommandKChip />
-              <HeroCta href="/accounting/sales-invoices/new" icon={Receipt} label="Invoice" />
-              <HeroCta href="/accounting/purchase-invoices/new" icon={FileSpreadsheet} label="Bill" />
-              <HeroCta href="/accounting/payment-entries/new" icon={Wallet} label="Payment" />
-              <HeroCta href="/accounting/journal-entries/new" icon={BookOpen} label="Journal" />
-              <HeroCta href="/accounting?s=reports" icon={BarChart3} label="Reports" />
-            </div>
+            <h1 className="mt-1 text-[22px] font-bold leading-tight tracking-tight text-foreground">
+              Accounting workspace
+            </h1>
+            <p className="mt-0.5 max-w-xl text-[12.5px] text-muted-foreground">
+              Live view of the ledger — invoices, payments, tax and cash.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <CommandKChip />
+            <HeroCta href="/accounting/sales-invoices/new" icon={Receipt} label="Invoice" />
+            <HeroCta href="/accounting/purchase-invoices/new" icon={FileSpreadsheet} label="Bill" />
+            <HeroCta href="/accounting/payment-entries/new" icon={Wallet} label="Payment" />
+            <HeroCta href="/accounting/journal-entries/new" icon={BookOpen} label="Journal" />
+            <HeroCta href="/accounting?s=reports" icon={BarChart3} label="Reports" />
           </div>
         </header>
       )}
@@ -102,7 +105,7 @@ function HeroCta({
   return (
     <Link
       href={href as Route}
-      className="inline-flex h-7 items-center gap-1 rounded-chip bg-surface/15 px-2.5 text-[11px] font-semibold text-primary-foreground backdrop-blur-sm transition hover:bg-surface/25"
+      className="inline-flex h-7 items-center gap-1 rounded-md border border-border bg-card px-2.5 text-[11.5px] font-semibold text-foreground shadow-xs transition hover:border-primary/40 hover:text-primary"
     >
       <Icon className="h-3 w-3" />
       {label}

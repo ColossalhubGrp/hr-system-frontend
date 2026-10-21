@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { SectionEyebrow } from "@/components/layout/section-eyebrow";
 // Basic HR-policy chatbot drawer (US-45) — hidden from the UI while
 // the analytics assistant at /analytics/ask is the primary AI surface.
 // Re-enable by uncommenting the import + the <ChatDrawer /> mount
@@ -34,9 +35,7 @@ type Props = {
 export function Topbar({ user, notifications = 0 }: Props) {
   return (
     <div className="flex items-center gap-3 px-6 pt-3">
-      <div className="min-w-0 text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-        Finance and HR workspace
-      </div>
+      <SectionEyebrow />
 
       <label className="relative ml-auto hidden md:block">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />

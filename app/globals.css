@@ -17,9 +17,9 @@
      * ───────────────────────────────────────────────────────── */
 
     /* --- Semantic surfaces (flip in dark mode) --- */
-    --canvas: 248 250 252;           /* slate-50  #F8FAFC */
+    --canvas: 247 248 250;           /* near-slate-50, a hair warmer */
     --surface: 255 255 255;          /* white */
-    --hairline: 226 232 240;         /* slate-200 #E2E8F0 */
+    --hairline: 229 232 238;         /* slightly lighter than slate-200 */
 
     /* --- Brand palette (constant across themes) --- */
     --ink: 32 48 96;                 /* #203060 — official brand navy */
@@ -171,8 +171,21 @@
     height: 100%;
     background: rgb(var(--canvas));
     color: rgb(var(--ash-900));
-    font-feature-settings: "ss01", "cv11";
+    /* Inter OpenType features — ss01 (single-storey a), cv11 (tabular
+     * figures that still read clean inline), plus cv05 for a modern
+     * dollar glyph. Tighter default leading + a hair of negative
+     * tracking match the FCGS reference's dense enterprise feel. */
+    font-feature-settings: "ss01", "cv05", "cv11", "ss03";
+    font-size: 14px;
+    line-height: 1.45;
+    letter-spacing: -0.003em;
     color-scheme: light;
+  }
+  /* Numbers in cards + tables stay vertically aligned without having
+   * to opt in per-element. Classless utility — any <strong class="tabular">
+   * or raw tabular-nums utility still works. */
+  table, .tabular-nums, [class*="tabular"] {
+    font-variant-numeric: tabular-nums;
   }
   .dark html,
   .dark body,

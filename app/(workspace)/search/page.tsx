@@ -115,8 +115,14 @@ async function runSearch(q: string): Promise<Group[]> {
           args: {
             doctype: s.doctype,
             fields: ["name", s.labelField],
-            filters: [["name", "like", needle]],
-            or_filters: [[s.labelField, "like", needle]],
+            // Match on either `name` (id) OR the label field (e.g.
+            // employee_name, customer_name). Frappe v15 ANDs
+            // `filters` with `or_filters`, so passing both would
+            // require BOTH to match — we want either.
+            or_filters: [
+              ["name", "like", needle],
+              [s.labelField, "like", needle],
+            ],
             limit_page_length: 10,
             order_by: "modified desc",
           },

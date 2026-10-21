@@ -68,12 +68,21 @@ type FiscalYear = {
   year_end_date: string;
 };
 
-export async function fiscalYearForDate(date: string): Promise<FiscalYear | null> {
+export async function fiscalYearForDate(
+  date: string,
+  company?: string,
+): Promise<FiscalYear | null> {
+  // ERPNext's reports (P&L, Balance Sheet, Trial Balance, Cash Flow)
+  // all call `erpnext.accounts.utils.get_fiscal_year(date, company=...)`
+  // against the stock `Fiscal Year` doctype — NOT our Colossal fork.
+  // Query it directly and, if the tenant has no FY covering `date`,
+  // auto-provision one (Jan 1 – Dec 31 of the calendar year, linked
+  // to the chosen company) so the report doesn't 417.
   const rows = await frappeCall<FiscalYear[]>({
     method: "frappe.client.get_list",
     as: "user",
     args: {
-      doctype: "Colossal Fiscal Year",
+      doctype: "Fiscal Year",
       fields: ["name", "year_start_date", "year_end_date"],
       filters: [
         ["year_start_date", "<=", date],
@@ -82,20 +91,103 @@ export async function fiscalYearForDate(date: string): Promise<FiscalYear | null
       limit_page_length: 1,
     },
   }).catch(() => [] as FiscalYear[]);
-  if (rows[0]) return rows[0];
+  if (rows[0]) {
+    // If a company was supplied, make sure the FY is also linked to
+    // that company via its `companies` child table. ERPNext's
+    // get_fiscal_year(company=...) filters by this link.
+    if (company) await ensureCompanyLinkedToFy(rows[0].name, company);
+    return rows[0];
+  }
 
-  // Fall back to any FY so the report still runs. Prefer the newest.
-  const anyFy = await frappeCall<FiscalYear[]>({
-    method: "frappe.client.get_list",
-    as: "user",
-    args: {
-      doctype: "Colossal Fiscal Year",
-      fields: ["name", "year_start_date", "year_end_date"],
-      order_by: "year_end_date desc",
-      limit_page_length: 1,
-    },
-  }).catch(() => [] as FiscalYear[]);
-  return anyFy[0] ?? null;
+  // No matching FY → provision one for the calendar year the date
+  // falls in. Jan 1 → Dec 31. ERPNext uses this shape for its own
+  // default FY ("2026"), so no surprises for downstream.
+  const [yStr] = date.split("-");
+  const year = Number(yStr) || new Date().getFullYear();
+  const yearStart = `${year}-01-01`;
+  const yearEnd = `${year}-12-31`;
+  const fyName = String(year);
+  const provisioned = await provisionFiscalYear(fyName, yearStart, yearEnd, company);
+  return provisioned;
+}
+
+async function provisionFiscalYear(
+  name: string,
+  startDate: string,
+  endDate: string,
+  company?: string,
+): Promise<FiscalYear | null> {
+  const doc: Record<string, unknown> = {
+    doctype: "Fiscal Year",
+    year: name,
+    year_start_date: startDate,
+    year_end_date: endDate,
+    // Child-table of {company: "..."} rows. Required when the report
+    // was called with company=X — ERPNext's get_fiscal_year filters
+    // by this link and silently returns no match otherwise.
+    companies: company ? [{ company }] : [],
+  };
+  try {
+    const saved = await frappeCall<{ name: string; year_start_date: string; year_end_date: string }>({
+      method: "frappe.client.insert",
+      verb: "POST",
+      args: { doc },
+      as: "user",
+    });
+    return {
+      name: saved.name,
+      year_start_date: saved.year_start_date || startDate,
+      year_end_date: saved.year_end_date || endDate,
+    };
+  } catch (err) {
+    // Could be a race with another request creating the same FY —
+    // retry a read on duplicate error.
+    const msg = err instanceof Error ? err.message : "";
+    if (/exists|duplicate|409/i.test(msg)) {
+      const rows = await frappeCall<FiscalYear[]>({
+        method: "frappe.client.get_list",
+        as: "user",
+        args: {
+          doctype: "Fiscal Year",
+          fields: ["name", "year_start_date", "year_end_date"],
+          filters: [["name", "=", name]],
+          limit_page_length: 1,
+        },
+      }).catch(() => [] as FiscalYear[]);
+      if (rows[0]) {
+        if (company) await ensureCompanyLinkedToFy(rows[0].name, company);
+        return rows[0];
+      }
+    }
+    throw err;
+  }
+}
+
+async function ensureCompanyLinkedToFy(fyName: string, company: string): Promise<void> {
+  try {
+    const fy = await frappeCall<{ companies?: Array<{ company?: string }> }>({
+      method: "frappe.client.get",
+      as: "user",
+      args: { doctype: "Fiscal Year", name: fyName },
+    });
+    const already = (fy.companies ?? []).some((c) => c?.company === company);
+    if (already) return;
+    const next = [...(fy.companies ?? []), { company }];
+    await frappeCall({
+      method: "frappe.client.set_value",
+      verb: "POST",
+      as: "user",
+      args: {
+        doctype: "Fiscal Year",
+        name: fyName,
+        fieldname: { companies: next },
+      },
+    });
+  } catch {
+    // Non-fatal — if the link write fails the report will show its own
+    // "not linked to company" message, which is clearer than a silent
+    // partial fix here.
+  }
 }
 
 /**
@@ -213,11 +305,11 @@ function requireFiscalYear(fy: FiscalYear | null, reportName: string): FiscalYea
 
 export async function trialBalance(opts: PeriodFilter) {
   // ERPNext's Trial Balance throws "Fiscal Year is required" when the
-  // filter is missing — resolve it from the From date, falling back to
-  // any FY the user can see.
+  // filter is missing — resolve it from the From date, auto-provisioning
+  // a company-linked FY if missing.
   const [fromFy, toFy] = await Promise.all([
-    fiscalYearForDate(opts.fromDate),
-    fiscalYearForDate(opts.toDate),
+    fiscalYearForDate(opts.fromDate, opts.company),
+    fiscalYearForDate(opts.toDate, opts.company),
   ]);
   const anyFy = requireFiscalYear(fromFy ?? toFy, "Trial Balance");
   return runReport("Trial Balance", {
@@ -241,10 +333,11 @@ export async function profitAndLoss(opts: PeriodFilter & { periodicity?: string 
   // P&L / Balance Sheet / Cash Flow read `period_start_date` +
   // `period_end_date` (NOT from_date/to_date). get_period_list then
   // calls get_fiscal_year(period.to_date, company=…) internally, so
-  // the dates still need to fall inside a Fiscal Year that exists.
+  // the dates still need to fall inside a Fiscal Year linked to this
+  // company. Auto-provision one if missing.
   const [fromFy, toFy] = await Promise.all([
-    fiscalYearForDate(opts.fromDate),
-    fiscalYearForDate(opts.toDate),
+    fiscalYearForDate(opts.fromDate, opts.company),
+    fiscalYearForDate(opts.toDate, opts.company),
   ]);
   const fy = requireFiscalYear(fromFy ?? toFy, "Profit and Loss");
   return runReport("Profit and Loss Statement", {
@@ -262,7 +355,7 @@ export async function balanceSheet(opts: { company: string; toDate: string; peri
   // Balance Sheet is a snapshot "as of" a date, but ERPNext still
   // demands a period range to compute movements. Open the window from
   // the enclosing FY's start.
-  const toFy = requireFiscalYear(await fiscalYearForDate(opts.toDate), "Balance Sheet");
+  const toFy = requireFiscalYear(await fiscalYearForDate(opts.toDate, opts.company), "Balance Sheet");
   return runReport("Balance Sheet", {
     company: opts.company,
     period_start_date: toFy.year_start_date,
@@ -276,8 +369,8 @@ export async function balanceSheet(opts: { company: string; toDate: string; peri
 
 export async function cashFlow(opts: PeriodFilter & { periodicity?: string }) {
   const [fromFy, toFy] = await Promise.all([
-    fiscalYearForDate(opts.fromDate),
-    fiscalYearForDate(opts.toDate),
+    fiscalYearForDate(opts.fromDate, opts.company),
+    fiscalYearForDate(opts.toDate, opts.company),
   ]);
   const fy = requireFiscalYear(fromFy ?? toFy, "Cash Flow");
   return runReport("Cash Flow", {

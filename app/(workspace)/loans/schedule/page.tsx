@@ -6,7 +6,7 @@ import { LoanDeductionSetup } from "@/components/loans/loan-deduction-setup";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { listSalaryComponents } from "@/lib/frappe/pay-adjustments";
 
-export const metadata = { title: "Loan schedule · Loans · Colossal ERP" };
+export const metadata = { title: "Loan schedule · Loans · Colossal Suite" };
 export const dynamic = "force-dynamic";
 
 type SP = { principal?: string; rate?: string; months?: string; start?: string };

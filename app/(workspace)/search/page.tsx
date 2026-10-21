@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { Search as SearchIcon } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
 
-export const metadata = { title: "Search · Colossal ERP" };
+export const metadata = { title: "Search · Colossal Suite" };
 export const dynamic = "force-dynamic";
 
 type Hit = { doctype: string; name: string; label: string; href: string };

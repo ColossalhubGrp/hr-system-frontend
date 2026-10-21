@@ -6,7 +6,7 @@ import { listCompanies } from "@/lib/frappe/accounting";
 import { frappeCall } from "@/lib/frappe/client";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Sales report · Accounting · Colossal ERP" };
+export const metadata = { title: "Sales report · Accounting · Colossal Suite" };
 export const dynamic = "force-dynamic";
 
 type Row = {

@@ -4,7 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { CsvImportForm } from "@/components/common/csv-import-form";
 import { importCustomersAction } from "./actions";
 
-export const metadata = { title: "Bulk import customers · Sales · Colossal ERP" };
+export const metadata = { title: "Bulk import customers · Sales · Colossal Suite" };
 
 const HEADER = ["customer_name", "customer_type", "customer_group", "territory", "tax_id"];
 const SAMPLE: string[][] = [

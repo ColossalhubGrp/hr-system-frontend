@@ -4,7 +4,7 @@ import { ChevronLeft, LineChart, Search, Download } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Earnings & Deductions · Payroll · Colossal ERP" };
+export const metadata = { title: "Earnings & Deductions · Payroll · Colossal Suite" };
 export const dynamic = "force-dynamic";
 
 type SP = { from?: string; to?: string; kind?: "EARNING" | "DEDUCTION" | "BOTH" };

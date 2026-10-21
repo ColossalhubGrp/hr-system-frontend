@@ -12,8 +12,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Colossal ERP",
-    template: "%s · Colossal ERP",
+    default: "Colossal Suite",
+    template: "%s · Colossal Suite",
   },
   description: "People, operations and finance in one workspace — by Colossal Hub.",
   robots: { index: false, follow: false },

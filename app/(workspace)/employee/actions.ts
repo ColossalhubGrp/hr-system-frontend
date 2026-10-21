@@ -52,6 +52,11 @@ const baseSchema = z.object({
   // disabled, on the form side.
   basic_usd: z.coerce.number().nonnegative().optional(),
   basic_zig: z.coerce.number().nonnegative().optional(),
+  // 0-100. When < 100 the Belina engine treats basic_usd as the TOTAL
+  // USD-equivalent gross and splits it between USD and ZiG at the pay
+  // run's exchange rate (80 = 80% USD + 20% ZiG). Null / 100 keeps the
+  // legacy two-independent-amounts behaviour.
+  salary_split_usd_pct: z.coerce.number().min(0).max(100).optional(),
   nec_industry: z.string().trim().optional(),
   nec_dues_usd: z.coerce.number().nonnegative().optional(),
   // Boolean travels through FormData as "0"/"1"; coerce → number → cast.

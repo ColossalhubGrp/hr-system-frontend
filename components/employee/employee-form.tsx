@@ -205,6 +205,9 @@ export function EmployeeForm({
   const [necIndustry, setNecIndustry] = useState<string>(initial?.necIndustry ?? "");
   const [basicUsd, setBasicUsd] = useState<number>(initial?.basicUsd ?? 0);
   const [basicZig, setBasicZig] = useState<number>(initial?.basicZig ?? 0);
+  const [salarySplitPct, setSalarySplitPct] = useState<number>(
+    Number(initial?.salarySplitUsdPct ?? 100),
+  );
   const [salarySource, setSalarySource] = useState<"industry" | "grade" | "none">("none");
   // NEC dues mirror the salary pattern: default is "Auto" (inherit
   // from industry.dues_amount_usd or dues_pct × basic_usd, split by
@@ -413,6 +416,7 @@ export function EmployeeForm({
     attendance_device_id: initial?.attendanceDeviceId ?? "",
     bio: initial?.bio ?? "",
     relieving_date: initial?.relievingDate ?? "",
+    salary_split_usd_pct: initial?.salarySplitUsdPct ? String(initial.salarySplitUsdPct) : "100",
   } satisfies Partial<Record<string, string>>;
 
   // Child-table tabs (Education / Work Experience / Skills) only make
@@ -761,12 +765,18 @@ export function EmployeeForm({
             <SalarySplitCalculator
               basicUsd={basicUsd}
               basicZig={basicZig}
-              onApply={(usd, zig) => {
+              initialSplitPct={Number(v.salary_split_usd_pct ?? "100")}
+              onApply={(usd, zig, pct) => {
                 setBasicUsd(usd);
                 setBasicZig(zig);
+                setSalarySplitPct(pct);
               }}
             />
           )}
+          {/* Hidden carrier so the % lands on the server even when the
+              calculator is collapsed; Belina honors values 0 < pct <
+              100 to split basic between USD and ZiG at run time. */}
+          <input type="hidden" name="salary_split_usd_pct" value={salarySplitPct} />
           <Field
             label="Basic (USD)"
             htmlFor="basic_usd"
@@ -1638,15 +1648,20 @@ function splitLast(fullName: string) {
 function SalarySplitCalculator({
   basicUsd,
   basicZig,
+  initialSplitPct,
   onApply,
 }: {
   basicUsd: number;
   basicZig: number;
-  onApply: (usd: number, zig: number) => void;
+  initialSplitPct?: number;
+  onApply: (usd: number, zig: number, pct: number) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const defaultPct = initialSplitPct && initialSplitPct > 0 && initialSplitPct < 100
+    ? initialSplitPct
+    : 100;
+  const [open, setOpen] = useState(defaultPct < 100);
   const [total, setTotal] = useState<number>(() => Math.max(0, basicUsd || 0));
-  const [usdPct, setUsdPct] = useState<number>(100);
+  const [usdPct, setUsdPct] = useState<number>(defaultPct);
   const [rate, setRate] = useState<number>(26);
   const previewUsd = +(total * (usdPct / 100)).toFixed(2);
   const previewZwg = +(total * (1 - usdPct / 100) * rate).toFixed(2);
@@ -1723,7 +1738,7 @@ function SalarySplitCalculator({
         <div className="flex items-end">
           <button
             type="button"
-            onClick={() => onApply(previewUsd, previewZwg)}
+            onClick={() => onApply(previewUsd, previewZwg, usdPct)}
             disabled={total <= 0}
             className="h-8 w-full rounded-md bg-primary px-3 text-[12.5px] font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
           >

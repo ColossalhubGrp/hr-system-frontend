@@ -98,6 +98,11 @@ export type EmployeeFull = {
   bankAccount: string | null;
   basicUsd: number;
   basicZig: number;
+  /** USD share % of basic. Null or 100 → basic_usd + basic_zig are
+   *  two independent amounts. 0 < N < 100 → engine treats basic_usd as
+   *  the TOTAL USD-equivalent gross and splits it into USD + ZiG at
+   *  the pay-run's exchange rate. */
+  salarySplitUsdPct: number;
   pensionPct: number;              // percent — 5 = 5%
   medicalAidUsd: number;
   necDuesUsd: number;
@@ -381,6 +386,7 @@ type RawEmployeeDoc = RawEmployeeRow & {
   bank_account: string | null;
   basic_usd: number | null;
   basic_zig: number | null;
+  salary_split_usd_pct: number | null;
   pension_pct: number | null;
   medical_aid_usd: number | null;
   nec_dues_usd: number | null;
@@ -495,6 +501,7 @@ function toFull(d: RawEmployeeDoc): EmployeeFull {
     bankAccount: d.bank_account,
     basicUsd: Number(d.basic_usd ?? 0),
     basicZig: Number(d.basic_zig ?? 0),
+    salarySplitUsdPct: Number(d.salary_split_usd_pct ?? 100),
     pensionPct: Number(d.pension_pct ?? 0),
     medicalAidUsd: Number(d.medical_aid_usd ?? 0),
     necDuesUsd: Number(d.nec_dues_usd ?? 0),

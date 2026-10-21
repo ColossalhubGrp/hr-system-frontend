@@ -413,6 +413,13 @@ export type EmployeeFormInput = {
   /** Basic monthly salary in ZiG. Same NEC-editability rule as
    *  basic_usd. */
   basic_zig?: number;
+  /** 0-100. When set between 0 and 100 (exclusive) the Belina payroll
+   *  engine treats `basic_usd` as the TOTAL USD-equivalent gross and
+   *  splits it at run time into (basic_usd × pct/100) USD and
+   *  (basic_usd × (1-pct/100) × exchange_rate) ZiG. Null or 100 →
+   *  legacy behaviour where basic_usd + basic_zig are two
+   *  independent amounts. */
+  salary_split_usd_pct?: number;
   /** Link → Payroll NEC Industry. When set together with an
    *  inside-NEC pay_grade, the salary auto-fills from that industry's
    *  grade_schedule (falling back to Payroll Pay Grade's flat salary

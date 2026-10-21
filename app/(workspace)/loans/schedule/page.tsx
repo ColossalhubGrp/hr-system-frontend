@@ -2,17 +2,27 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, HandCoins } from "lucide-react";
 import { AmortizationCalculator } from "@/components/loans/amortization-calculator";
+import { LoanDeductionSetup } from "@/components/loans/loan-deduction-setup";
+import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
+import { listSalaryComponents } from "@/lib/frappe/pay-adjustments";
 
 export const metadata = { title: "Loan schedule · Loans · Colossal ERP" };
 export const dynamic = "force-dynamic";
 
 type SP = { principal?: string; rate?: string; months?: string; start?: string };
 
-export default function LoanSchedulePage({ searchParams }: { searchParams: SP }) {
+export default async function LoanSchedulePage({ searchParams }: { searchParams: SP }) {
   const principal = Number(searchParams.principal) || 0;
   const rateAnnualPct = Number(searchParams.rate) || 0;
   const months = Number(searchParams.months) || 0;
   const start = searchParams.start || new Date().toISOString().slice(0, 10);
+
+  // Load directory + deduction components in parallel so the "Set up
+  // recurring deduction" form can render inline without a round-trip.
+  const [employeeDirectory, components] = await Promise.all([
+    listEmployeeDirectory(),
+    listSalaryComponents({ type: "Deduction" }).catch(() => []),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -24,11 +34,11 @@ export default function LoanSchedulePage({ searchParams }: { searchParams: SP })
         <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">— Loans</div>
         <h1 className="mt-1 flex items-center gap-2 text-[22px] font-bold leading-tight tracking-tight text-foreground">
           <HandCoins className="h-5 w-5 text-primary" />
-          Repayment schedule
+          Loan repayment schedule
         </h1>
         <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-          Enter the loan terms to generate a month-by-month amortization table. The outstanding
-          capital reduces by the principal portion each month until paid off.
+          Enter the loan terms to generate a month-by-month amortization table. Then set up the
+          recurring payroll deduction below so the capital balance reduces automatically each pay run.
         </p>
       </div>
 
@@ -39,13 +49,10 @@ export default function LoanSchedulePage({ searchParams }: { searchParams: SP })
         defaultStart={start}
       />
 
-      <div className="rounded-xl border border-dashed border-border bg-muted/20 p-4 text-[13px] text-muted-foreground">
-        <strong className="font-semibold text-foreground">To deduct this loan from salary each month:</strong>{" "}
-        add a recurring deduction in <Link href={"/payroll/adjustments" as Route} className="font-medium text-primary hover:underline">Payroll → Adjustments</Link> with
-        amount = this month&apos;s EMI, for the loan&apos;s duration. The payroll engine will apply the
-        deduction every run until the end date and the capital balance drops by the principal
-        portion each month.
-      </div>
+      <LoanDeductionSetup
+        employeeDirectory={employeeDirectory}
+        components={components.map((c) => c.name)}
+      />
     </div>
   );
 }

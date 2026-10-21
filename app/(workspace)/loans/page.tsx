@@ -4,6 +4,8 @@ import {
   CircleDollarSign,
   TrendingUp,
 } from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
 import { FilterRow } from "@/components/common/list-shell";
@@ -32,12 +34,20 @@ export default async function LoansPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        icon={Landmark}
-        crumb="Loans · All loans"
-        title="Loans"
-        subtitle={`${result.total.toLocaleString()} loans on file.`}
-      />
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <PageHeader
+          icon={Landmark}
+          crumb="Loans · All loans"
+          title="Loans"
+          subtitle={`${result.total.toLocaleString()} loans on file.`}
+        />
+        <Link
+          href={"/loans/schedule" as Route}
+          className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-sm font-medium hover:border-primary/40 hover:text-primary"
+        >
+          Repayment schedule →
+        </Link>
+      </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <SummaryTile

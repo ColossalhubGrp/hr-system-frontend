@@ -38,10 +38,14 @@ export async function GET(req: NextRequest) {
       ],
       filters: [
         ["company", "=", company],
-        ["posting_date", "between", [from, to]],
+        ["posting_date", ">=", from],
+        ["posting_date", "<=", to],
       ],
       order_by: "posting_date asc, creation asc",
-      limit_page_length: 5000,
+      // v15 caps list queries at 500 → oversize values trigger 417
+      // from the typed_validator. If a tenant genuinely has > 500 SI
+      // in one range, extend this to multi-page later.
+      limit_page_length: 500,
     },
   });
 

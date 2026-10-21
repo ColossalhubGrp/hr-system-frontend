@@ -21,7 +21,10 @@ export async function GET(req: NextRequest) {
     args: {
       doctype: "Payroll Run",
       fields: ["name"],
-      filters: [["pay_date", "between", [from, to]]],
+      filters: [
+        ["pay_date", ">=", from],
+        ["pay_date", "<=", to],
+      ],
       limit_page_length: 500,
     },
   });
@@ -33,19 +36,25 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const filters: Array<[string, string, unknown]> = [["payroll_run", "in", runNames]];
-  if (kind !== "BOTH") filters.push(["kind", "=", kind]);
-
-  const txns = await frappeCall<Array<Record<string, unknown>>>({
-    method: "frappe.client.get_list",
-    as: "user",
-    args: {
-      doctype: "Payroll Transaction",
-      fields: ["employee", "employee_name", "code", "currency", "amount", "kind"],
-      filters,
-      limit_page_length: 5000,
-    },
-  });
+  // One query per run, 500 rows each (v15 caps list queries at 500).
+  // Mirrors the shape used by the UI page.
+  const perRun = await Promise.all(
+    runNames.map((runName) => {
+      const filters: Array<[string, string, unknown]> = [["payroll_run", "=", runName]];
+      if (kind !== "BOTH") filters.push(["kind", "=", kind]);
+      return frappeCall<Array<Record<string, unknown>>>({
+        method: "frappe.client.get_list",
+        as: "user",
+        args: {
+          doctype: "Payroll Transaction",
+          fields: ["employee", "employee_name", "code", "currency", "amount", "kind"],
+          filters,
+          limit_page_length: 500,
+        },
+      });
+    }),
+  );
+  const txns = perRun.flat();
 
   // Aggregate (kind, employee, code) → amount so the CSV matches the UI
   // totals rather than every raw transaction row.

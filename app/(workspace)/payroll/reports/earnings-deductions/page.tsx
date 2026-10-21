@@ -121,15 +121,20 @@ export default async function EarningsDeductionsReportPage({ searchParams }: { s
 }
 
 async function loadTxns(from: string, to: string, kind: "EARNING" | "DEDUCTION" | "BOTH"): Promise<Txn[]> {
-  // First fetch Payroll Run names in the date range so we filter the
-  // potentially-huge Payroll Transaction set by pay-date membership.
+  // Payroll Runs in the date range. Prefer >= / <= over `between`:
+  // Frappe v15's typed_validator sometimes 417s on `between` because
+  // its third-element nested-list value fails coercion depending on
+  // whether filters arrived as a JSON string or a list.
   const runs = await frappeCall<Array<Record<string, unknown>>>({
     method: "frappe.client.get_list",
     as: "user",
     args: {
       doctype: "Payroll Run",
       fields: ["name", "pay_date"],
-      filters: [["pay_date", "between", [from, to]]],
+      filters: [
+        ["pay_date", ">=", from],
+        ["pay_date", "<=", to],
+      ],
       limit_page_length: 500,
       order_by: "pay_date asc",
     },
@@ -138,20 +143,28 @@ async function loadTxns(from: string, to: string, kind: "EARNING" | "DEDUCTION" 
   const payDateByRun = new Map(runs.map((r) => [String(r.name ?? ""), String(r.pay_date ?? "")]));
   if (runNames.length === 0) return [];
 
-  const txnFilters: Array<[string, string, unknown]> = [["payroll_run", "in", runNames]];
-  if (kind !== "BOTH") txnFilters.push(["kind", "=", kind]);
-
-  const raw = await frappeCall<Array<Record<string, unknown>>>({
-    method: "frappe.client.get_list",
-    as: "user",
-    args: {
-      doctype: "Payroll Transaction",
-      fields: ["employee", "employee_name", "code", "currency", "amount", "kind", "payroll_run"],
-      filters: txnFilters,
-      limit_page_length: 5000,
-    },
-  });
-  return raw.map((r) => ({
+  // Page through Payroll Transactions in 500-row chunks per run — one
+  // over-sized limit_page_length (we were asking for 5 000) also 417s
+  // on v15 which caps list queries at 500. Fan out across runs and
+  // flatten.
+  const perRun = await Promise.all(
+    runNames.map(async (runName) => {
+      const txnFilters: Array<[string, string, unknown]> = [["payroll_run", "=", runName]];
+      if (kind !== "BOTH") txnFilters.push(["kind", "=", kind]);
+      return frappeCall<Array<Record<string, unknown>>>({
+        method: "frappe.client.get_list",
+        as: "user",
+        args: {
+          doctype: "Payroll Transaction",
+          fields: ["employee", "employee_name", "code", "currency", "amount", "kind", "payroll_run"],
+          filters: txnFilters,
+          limit_page_length: 500,
+          order_by: "employee_name asc",
+        },
+      });
+    }),
+  );
+  return perRun.flat().map((r) => ({
     employee: String(r.employee ?? ""),
     employee_name: String(r.employee_name ?? r.employee ?? ""),
     code: String(r.code ?? "—"),

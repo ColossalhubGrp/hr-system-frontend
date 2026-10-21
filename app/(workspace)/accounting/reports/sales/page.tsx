@@ -193,7 +193,8 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
 async function loadRows(company: string, from: string, to: string): Promise<Row[]> {
   const filters: Array<[string, string, unknown]> = [
     ["company", "=", company],
-    ["posting_date", "between", [from, to]],
+    ["posting_date", ">=", from],
+    ["posting_date", "<=", to],
   ];
   const raw = await frappeCall<Array<Record<string, unknown>>>({
     method: "frappe.client.get_list",

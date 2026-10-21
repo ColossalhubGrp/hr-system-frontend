@@ -1,5 +1,59 @@
 import "server-only";
-import { frappeCall } from "./client";
+import { frappeCall, FrappeRequestError } from "./client";
+import { serverEnv } from "@/lib/env";
+import { frappeCookieHeader } from "./session";
+
+/**
+ * Form-urlencoded POST — Frappe Desk's native call shape for
+ * query_report.run and a few other endpoints whose typed_validator
+ * dislikes JSON bodies. Mirrors Desk's wire exactly.
+ *
+ * On non-2xx, surfaces the first paragraph of Frappe's HTML/JSON
+ * error (not just "417 EXPECTATION FAILED") so the server-side
+ * log in Vercel actually shows which argument failed.
+ */
+async function frappeFormPost<T>({ method, form }: { method: string; form: Record<string, string> }): Promise<T> {
+  const env = serverEnv();
+  const url = new URL(`/api/method/${method}`, env.FRAPPE_URL);
+  const cookie = frappeCookieHeader();
+  if (!cookie) {
+    throw new FrappeRequestError(`User-scoped form POST ${method} needs a session cookie.`, 401);
+  }
+  const body = new URLSearchParams(form).toString();
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
+      "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
+      Cookie: cookie,
+    },
+    body,
+    cache: "no-store",
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    // Dig the Frappe exception message out of the response. Frappe
+    // returns HTML on exceptions with the error between
+    // `<pre>…</pre>` or in `_server_messages`. First try JSON.
+    let detail = "";
+    try {
+      const j = JSON.parse(text) as Record<string, unknown>;
+      if (typeof j.exception === "string") detail = j.exception;
+      else if (typeof j._server_messages === "string") detail = j._server_messages;
+    } catch { /* non-JSON HTML trace */ }
+    if (!detail) {
+      const m = text.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+      if (m) detail = m[1].replace(/<[^>]+>/g, "").trim().slice(0, 400);
+    }
+    throw new FrappeRequestError(
+      detail ? `${method} failed (${res.status}): ${detail}` : `${method} failed (${res.status})`,
+      res.status,
+    );
+  }
+  const payload = text ? JSON.parse(text) : {};
+  return (payload.message ?? payload) as T;
+}
 
 /**
  * Resolve the Fiscal Year master row whose range contains `date`.
@@ -74,26 +128,18 @@ async function runReport(
   reportName: string,
   filters: Record<string, unknown>,
 ): Promise<ReportResult> {
-  const raw = await frappeCall<Record<string, unknown>>({
+  // Frappe Desk itself POSTs to this endpoint with form-urlencoded
+  // body + filters as a JSON-string value. That's the shape its
+  // typed_validator (which has flipped between accepting str vs dict
+  // across v15 point releases) always accepts. Replicate that
+  // exactly, bypassing our JSON frappeCall path.
+  const raw = await frappeFormPost<Record<string, unknown>>({
     method: "frappe.desk.query_report.run",
-    as: "user",
-    // query_report.run is `@frappe.read_only()`, which forces GET.
-    // POST → 417 EXPECTATION FAILED on v15. Desk itself always calls
-    // this via GET with query-string params.
-    verb: "GET",
-    args: {
+    form: {
       report_name: reportName,
-      // Frappe v15 declares `filters` as str on this endpoint and
-      // json.loads it internally; sending the raw object (which the
-      // client.ts GET serializer would turn into [object Object])
-      // fails parsing. Mirror Desk's behaviour: stringify first.
       filters: JSON.stringify(filters),
-      ignore_prepared_report: 1,
-      // `are_default_filters` defaults to True server-side and when it
-      // is True + we send custom filters, Frappe may overlay the
-      // report's default filters on top of ours. Force False so OUR
-      // From/To/Company land verbatim.
-      are_default_filters: 0,
+      ignore_prepared_report: "1",
+      are_default_filters: "0",
     },
   });
   const rawColumns = Array.isArray(raw.columns) ? (raw.columns as Array<Record<string, unknown> | string>) : [];

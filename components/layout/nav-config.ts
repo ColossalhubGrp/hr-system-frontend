@@ -1,18 +1,22 @@
 import {
-  LayoutGrid,
-  UserRound,
+  Home,
+  CircleUser,
   Users,
-  Banknote,
-  BarChart3,
-  Package,
-  ShoppingBag,
-  Factory,
-  Wallet,
-  Landmark,
-  ShieldCheck,
-  Settings,
+  ContactRound,
   Briefcase,
+  HeartHandshake,
+  Sparkles,
+  Banknote,
+  Landmark,
+  HandCoins,
+  ShieldCheck,
   Database,
+  Boxes,
+  Settings,
+  TrendingUp,
+  Package,
+  ShoppingCart,
+  Factory,
   type LucideIcon,
 } from "lucide-react";
 
@@ -108,15 +112,15 @@ export const GROUP_BY_ITEM: Record<string, NavGroupId> = {
 export const NAV: NavItem[] = [
   // HR-flavored landing for managers/admins; pure employees get
   // /me as their default landing (see the workspace layout).
-  { label: "Home", href: "/dashboard", icon: LayoutGrid, requires: "HR_ANY" },
+  { label: "Home", href: "/dashboard", icon: Home, requires: "HR_ANY" },
 
   // Every signed-in employee gets a self-service hub at /me.
-  { label: "My Workspace", href: "/me", icon: UserRound },
+  { label: "My Workspace", href: "/me", icon: CircleUser },
 
   {
     label: "Employee",
     href: "/employee",
-    icon: Users,
+    icon: ContactRound,
     requires: "HR_ANY",
     children: [
       { label: "Master Data", href: "/employee", requires: "HR_ANY" },
@@ -170,7 +174,7 @@ export const NAV: NavItem[] = [
   {
     label: "HR",
     href: "/hr",
-    icon: UserRound,
+    icon: HeartHandshake,
     requires: "HR_ANY",
     children: [
       { label: "Shift Management", href: "/hr/shift-management", requires: "SHIFT_ADMIN" },
@@ -189,7 +193,7 @@ export const NAV: NavItem[] = [
   {
     label: "Business Intelligence",
     href: "/analytics/ask",
-    icon: BarChart3,
+    icon: Sparkles,
     requires: "EXECUTIVE_VIEWER",
     children: [
       { label: "Ask (AI)", href: "/analytics/ask", requires: "EXECUTIVE_VIEWER" },
@@ -218,7 +222,7 @@ export const NAV: NavItem[] = [
     // Landing point when the group is expanded — the Dashboard is
     // the "story" surface, so it goes first + is what users see.
     href: "/payroll/dashboard",
-    icon: Wallet,
+    icon: Banknote,
     // PAYROLL_ANY = admin ∪ reviewer. Members of both bundles (HR
     // Director, System Manager) see everything.
     requires: "PAYROLL_ANY",
@@ -327,7 +331,7 @@ export const NAV: NavItem[] = [
   {
     label: "Loans",
     href: "/loans",
-    icon: Landmark,
+    icon: HandCoins,
     requires: "HR_ANY",
     children: [
       { label: "Loans", href: "/loans", requires: "HR_ANY" },
@@ -358,7 +362,7 @@ export const NAV: NavItem[] = [
   {
     label: "Platform",
     href: "/platform/subscriptions",
-    icon: Package,
+    icon: Boxes,
     requires: "PLATFORM_OPERATOR",
     children: [
       { label: "Subscriptions", href: "/platform/subscriptions", requires: "PLATFORM_OPERATOR" },
@@ -379,8 +383,8 @@ export const NAV: NavItem[] = [
   // ERPNext modules — admin-only by default. (Accounting is handled
   // further up with its own 11-section child list, so it doesn't
   // appear here.)
-  { label: "Sales", href: "/sales", icon: BarChart3, requires: "HR_ADMIN" },
+  { label: "Sales", href: "/sales", icon: TrendingUp, requires: "HR_ADMIN" },
   { label: "Stock", href: "/stock", icon: Package, requires: "HR_ADMIN" },
-  { label: "Buying", href: "/buying", icon: ShoppingBag, requires: "HR_ADMIN" },
+  { label: "Buying", href: "/buying", icon: ShoppingCart, requires: "HR_ADMIN" },
   { label: "Manufacturing", href: "/manufacturing", icon: Factory, requires: "HR_ADMIN" },
 ];

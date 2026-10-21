@@ -48,8 +48,11 @@ export async function searchLinkOptions(
       as: "user",
       args: {
         doctype,
+        // Frappe v15's typed validator on `get_list` wants a real list
+        // for `filters`, not a JSON string — passing the string yields
+        // a 417 EXPECTATION FAILED. Same for `fields`.
         fields,
-        filters: JSON.stringify(filters),
+        filters,
         limit_page_length: limit,
         order_by: "modified desc",
       },
@@ -65,9 +68,33 @@ export async function searchLinkOptions(
   } catch (err) {
     return {
       ok: false,
-      error: err instanceof Error ? err.message : "Lookup failed.",
+      error: humaniseSearchError(err, entry?.label ?? doctype),
     };
   }
+}
+
+/**
+ * Translate a backend search failure into a sentence a non-technical
+ * user can act on. Mirrors the create-side humaniser — nothing
+ * Frappe / HTTP leaks into on-screen copy.
+ */
+function humaniseSearchError(err: unknown, label: string): string {
+  const raw = err instanceof Error ? err.message : "";
+  const s = raw.toLowerCase();
+  if (!raw) return `Couldn't load ${label.toLowerCase()} options. Try again.`;
+  if (s.includes("403") || s.includes("forbidden") || s.includes("permission")) {
+    return `You don't have permission to see ${label.toLowerCase()} options here.`;
+  }
+  if (s.includes("401") || s.includes("unauthorized") || s.includes("login")) {
+    return "Your session has expired — refresh the page and sign in again.";
+  }
+  if (s.includes("417")) {
+    return `Couldn't search for ${label.toLowerCase()}. Reload the page and try again.`;
+  }
+  if (s.includes("timeout") || s.includes("etimedout")) {
+    return "The search is taking too long. Try again in a moment.";
+  }
+  return `Couldn't load ${label.toLowerCase()} options. Try again or add it from the full form.`;
 }
 
 export async function createLinkOption(

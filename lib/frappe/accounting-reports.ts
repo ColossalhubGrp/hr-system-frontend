@@ -80,7 +80,12 @@ async function runReport(
     verb: "POST",
     args: {
       report_name: reportName,
-      filters,
+      // Frappe v15's typed validator on query_report.run declares
+      // `filters` as `str | None`. Sending a bare JSON object in the
+      // POST body fails validation with 417 EXPECTATION FAILED;
+      // Frappe's own front-end always serialises filters to a string
+      // and json.loads them inside the function. Mirror that.
+      filters: JSON.stringify(filters),
       ignore_prepared_report: true,
     },
   });

@@ -4,7 +4,13 @@ import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { ChevronRight, ExternalLink, PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { NAV, type NavItem } from "./nav-config";
+import {
+  NAV,
+  NAV_GROUPS,
+  GROUP_BY_ITEM,
+  type NavItem,
+  type NavGroupId,
+} from "./nav-config";
 import { BrandMark } from "./brand-mark";
 import { cn } from "@/lib/cn";
 import { appCodeForPath } from "@/lib/subscriptions/path";
@@ -188,20 +194,31 @@ export function Sidebar({ access }: { access: AccessBundle }) {
     >
       <div
         className={cn(
-          "flex items-center pt-7",
-          collapsed ? "justify-center px-2" : "gap-3 px-6",
+          "flex items-center pt-6",
+          collapsed ? "justify-center px-2" : "gap-3 px-5",
         )}
       >
-        <BrandMark className="h-10 w-10 shrink-0" />
-        {/* Toggle: pushed to the right when expanded; below the brand
-            when collapsed so it stays reachable. */}
+        <BrandMark className="h-9 w-9 shrink-0" />
+        {!collapsed && (
+          // Wordmark lockup — product name on top, tenant eyebrow
+          // underneath. Mirrors the FCGS reference's two-line brand
+          // treatment.
+          <div className="min-w-0 leading-tight">
+            <div className="truncate text-[14px] font-bold tracking-tight text-ash-900">
+              Colossal ERP
+            </div>
+            <div className="truncate text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ash-500">
+              Work operations
+            </div>
+          </div>
+        )}
         <button
           type="button"
           onClick={toggleCollapsed}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           className={cn(
-            "ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-ash-500 transition hover:bg-canvas hover:text-ash-900 focus-ring",
+            "ml-auto inline-flex h-7 w-7 items-center justify-center rounded-md text-ash-500 transition hover:bg-canvas hover:text-ash-900 focus-ring",
             collapsed && "ml-0 mt-2",
           )}
         >
@@ -213,21 +230,41 @@ export function Sidebar({ access }: { access: AccessBundle }) {
         </button>
       </div>
 
+      {/* Group visible items by their NAV_GROUPS id. Empty groups are
+          elided so a role with no items in Operations (for example)
+          doesn't see a lonely "Operations" header above a gap. */}
       <nav
         className={cn(
           "flex-1 overflow-y-auto pb-4",
           collapsed ? "px-2" : "px-3",
         )}
       >
-        <ul className="flex flex-col gap-1">
-          {visible.map((item) => {
-            const Icon = item.icon;
-            const isOpen = openGroups.has(item.label);
-            const isActive =
+        {NAV_GROUPS.map((group) => {
+          const groupItems = visible.filter(
+            (it) => (GROUP_BY_ITEM[it.label] ?? "workspace") === group.id,
+          );
+          if (groupItems.length === 0) return null;
+          return (
+            <section key={group.id} className={cn(collapsed ? "mt-3" : "mt-4 first:mt-0")}>
+              {!collapsed && (
+                <div className="px-3 pb-1.5 pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-ash-500">
+                  {group.label}
+                </div>
+              )}
+              {collapsed && (
+                // Thin divider between groups in collapsed mode — keeps
+                // the icon rail readable without a label.
+                <div className="mx-2 mb-2 mt-1 h-px bg-hairline first:hidden" />
+              )}
+              <ul className="flex flex-col gap-0.5">
+                {groupItems.map((item) => {
+          const Icon = item.icon;
+          const isOpen = openGroups.has(item.label);
+          const isActive =
               pathname === item.href ||
               (item.href !== "/" && pathname.startsWith(item.href));
 
-            return (
+          return (
               <li key={item.label}>
                 {item.children ? (
                   // Parent with children: the label part is a Link that
@@ -367,7 +404,10 @@ export function Sidebar({ access }: { access: AccessBundle }) {
               </li>
             );
           })}
-        </ul>
+              </ul>
+            </section>
+          );
+        })}
       </nav>
     </aside>
   );

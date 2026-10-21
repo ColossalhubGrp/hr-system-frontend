@@ -33,14 +33,21 @@ type Props = {
  */
 export function Topbar({ user, notifications = 0 }: Props) {
   return (
-    <div className="flex items-center justify-end gap-3 px-6 pt-5">
-      <label className="relative hidden md:block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div className="flex items-center gap-3 px-6 pt-3">
+      <div className="min-w-0 text-[12.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+        Finance and HR workspace
+      </div>
+
+      <label className="relative ml-auto hidden md:block">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search"
-          className="h-10 w-[280px] rounded-full pl-9"
+          placeholder="Search records"
+          className="h-8 w-[280px] rounded-md border border-input bg-card pl-8 pr-14 text-[13px]"
         />
+        <kbd className="pointer-events-none absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center rounded border border-input bg-background px-1 py-0 font-mono text-[9px] text-muted-foreground">
+          Ctrl K
+        </kbd>
       </label>
 
       {/* <ChatDrawer /> — hidden. See import block for revival notes. */}
@@ -56,11 +63,11 @@ export function Topbar({ user, notifications = 0 }: Props) {
             ? `${notifications} unread notifications`
             : "Notifications"
         }
-        className="relative h-10 w-10 rounded-full bg-card shadow-card"
+        className="relative h-8 w-8 rounded-md"
       >
         <Bell className="h-4 w-4 text-muted-foreground" />
         {notifications > 0 && (
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rise ring-2 ring-background" />
+          <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-rise ring-2 ring-background" />
         )}
       </Button>
 
@@ -79,11 +86,11 @@ function UserMenu({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="h-10 gap-2 rounded-full bg-card pl-1 pr-3 shadow-card hover:bg-card/80"
+          className="h-8 gap-2 rounded-md pl-1 pr-2.5 hover:bg-muted"
         >
           <Avatar name={user.name} avatarUrl={user.avatarUrl} />
-          <span className="hidden text-sm font-medium text-foreground sm:inline">
-            {user.name}
+          <span className="hidden text-[13px] font-medium text-foreground sm:inline">
+            {user.name.split(/\s+/)[0] || user.name}
           </span>
         </Button>
       </DropdownMenuTrigger>
@@ -127,7 +134,7 @@ function Avatar({
   avatarUrl?: string;
   size?: "sm" | "lg";
 }) {
-  const dim = size === "lg" ? "h-10 w-10 text-sm" : "h-8 w-8 text-xs";
+  const dim = size === "lg" ? "h-10 w-10 text-sm" : "h-6 w-6 text-[10.5px]";
   return (
     <span
       className={cn(

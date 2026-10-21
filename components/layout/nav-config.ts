@@ -43,6 +43,62 @@ export type NavItem = {
 };
 
 /**
+ * Section groups rendered as uppercase labels in the sidebar rail.
+ * Ordered — this is the top-to-bottom reading order.
+ *
+ * Picked for a small-org mental model: one operator typically scans the
+ * sidebar left-to-right the first few days, and these labels mirror the
+ * question "what am I about to do?" more cleanly than product names.
+ */
+export type NavGroupId =
+  | "workspace"
+  | "people"
+  | "operations"
+  | "finance"
+  | "intelligence"
+  | "admin";
+
+export const NAV_GROUPS: Array<{ id: NavGroupId; label: string }> = [
+  { id: "workspace",    label: "Workspace" },
+  { id: "people",       label: "People" },
+  { id: "operations",   label: "Operations" },
+  { id: "finance",      label: "Finance" },
+  { id: "intelligence", label: "Intelligence" },
+  { id: "admin",        label: "Admin" },
+];
+
+/**
+ * Assigns each top-level NavItem.label to a group id. Items without an
+ * entry fall through to "workspace" so a new entry is never silently
+ * dropped from the rail.
+ */
+export const GROUP_BY_ITEM: Record<string, NavGroupId> = {
+  "Home": "workspace",
+  "My Workspace": "workspace",
+  "My Team": "workspace",
+
+  "Employee": "people",
+  "HR": "people",
+  "Recruitment": "people",
+  "Payroll": "people",
+  "Loans": "people",
+
+  "Sales": "operations",
+  "Stock": "operations",
+  "Buying": "operations",
+  "Manufacturing": "operations",
+
+  "Accounting": "finance",
+  "Audit": "finance",
+
+  "Business Intelligence": "intelligence",
+  "Data": "intelligence",
+
+  "Platform": "admin",
+  "Configuration": "admin",
+};
+
+/**
  * Top-level workspace nav. Employee, Payroll and Loans are their own products —
  * they sit alongside HR so a customer can subscribe to one without the other.
  * The `requires` field maps each entry to one of the SRS-named role bundles in

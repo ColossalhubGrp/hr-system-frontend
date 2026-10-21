@@ -12,10 +12,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Colossal HR",
-    template: "%s · Colossal HR",
+    default: "Colossal ERP",
+    template: "%s · Colossal ERP",
   },
-  description: "Human resources workspace for Colossal Hub.",
+  description: "People, operations and finance in one workspace — by Colossal Hub.",
   robots: { index: false, follow: false },
 };
 

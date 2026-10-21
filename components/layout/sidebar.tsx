@@ -307,11 +307,11 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                       >
                         <Icon
                           className={cn(
-                            "h-[18px] w-[18px]",
+                            "h-[18px] w-[18px] shrink-0",
                             isActive ? "text-white" : "text-ash-500",
                           )}
                         />
-                        {item.label}
+                        <span className="truncate">{item.label}</span>
                       </Link>
                       <button
                         type="button"
@@ -350,11 +350,11 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                   >
                     <Icon
                       className={cn(
-                        "h-[18px] w-[18px]",
+                        "h-[18px] w-[18px] shrink-0",
                         isActive ? "text-white" : "text-ash-500",
                       )}
                     />
-                    {!collapsed && item.label}
+                    {!collapsed && <span className="truncate">{item.label}</span>}
                   </Link>
                 )}
 

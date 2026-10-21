@@ -95,7 +95,7 @@ export const GROUP_BY_ITEM: Record<string, NavGroupId> = {
   "Accounting": "finance",
   "Audit": "finance",
 
-  "Business Intelligence": "intelligence",
+  "Analytics": "intelligence",
   "Data": "intelligence",
 
   "Platform": "admin",
@@ -191,7 +191,7 @@ export const NAV: NavItem[] = [
   // (who don't have HR_ANY) can reach it without tripping the /hr layout
   // guard. Landing surface is the AI chat — Overview was removed.
   {
-    label: "Business Intelligence",
+    label: "Analytics",
     href: "/analytics/ask",
     icon: Sparkles,
     requires: "EXECUTIVE_VIEWER",

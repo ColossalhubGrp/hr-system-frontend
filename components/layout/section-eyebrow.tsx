@@ -22,7 +22,7 @@ export function SectionEyebrow() {
 
 const RULES: Array<[string, string]> = [
   ["/recruitment", "Recruitment"],
-  ["/analytics", "Business intelligence"],
+  ["/analytics", "Analytics"],
   ["/accounting", "Accounting"],
   ["/payroll", "Payroll"],
   ["/employee/lifecycle", "Lifecycle"],

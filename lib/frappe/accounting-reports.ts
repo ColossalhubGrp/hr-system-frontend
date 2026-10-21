@@ -77,16 +77,23 @@ async function runReport(
   const raw = await frappeCall<Record<string, unknown>>({
     method: "frappe.desk.query_report.run",
     as: "user",
-    verb: "POST",
+    // query_report.run is `@frappe.read_only()`, which forces GET.
+    // POST → 417 EXPECTATION FAILED on v15. Desk itself always calls
+    // this via GET with query-string params.
+    verb: "GET",
     args: {
       report_name: reportName,
-      // Frappe v15's typed validator on query_report.run declares
-      // `filters` as `str | None`. Sending a bare JSON object in the
-      // POST body fails validation with 417 EXPECTATION FAILED;
-      // Frappe's own front-end always serialises filters to a string
-      // and json.loads them inside the function. Mirror that.
+      // Frappe v15 declares `filters` as str on this endpoint and
+      // json.loads it internally; sending the raw object (which the
+      // client.ts GET serializer would turn into [object Object])
+      // fails parsing. Mirror Desk's behaviour: stringify first.
       filters: JSON.stringify(filters),
-      ignore_prepared_report: true,
+      ignore_prepared_report: 1,
+      // `are_default_filters` defaults to True server-side and when it
+      // is True + we send custom filters, Frappe may overlay the
+      // report's default filters on top of ours. Force False so OUR
+      // From/To/Company land verbatim.
+      are_default_filters: 0,
     },
   });
   const rawColumns = Array.isArray(raw.columns) ? (raw.columns as Array<Record<string, unknown> | string>) : [];

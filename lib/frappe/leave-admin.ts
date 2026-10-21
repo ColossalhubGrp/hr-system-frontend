@@ -445,20 +445,54 @@ export async function createLeaveEncashment(input: {
   employee: string;
   leaveType: string;
   encashmentDate: string;
+  /** Days to encash. Auto-costed as basic ÷ working-days-per-month ×
+   *  encashmentDays. 22 is the standard Zimbabwe NEC assumption for
+   *  monthly-paid staff; override by passing a different number. */
+  encashmentDays?: number;
+  /** Explicit encashment amount. Rarely used — if omitted and
+   *  encashmentDays is provided, we compute it from the employee's
+   *  current basic_usd. */
+  encashmentAmount?: number;
   payViaSalarySlip?: boolean;
 }): Promise<string> {
+  const WORKING_DAYS_PER_MONTH = 22;
+
+  // Resolve amount: either explicit, or derived from days × daily rate.
+  let amount = input.encashmentAmount;
+  if (amount == null && input.encashmentDays) {
+    try {
+      const emp = await frappeCall<{ basic_usd?: number }>({
+        method: "frappe.client.get_value",
+        args: {
+          doctype: "Employee",
+          filters: { name: input.employee },
+          fieldname: ["basic_usd"],
+        },
+        as: "user",
+      });
+      const basic = Number(emp?.basic_usd ?? 0);
+      amount = (basic / WORKING_DAYS_PER_MONTH) * input.encashmentDays;
+    } catch {
+      // Fall back to 0 — Frappe HRMS native backend may still compute
+      // if the Leave Allocation + Leave Period are wired up.
+      amount = 0;
+    }
+  }
+
+  const doc: Record<string, unknown> = {
+    doctype: "Leave Encashment",
+    employee: input.employee,
+    leave_type: input.leaveType,
+    encashment_date: input.encashmentDate,
+    pay_via_salary_slip: input.payViaSalarySlip === false ? 0 : 1,
+  };
+  if (input.encashmentDays) doc.encashment_days = input.encashmentDays;
+  if (amount != null) doc.encashment_amount = amount;
+
   const saved = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
     verb: "POST",
-    args: {
-      doc: {
-        doctype: "Leave Encashment",
-        employee: input.employee,
-        leave_type: input.leaveType,
-        encashment_date: input.encashmentDate,
-        pay_via_salary_slip: input.payViaSalarySlip === false ? 0 : 1,
-      },
-    },
+    args: { doc },
     as: "user",
   });
   return saved.name;

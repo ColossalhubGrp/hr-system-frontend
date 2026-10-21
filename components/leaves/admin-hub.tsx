@@ -448,10 +448,16 @@ function EncashmentsTab({
             {state.error && <ErrBanner msg={state.error} />}
             <EmpSelect employees={employees} className="sm:col-span-2" />
             <SelectField name="leave_type" label="Leave type" options={leaveTypes} required />
+            <NumberField
+              name="encashment_days"
+              label="Days to encash"
+              step={0.5}
+              required
+            />
             <DateField name="encashment_date" label="Encashment date" required />
             <CheckField
               name="pay_via_salary_slip"
-              label="Pay via Salary Slip (adds an Additional Salary entry)"
+              label="Pay via Salary Slip (adds an Additional Salary entry). Amount is auto-calculated as basic ÷ working days per month × days encashed."
               defaultChecked
               className="sm:col-span-6"
             />

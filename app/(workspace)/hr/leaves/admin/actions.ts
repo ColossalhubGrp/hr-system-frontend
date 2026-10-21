@@ -278,6 +278,7 @@ export async function createLeaveEncashmentAction(
       employee: z.string().trim().min(1),
       leave_type: z.string().trim().min(1),
       encashment_date: isoDate,
+      encashment_days: z.coerce.number().gt(0, "Days must be greater than 0."),
       pay_via_salary_slip: z.union([z.literal("on"), z.literal("")]).optional(),
     })
     .safeParse(Object.fromEntries(form));
@@ -287,6 +288,7 @@ export async function createLeaveEncashmentAction(
       employee: parsed.data.employee,
       leaveType: parsed.data.leave_type,
       encashmentDate: parsed.data.encashment_date,
+      encashmentDays: parsed.data.encashment_days,
       payViaSalarySlip: parsed.data.pay_via_salary_slip === "on",
     });
     await submitLeaveDoc("Leave Encashment", name);

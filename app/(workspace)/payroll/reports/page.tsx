@@ -78,12 +78,20 @@ export default async function ReportsTab({
             {all.length} payslip{all.length === 1 ? "" : "s"}
           </p>
         </div>
-        <Link
-          href={`/payroll/audit-report?from=${from}&to=${to}` as Route}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
-        >
-          Print for external audit →
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/payroll/reports/earnings-deductions?from=${from}&to=${to}` as Route}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-semibold text-foreground hover:border-primary/40 hover:text-primary"
+          >
+            Earnings &amp; deductions →
+          </Link>
+          <Link
+            href={`/payroll/audit-report?from=${from}&to=${to}` as Route}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+          >
+            Print for external audit →
+          </Link>
+        </div>
       </header>
 
       <form className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-4">

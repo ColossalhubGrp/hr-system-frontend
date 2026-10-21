@@ -779,6 +779,7 @@ export type PayslipDetail = {
     name: string;
     employee_name: string;
     job_title: string | null;
+    department: string | null;
     date_of_joining: string | null;
     national_id: string | null;
     tax_number: string | null;
@@ -793,6 +794,16 @@ export type PayslipDetail = {
   slip: RunPayslip;
   earnings: Array<{ name: string; code: string; currency: string; amount: number; taxable: 0 | 1 | boolean }>;
   deductions: Array<{ name: string; code: string; currency: string; amount: number; taxable: 0 | 1 | boolean }>;
+  /** Hours captured on this employee's Payroll Timesheet row for the
+   *  run. Used by the payslip to show the 1.5× / 2.0× / 2.5× overtime
+   *  breakdown — Frappe doesn't store the amount per bucket, so the
+   *  renderer derives it from basic / standard-month-hours × hours. */
+  timesheet: {
+    regular_hours: number;
+    overtime_hours: number;
+    weekend_hours: number;
+    holiday_hours: number;
+  } | null;
 };
 
 export async function getPayslipDetail(
@@ -858,6 +869,16 @@ export async function getPayslipDetail(
     limit: 200,
   });
 
+  // Timesheet hours for the OT breakdown on the payslip. One row per
+  // (run, employee); may be missing if no timesheet was captured, in
+  // which case the payslip simply omits the OT lines.
+  const tsRows = await listDocs<Record<string, unknown>>("Payroll Timesheet", {
+    fields: ["regular_hours", "overtime_hours", "weekend_hours", "holiday_hours"],
+    filters: { payroll_run: payrollRun, employee },
+    limit: 1,
+  });
+  const ts = tsRows[0] ?? null;
+
   return {
     run: {
       name: run.name as string,
@@ -876,6 +897,7 @@ export async function getPayslipDetail(
       name: (e.name as string) || employee,
       employee_name: (e.employee_name as string) || employee,
       job_title: (e.job_title as string) || null,
+      department: (e.department as string) || null,
       date_of_joining: (e.date_of_joining as string) || null,
       national_id: (e.national_id as string) || null,
       tax_number: (e.tax_number as string) || null,
@@ -927,6 +949,14 @@ export async function getPayslipDetail(
         amount: Number(t.amount ?? 0),
         taxable: Boolean(t.taxable) ? 1 : 0,
       })),
+    timesheet: ts
+      ? {
+          regular_hours: Number(ts.regular_hours ?? 0),
+          overtime_hours: Number(ts.overtime_hours ?? 0),
+          weekend_hours: Number(ts.weekend_hours ?? 0),
+          holiday_hours: Number(ts.holiday_hours ?? 0),
+        }
+      : null,
   };
 }
 

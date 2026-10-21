@@ -37,17 +37,19 @@ export function Topbar({ user, notifications = 0 }: Props) {
     <div className="flex items-center gap-3 px-6 pt-3">
       <SectionEyebrow />
 
-      <label className="relative ml-auto hidden md:block">
+      <form action="/search" method="get" className="relative ml-auto hidden md:block">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
+          name="q"
           type="search"
           placeholder="Search records"
           className="h-8 w-[280px] rounded-md border border-input bg-card pl-8 pr-14 text-[13px]"
+          aria-label="Search records"
         />
         <kbd className="pointer-events-none absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center rounded border border-input bg-background px-1 py-0 font-mono text-[9px] text-muted-foreground">
-          Ctrl K
+          Enter
         </kbd>
-      </label>
+      </form>
 
       {/* <ChatDrawer /> — hidden. See import block for revival notes. */}
 

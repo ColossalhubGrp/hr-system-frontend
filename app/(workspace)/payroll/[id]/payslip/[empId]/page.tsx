@@ -50,7 +50,7 @@ export default async function PayslipPage({
   const backHref = fromMe ? "/me/payslips" : `/payroll/${encodeURIComponent(runId)}`;
   const backLabel = fromMe ? "← Back to my payslips" : "← Back to pay run";
 
-  const { run, company, employee, slip, earnings, deductions } = data;
+  const { run, company, employee, slip, earnings, deductions, timesheet } = data;
   const companyDisplay = company.legal_name || company.company_name;
 
   // Snapshot values — derive what basic + pension % WERE at run time from
@@ -136,6 +136,7 @@ export default async function PayslipPage({
             <div className="text-xs text-muted-foreground">
               {employee.name}
               {employee.job_title ? ` · ${employee.job_title}` : ""}
+              {employee.department ? ` · ${employee.department}` : ""}
               {employee.nec_industry ? ` · ${employee.nec_industry}` : ""}
             </div>
           </div>
@@ -176,6 +177,12 @@ export default async function PayslipPage({
             <MoneyTable
               rows={[
                 { label: "Basic pay", u: snapshotBasicUsd, z: snapshotBasicZig },
+                // Overtime breakdown — split into the three statutory
+                // Zimbabwe buckets so the employee sees exactly which
+                // hours attracted which multiplier. Rate derived from
+                // basic / 160 standard monthly hours; same assumption
+                // the pay-run wizard shows ("1.5× hourly rate").
+                ...overtimeRows(snapshotBasicUsd, snapshotBasicZig, timesheet),
                 ...earnings.map((t) => ({
                   key: t.name,
                   label: `${t.code}${t.taxable ? "" : " (non-tax)"}`,
@@ -269,6 +276,43 @@ function Info({ label, value }: { label: string; value: string }) {
 
 type MoneyRow = { key?: string; label: string; u: number; z: number; tone?: "credit" };
 type MoneyTotal = { label: string; u: number; z: number };
+
+/** Standard working hours per month assumed when deriving an hourly
+ *  rate from a salaried employee's basic. Zimbabwe NEC industries vary
+ *  (160–195); 160 is the most common and matches the pay-run wizard
+ *  tooltip. */
+const MONTH_HOURS = 160;
+
+/**
+ * Build the overtime rows for the payslip's Earnings table from the
+ * Payroll Timesheet row. Each hour bucket becomes its own line so the
+ * employee sees the 1.5× / 2.0× / 2.5× split explicitly instead of
+ * one lumped "Overtime" number. Rows with zero hours are elided.
+ *
+ * ZiG amount mirrors the USD amount by basic ratio so dual-currency
+ * salaries show OT on both sides of the slip.
+ */
+function overtimeRows(
+  basicUsd: number,
+  basicZig: number,
+  ts: { overtime_hours: number; weekend_hours: number; holiday_hours: number } | null,
+): MoneyRow[] {
+  if (!ts) return [];
+  const rateUsd = basicUsd > 0 ? basicUsd / MONTH_HOURS : 0;
+  const rateZig = basicZig > 0 ? basicZig / MONTH_HOURS : 0;
+  const buckets: Array<{ label: string; hours: number; mult: number }> = [
+    { label: "Overtime (1.5×)", hours: ts.overtime_hours, mult: 1.5 },
+    { label: "Weekend OT (2.0×)", hours: ts.weekend_hours, mult: 2.0 },
+    { label: "Holiday OT (2.5×)", hours: ts.holiday_hours, mult: 2.5 },
+  ];
+  return buckets
+    .filter((b) => b.hours > 0)
+    .map((b) => ({
+      label: `${b.label} · ${b.hours.toFixed(1)} hrs`,
+      u: rateUsd * b.hours * b.mult,
+      z: rateZig * b.hours * b.mult,
+    }));
+}
 
 const num = (n: number) =>
   n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

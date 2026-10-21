@@ -1,12 +1,12 @@
 "use client";
 
-import { Search, Bell, LogOut } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 import { logoutAction } from "@/app/login/actions";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { SectionEyebrow } from "@/components/layout/section-eyebrow";
+import { TopbarSearch } from "@/components/layout/topbar-search";
 // Basic HR-policy chatbot drawer (US-45) — hidden from the UI while
 // the analytics assistant at /analytics/ask is the primary AI surface.
 // Re-enable by uncommenting the import + the <ChatDrawer /> mount
@@ -37,19 +37,9 @@ export function Topbar({ user, notifications = 0 }: Props) {
     <div className="flex items-center gap-3 px-6 pt-3">
       <SectionEyebrow />
 
-      <form action="/search" method="get" className="relative ml-auto hidden md:block">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          name="q"
-          type="search"
-          placeholder="Search records"
-          className="h-8 w-[280px] rounded-md border border-input bg-card pl-8 pr-14 text-[13px]"
-          aria-label="Search records"
-        />
-        <kbd className="pointer-events-none absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center rounded border border-input bg-background px-1 py-0 font-mono text-[9px] text-muted-foreground">
-          Enter
-        </kbd>
-      </form>
+      <div className="ml-auto">
+        <TopbarSearch />
+      </div>
 
       {/* <ChatDrawer /> — hidden. See import block for revival notes. */}
 

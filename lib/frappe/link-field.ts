@@ -1,6 +1,6 @@
 "use server";
 
-import { frappeCall } from "./client";
+import { frappeCall, FrappeRequestError } from "./client";
 import { LINK_REGISTRY, type QuickCreateField } from "./link-field-registry";
 
 /**
@@ -170,11 +170,15 @@ export async function createLinkOption(
 
 /**
  * Translate a backend create failure into a sentence a non-technical
- * user can act on. Keeps every Frappe/HTTP/stack detail out of the UI
- * (we never surface things like "frappe.client.insert", "403
- * FORBIDDEN", or Python tracebacks in strings an HR user will read).
+ * user can act on. First tries to pull the real reason out of the
+ * Frappe error body (_server_messages / exception, HTML stripped),
+ * then falls back to generic class-based sentences for cases where
+ * the body wasn't populated.
  */
 function humaniseCreateError(err: unknown, label: string): string {
+  const detail = err instanceof FrappeRequestError ? err.detail : undefined;
+  const real = extractFrappeMessage(detail);
+  if (real) return real;
   const raw = err instanceof Error ? err.message : "";
   const s = raw.toLowerCase();
   if (!raw) return `Couldn't add this ${label.toLowerCase()}. Please try again.`;
@@ -195,6 +199,45 @@ function humaniseCreateError(err: unknown, label: string): string {
   }
   // Last resort: generic sentence that still names the thing we tried to add.
   return `Couldn't add this ${label.toLowerCase()}. Please try again or add it from the full form.`;
+}
+
+/** Pull the real sentence out of a Frappe error body. Prefers `exception`
+ *  (populated only on actual throws) over `_server_messages` (which also
+ *  carries success/info msgprints). Red/orange indicators only in the
+ *  _server_messages fallback — green/yellow are info. HTML stripped so
+ *  <strong>/<br>/<ul><li> don't render literally. */
+function extractFrappeMessage(detail: unknown): string | null {
+  if (!detail || typeof detail !== "object") return null;
+  const obj = detail as Record<string, unknown>;
+  const exc = obj.exception;
+  if (typeof exc === "string" && exc.trim()) {
+    const stripped = stripHtml(exc.replace(/^[\w.]+:\s*/, "")).trim();
+    if (stripped) return stripped;
+  }
+  const sm = obj._server_messages;
+  if (typeof sm === "string") {
+    try {
+      const arr = JSON.parse(sm) as unknown;
+      if (!Array.isArray(arr) || arr.length === 0) return null;
+      const parsed = arr.map((e) => (typeof e === "string" ? JSON.parse(e) : e)) as Array<{
+        message?: string;
+        indicator?: string;
+      }>;
+      const err = parsed.find((e) => e?.indicator === "red" || e?.indicator === "orange");
+      const pick = err ?? parsed[0];
+      const msg = pick?.message;
+      if (msg) return stripHtml(String(msg)).trim();
+    } catch { /* fall through */ }
+  }
+  return null;
+}
+
+function stripHtml(input: string): string {
+  return input
+    .replace(/<\s*(br|\/li|\/p|\/div|\/ul|\/ol)\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Expose the field spec to the client for building the quick-create dialog. */

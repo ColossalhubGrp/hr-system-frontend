@@ -54,6 +54,11 @@ export function SalesTaxTemplateForm({
   const [state, dispatch] = useFormState(action, EMPTY);
   const fe = state.fieldErrors ?? {};
   const [lines, setLines] = useState<Line[]>(initial?.taxes && initial.taxes.length ? initial.taxes : [EMPTY_LINE()]);
+  // Track company reactively so each row's Account picker can filter to
+  // accounts in the SAME company. The server rejects cross-company
+  // rows with "Account X does not belong to Company Y".
+  const [company, setCompany] = useState<string>(initial?.company ?? companies[0]?.name ?? "");
+  const accountFilters = company ? ([["company", "=", company]] as Array<[string, string, unknown]>) : undefined;
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -69,7 +74,21 @@ export function SalesTaxTemplateForm({
             <TextInput id="title" name="title" defaultValue={initial?.title ?? ""} placeholder="e.g. Zimbabwe VAT 15%" />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
-            <LinkField id="company" name="company" doctype="Company" defaultValue={initial?.company ?? companies[0]?.name ?? ""} required invalid={Boolean(fe.company)} />
+            <LinkField
+              id="company"
+              name="company"
+              doctype="Company"
+              value={company}
+              onChange={(next) => {
+                setCompany(next);
+                // Any previously-picked accounts almost certainly belong
+                // to the old company, so clear them so the user is forced
+                // to re-pick from the new company's chart.
+                setLines((prev) => prev.map((l) => ({ ...l, account_head: "" })));
+              }}
+              required
+              invalid={Boolean(fe.company)}
+            />
           </Field>
           <Field label="Flags" htmlFor="is_default">
             <div className="flex flex-col gap-2 text-sm">
@@ -96,7 +115,14 @@ export function SalesTaxTemplateForm({
               </div>
               <div className="col-span-12 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account head</label>
-                <LinkField doctype="Colossal Account" value={l.account_head} onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: next } : x)))} />
+                <LinkField
+                  doctype="Colossal Account"
+                  value={l.account_head}
+                  onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: next } : x)))}
+                  filters={accountFilters}
+                  placeholder={company ? "Pick a tax account" : "Pick a company first"}
+                  disabled={!company}
+                />
               </div>
               <div className="col-span-8 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Description</label>

@@ -66,6 +66,7 @@ export default async function EditSalesInvoicePage({
           poNo: doc.poNo,
           poDate: doc.poDate,
           remarks: doc.remarks,
+          taxesAndCharges: doc.taxesAndCharges ?? null,
           lines: doc.items.map((it) => ({
             itemCode: it.itemCode,
             itemName: it.itemName,

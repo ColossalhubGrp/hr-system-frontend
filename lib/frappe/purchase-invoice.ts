@@ -79,6 +79,7 @@ export type PurchaseInvoiceDetail = {
   billNo: string | null;
   billDate: string | null;
   remarks: string | null;
+  taxesAndCharges: string | null;
   items: PurchaseInvoiceItem[];
   taxes: PurchaseInvoiceTax[];
 };
@@ -235,6 +236,7 @@ export async function getPurchaseInvoice(name: string): Promise<PurchaseInvoiceD
       billNo: (doc.bill_no as string | null) ?? null,
       billDate: (doc.bill_date as string | null) ?? null,
       remarks: (doc.remarks as string | null) ?? null,
+      taxesAndCharges: (doc.taxes_and_charges as string | null) ?? null,
       items: items.map((r, i) => ({
         idx: Number(r.idx ?? i + 1),
         itemCode: String(r.item_code ?? ""),
@@ -272,6 +274,10 @@ export type PurchaseInvoiceCreateInput = {
   billNo?: string;
   billDate?: string;
   remarks?: string;
+  /** Link to Colossal Purchase Taxes and Charges Template. When set, the
+   *  Frappe controller copies the template's rows into the invoice's
+   *  `taxes` child table and recomputes grand_total = net + taxes. */
+  taxesAndCharges?: string;
   items: Array<{
     itemCode: string;
     qty: number;
@@ -294,6 +300,7 @@ export async function createPurchaseInvoice(input: PurchaseInvoiceCreateInput): 
     bill_no: input.billNo || undefined,
     bill_date: input.billDate || undefined,
     remarks: input.remarks || undefined,
+    taxes_and_charges: input.taxesAndCharges || undefined,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),
@@ -342,6 +349,7 @@ export async function updatePurchaseInvoice(
     bill_no: input.billNo || null,
     bill_date: input.billDate || null,
     remarks: input.remarks || null,
+    taxes_and_charges: input.taxesAndCharges || null,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),

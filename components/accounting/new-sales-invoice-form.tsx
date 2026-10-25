@@ -45,6 +45,7 @@ export type SalesInvoiceEditInitial = {
   poNo: string | null;
   poDate: string | null;
   remarks: string | null;
+  taxesAndCharges: string | null;
   lines: Array<{
     itemCode: string;
     itemName: string;
@@ -178,6 +179,21 @@ export function NewSalesInvoiceForm({
               name="po_date"
               type="date"
               defaultValue={initial?.poDate ?? ""}
+            />
+          </Field>
+          <Field
+            label="Tax template"
+            htmlFor="taxes_and_charges"
+            error={fe.taxes_and_charges}
+            hint="Pick a VAT / sales-tax template (e.g. Zimbabwe VAT 15%). Leave blank to invoice without tax."
+            wide
+          >
+            <LinkField
+              id="taxes_and_charges"
+              name="taxes_and_charges"
+              doctype="Colossal Sales Taxes and Charges Template"
+              defaultValue={initial?.taxesAndCharges ?? ""}
+              placeholder="Search a tax template…"
             />
           </Field>
           <Field label="Remarks" htmlFor="remarks" error={fe.remarks} wide>

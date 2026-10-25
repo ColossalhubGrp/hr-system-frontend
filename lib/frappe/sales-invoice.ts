@@ -83,6 +83,7 @@ export type SalesInvoiceDetail = {
   poNo: string | null;
   poDate: string | null;
   remarks: string | null;
+  taxesAndCharges: string | null;
   items: SalesInvoiceItem[];
   taxes: SalesInvoiceTax[];
 };
@@ -239,6 +240,7 @@ export async function getSalesInvoice(name: string): Promise<SalesInvoiceDetail 
       poNo: (doc.po_no as string | null) ?? null,
       poDate: (doc.po_date as string | null) ?? null,
       remarks: (doc.remarks as string | null) ?? null,
+      taxesAndCharges: (doc.taxes_and_charges as string | null) ?? null,
       items: items.map((r, i) => ({
         idx: Number(r.idx ?? i + 1),
         itemCode: String(r.item_code ?? ""),
@@ -276,6 +278,10 @@ export type SalesInvoiceCreateInput = {
   poNo?: string;
   poDate?: string;
   remarks?: string;
+  /** Link to Colossal Sales Taxes and Charges Template. When set, the
+   *  Frappe controller copies the template's rows into the invoice's
+   *  `taxes` child table and recomputes grand_total = net + taxes. */
+  taxesAndCharges?: string;
   items: Array<{
     itemCode: string;
     qty: number;
@@ -298,6 +304,7 @@ export async function createSalesInvoice(input: SalesInvoiceCreateInput): Promis
     po_no: input.poNo || undefined,
     po_date: input.poDate || undefined,
     remarks: input.remarks || undefined,
+    taxes_and_charges: input.taxesAndCharges || undefined,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),
@@ -346,6 +353,7 @@ export async function updateSalesInvoice(
     po_no: input.poNo || null,
     po_date: input.poDate || null,
     remarks: input.remarks || null,
+    taxes_and_charges: input.taxesAndCharges || null,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),

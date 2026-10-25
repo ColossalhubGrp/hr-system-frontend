@@ -37,6 +37,11 @@ const createSchema = z.object({
   po_no: z.string().trim().optional(),
   po_date: z.string().trim().optional(),
   remarks: z.string().trim().optional(),
+  // Optional link → Colossal Sales Taxes and Charges Template. When
+  // set, the Frappe controller applies the template's tax lines and
+  // recomputes grand_total = net + taxes. When blank, the invoice
+  // ships without VAT.
+  taxes_and_charges: z.string().trim().optional(),
   items_json: z
     .string()
     .trim()
@@ -89,6 +94,7 @@ export async function createSalesInvoiceAction(
       poNo: parsed.data.po_no || undefined,
       poDate: parsed.data.po_date || undefined,
       remarks: parsed.data.remarks || undefined,
+      taxesAndCharges: parsed.data.taxes_and_charges || undefined,
       items: parsed.data.items_json.map((i) => ({
         itemCode: i.item_code,
         qty: i.qty,
@@ -132,6 +138,7 @@ export async function updateSalesInvoiceAction(
       poNo: parsed.data.po_no || undefined,
       poDate: parsed.data.po_date || undefined,
       remarks: parsed.data.remarks || undefined,
+      taxesAndCharges: parsed.data.taxes_and_charges || undefined,
       items: parsed.data.items_json.map((i) => ({
         itemCode: i.item_code,
         qty: i.qty,

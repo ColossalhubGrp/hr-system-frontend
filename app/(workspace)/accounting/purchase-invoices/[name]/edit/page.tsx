@@ -67,6 +67,7 @@ export default async function EditPurchaseInvoicePage({
           billNo: doc.billNo,
           billDate: doc.billDate,
           remarks: doc.remarks,
+          taxesAndCharges: doc.taxesAndCharges ?? null,
           lines: doc.items.map((it) => ({
             itemCode: it.itemCode,
             qty: it.qty,

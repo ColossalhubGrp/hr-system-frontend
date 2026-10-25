@@ -37,6 +37,11 @@ const createSchema = z.object({
   bill_no: z.string().trim().optional(),
   bill_date: z.string().trim().optional(),
   remarks: z.string().trim().optional(),
+  // Optional link → Colossal Purchase Taxes and Charges Template. When
+  // set, the Frappe controller applies the template's tax lines and
+  // recomputes grand_total = net + taxes. When blank, the bill ships
+  // without VAT.
+  taxes_and_charges: z.string().trim().optional(),
   items_json: z
     .string()
     .trim()
@@ -89,6 +94,7 @@ export async function createPurchaseInvoiceAction(
       billNo: parsed.data.bill_no || undefined,
       billDate: parsed.data.bill_date || undefined,
       remarks: parsed.data.remarks || undefined,
+      taxesAndCharges: parsed.data.taxes_and_charges || undefined,
       items: parsed.data.items_json.map((i) => ({
         itemCode: i.item_code,
         qty: i.qty,
@@ -132,6 +138,7 @@ export async function updatePurchaseInvoiceAction(
       billNo: parsed.data.bill_no || undefined,
       billDate: parsed.data.bill_date || undefined,
       remarks: parsed.data.remarks || undefined,
+      taxesAndCharges: parsed.data.taxes_and_charges || undefined,
       items: parsed.data.items_json.map((i) => ({
         itemCode: i.item_code,
         qty: i.qty,

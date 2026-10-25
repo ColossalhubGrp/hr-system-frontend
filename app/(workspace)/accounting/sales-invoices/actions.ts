@@ -98,21 +98,32 @@ function friendlyInvoiceError(raw: string, status?: number, detail?: unknown): s
 function extractFrappeMessage(detail: unknown): string | null {
   if (!detail || typeof detail !== "object") return null;
   const obj = detail as Record<string, unknown>;
+  // `exception` holds the actual error class + sentence when the request
+  // actually failed. `_server_messages` is a mix of errors AND info
+  // msgprints ("Item Price added for X") — prefer `exception` so an
+  // informational notice doesn't get surfaced as the failure reason.
+  const exc = obj.exception;
+  if (typeof exc === "string" && exc.trim()) {
+    const stripped = exc.replace(/^[\w.]+:\s*/, "").trim();
+    if (stripped) return stripped;
+  }
   const sm = obj._server_messages;
   if (typeof sm === "string") {
     try {
       const arr = JSON.parse(sm) as unknown;
-      if (Array.isArray(arr) && arr.length > 0) {
-        const first = typeof arr[0] === "string" ? JSON.parse(arr[0]) : arr[0];
-        const msg = (first as { message?: string })?.message;
-        if (msg) return String(msg).replace(/<[^>]+>/g, "").trim();
-      }
+      if (!Array.isArray(arr) || arr.length === 0) return null;
+      const parsed = arr.map((e) => (typeof e === "string" ? JSON.parse(e) : e)) as Array<{
+        message?: string;
+        indicator?: string;
+      }>;
+      // Red / orange indicators are actual errors; green / yellow /
+      // blue are info or warning msgprints we should ignore when
+      // picking the failure reason.
+      const err = parsed.find((e) => e?.indicator === "red" || e?.indicator === "orange");
+      const pick = err ?? parsed[0];
+      const msg = pick?.message;
+      if (msg) return String(msg).replace(/<[^>]+>/g, "").trim();
     } catch { /* fall through */ }
-  }
-  const exc = obj.exception;
-  if (typeof exc === "string") {
-    const stripped = exc.replace(/^[\w.]+:\s*/, "").trim();
-    if (stripped) return stripped;
   }
   return null;
 }

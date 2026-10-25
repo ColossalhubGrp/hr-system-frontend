@@ -63,22 +63,22 @@ export function EditCompanyForm({ initial, accounts }: { initial: CompanyDetail;
       <FormSection title="Default accounts" description="Which ledger accounts Sales/Purchase Invoices and payments post to when the user doesn't override.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Default receivable" htmlFor="default_receivable_account">
-            <LinkField id="default_receivable_account" name="default_receivable_account" doctype="Colossal Account" defaultValue={initial.defaultReceivableAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="default_receivable_account" name="default_receivable_account" doctype="Colossal Account" defaultValue={initial.defaultReceivableAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Default payable" htmlFor="default_payable_account">
-            <LinkField id="default_payable_account" name="default_payable_account" doctype="Colossal Account" defaultValue={initial.defaultPayableAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="default_payable_account" name="default_payable_account" doctype="Colossal Account" defaultValue={initial.defaultPayableAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Default income" htmlFor="default_income_account">
-            <LinkField id="default_income_account" name="default_income_account" doctype="Colossal Account" defaultValue={initial.defaultIncomeAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="default_income_account" name="default_income_account" doctype="Colossal Account" defaultValue={initial.defaultIncomeAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Default expense" htmlFor="default_expense_account">
-            <LinkField id="default_expense_account" name="default_expense_account" doctype="Colossal Account" defaultValue={initial.defaultExpenseAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="default_expense_account" name="default_expense_account" doctype="Colossal Account" defaultValue={initial.defaultExpenseAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Default cash" htmlFor="default_cash_account">
-            <LinkField id="default_cash_account" name="default_cash_account" doctype="Colossal Account" defaultValue={initial.defaultCashAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="default_cash_account" name="default_cash_account" doctype="Colossal Account" defaultValue={initial.defaultCashAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Default bank" htmlFor="default_bank_account">
-            <LinkField id="default_bank_account" name="default_bank_account" doctype="Colossal Account" defaultValue={initial.defaultBankAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="default_bank_account" name="default_bank_account" doctype="Colossal Account" defaultValue={initial.defaultBankAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
         </div>
       </FormSection>
@@ -86,19 +86,19 @@ export function EditCompanyForm({ initial, accounts }: { initial: CompanyDetail;
       <FormSection title="Rounding & FX" description="Where currency and rounding gains/losses land.">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Round-off account" htmlFor="round_off_account">
-            <LinkField id="round_off_account" name="round_off_account" doctype="Colossal Account" defaultValue={initial.roundOffAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="round_off_account" name="round_off_account" doctype="Colossal Account" defaultValue={initial.roundOffAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Round-off cost centre" htmlFor="round_off_cost_center">
-            <LinkField id="round_off_cost_center" name="round_off_cost_center" doctype="Colossal Cost Center" defaultValue={initial.roundOffCostCenter ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="round_off_cost_center" name="round_off_cost_center" doctype="Colossal Cost Center" defaultValue={initial.roundOffCostCenter ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Write-off account" htmlFor="write_off_account">
-            <LinkField id="write_off_account" name="write_off_account" doctype="Colossal Account" defaultValue={initial.writeOffAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="write_off_account" name="write_off_account" doctype="Colossal Account" defaultValue={initial.writeOffAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Exchange gain/loss" htmlFor="exchange_gain_loss_account">
-            <LinkField id="exchange_gain_loss_account" name="exchange_gain_loss_account" doctype="Colossal Account" defaultValue={initial.exchangeGainLossAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="exchange_gain_loss_account" name="exchange_gain_loss_account" doctype="Colossal Account" defaultValue={initial.exchangeGainLossAccount ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
           <Field label="Default cost centre" htmlFor="cost_center">
-            <LinkField id="cost_center" name="cost_center" doctype="Colossal Cost Center" defaultValue={initial.costCenter ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name]]} />
+            <LinkField id="cost_center" name="cost_center" doctype="Colossal Cost Center" defaultValue={initial.costCenter ?? ""} seed={{ company: initial.name }} filters={[["company", "=", initial.name], ["is_group", "=", 0], ["disabled", "=", 0]]} />
           </Field>
         </div>
       </FormSection>

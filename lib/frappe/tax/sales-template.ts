@@ -88,6 +88,7 @@ export type SalesTaxTemplateInput = {
 };
 
 export async function createSalesTaxTemplate(input: SalesTaxTemplateInput): Promise<{ name: string }> {
+  await assertAccountsInCompany(input.taxes, input.company);
   const doc = {
     doctype: "Colossal Sales Taxes and Charges Template",
     title: input.title,
@@ -113,6 +114,10 @@ export async function createSalesTaxTemplate(input: SalesTaxTemplateInput): Prom
 }
 
 export async function updateSalesTaxTemplate(name: string, input: SalesTaxTemplateInput): Promise<void> {
+  // Catch cross-company rows BEFORE calling save, so the user sees a
+  // specific "Row 2: 5500 - Insurance - CH belongs to <other company>"
+  // instead of a generic 417 from the Frappe validator.
+  await assertAccountsInCompany(input.taxes, input.company);
   // Frappe v15's typed_validator rejects a partial `frappe.client.save`
   // payload with 417. Fetch the full doc, spread, overwrite the editable
   // fields and the whole `taxes` child table, then save it back.
@@ -144,6 +149,48 @@ export async function updateSalesTaxTemplate(name: string, input: SalesTaxTempla
     verb: "POST",
     args: { doc },
   });
+}
+
+/** Resolve each tax row's account company and raise a clear error if any
+ *  row references an account from a different company. Prevents the
+ *  Frappe server validator from firing with its generic 417 message. */
+async function assertAccountsInCompany(
+  rows: Array<{ accountHead: string }>,
+  company: string,
+): Promise<void> {
+  const unique = Array.from(new Set(rows.map((r) => r.accountHead).filter(Boolean)));
+  if (unique.length === 0) return;
+  const companies = await Promise.all(
+    unique.map(async (acc) => {
+      try {
+        const doc = await frappeCall<{ company?: string }>({
+          method: "frappe.client.get_value",
+          as: "user",
+          args: {
+            doctype: "Colossal Account",
+            filters: { name: acc },
+            fieldname: ["company"],
+          },
+        });
+        return { acc, company: String(doc?.company ?? "") };
+      } catch {
+        return { acc, company: "" };
+      }
+    }),
+  );
+  const byAccount = new Map(companies.map((c) => [c.acc, c.company]));
+  const bad: string[] = [];
+  rows.forEach((r, i) => {
+    const owner = byAccount.get(r.accountHead) ?? "";
+    if (r.accountHead && owner && owner !== company) {
+      bad.push(`Row ${i + 1}: "${r.accountHead}" is for company "${owner}", not "${company}". Pick an account from "${company}" instead.`);
+    } else if (r.accountHead && !owner) {
+      bad.push(`Row ${i + 1}: "${r.accountHead}" is no longer available. Pick another account.`);
+    }
+  });
+  if (bad.length > 0) {
+    throw new Error(bad.join(" "));
+  }
 }
 
 export async function deleteSalesTaxTemplate(name: string): Promise<void> {

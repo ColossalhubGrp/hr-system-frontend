@@ -83,6 +83,10 @@ export function LinkField({
   const [createOpen, setCreateOpen] = useState(false);
 
   // Debounced search — fires 180ms after the user stops typing.
+  // `filters` is a new array literal on every render; key the effect on
+  // its JSON so a stable filter set doesn't re-fire, but a real change
+  // (e.g. company switched on the parent form) does.
+  const filtersKey = JSON.stringify(filters ?? null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     if (!open) return;
@@ -103,7 +107,7 @@ export function LinkField({
       if (timer.current) clearTimeout(timer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, open, doctype]);
+  }, [query, open, doctype, filtersKey]);
 
   function pick(next: string) {
     if (!isControlled) setInternal(next);

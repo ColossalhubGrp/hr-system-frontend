@@ -101,6 +101,7 @@ export type PurchaseTaxTemplateInput = {
 };
 
 export async function createPurchaseTaxTemplate(input: PurchaseTaxTemplateInput): Promise<{ name: string }> {
+  await assertAccountsInCompany(input.taxes, input.company);
   const doc = {
     doctype: "Colossal Purchase Taxes and Charges Template",
     title: input.title,
@@ -128,6 +129,7 @@ export async function createPurchaseTaxTemplate(input: PurchaseTaxTemplateInput)
 }
 
 export async function updatePurchaseTaxTemplate(name: string, input: PurchaseTaxTemplateInput): Promise<void> {
+  await assertAccountsInCompany(input.taxes, input.company);
   // Frappe v15's typed_validator rejects a partial `frappe.client.save`
   // payload with 417. Fetch the full doc, spread, overwrite the editable
   // fields and the whole `taxes` child table, then save it back.
@@ -161,6 +163,48 @@ export async function updatePurchaseTaxTemplate(name: string, input: PurchaseTax
     verb: "POST",
     args: { doc },
   });
+}
+
+/** Mirror of the sales-template guard — resolve each row's account
+ *  company and reject BEFORE calling Frappe save on a cross-company
+ *  row. */
+async function assertAccountsInCompany(
+  rows: Array<{ accountHead: string }>,
+  company: string,
+): Promise<void> {
+  const unique = Array.from(new Set(rows.map((r) => r.accountHead).filter(Boolean)));
+  if (unique.length === 0) return;
+  const companies = await Promise.all(
+    unique.map(async (acc) => {
+      try {
+        const doc = await frappeCall<{ company?: string }>({
+          method: "frappe.client.get_value",
+          as: "user",
+          args: {
+            doctype: "Colossal Account",
+            filters: { name: acc },
+            fieldname: ["company"],
+          },
+        });
+        return { acc, company: String(doc?.company ?? "") };
+      } catch {
+        return { acc, company: "" };
+      }
+    }),
+  );
+  const byAccount = new Map(companies.map((c) => [c.acc, c.company]));
+  const bad: string[] = [];
+  rows.forEach((r, i) => {
+    const owner = byAccount.get(r.accountHead) ?? "";
+    if (r.accountHead && owner && owner !== company) {
+      bad.push(`Row ${i + 1}: "${r.accountHead}" is for company "${owner}", not "${company}". Pick an account from "${company}" instead.`);
+    } else if (r.accountHead && !owner) {
+      bad.push(`Row ${i + 1}: "${r.accountHead}" is no longer available. Pick another account.`);
+    }
+  });
+  if (bad.length > 0) {
+    throw new Error(bad.join(" "));
+  }
 }
 
 export async function deletePurchaseTaxTemplate(name: string): Promise<void> {

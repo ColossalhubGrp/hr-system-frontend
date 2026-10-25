@@ -40,6 +40,12 @@ function toFormState(err: unknown): FormState {
     if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT")) throw err;
     if (digest === "NEXT_NOT_FOUND") throw err;
   }
+  // Plain Error from our own pre-save guards (e.g. the account-company
+  // mismatch check) carries the exact user-facing sentence we wrote.
+  // Surface it verbatim; don't let the Frappe humaniser swallow it.
+  if (err instanceof Error && !(err instanceof FrappeRequestError)) {
+    return { error: err.message };
+  }
   const raw = err instanceof Error ? err.message : "";
   const status = err instanceof FrappeRequestError ? err.status : undefined;
   const detail = err instanceof FrappeRequestError ? err.detail : undefined;

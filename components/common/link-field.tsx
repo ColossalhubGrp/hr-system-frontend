@@ -135,7 +135,7 @@ export function LinkField({
         </PopoverTrigger>
         <PopoverContent
           align="start"
-          className="w-[var(--radix-popover-trigger-width)] p-0"
+          className="w-[max(var(--radix-popover-trigger-width),320px)] p-0"
         >
           <div className="flex items-center gap-2 border-b border-border px-3 py-2">
             <Search className="h-4 w-4 text-muted-foreground" />

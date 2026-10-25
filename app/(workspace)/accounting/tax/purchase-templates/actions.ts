@@ -42,12 +42,35 @@ function toFormState(err: unknown): FormState {
   }
   const raw = err instanceof Error ? err.message : "";
   const status = err instanceof FrappeRequestError ? err.status : undefined;
-  return { error: friendlyTaxTemplateError(raw, status) };
+  const detail = err instanceof FrappeRequestError ? err.detail : undefined;
+  return { error: friendlyTaxTemplateError(raw, status, detail) };
 }
 
-/** Keep internal Frappe wording (frappe.client.save, 417 EXPECTATION
- *  FAILED, Python tracebacks) out of the Save-changes banner. */
-function friendlyTaxTemplateError(raw: string, status?: number): string {
+function extractFrappeMessage(detail: unknown): string | null {
+  if (!detail || typeof detail !== "object") return null;
+  const obj = detail as Record<string, unknown>;
+  const sm = obj._server_messages;
+  if (typeof sm === "string") {
+    try {
+      const arr = JSON.parse(sm) as unknown;
+      if (Array.isArray(arr) && arr.length > 0) {
+        const first = typeof arr[0] === "string" ? JSON.parse(arr[0]) : arr[0];
+        const msg = (first as { message?: string })?.message;
+        if (msg) return String(msg).replace(/<[^>]+>/g, "").trim();
+      }
+    } catch { /* fall through */ }
+  }
+  const exc = obj.exception;
+  if (typeof exc === "string") {
+    const stripped = exc.replace(/^[\w.]+:\s*/, "").trim();
+    if (stripped) return stripped;
+  }
+  return null;
+}
+
+function friendlyTaxTemplateError(raw: string, status?: number, detail?: unknown): string {
+  const real = extractFrappeMessage(detail);
+  if (real) return real;
   const s = raw.toLowerCase();
   if (!raw) return "Couldn't save this tax template. Please try again.";
   if (s.includes("403") || s.includes("forbidden") || s.includes("permission")) {
@@ -58,15 +81,6 @@ function friendlyTaxTemplateError(raw: string, status?: number): string {
   }
   if (s.includes("duplicate") || s.includes("already exists") || s.includes("409")) {
     return "A template with that title already exists for this company.";
-  }
-  if (s.includes("mandatory") || s.includes("required")) {
-    return "A required field is missing. Check the Title, Company and that each row has an Account.";
-  }
-  if (s.includes("link validation") || s.includes("could not find")) {
-    return "One of the picked values (account or cost centre) no longer exists. Pick it again.";
-  }
-  if (s.includes("417") || s.includes("expectation failed")) {
-    return "Couldn't save this template — the values didn't line up with what the system expected. Reload the page and try again.";
   }
   if (status && status >= 500) {
     return "The server couldn't finish saving this template. Try again in a moment.";

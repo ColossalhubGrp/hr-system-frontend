@@ -100,39 +100,43 @@ export function PurchaseTaxTemplateForm({
       <FormSection title="Charges" description="Each row is a line on the purchase-invoice tax table.">
         <div className="flex flex-col gap-3">
           {lines.map((l, idx) => (
-            <div key={idx} className="grid grid-cols-12 items-end gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
-              <div className="col-span-12 md:col-span-3">
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Charge type</label>
-                <SelectInput value={l.charge_type} options={[...CHARGE_TYPES]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, charge_type: e.target.value } : x)))} />
+            <div key={idx} className="flex flex-col gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
+              <div className="grid grid-cols-12 items-end gap-2">
+                <div className="col-span-12 md:col-span-4">
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Charge type</label>
+                  <SelectInput value={l.charge_type} options={[...CHARGE_TYPES]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, charge_type: e.target.value } : x)))} />
+                </div>
+                <div className="col-span-12 md:col-span-4">
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account head</label>
+                  <LinkField doctype="Colossal Account" value={l.account_head} onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: next } : x)))} />
+                </div>
+                <div className="col-span-11 md:col-span-3">
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Description</label>
+                  <TextInput value={l.description} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, description: e.target.value } : x)))} />
+                </div>
+                <div className="col-span-1 flex justify-end">
+                  {lines.length > 1 && (
+                    <button type="button" onClick={() => setLines((p) => p.filter((_, i) => i !== idx))} className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label={`Remove line ${idx + 1}`}>
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="col-span-12 md:col-span-3">
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account head</label>
-                <LinkField doctype="Colossal Account" value={l.account_head} onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: next } : x)))} />
+              <div className="grid grid-cols-12 items-end gap-2">
+                <div className="col-span-4 md:col-span-2">
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Rate (%)</label>
+                  <TextInput type="number" step="0.01" value={l.rate} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, rate: e.target.value } : x)))} className="tabular-nums" />
+                </div>
+                <div className="col-span-8 md:col-span-4">
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Category</label>
+                  <SelectInput value={l.category} options={[...CATEGORY]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, category: e.target.value } : x)))} />
+                </div>
+                <div className="col-span-12 md:col-span-3">
+                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Add / Deduct</label>
+                  <SelectInput value={l.add_deduct_tax} options={[...ADD_DEDUCT]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, add_deduct_tax: e.target.value } : x)))} />
+                </div>
               </div>
-              <div className="col-span-8 md:col-span-2">
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Description</label>
-                <TextInput value={l.description} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, description: e.target.value } : x)))} />
-              </div>
-              <div className="col-span-4 md:col-span-1">
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Rate</label>
-                <TextInput type="number" step="0.01" value={l.rate} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, rate: e.target.value } : x)))} className="tabular-nums" />
-              </div>
-              <div className="col-span-6 md:col-span-2">
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Category</label>
-                <SelectInput value={l.category} options={[...CATEGORY]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, category: e.target.value } : x)))} />
-              </div>
-              <div className="col-span-5 md:col-span-1">
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Add/Deduct</label>
-                <SelectInput value={l.add_deduct_tax} options={[...ADD_DEDUCT]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, add_deduct_tax: e.target.value } : x)))} />
-              </div>
-              <div className="col-span-1 flex justify-end">
-                {lines.length > 1 && (
-                  <button type="button" onClick={() => setLines((p) => p.filter((_, i) => i !== idx))} className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive" aria-label={`Remove line ${idx + 1}`}>
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-              <div className="col-span-12">
+              <div>
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   <input type="checkbox" checked={l.included_in_print_rate} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, included_in_print_rate: e.target.checked } : x)))} className="h-3.5 w-3.5" />
                   Included in printed rate (tax-inclusive display)

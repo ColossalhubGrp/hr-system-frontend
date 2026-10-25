@@ -94,7 +94,7 @@ export function SalesTaxTemplateForm({
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Charge type</label>
                 <SelectInput value={l.charge_type} options={[...CHARGE_TYPES]} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, charge_type: e.target.value } : x)))} />
               </div>
-              <div className="col-span-12 md:col-span-4">
+              <div className="col-span-12 md:col-span-3">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Account head</label>
                 <LinkField doctype="Colossal Account" value={l.account_head} onChange={(next) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, account_head: next } : x)))} />
               </div>
@@ -102,7 +102,7 @@ export function SalesTaxTemplateForm({
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Description</label>
                 <TextInput value={l.description} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, description: e.target.value } : x)))} placeholder="Shown on invoice" />
               </div>
-              <div className="col-span-4 md:col-span-1">
+              <div className="col-span-3 md:col-span-2">
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Rate (%)</label>
                 <TextInput type="number" step="0.01" value={l.rate} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, rate: e.target.value } : x)))} className="tabular-nums" />
               </div>
@@ -113,7 +113,7 @@ export function SalesTaxTemplateForm({
                   </button>
                 )}
               </div>
-              <div className="col-span-12 md:col-span-6">
+              <div className="col-span-12">
                 <label className="flex items-center gap-2 text-xs text-muted-foreground">
                   <input type="checkbox" checked={l.included_in_print_rate} onChange={(e) => setLines((p) => p.map((x, i) => (i === idx ? { ...x, included_in_print_rate: e.target.checked } : x)))} className="h-3.5 w-3.5" />
                   Included in printed rate (tax-inclusive display)

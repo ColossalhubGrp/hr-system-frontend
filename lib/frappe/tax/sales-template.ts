@@ -113,39 +113,36 @@ export async function createSalesTaxTemplate(input: SalesTaxTemplateInput): Prom
 }
 
 export async function updateSalesTaxTemplate(name: string, input: SalesTaxTemplateInput): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.set_value",
+  // Frappe v15's typed_validator rejects a partial `frappe.client.save`
+  // payload with 417. Fetch the full doc, spread, overwrite the editable
+  // fields and the whole `taxes` child table, then save it back.
+  const existing = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
     as: "user",
-    verb: "POST",
-    args: {
-      doctype: "Colossal Sales Taxes and Charges Template",
-      name,
-      fieldname: {
-        title: input.title,
-        company: input.company,
-        is_default: input.isDefault ? 1 : 0,
-        disabled: input.disabled ? 1 : 0,
-      },
-    },
+    args: { doctype: "Colossal Sales Taxes and Charges Template", name },
   });
+  const doc = {
+    ...existing,
+    doctype: "Colossal Sales Taxes and Charges Template",
+    name,
+    title: input.title,
+    company: input.company,
+    is_default: input.isDefault ? 1 : 0,
+    disabled: input.disabled ? 1 : 0,
+    taxes: input.taxes.map((t) => ({
+      charge_type: t.chargeType,
+      account_head: t.accountHead,
+      description: t.description,
+      rate: t.rate,
+      cost_center: t.costCenter || undefined,
+      included_in_print_rate: t.includedInPrintRate ? 1 : 0,
+    })),
+  };
   await frappeCall({
     method: "frappe.client.save",
     as: "user",
     verb: "POST",
-    args: {
-      doc: {
-        doctype: "Colossal Sales Taxes and Charges Template",
-        name,
-        taxes: input.taxes.map((t) => ({
-          charge_type: t.chargeType,
-          account_head: t.accountHead,
-          description: t.description,
-          rate: t.rate,
-          cost_center: t.costCenter || undefined,
-          included_in_print_rate: t.includedInPrintRate ? 1 : 0,
-        })),
-      },
-    },
+    args: { doc },
   });
 }
 

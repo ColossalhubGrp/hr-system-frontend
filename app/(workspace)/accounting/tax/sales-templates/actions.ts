@@ -36,8 +36,38 @@ function toFormState(err: unknown): FormState {
     if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT")) throw err;
     if (digest === "NEXT_NOT_FOUND") throw err;
   }
-  if (err instanceof FrappeRequestError) return { error: err.message || `Backend error (${err.status}).` };
-  return { error: err instanceof Error ? err.message : "Something went wrong." };
+  const raw = err instanceof Error ? err.message : "";
+  const status = err instanceof FrappeRequestError ? err.status : undefined;
+  return { error: friendlyTaxTemplateError(raw, status) };
+}
+
+/** Keep internal Frappe wording (frappe.client.save, 417 EXPECTATION
+ *  FAILED, Python tracebacks) out of the Save-changes banner. */
+function friendlyTaxTemplateError(raw: string, status?: number): string {
+  const s = raw.toLowerCase();
+  if (!raw) return "Couldn't save this tax template. Please try again.";
+  if (s.includes("403") || s.includes("forbidden") || s.includes("permission")) {
+    return "You don't have permission to change this tax template.";
+  }
+  if (s.includes("401") || s.includes("unauthorized") || s.includes("login")) {
+    return "Your session has expired — refresh the page and sign in again.";
+  }
+  if (s.includes("duplicate") || s.includes("already exists") || s.includes("409")) {
+    return "A template with that title already exists for this company.";
+  }
+  if (s.includes("mandatory") || s.includes("required")) {
+    return "A required field is missing. Check the Title, Company and that each row has an Account.";
+  }
+  if (s.includes("link validation") || s.includes("could not find")) {
+    return "One of the picked values (account or cost centre) no longer exists. Pick it again.";
+  }
+  if (s.includes("417") || s.includes("expectation failed")) {
+    return "Couldn't save this template — the values didn't line up with what the system expected. Reload the page and try again.";
+  }
+  if (status && status >= 500) {
+    return "The server couldn't finish saving this template. Try again in a moment.";
+  }
+  return "Couldn't save this tax template. Please try again.";
 }
 
 type Line = z.infer<typeof lineSchema>;

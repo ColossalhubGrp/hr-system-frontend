@@ -37,7 +37,7 @@ export default async function CostCenterAllocationsPage() {
         rowHref={(r) => `/accounting/cost-centers/allocations/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No allocations yet.</p>}
         columns={[
-          { header: "Allocation", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Allocation", cell: (r) => <Link href={`/accounting/cost-centers/allocations/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Company", cell: (r) => r.company },
           { header: "Main cost centre", cell: (r) => r.mainCostCenter },
           { header: "Valid from", cell: (r) => r.validFrom },

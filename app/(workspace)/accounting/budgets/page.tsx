@@ -33,7 +33,7 @@ export default async function BudgetsPage() {
         rowHref={(r) => `/accounting/budgets/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No budgets yet.</p>}
         columns={[
-          { header: "Budget", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Budget", cell: (r) => <Link href={`/accounting/budgets/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Against", cell: (r) => `${r.budgetAgainst}: ${r.costCenter ?? r.project ?? "—"}` },
           { header: "Company", cell: (r) => r.company },
           { header: "Fiscal year", cell: (r) => r.fiscalYear },

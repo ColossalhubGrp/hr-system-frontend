@@ -32,7 +32,7 @@ export default async function TaxRulesPage() {
         rowHref={(r) => `/accounting/tax/rules/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No rules yet.</p>}
         columns={[
-          { header: "Rule", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Rule", cell: (r) => <Link href={`/accounting/tax/rules/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Kind", cell: (r) => r.taxType },
           { header: "Category", cell: (r) => r.taxCategory ?? "—" },
           {

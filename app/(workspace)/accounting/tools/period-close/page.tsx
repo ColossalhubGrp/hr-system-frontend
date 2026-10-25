@@ -33,7 +33,7 @@ export default async function PeriodClosePage() {
         rowHref={(r) => `/accounting/tools/period-close/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No period closings yet.</p>}
         columns={[
-          { header: "Voucher", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Voucher", cell: (r) => <Link href={`/accounting/tools/period-close/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Company", cell: (r) => r.company },
           { header: "Fiscal year", cell: (r) => r.fiscalYear },
           { header: "Period end", cell: (r) => r.periodEndDate },

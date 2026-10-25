@@ -85,7 +85,7 @@ export default async function PaymentEntriesPage({
           </div>
         }
         columns={[
-          { header: "Voucher", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Voucher", cell: (r) => <Link href={`/accounting/payment-entries/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Type", cell: (r) => <PaymentTypePill type={r.paymentType} /> },
           { header: "Date", cell: (r) => r.postingDate },
           {

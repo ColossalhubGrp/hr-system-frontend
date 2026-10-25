@@ -33,7 +33,7 @@ export default async function RevaluationPage() {
         rowHref={(r) => `/accounting/multi-currency/revaluation/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No revaluations yet.</p>}
         columns={[
-          { header: "Doc", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Doc", cell: (r) => <Link href={`/accounting/multi-currency/revaluation/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Company", cell: (r) => r.company },
           { header: "Posting date", cell: (r) => r.postingDate },
           { header: "Gain/loss account", cell: (r) => r.gainLossAccount },

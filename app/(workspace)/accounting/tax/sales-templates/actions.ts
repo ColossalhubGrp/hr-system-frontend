@@ -156,7 +156,7 @@ export async function updateSalesTaxTemplateAction(name: string, _prev: FormStat
   }
   revalidatePath("/accounting/tax/sales-templates");
   revalidatePath(`/accounting/tax/sales-templates/${name}`);
-  return {};
+  redirect("/accounting/tax/sales-templates");
 }
 
 export async function deleteSalesTaxTemplateAction(name: string): Promise<FormState> {

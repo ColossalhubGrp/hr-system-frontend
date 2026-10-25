@@ -36,10 +36,13 @@ export default async function BankAccountsPage() {
           {
             header: "Account",
             cell: (r) => (
-              <span className="flex items-center gap-1.5 font-semibold text-foreground">
+              <Link
+                href={`/accounting/banking/accounts/${encodeURIComponent(r.name)}` as Route}
+                className="inline-flex items-center gap-1.5 font-semibold text-foreground hover:underline"
+              >
                 {r.accountName}
                 {r.isDefault && <Star className="h-3 w-3 text-primary" aria-label="Default" />}
-              </span>
+              </Link>
             ),
           },
           { header: "Bank", cell: (r) => r.bank },

@@ -33,7 +33,7 @@ export default async function SubscriptionsPage() {
         rowHref={(r) => `/accounting/subscriptions/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No subscriptions yet.</p>}
         columns={[
-          { header: "Sub", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Sub", cell: (r) => <Link href={`/accounting/subscriptions/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Party", cell: (r) => `${r.partyType}: ${r.party}` },
           { header: "Company", cell: (r) => r.company },
           { header: "Started", cell: (r) => r.startDate },

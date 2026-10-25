@@ -80,7 +80,7 @@ export default async function PurchaseInvoicesPage({ searchParams }: { searchPar
           </div>
         }
         columns={[
-          { header: "Bill", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Bill", cell: (r) => <Link href={`/accounting/purchase-invoices/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Supplier", cell: (r) => r.supplierName ?? r.supplier },
           { header: "Date", cell: (r) => r.postingDate, className: "hidden md:table-cell" },
           { header: "Due", cell: (r) => r.dueDate ?? "—", className: "hidden lg:table-cell" },

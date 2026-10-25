@@ -36,10 +36,13 @@ export default async function SalesTaxTemplatesPage() {
           {
             header: "Title",
             cell: (r) => (
-              <span className="flex items-center gap-1.5 font-semibold text-foreground">
+              <Link
+                href={`/accounting/tax/sales-templates/${encodeURIComponent(r.name)}` as Route}
+                className="inline-flex items-center gap-1.5 font-semibold text-foreground hover:underline"
+              >
                 {r.title}
                 {r.isDefault && <Star className="h-3 w-3 text-primary" aria-label="Default" />}
-              </span>
+              </Link>
             ),
           },
           { header: "Company", cell: (r) => r.company },

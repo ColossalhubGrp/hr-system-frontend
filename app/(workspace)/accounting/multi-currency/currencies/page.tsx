@@ -34,7 +34,7 @@ export default async function CurrenciesPage() {
         rowHref={(r) => `/accounting/multi-currency/currencies/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No currencies yet.</p>}
         columns={[
-          { header: "Code", cell: (r) => <span className="font-mono font-semibold text-foreground">{r.name}</span> },
+          { header: "Code", cell: (r) => <Link href={`/accounting/multi-currency/currencies/${encodeURIComponent(r.name)}` as Route} className="font-mono font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Name", cell: (r) => r.currencyName },
           { header: "Symbol", cell: (r) => r.symbol ?? "—" },
           { header: "Fraction", cell: (r) => (r.fraction ? `${r.fraction} × ${r.fractionUnits}` : "—") },

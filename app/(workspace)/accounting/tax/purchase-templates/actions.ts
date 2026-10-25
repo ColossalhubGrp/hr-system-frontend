@@ -152,7 +152,7 @@ export async function updatePurchaseTaxTemplateAction(name: string, _prev: FormS
   }
   revalidatePath("/accounting/tax/purchase-templates");
   revalidatePath(`/accounting/tax/purchase-templates/${name}`);
-  return {};
+  redirect("/accounting/tax/purchase-templates");
 }
 
 export async function deletePurchaseTaxTemplateAction(name: string): Promise<FormState> {

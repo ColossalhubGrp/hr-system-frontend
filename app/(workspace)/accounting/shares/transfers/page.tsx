@@ -33,7 +33,7 @@ export default async function ShareTransfersPage() {
         rowHref={(r) => `/accounting/shares/transfers/${encodeURIComponent(r.name)}`}
         empty={<p className="py-10 text-center text-sm text-muted-foreground">No transfers yet.</p>}
         columns={[
-          { header: "Voucher", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Voucher", cell: (r) => <Link href={`/accounting/shares/transfers/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Type", cell: (r) => r.transferType },
           { header: "Date", cell: (r) => r.date },
           { header: "From → To", cell: (r) => `${r.fromShareholder ?? "—"} → ${r.toShareholder ?? "—"}` },

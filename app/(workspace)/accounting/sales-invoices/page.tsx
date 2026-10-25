@@ -81,7 +81,7 @@ export default async function SalesInvoicesPage({ searchParams }: { searchParams
           </div>
         }
         columns={[
-          { header: "Invoice", cell: (r) => <span className="font-mono text-sm">{r.name}</span> },
+          { header: "Invoice", cell: (r) => <Link href={`/accounting/sales-invoices/${encodeURIComponent(r.name)}` as Route} className="font-mono text-sm font-semibold text-foreground hover:underline">{r.name}</Link> },
           { header: "Customer", cell: (r) => r.customerName ?? r.customer },
           { header: "Date", cell: (r) => r.postingDate, className: "hidden md:table-cell" },
           { header: "Due", cell: (r) => r.dueDate ?? "—", className: "hidden lg:table-cell" },

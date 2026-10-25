@@ -139,7 +139,7 @@ export async function updateCompanyMasterAction(name: string, _prev: FormState, 
   }
   revalidatePath("/accounting/masters/companies");
   revalidatePath(`/accounting/masters/companies/${name}`);
-  return {};
+  redirect("/accounting/masters/companies");
 }
 
 export async function deleteCompanyMasterAction(name: string): Promise<FormState> {

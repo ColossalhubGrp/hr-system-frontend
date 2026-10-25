@@ -231,7 +231,12 @@ function QuickCreateDialog({
   onCancel: () => void;
   onCreated: (name: string) => void;
 }) {
-  const [spec, setSpec] = useState<{ label: string; fields: QuickCreateField[]; seedFields: string[] } | null>(null);
+  const [spec, setSpec] = useState<{
+    label: string;
+    fields: QuickCreateField[];
+    seedFields: string[];
+    childRow?: { tableField: string; title: string; hint?: string; fields: QuickCreateField[] };
+  } | null>(null);
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [saving, startSave] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -255,7 +260,11 @@ function QuickCreateDialog({
 
   const canSubmit = useMemo(() => {
     if (!spec) return false;
-    return spec.fields.filter((f) => f.required).every((f) => !!values[f.name]);
+    const parentOk = spec.fields.filter((f) => f.required).every((f) => !!values[f.name]);
+    const rowOk = !spec.childRow
+      ? true
+      : spec.childRow.fields.filter((f) => f.required).every((f) => !!values[`row__${f.name}`]);
+    return parentOk && rowOk;
   }, [spec, values]);
 
   function submit() {
@@ -308,6 +317,32 @@ function QuickCreateDialog({
                 seed={seed}
               />
             ))}
+
+            {spec.childRow && (
+              <div className="mt-1 flex flex-col gap-2 rounded-md border border-border/60 bg-muted/20 p-3">
+                <div className="flex flex-col gap-0.5">
+                  <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {spec.childRow.title}
+                  </div>
+                  {spec.childRow.hint && (
+                    <div className="text-[11px] text-muted-foreground">{spec.childRow.hint}</div>
+                  )}
+                </div>
+                {spec.childRow.fields.map((f) => {
+                  const key = `row__${f.name}`;
+                  return (
+                    <QuickCreateFieldInput
+                      key={key}
+                      field={f}
+                      value={values[key]}
+                      onChange={(v) => setValues((prev) => ({ ...prev, [key]: v }))}
+                      error={fieldErrors[key]}
+                      seed={seed}
+                    />
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

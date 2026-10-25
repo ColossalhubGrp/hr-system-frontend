@@ -131,6 +131,30 @@ export async function createLinkOption(
     if (values[key] != null && doc[key] == null) doc[key] = values[key];
   }
 
+  // Optional inline child row (e.g. tax template → first `taxes` line).
+  // The client prefixes those field names with "row__" so they don't
+  // collide with parent-level fields.
+  if (entry.childRow) {
+    const rowErrors: Record<string, string> = {};
+    const row: Record<string, unknown> = { ...(entry.childRow.defaults ?? {}) };
+    for (const f of entry.childRow.fields) {
+      const key = `row__${f.name}`;
+      let v = values[key];
+      if (f.required && (v === undefined || v === null || v === "")) {
+        rowErrors[key] = `${f.label} is required.`;
+        continue;
+      }
+      if (v === undefined || v === null || v === "") continue;
+      if (f.type === "check") v = v ? 1 : 0;
+      if (f.type === "number") v = Number(v);
+      row[f.name] = v;
+    }
+    if (Object.keys(rowErrors).length > 0) {
+      return { ok: false, error: "Fill the required fields.", fieldErrors: rowErrors };
+    }
+    doc[entry.childRow.tableField] = [row];
+  }
+
   try {
     const created = await frappeCall<{ name: string }>({
       method: "frappe.client.insert",
@@ -178,6 +202,12 @@ export async function getQuickCreateSpec(doctype: string): Promise<{
   label: string;
   fields: QuickCreateField[];
   seedFields: string[];
+  childRow?: {
+    tableField: string;
+    title: string;
+    hint?: string;
+    fields: QuickCreateField[];
+  };
 } | null> {
   const entry = LINK_REGISTRY[doctype];
   if (!entry) return null;
@@ -185,5 +215,13 @@ export async function getQuickCreateSpec(doctype: string): Promise<{
     label: entry.label,
     fields: entry.fields,
     seedFields: entry.seedFields ?? [],
+    childRow: entry.childRow
+      ? {
+          tableField: entry.childRow.tableField,
+          title: entry.childRow.title,
+          hint: entry.childRow.hint,
+          fields: entry.childRow.fields,
+        }
+      : undefined,
   };
 }

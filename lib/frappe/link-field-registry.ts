@@ -35,6 +35,21 @@ export type LinkEntry = {
   fields: QuickCreateField[];
   /** Fields the dialog expects the host form to seed (e.g. "company"). */
   seedFields?: string[];
+  /** Collect one child-table row from the modal. Lets a DocType whose
+   *  shape is "shell + rows" (tax template, price list) be useful out of
+   *  the modal without a second trip to the full edit page. */
+  childRow?: {
+    /** Parent field name (child table), e.g. "taxes". */
+    tableField: string;
+    /** Visible section title in the dialog. */
+    title: string;
+    /** One-sentence hint shown under the title. */
+    hint?: string;
+    /** Fields the modal collects for the single row. */
+    fields: QuickCreateField[];
+    /** Static defaults the server stamps onto the row before insert. */
+    defaults?: Record<string, unknown>;
+  };
 };
 
 export const LINK_REGISTRY: Record<string, LinkEntry> = {
@@ -430,24 +445,68 @@ export const LINK_REGISTRY: Record<string, LinkEntry> = {
     search: ["name", "title"],
     fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
     seedFields: ["company"],
+    childRow: {
+      tableField: "taxes",
+      title: "Tax line",
+      hint: "What rate and which account. One line now; add more later from the template page.",
+      fields: [
+        { name: "account_head", label: "Tax account", type: "link", linkDoctype: "Account", required: true },
+        { name: "rate", label: "Rate %", type: "number", required: true, min: 0, placeholder: "e.g. 15" },
+        { name: "description", label: "Shown on invoice as", type: "text", required: true, placeholder: "e.g. VAT 15%" },
+      ],
+      defaults: { charge_type: "On Net Total" },
+    },
   },
   "Purchase Taxes and Charges Template": {
     label: "Purchase Tax Template",
     search: ["name", "title"],
     fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
     seedFields: ["company"],
+    childRow: {
+      tableField: "taxes",
+      title: "Tax line",
+      hint: "What rate and which account. One line now; add more later from the template page.",
+      fields: [
+        { name: "account_head", label: "Tax account", type: "link", linkDoctype: "Account", required: true },
+        { name: "rate", label: "Rate %", type: "number", required: true, min: 0, placeholder: "e.g. 15" },
+        { name: "description", label: "Shown on bill as", type: "text", required: true, placeholder: "e.g. VAT 15%" },
+      ],
+      defaults: { charge_type: "On Net Total", category: "Total", add_deduct_tax: "Add" },
+    },
   },
   "Colossal Sales Taxes and Charges Template": {
     label: "Sales Tax Template",
     search: ["name", "title"],
     fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
     seedFields: ["company"],
+    childRow: {
+      tableField: "taxes",
+      title: "Tax line",
+      hint: "What rate and which account. One line now; add more later from the template page.",
+      fields: [
+        { name: "account_head", label: "Tax account", type: "link", linkDoctype: "Colossal Account", required: true },
+        { name: "rate", label: "Rate %", type: "number", required: true, min: 0, placeholder: "e.g. 15" },
+        { name: "description", label: "Shown on invoice as", type: "text", required: true, placeholder: "e.g. VAT 15%" },
+      ],
+      defaults: { charge_type: "On Net Total" },
+    },
   },
   "Colossal Purchase Taxes and Charges Template": {
     label: "Purchase Tax Template",
     search: ["name", "title"],
     fields: [{ name: "title", label: "Template Title", type: "text", required: true }],
     seedFields: ["company"],
+    childRow: {
+      tableField: "taxes",
+      title: "Tax line",
+      hint: "What rate and which account. One line now; add more later from the template page.",
+      fields: [
+        { name: "account_head", label: "Tax account", type: "link", linkDoctype: "Colossal Account", required: true },
+        { name: "rate", label: "Rate %", type: "number", required: true, min: 0, placeholder: "e.g. 15" },
+        { name: "description", label: "Shown on bill as", type: "text", required: true, placeholder: "e.g. VAT 15%" },
+      ],
+      defaults: { charge_type: "On Net Total", category: "Total", add_deduct_tax: "Add" },
+    },
   },
   "Price List": {
     label: "Price List",

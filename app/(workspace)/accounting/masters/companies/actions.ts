@@ -48,8 +48,55 @@ function toFormState(err: unknown): FormState {
     if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT")) throw err;
     if (digest === "NEXT_NOT_FOUND") throw err;
   }
-  if (err instanceof FrappeRequestError) return { error: err.message || `Backend error (${err.status}).` };
-  return { error: err instanceof Error ? err.message : "Something went wrong." };
+  if (err instanceof Error && !(err instanceof FrappeRequestError)) {
+    return { error: err.message };
+  }
+  const detail = err instanceof FrappeRequestError ? err.detail : undefined;
+  const real = extractFrappeMessage(detail);
+  if (real) return { error: real };
+  const raw = err instanceof Error ? err.message : "";
+  const s = raw.toLowerCase();
+  if (s.includes("403") || s.includes("forbidden") || s.includes("permission")) {
+    return { error: "You don't have permission to change this company." };
+  }
+  if (s.includes("401") || s.includes("unauthorized") || s.includes("login")) {
+    return { error: "Your session has expired — refresh the page and sign in again." };
+  }
+  return { error: "Couldn't save this company. Please try again." };
+}
+
+function extractFrappeMessage(detail: unknown): string | null {
+  if (!detail || typeof detail !== "object") return null;
+  const obj = detail as Record<string, unknown>;
+  const exc = obj.exception;
+  if (typeof exc === "string" && exc.trim()) {
+    const stripped = stripHtml(exc.replace(/^[\w.]+:\s*/, "")).trim();
+    if (stripped) return stripped;
+  }
+  const sm = obj._server_messages;
+  if (typeof sm === "string") {
+    try {
+      const arr = JSON.parse(sm) as unknown;
+      if (!Array.isArray(arr) || arr.length === 0) return null;
+      const parsed = arr.map((e) => (typeof e === "string" ? JSON.parse(e) : e)) as Array<{
+        message?: string;
+        indicator?: string;
+      }>;
+      const err = parsed.find((e) => e?.indicator === "red" || e?.indicator === "orange");
+      const pick = err ?? parsed[0];
+      const msg = pick?.message;
+      if (msg) return stripHtml(String(msg)).trim();
+    } catch { /* fall through */ }
+  }
+  return null;
+}
+
+function stripHtml(input: string): string {
+  return input
+    .replace(/<\s*(br|\/li|\/p|\/div|\/ul|\/ol)\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export async function createCompanyMasterAction(_prev: FormState, formData: FormData): Promise<FormState> {

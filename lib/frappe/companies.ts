@@ -162,14 +162,25 @@ export async function updateCompany(
   id: string,
   input: Omit<CompanyInput, "abbr">,
 ): Promise<void> {
+  // Frappe v15's typed_validator rejects `frappe.client.set_value` with
+  // a dict `fieldname` (417 EXPECTATION FAILED). Fetch the existing doc,
+  // overlay the edited fields, and save the whole thing back - same
+  // pattern the invoice / tax-template updates use.
+  const existing = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    as: "user",
+    args: { doctype: "Company", name: id },
+  });
+  const doc = {
+    ...existing,
+    doctype: "Company",
+    name: id,
+    ...compact(input),
+  };
   await frappeCall<unknown>({
-    method: "frappe.client.set_value",
+    method: "frappe.client.save",
     verb: "POST",
-    args: {
-      doctype: "Company",
-      name: id,
-      fieldname: compact(input),
-    },
+    args: { doc },
     as: "user",
   });
 }

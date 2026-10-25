@@ -95,7 +95,7 @@ function extractFrappeMessage(detail: unknown): string | null {
   const obj = detail as Record<string, unknown>;
   const exc = obj.exception;
   if (typeof exc === "string" && exc.trim()) {
-    const stripped = exc.replace(/^[\w.]+:\s*/, "").trim();
+    const stripped = stripHtml(exc.replace(/^[\w.]+:\s*/, "")).trim();
     if (stripped) return stripped;
   }
   const sm = obj._server_messages;
@@ -110,10 +110,18 @@ function extractFrappeMessage(detail: unknown): string | null {
       const err = parsed.find((e) => e?.indicator === "red" || e?.indicator === "orange");
       const pick = err ?? parsed[0];
       const msg = pick?.message;
-      if (msg) return String(msg).replace(/<[^>]+>/g, "").trim();
+      if (msg) return stripHtml(String(msg)).trim();
     } catch { /* fall through */ }
   }
   return null;
+}
+
+function stripHtml(input: string): string {
+  return input
+    .replace(/<\s*(br|\/li|\/p|\/div|\/ul|\/ol)\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export async function createPurchaseInvoiceAction(

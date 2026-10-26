@@ -11,65 +11,74 @@ import { myCompany } from "@/lib/references/server";
 
 /** The doctype each known row label resolves to. Rows not in this map
  *  render with no count (that's fine — some rows are tools, not lists). */
+// NOTE: values must be the doctype that the row's LIST PAGE actually
+// queries — for the fork that's almost always the "Colossal …"
+// doctype, not the stock ERPNext one (which is empty here). Mapping to
+// the stock names made every card say "Not set up yet" even with real
+// records present.
 const LABEL_TO_DOCTYPE: Record<string, string> = {
   // Masters
   "Company":              "Company",
-  "Chart of Accounts":    "Account",
-  "Fiscal Year":          "Fiscal Year",
-  "Accounting Dimension": "Accounting Dimension",
-  "Finance Book":         "Finance Book",
-  "Accounting Period":    "Accounting Period",
-  "Payment Term":         "Payment Term",
+  "Chart of Accounts":    "Colossal Account",
+  "Fiscal Year":          "Colossal Fiscal Year",
+  "Accounting Dimension": "Colossal Accounting Dimension",
+  "Finance Book":         "Colossal Finance Book",
+  "Accounting Period":    "Colossal Accounting Period",
+  "Payment Term":         "Colossal Payment Term",
   // Transactions
-  "Sales Invoice":            "Sales Invoice",
-  "Purchase Invoice":         "Purchase Invoice",
-  "Journal Entry":            "Journal Entry",
-  "Payment Entry":            "Payment Entry",
-  "Journal Entry Template":   "Journal Entry Template",
+  "Sales Invoice":            "Colossal Sales Invoice",
+  "Purchase Invoice":         "Colossal Purchase Invoice",
+  "Journal Entry":            "Colossal Journal Entry",
+  "Payment Entry":            "Colossal Payment Entry",
+  "Journal Entry Template":   "Colossal Journal Entry Template",
   "Terms and Conditions":     "Terms and Conditions",
-  "Mode of Payment":          "Mode of Payment",
+  "Mode of Payment":          "Colossal Mode of Payment",
   // Tax
-  "Sales Taxes and Charges Template":    "Sales Taxes and Charges Template",
-  "Purchase Taxes and Charges Template": "Purchase Taxes and Charges Template",
-  "Item Tax Template":                   "Item Tax Template",
-  "Tax Category":                        "Tax Category",
-  "Tax Rule":                            "Tax Rule",
-  "Tax Withholding Category":            "Tax Withholding Category",
+  "Sales Taxes and Charges Template":    "Colossal Sales Taxes and Charges Template",
+  "Purchase Taxes and Charges Template": "Colossal Purchase Taxes and Charges Template",
+  "Item Tax Template":                   "Colossal Item Tax Template",
+  "Tax Category":                        "Colossal Tax Category",
+  "Tax Rule":                            "Colossal Tax Rule",
+  "Tax Withholding Category":            "Colossal Tax Withholding Category",
   // Cost & Budget
-  "Chart of Cost Centers":  "Cost Center",
-  "Budget":                 "Budget",
+  "Chart of Cost Centers":  "Colossal Cost Center",
+  "Budget":                 "Colossal Budget",
   "Cost Center Allocation": "Cost Center Allocation",
-  "Monthly Distribution":   "Monthly Distribution",
+  "Monthly Distribution":   "Colossal Monthly Distribution",
   // Multi-currency
   "Currency":                   "Currency",
-  "Currency Exchange":          "Currency Exchange",
-  "Exchange Rate Revaluation":  "Exchange Rate Revaluation",
+  "Currency Exchange":          "Colossal Currency Exchange",
+  "Exchange Rate Revaluation":  "Colossal Exchange Rate Revaluation",
   // Banking
   "Bank":                               "Bank",
   "Bank Account":                       "Bank Account",
   "Bank Clearance":                     "Bank Clearance",
   "Bank Reconciliation Statement":      "Bank Reconciliation Statement",
   // Subscriptions
-  "Subscription Plan":  "Subscription Plan",
-  "Subscription":       "Subscription",
+  "Subscription Plan":  "Colossal Subscription Plan",
+  "Subscription":       "Colossal Subscription",
   // Shares
-  "Shareholder":    "Shareholder",
-  "Share Transfer": "Share Transfer",
+  "Shareholder":    "Colossal Shareholder",
+  "Share Transfer": "Colossal Share Transfer",
 };
 
 /** Doctypes that always have company scope. */
 const COMPANY_SCOPED = new Set<string>([
-  "Account", "Fiscal Year", "Finance Book", "Accounting Period",
-  "Sales Invoice", "Purchase Invoice", "Journal Entry", "Payment Entry",
-  "Cost Center", "Budget", "Bank Account",
-  "Sales Taxes and Charges Template", "Purchase Taxes and Charges Template",
+  "Colossal Account",
+  "Colossal Sales Invoice", "Colossal Purchase Invoice",
+  "Colossal Journal Entry", "Colossal Payment Entry",
+  "Colossal Cost Center", "Colossal Budget", "Bank Account",
+  "Colossal Sales Taxes and Charges Template",
+  "Colossal Purchase Taxes and Charges Template",
 ]);
 
 async function count(doctype: string, filters: Record<string, unknown>): Promise<number | null> {
   try {
+    // Raw object, not JSON.stringify — v15's typed validator rejects
+    // stringified filters with 417 (same lesson as the report pages).
     const n = await frappeCall<number>({
       method: "frappe.client.get_count",
-      args: { doctype, filters: JSON.stringify(filters) },
+      args: { doctype, filters },
       as: "user",
     });
     return Number(n ?? 0);

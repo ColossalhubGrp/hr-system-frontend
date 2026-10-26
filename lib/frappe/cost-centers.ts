@@ -122,6 +122,8 @@ export async function getCostCenter(name: string): Promise<CostCenter | null> {
 export type CostCenterCreateInput = {
   costCenterName: string;
   company: string;
+  /** Blank = let the backend auto-pick (or create) the company's root
+   *  group. See colossal_accounting.overrides.cost_center_events. */
   parentCostCenter: string;
   isGroup: boolean;
 };
@@ -136,7 +138,9 @@ export async function createCostCenter(input: CostCenterCreateInput): Promise<{ 
         doctype: "Colossal Cost Center",
         cost_center_name: input.costCenterName,
         company: input.company,
-        parent_cost_center: input.parentCostCenter,
+        // Omit when blank so the before_insert hook can auto-wire it;
+        // sending "" counts as a set value and bypasses the fallback.
+        parent_cost_center: input.parentCostCenter?.trim() || undefined,
         is_group: input.isGroup ? 1 : 0,
       },
     },

@@ -25,7 +25,10 @@ export async function createCostCenterAction(input: {
   isGroup: boolean;
 }): Promise<Ok<{ name: string; message: string }> | Err> {
   if (!input.costCenterName.trim()) return { ok: false, error: "Name is required." };
-  if (!input.parentCostCenter.trim()) return { ok: false, error: "Parent is required." };
+  // Parent is optional on the UI — the Colossal fork's before_insert
+  // hook auto-wires it to the company's root group (creating one if
+  // none exists), so a fresh tenant isn't locked out of adding its
+  // first cost centre.
   try {
     const created = await createCostCenter(input);
     revalidatePath("/accounting/cost-centers");

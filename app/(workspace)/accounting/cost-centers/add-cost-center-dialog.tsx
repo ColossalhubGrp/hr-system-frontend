@@ -91,12 +91,20 @@ export function AddCostCenterDialog({
             />
           </Field>
 
-          <Field label="Parent" required hint="Must be a group cost center.">
+          <Field
+            label="Parent"
+            hint={
+              parents.length === 0
+                ? "Leave blank — a top-level group will be created automatically."
+                : "Leave blank to nest under the top-level group for this company."
+            }
+          >
             <select
               value={parent}
               onChange={(e) => setParent(e.currentTarget.value)}
               className="h-10 w-full rounded-md border border-input bg-transparent px-3 text-sm"
             >
+              <option value="">— Auto-pick top-level group —</option>
               {parents.map((p) => (
                 <option key={p.name} value={p.name}>{p.label}</option>
               ))}
@@ -133,7 +141,7 @@ export function AddCostCenterDialog({
           <button
             type="button"
             onClick={save}
-            disabled={pending || !name.trim() || !parent}
+            disabled={pending || !name.trim()}
             className={cn(
               "inline-flex h-10 items-center gap-1.5 rounded-chip bg-ink-800 px-4 text-sm font-semibold text-white disabled:opacity-60 hover:bg-ink-700",
             )}

@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listCustomers, listItems } from "@/lib/frappe/sales-invoice";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { NewSalesInvoiceForm } from "@/components/accounting/new-sales-invoice-form";
+import { AccountingSetupGate } from "@/components/accounting/setup-gate";
 import Link from "next/link";
 import type { Route } from "next";
 
@@ -10,14 +11,6 @@ export const metadata = { title: "New Sales Invoice · Accounting · Colossal HR
 export const dynamic = "force-dynamic";
 
 export default async function NewSalesInvoicePage() {
-  const [companies, customers, items] = await Promise.all([
-    listCompanies(),
-    listCustomers({ limit: 50 }),
-    listItems({ limit: 50 }),
-  ]);
-  const defaultCompany = companies[0]?.name ?? "";
-  const today = new Date().toISOString().slice(0, 10);
-
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-center gap-2 text-sm">
@@ -32,13 +25,28 @@ export default async function NewSalesInvoicePage() {
         title="New Sales Invoice"
         subtitle="Bill a customer for goods or services."
       />
-      <NewSalesInvoiceForm
-        companies={companies}
-        customers={customers}
-        items={items}
-        defaultCompany={defaultCompany}
-        defaultDate={today}
-      />
+      <AccountingSetupGate>
+        <NewSalesInvoiceFormWrapper />
+      </AccountingSetupGate>
     </div>
+  );
+}
+
+async function NewSalesInvoiceFormWrapper() {
+  const [companies, customers, items] = await Promise.all([
+    listCompanies(),
+    listCustomers({ limit: 50 }),
+    listItems({ limit: 50 }),
+  ]);
+  const defaultCompany = companies[0]?.name ?? "";
+  const today = new Date().toISOString().slice(0, 10);
+  return (
+    <NewSalesInvoiceForm
+      companies={companies}
+      customers={customers}
+      items={items}
+      defaultCompany={defaultCompany}
+      defaultDate={today}
+    />
   );
 }

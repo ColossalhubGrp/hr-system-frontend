@@ -4,11 +4,12 @@ import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Route } from "next";
-import { AlertCircle, Send, Ban, Pencil } from "lucide-react";
+import { Send, Ban, Pencil } from "lucide-react";
 import {
   submitJournalEntryAction,
   cancelJournalEntryAction,
 } from "@/app/(workspace)/accounting/journal-entries/actions";
+import { ActionError } from "./action-error";
 import { cn } from "@/lib/cn";
 
 /**
@@ -72,12 +73,7 @@ export function JournalEntryActions({
           {pending ? (isDraft ? "Submitting…" : "Cancelling…") : isDraft ? "Submit" : "Cancel"}
         </button>
       </div>
-      {error && (
-        <div className="flex items-start gap-1 text-xs text-destructive">
-          <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
-          <span>{error}</span>
-        </div>
-      )}
+      {error && <ActionError message={error} onDismiss={() => setError(null)} />}
     </div>
   );
 }

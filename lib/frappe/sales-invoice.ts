@@ -293,7 +293,39 @@ export type SalesInvoiceCreateInput = {
   }>;
 };
 
+/** Fetch a tax template's rows and shape them as invoice `taxes` child
+ *  rows. The Desk UI copies these client-side when you pick a template;
+ *  REST inserts get no such help, so without this the invoice stores
+ *  the template name but computes zero tax. */
+export async function fetchTemplateTaxRows(
+  templateDoctype: string,
+  templateName: string,
+): Promise<Array<Record<string, unknown>>> {
+  try {
+    const tpl = await frappeCall<Record<string, unknown>>({
+      method: "frappe.client.get",
+      as: "user",
+      args: { doctype: templateDoctype, name: templateName },
+    });
+    const rows = (tpl.taxes as Array<Record<string, unknown>>) ?? [];
+    return rows.map((r) => ({
+      charge_type: r.charge_type,
+      account_head: r.account_head,
+      description: r.description || r.account_head,
+      rate: Number(r.rate ?? 0),
+      row_id: r.row_id || undefined,
+      cost_center: r.cost_center || undefined,
+      included_in_print_rate: Number(r.included_in_print_rate ?? 0),
+    }));
+  } catch {
+    return [];
+  }
+}
+
 export async function createSalesInvoice(input: SalesInvoiceCreateInput): Promise<{ name: string }> {
+  const taxRows = input.taxesAndCharges
+    ? await fetchTemplateTaxRows("Colossal Sales Taxes and Charges Template", input.taxesAndCharges)
+    : [];
   const doc = {
     doctype: "Colossal Sales Invoice",
     customer: input.customer,
@@ -305,6 +337,7 @@ export async function createSalesInvoice(input: SalesInvoiceCreateInput): Promis
     po_date: input.poDate || undefined,
     remarks: input.remarks || undefined,
     taxes_and_charges: input.taxesAndCharges || undefined,
+    taxes: taxRows.length > 0 ? taxRows : undefined,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),
@@ -342,6 +375,12 @@ export async function updateSalesInvoice(
     throw new Error("This invoice is no longer a draft, so it can't be edited. Reload the page.");
   }
 
+  // Re-derive tax rows from the picked template so changing (or
+  // clearing) the template on edit actually changes the computed tax.
+  const taxRows = input.taxesAndCharges
+    ? await fetchTemplateTaxRows("Colossal Sales Taxes and Charges Template", input.taxesAndCharges)
+    : [];
+
   const doc = {
     ...existing,
     doctype: "Colossal Sales Invoice",
@@ -354,6 +393,7 @@ export async function updateSalesInvoice(
     po_date: input.poDate || null,
     remarks: input.remarks || null,
     taxes_and_charges: input.taxesAndCharges || null,
+    taxes: taxRows,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),

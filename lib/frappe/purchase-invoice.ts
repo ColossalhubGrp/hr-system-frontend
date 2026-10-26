@@ -290,6 +290,10 @@ export type PurchaseInvoiceCreateInput = {
 };
 
 export async function createPurchaseInvoice(input: PurchaseInvoiceCreateInput): Promise<{ name: string }> {
+  const { fetchTemplateTaxRows } = await import("./sales-invoice");
+  const taxRows = input.taxesAndCharges
+    ? await fetchTemplateTaxRows("Colossal Purchase Taxes and Charges Template", input.taxesAndCharges)
+    : [];
   const doc = {
     doctype: "Colossal Purchase Invoice",
     supplier: input.supplier,
@@ -301,6 +305,7 @@ export async function createPurchaseInvoice(input: PurchaseInvoiceCreateInput): 
     bill_date: input.billDate || undefined,
     remarks: input.remarks || undefined,
     taxes_and_charges: input.taxesAndCharges || undefined,
+    taxes: taxRows.length > 0 ? taxRows : undefined,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),
@@ -338,6 +343,11 @@ export async function updatePurchaseInvoice(
     throw new Error("This invoice is no longer a draft, so it can't be edited. Reload the page.");
   }
 
+  const { fetchTemplateTaxRows } = await import("./sales-invoice");
+  const taxRows = input.taxesAndCharges
+    ? await fetchTemplateTaxRows("Colossal Purchase Taxes and Charges Template", input.taxesAndCharges)
+    : [];
+
   const doc = {
     ...existing,
     doctype: "Colossal Purchase Invoice",
@@ -350,6 +360,7 @@ export async function updatePurchaseInvoice(
     bill_date: input.billDate || null,
     remarks: input.remarks || null,
     taxes_and_charges: input.taxesAndCharges || null,
+    taxes: taxRows,
     items: input.items.map((it) => ({
       item_code: it.itemCode,
       qty: Number(it.qty),

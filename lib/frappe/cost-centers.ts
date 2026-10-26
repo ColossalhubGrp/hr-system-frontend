@@ -122,13 +122,65 @@ export async function getCostCenter(name: string): Promise<CostCenter | null> {
 export type CostCenterCreateInput = {
   costCenterName: string;
   company: string;
-  /** Blank = let the backend auto-pick (or create) the company's root
-   *  group. See colossal_accounting.overrides.cost_center_events. */
+  /** Blank = we resolve (or create) the company's root group here in
+   *  the server action before inserting. */
   parentCostCenter: string;
   isGroup: boolean;
 };
 
+/** Find the company's root cost centre (the one group row whose
+ *  cost_center_name equals the company and has no parent). Creates it
+ *  if it doesn't exist yet. The fork's own validate_mandatory
+ *  explicitly allows exactly this shape — `cost_center_name == company`
+ *  with no parent — as the root, so this needs no backend hook. */
+export async function ensureRootCostCenter(company: string): Promise<string> {
+  // 1) Any group with no parent for this company counts as the root.
+  const existing = await frappeCall<Array<{ name: string }>>({
+    method: "frappe.client.get_list",
+    as: "user",
+    args: {
+      doctype: "Colossal Cost Center",
+      fields: ["name"],
+      filters: [["company", "=", company], ["is_group", "=", 1]],
+      limit_page_length: 50,
+    },
+  });
+  if (existing.length > 0) {
+    // Prefer the row named after the company (the canonical root);
+    // otherwise any group will do as a nesting parent.
+    const canonical = existing.find((r) => r.name.startsWith(company));
+    return (canonical ?? existing[0]).name;
+  }
+
+  // 2) No group at all — create the root. Named after the company, so
+  //    the fork controller's validate_mandatory treats it as the root
+  //    and allows the missing parent.
+  const created = await frappeCall<{ name: string }>({
+    method: "frappe.client.insert",
+    as: "user",
+    verb: "POST",
+    args: {
+      doc: {
+        doctype: "Colossal Cost Center",
+        cost_center_name: company,
+        company,
+        is_group: 1,
+      },
+    },
+  });
+  return created.name;
+}
+
 export async function createCostCenter(input: CostCenterCreateInput): Promise<{ name: string }> {
+  let parent = input.parentCostCenter?.trim() || "";
+  if (!parent) {
+    parent = await ensureRootCostCenter(input.company);
+  }
+  // Creating the root itself? (name matches the company and caller asked
+  // for a group with no parent) — insert without parent; the fork's
+  // validate_mandatory allows that single case.
+  const isRootItself =
+    input.isGroup && input.costCenterName.trim() === input.company && !input.parentCostCenter?.trim();
   const created = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
     as: "user",
@@ -138,9 +190,7 @@ export async function createCostCenter(input: CostCenterCreateInput): Promise<{ 
         doctype: "Colossal Cost Center",
         cost_center_name: input.costCenterName,
         company: input.company,
-        // Omit when blank so the before_insert hook can auto-wire it;
-        // sending "" counts as a set value and bypasses the fallback.
-        parent_cost_center: input.parentCostCenter?.trim() || undefined,
+        parent_cost_center: isRootItself ? undefined : parent,
         is_group: input.isGroup ? 1 : 0,
       },
     },

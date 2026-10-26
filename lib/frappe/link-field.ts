@@ -155,6 +155,19 @@ export async function createLinkOption(
     doc[entry.childRow.tableField] = [row];
   }
 
+  // Cost centres: parent is mandatory on the DocType but a fresh tenant
+  // has nothing to pick. Resolve (or create) the company's root group
+  // here — same logic the dedicated chart page uses — so the modal
+  // can't dead-end.
+  if (doctype === "Colossal Cost Center" && !doc.parent_cost_center && doc.company) {
+    try {
+      const { ensureRootCostCenter } = await import("./cost-centers");
+      doc.parent_cost_center = await ensureRootCostCenter(String(doc.company));
+    } catch {
+      // Fall through — insert will surface the real error.
+    }
+  }
+
   try {
     const created = await frappeCall<{ name: string }>({
       method: "frappe.client.insert",

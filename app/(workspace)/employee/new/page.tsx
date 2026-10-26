@@ -5,6 +5,7 @@ import { EmployeeForm } from "@/components/employee/employee-form";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { requireGroup } from "@/lib/frappe/require-role";
 import { getMyAccess, PERSONA_ROLES } from "@/lib/frappe/roles";
+import { HrSetupGate } from "@/components/hr/setup-gate";
 import { createEmployeeAction } from "../actions";
 
 export const metadata = { title: "New employee · Colossal HR" };
@@ -12,15 +13,6 @@ export const metadata = { title: "New employee · Colossal HR" };
 export default async function NewEmployeePage() {
   // Creating an Employee is HR-only.
   await requireGroup("HR_ANY", "/employee/new");
-  const [options, access] = await Promise.all([
-    fetchEmployeeFormOptions(),
-    getMyAccess(),
-  ]);
-  // Only admins can assign persona roles — mirrors the gate on
-  // recruitment_app.api.me.set_login_roles_for_employee. Non-admin
-  // HR still creates the Employee (they always land with the
-  // Employee self-service role); the picker just isn't shown.
-  const canAssignRoles = Boolean(access?.isItAdmin || access?.isHrAdmin);
 
   return (
     <div className="flex flex-col gap-5">
@@ -45,14 +37,27 @@ export default async function NewEmployeePage() {
         </p>
       </header>
 
-      <EmployeeForm
-        mode="create"
-        action={createEmployeeAction}
-        options={options}
-        personaRoles={PERSONA_ROLES}
-        canAssignRoles={canAssignRoles}
-        cancelHref="/employee"
-      />
+      <HrSetupGate>
+        <NewEmployeeFormWrapper />
+      </HrSetupGate>
     </div>
+  );
+}
+
+async function NewEmployeeFormWrapper() {
+  const [options, access] = await Promise.all([
+    fetchEmployeeFormOptions(),
+    getMyAccess(),
+  ]);
+  const canAssignRoles = Boolean(access?.isItAdmin || access?.isHrAdmin);
+  return (
+    <EmployeeForm
+      mode="create"
+      action={createEmployeeAction}
+      options={options}
+      personaRoles={PERSONA_ROLES}
+      canAssignRoles={canAssignRoles}
+      cancelHref="/employee"
+    />
   );
 }

@@ -13,9 +13,52 @@ type Ok<T> = { ok: true } & T;
 type Err = { ok: false; error: string };
 
 function err(e: unknown): Err {
-  if (e instanceof FrappeRequestError) return { ok: false, error: e.message || `Backend error (${e.status}).` };
+  if (e instanceof FrappeRequestError) {
+    const real = extractFrappeMessage(e.detail);
+    if (real) return { ok: false, error: real };
+    const s = e.message.toLowerCase();
+    if (s.includes("403") || s.includes("forbidden") || s.includes("permission")) {
+      return { ok: false, error: "You don't have permission to change cost centres." };
+    }
+    if (e.status >= 500) {
+      return { ok: false, error: "The server couldn't save this cost centre. Try again in a moment." };
+    }
+    return { ok: false, error: "Couldn't save this cost centre. Please try again." };
+  }
   if (e instanceof Error) return { ok: false, error: e.message };
   return { ok: false, error: "Something went wrong." };
+}
+
+function extractFrappeMessage(detail: unknown): string | null {
+  if (!detail || typeof detail !== "object") return null;
+  const obj = detail as Record<string, unknown>;
+  const exc = obj.exception;
+  if (typeof exc === "string" && exc.trim()) {
+    const stripped = stripHtml(exc.replace(/^[\w.]+:\s*/, "")).trim();
+    if (stripped) return stripped;
+  }
+  const sm = obj._server_messages;
+  if (typeof sm === "string") {
+    try {
+      const arr = JSON.parse(sm) as unknown;
+      if (!Array.isArray(arr) || arr.length === 0) return null;
+      const parsed = arr.map((x) => (typeof x === "string" ? JSON.parse(x) : x)) as Array<{
+        message?: string; indicator?: string;
+      }>;
+      const red = parsed.find((x) => x?.indicator === "red" || x?.indicator === "orange");
+      const pick = red ?? parsed[0];
+      if (pick?.message) return stripHtml(String(pick.message)).trim();
+    } catch { /* fall through */ }
+  }
+  return null;
+}
+
+function stripHtml(input: string): string {
+  return input
+    .replace(/<\s*(br|\/li|\/p|\/div|\/ul|\/ol)\s*\/?>/gi, " ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export async function createCostCenterAction(input: {

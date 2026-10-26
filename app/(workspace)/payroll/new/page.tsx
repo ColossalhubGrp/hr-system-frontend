@@ -8,19 +8,11 @@ import {
   getCompanyPayrollDefaults,
   getCompanyPayrollSettings,
 } from "@/lib/payroll-engine/doctype-helpers";
+import { PayrollSetupGate } from "@/components/payroll/setup-gate";
 
 export const metadata = { title: "New pay run · Payroll · Colossal HR" };
 
 export default async function NewPayRunPage() {
-  // Pre-load company pay frequency + currency + payable account so the
-  // form's defaults match the company's standing config and the user can
-  // create a run in one step.
-  const [settings, defaults] = await Promise.all([
-    getCompanyPayrollSettings(),
-    getCompanyPayrollDefaults(),
-  ]);
-  const frequency = mapFrappeFrequency(settings?.pay_frequency);
-
   return (
     <div className="flex flex-col gap-5">
       <Button asChild variant="ghost" size="sm" className="w-fit gap-1 text-xs text-muted-foreground">
@@ -45,15 +37,28 @@ export default async function NewPayRunPage() {
         </p>
       </header>
 
-      <Card className="p-5">
-        <NewPayRunForm
-          defaultFrequency={frequency}
-          defaultCurrency={defaults?.defaultCurrency ?? "USD"}
-          defaultPayableAccount={defaults?.defaultPayrollPayableAccount ?? null}
-          payableAccounts={defaults?.payableAccounts ?? []}
-        />
-      </Card>
+      <PayrollSetupGate>
+        <NewPayRunFormWrapper />
+      </PayrollSetupGate>
     </div>
+  );
+}
+
+async function NewPayRunFormWrapper() {
+  const [settings, defaults] = await Promise.all([
+    getCompanyPayrollSettings(),
+    getCompanyPayrollDefaults(),
+  ]);
+  const frequency = mapFrappeFrequency(settings?.pay_frequency);
+  return (
+    <Card className="p-5">
+      <NewPayRunForm
+        defaultFrequency={frequency}
+        defaultCurrency={defaults?.defaultCurrency ?? "USD"}
+        defaultPayableAccount={defaults?.defaultPayrollPayableAccount ?? null}
+        payableAccounts={defaults?.payableAccounts ?? []}
+      />
+    </Card>
   );
 }
 

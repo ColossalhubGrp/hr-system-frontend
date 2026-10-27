@@ -335,7 +335,7 @@ function LineRow({
 
   return (
     <div className="grid grid-cols-12 items-start gap-2 rounded-xl border border-border/60 bg-muted/10 p-3">
-      <div className="col-span-12 md:col-span-4">
+      <div className={multiCurrency ? "col-span-12 md:col-span-3" : "col-span-12 md:col-span-4"}>
         <label className="mb-1 block text-xs font-semibold text-muted-foreground">
           Account #{idx + 1}
           {multiCurrency && picked && (
@@ -413,7 +413,7 @@ function LineRow({
           )}
         </div>
       )}
-      <div className={cn(multiCurrency ? "col-span-5 md:col-span-1" : "col-span-11 md:col-span-3")}>
+      <div className={cn(multiCurrency ? "col-span-11 md:col-span-2" : "col-span-11 md:col-span-3")}>
         <label className="mb-1 block text-xs font-semibold text-muted-foreground">Cost Center</label>
         <LinkField
           doctype="Colossal Cost Center"

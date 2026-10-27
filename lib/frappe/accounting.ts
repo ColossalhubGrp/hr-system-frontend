@@ -16,7 +16,7 @@ import { submitDoc, cancelDoc } from "./submit-doc";
 // ── Types ────────────────────────────────────────────────────────
 
 export type VoucherType =
-  | "Colossal Journal Entry"
+  | "Journal Entry"
   | "Bank Entry"
   | "Cash Entry"
   | "Credit Card Entry"
@@ -27,10 +27,10 @@ export type VoucherType =
   | "Write Off Entry"
   | "Opening Entry"
   | "Depreciation Entry"
-  | "Colossal Exchange Rate Revaluation";
+  | "Exchange Rate Revaluation";
 
 export const VOUCHER_TYPES: VoucherType[] = [
-  "Colossal Journal Entry",
+  "Journal Entry",
   "Bank Entry",
   "Cash Entry",
   "Credit Card Entry",
@@ -40,7 +40,7 @@ export const VOUCHER_TYPES: VoucherType[] = [
   "Write Off Entry",
   "Opening Entry",
   "Depreciation Entry",
-  "Colossal Exchange Rate Revaluation",
+  "Exchange Rate Revaluation",
 ];
 
 export type JournalEntryRow = {
@@ -168,7 +168,7 @@ export async function listJournalEntries(opts: {
 
   const rows: JournalEntryRow[] = rowsRaw.map((r) => ({
     name: String(r.name ?? ""),
-    voucherType: String(r.voucher_type ?? "Colossal Journal Entry"),
+    voucherType: String(r.voucher_type ?? "Journal Entry"),
     postingDate: String(r.posting_date ?? ""),
     company: String(r.company ?? ""),
     totalDebit: Number(r.total_debit ?? 0),
@@ -240,7 +240,7 @@ export async function getJournalEntry(name: string): Promise<JournalEntryDetail 
     const linesRaw = (doc.accounts as Array<Record<string, unknown>>) ?? [];
     return {
       name: String(doc.name ?? name),
-      voucherType: String(doc.voucher_type ?? "Colossal Journal Entry"),
+      voucherType: String(doc.voucher_type ?? "Journal Entry"),
       postingDate: String(doc.posting_date ?? ""),
       company: String(doc.company ?? ""),
       chequeNo: (doc.cheque_no as string | null) ?? null,

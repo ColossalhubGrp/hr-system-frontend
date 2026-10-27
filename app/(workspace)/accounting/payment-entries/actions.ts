@@ -30,7 +30,14 @@ const createSchema = z
     paid_from: z.string().trim().optional(),
     paid_to: z.string().trim().optional(),
     paid_amount: z.coerce.number().gt(0, "Amount must be greater than zero."),
-    received_amount: z.coerce.number().optional(),
+    // Empty input must mean "default to Paid Amount", but a bare
+    // z.coerce.number() turns "" into 0 — a real (invalid) value that
+    // suppressed the fallback and tripped the server's "Received
+    // Amount is mandatory". Preprocess "" to undefined.
+    received_amount: z.preprocess(
+      (v) => (v === "" || v == null ? undefined : v),
+      z.coerce.number().gt(0, "Received amount must be greater than zero.").optional(),
+    ),
     mode_of_payment: z.string().trim().optional(),
     reference_no: z.string().trim().optional(),
     reference_date: z.string().trim().optional(),

@@ -45,6 +45,15 @@ const EMPTY_LINE = (): Line => ({
   exchange_rate: "1",
 });
 
+/** A saved Journal Entry Template, flattened for one-click prefill. */
+export type JournalTemplatePrefill = {
+  name: string;
+  title: string;
+  voucherType: string;
+  company: string | null;
+  lines: Array<{ account: string; debit: number; credit: number; costCenter: string | null }>;
+};
+
 /** Shape of an existing voucher being hydrated into the form for edit. */
 export type JournalEntryEditInitial = {
   name: string;
@@ -71,6 +80,7 @@ export function NewJournalEntryForm({
   voucherTypes,
   defaultCompany,
   defaultDate,
+  templates = [],
   initial,
 }: {
   companies: Company[];
@@ -78,6 +88,8 @@ export function NewJournalEntryForm({
   voucherTypes: string[];
   defaultCompany: string;
   defaultDate: string;
+  /** Saved templates offered as one-click prefills on the New flow. */
+  templates?: JournalTemplatePrefill[];
   /** When provided, the form hydrates with these values and submits
    *  via updateJournalEntryAction bound to `initial.name`. Omit for
    *  the New flow. */
@@ -106,6 +118,31 @@ export function NewJournalEntryForm({
     return [EMPTY_LINE(), EMPTY_LINE()];
   });
   const [multiCurrency, setMultiCurrency] = useState(initial?.multiCurrency ?? false);
+  const [voucherType, setVoucherType] = useState(initial?.voucherType ?? "Journal Entry");
+  const [templateName, setTemplateName] = useState("");
+
+  const applyTemplate = (name: string) => {
+    setTemplateName(name);
+    const t = templates.find((x) => x.name === name);
+    if (!t) return;
+    setVoucherType(t.voucherType);
+    if (t.company && t.company !== company) {
+      setCompany(t.company);
+      setAccounts([]);
+    }
+    if (t.lines.length > 0) {
+      setLines(
+        t.lines.map((l) => ({
+          account: l.account,
+          debit: l.debit ? String(l.debit) : "",
+          credit: l.credit ? String(l.credit) : "",
+          cost_center: l.costCenter ?? "",
+          user_remark: "",
+          exchange_rate: "1",
+        })),
+      );
+    }
+  };
 
   const companyCurrency =
     companies.find((c) => c.name === company)?.currency ?? "USD";
@@ -142,6 +179,23 @@ export function NewJournalEntryForm({
       )}
 
       <FormSection title="Voucher" description="Company, date and voucher type all post-forward to the ledger.">
+        {!isEdit && templates.length > 0 && (
+          <div className="mb-4">
+            <Field
+              label="Start from a template"
+              htmlFor="je_template"
+              hint="Prefills the voucher type and account lines — you can still change everything before saving."
+            >
+              <SelectInput
+                id="je_template"
+                value={templateName}
+                onChange={(e) => applyTemplate(e.target.value)}
+                options={templates.map((t) => ({ value: t.name, label: t.title }))}
+                placeholder="Blank entry"
+              />
+            </Field>
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Company" htmlFor="company" error={fe.company} required>
             <LinkField
@@ -165,7 +219,8 @@ export function NewJournalEntryForm({
             <SelectInput
               id="voucher_type"
               name="voucher_type"
-              defaultValue={initial?.voucherType ?? "Journal Entry"}
+              value={voucherType}
+              onChange={(e) => setVoucherType(e.target.value)}
               options={voucherTypes}
             />
           </Field>

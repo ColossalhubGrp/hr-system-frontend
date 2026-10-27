@@ -1,6 +1,11 @@
-/** Client-safe voucher types for Journal Entry Template. */
+/** Client-safe voucher types for Journal Entry Template.
+ *  Must match the doctype's Select options EXACTLY — Frappe v15
+ *  rejects unknown Select values with a bare 417. The template
+ *  doctype's list is shorter than the Journal Entry's (no Deferred
+ *  Revenue/Expense etc.), so keep this in sync with
+ *  colossal_journal_entry_template.json, not the JE form. */
 export const VOUCHER_TYPES = [
-  "Colossal Journal Entry",
+  "Journal Entry",
   "Inter Company Journal Entry",
   "Bank Entry",
   "Cash Entry",
@@ -12,7 +17,5 @@ export const VOUCHER_TYPES = [
   "Write Off Entry",
   "Opening Entry",
   "Depreciation Entry",
-  "Colossal Exchange Rate Revaluation",
-  "Deferred Revenue",
-  "Deferred Expense",
+  "Exchange Rate Revaluation",
 ] as const;

@@ -48,7 +48,9 @@ export function JournalTemplateForm({
   const fe = state.fieldErrors ?? {};
 
   const [lines, setLines] = useState<Line[]>(initial?.accounts && initial.accounts.length > 0 ? initial.accounts : [EMPTY_LINE(), EMPTY_LINE()]);
-  const [company, setCompany] = useState(initial?.company ?? "");
+  // Company is mandatory on the template — prefill the (usually only)
+  // company so the user doesn't have to pick it every time.
+  const [company, setCompany] = useState(initial?.company ?? companies[0]?.name ?? "");
 
   return (
     <form action={dispatch} className="flex flex-col gap-5">
@@ -74,14 +76,14 @@ export function JournalTemplateForm({
               required
             />
           </Field>
-          <Field label="Company" htmlFor="company" error={fe.company}>
+          <Field label="Company" htmlFor="company" error={fe.company} required>
             <LinkField
               id="company"
               name="company"
               doctype="Company"
               value={company}
               onChange={(next) => setCompany(next)}
-              placeholder="Any company"
+              required
               invalid={!!fe.company}
             />
           </Field>

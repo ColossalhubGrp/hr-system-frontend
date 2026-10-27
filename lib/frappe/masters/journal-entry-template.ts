@@ -50,7 +50,7 @@ export async function listJournalTemplates(): Promise<JournalEntryTemplate[]> {
   return rows.map((r) => ({
     name: String(r.name ?? ""),
     templateTitle: String(r.template_title ?? r.name ?? ""),
-    voucherType: String(r.voucher_type ?? "Colossal Journal Entry"),
+    voucherType: String(r.voucher_type ?? "Journal Entry"),
     company: (r.company as string | null) ?? null,
   }));
 }
@@ -66,7 +66,7 @@ export async function getJournalTemplate(name: string): Promise<JournalEntryTemp
     return {
       name: String(doc.name ?? name),
       templateTitle: String(doc.template_title ?? doc.name ?? ""),
-      voucherType: String(doc.voucher_type ?? "Colossal Journal Entry"),
+      voucherType: String(doc.voucher_type ?? "Journal Entry"),
       company: (doc.company as string | null) ?? null,
       namingSeries: (doc.naming_series as string | null) ?? null,
       accounts: accounts.map((r, i) => ({
@@ -88,16 +88,23 @@ export async function getJournalTemplate(name: string): Promise<JournalEntryTemp
 export type JournalTemplateInput = {
   templateTitle: string;
   voucherType: string;
-  company?: string;
+  /** Mandatory on the doctype — a template always belongs to a company. */
+  company: string;
   accounts: Array<{ account: string; debit: number; credit: number; costCenter?: string }>;
 };
+
+/** naming_series is reqd on the doctype but never shown to the user
+ *  (the doc is actually named by template_title); Desk fills it from
+ *  the Journal Entry's series. Pin the same value server-side. */
+const JE_NAMING_SERIES = "ACC-JV-.YYYY.-";
 
 export async function createJournalTemplate(input: JournalTemplateInput): Promise<{ name: string }> {
   const doc = {
     doctype: "Colossal Journal Entry Template",
     template_title: input.templateTitle,
     voucher_type: input.voucherType,
-    company: input.company || undefined,
+    company: input.company,
+    naming_series: JE_NAMING_SERIES,
     accounts: input.accounts.map((a) => ({
       account: a.account,
       debit_in_account_currency: a.debit,
@@ -115,36 +122,29 @@ export async function createJournalTemplate(input: JournalTemplateInput): Promis
 }
 
 export async function updateJournalTemplate(name: string, input: JournalTemplateInput): Promise<void> {
-  await frappeCall({
-    method: "frappe.client.set_value",
+  // frappe.client.set_value with a dict fieldname and partial
+  // frappe.client.save payloads both 417 on this build — fetch the
+  // full doc, merge the edits, save it back whole.
+  const doc = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
     as: "user",
-    verb: "POST",
-    args: {
-      doctype: "Colossal Journal Entry Template",
-      name,
-      fieldname: {
-        template_title: input.templateTitle,
-        voucher_type: input.voucherType,
-        company: input.company || null,
-      },
-    },
+    args: { doctype: "Colossal Journal Entry Template", name },
   });
+  doc.template_title = input.templateTitle;
+  doc.voucher_type = input.voucherType;
+  doc.company = input.company;
+  if (!doc.naming_series) doc.naming_series = JE_NAMING_SERIES;
+  doc.accounts = input.accounts.map((a) => ({
+    account: a.account,
+    debit_in_account_currency: a.debit,
+    credit_in_account_currency: a.credit,
+    cost_center: a.costCenter || undefined,
+  }));
   await frappeCall({
     method: "frappe.client.save",
     as: "user",
     verb: "POST",
-    args: {
-      doc: {
-        doctype: "Colossal Journal Entry Template",
-        name,
-        accounts: input.accounts.map((a) => ({
-          account: a.account,
-          debit_in_account_currency: a.debit,
-          credit_in_account_currency: a.credit,
-          cost_center: a.costCenter || undefined,
-        })),
-      },
-    },
+    args: { doc },
   });
 }
 

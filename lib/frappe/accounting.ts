@@ -691,6 +691,35 @@ export type PaymentEntryCreateInput = {
   remarks?: string;
 };
 
+/** Account currencies for paid_from / paid_to. The Payment Entry
+ *  doctype marks both *_account_currency fields mandatory and Desk
+ *  fills them client-side; REST inserts must supply them or the save
+ *  is rejected. Exchange rates default to 1 (single-currency books —
+ *  the controller recomputes when currencies differ). */
+async function paymentAccountCurrencies(
+  paidFrom?: string,
+  paidTo?: string,
+): Promise<{ from?: string; to?: string }> {
+  const names = [paidFrom, paidTo].filter(Boolean) as string[];
+  if (names.length === 0) return {};
+  try {
+    const rows = await frappeCall<Array<{ name: string; account_currency?: string | null }>>({
+      method: "frappe.client.get_list",
+      as: "user",
+      args: {
+        doctype: "Colossal Account",
+        fields: ["name", "account_currency"],
+        filters: [["name", "in", names]],
+        limit_page_length: names.length,
+      },
+    });
+    const byName = new Map(rows.map((r) => [r.name, r.account_currency || undefined]));
+    return { from: paidFrom ? byName.get(paidFrom) : undefined, to: paidTo ? byName.get(paidTo) : undefined };
+  } catch {
+    return {};
+  }
+}
+
 export async function createPaymentEntry(input: PaymentEntryCreateInput): Promise<{ name: string }> {
   const doc: Record<string, unknown> = {
     doctype: "Colossal Payment Entry",
@@ -710,6 +739,12 @@ export async function createPaymentEntry(input: PaymentEntryCreateInput): Promis
   }
   if (input.paidFrom) doc.paid_from = input.paidFrom;
   if (input.paidTo) doc.paid_to = input.paidTo;
+
+  const cur = await paymentAccountCurrencies(input.paidFrom, input.paidTo);
+  if (cur.from) doc.paid_from_account_currency = cur.from;
+  if (cur.to) doc.paid_to_account_currency = cur.to;
+  doc.source_exchange_rate = 1;
+  doc.target_exchange_rate = 1;
 
   const created = await frappeCall<{ name: string }>({
     method: "frappe.client.insert",
@@ -759,6 +794,12 @@ export async function updatePaymentEntry(
     paid_from: input.paidFrom || null,
     paid_to: input.paidTo || null,
   };
+
+  const cur = await paymentAccountCurrencies(input.paidFrom, input.paidTo);
+  if (cur.from) doc.paid_from_account_currency = cur.from;
+  if (cur.to) doc.paid_to_account_currency = cur.to;
+  doc.source_exchange_rate = (existing.source_exchange_rate as number) || 1;
+  doc.target_exchange_rate = (existing.target_exchange_rate as number) || 1;
 
   await frappeCall({
     method: "frappe.client.save",

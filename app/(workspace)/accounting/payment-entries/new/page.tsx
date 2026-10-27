@@ -43,11 +43,13 @@ export default async function NewPaymentEntryPage() {
  * state.
  */
 async function NewPaymentEntryFormWrapper() {
+  const { getCompanyMaster } = await import("@/lib/frappe/masters/company");
   const [companies, modes] = await Promise.all([listCompanies(), listModesOfPayment()]);
   const defaultCompany = companies[0]?.name ?? "";
-  const accounts = defaultCompany
-    ? await listAccounts(defaultCompany, { limit: 50 })
-    : [];
+  const [accounts, companyDoc] = await Promise.all([
+    defaultCompany ? listAccounts(defaultCompany, { limit: 50 }) : Promise.resolve([]),
+    defaultCompany ? getCompanyMaster(defaultCompany).catch(() => null) : Promise.resolve(null),
+  ]);
   const today = new Date().toISOString().slice(0, 10);
   return (
     <NewPaymentEntryForm
@@ -58,6 +60,10 @@ async function NewPaymentEntryFormWrapper() {
       paymentTypes={[...PAYMENT_TYPES]}
       defaultCompany={defaultCompany}
       defaultDate={today}
+      defaultReceivable={companyDoc?.defaultReceivableAccount ?? null}
+      defaultPayable={companyDoc?.defaultPayableAccount ?? null}
+      defaultBank={companyDoc?.defaultBankAccount ?? null}
+      defaultCash={companyDoc?.defaultCashAccount ?? null}
     />
   );
 }

@@ -51,6 +51,10 @@ export function NewPaymentEntryForm({
   paymentTypes,
   defaultCompany,
   defaultDate,
+  defaultReceivable,
+  defaultPayable,
+  defaultBank,
+  defaultCash,
   initial,
 }: {
   companies: Company[];
@@ -60,6 +64,12 @@ export function NewPaymentEntryForm({
   paymentTypes: string[];
   defaultCompany: string;
   defaultDate: string;
+  /** Company default accounts — used to prefill the accounting side
+   *  so the user only has to pick the bank/cash side. */
+  defaultReceivable?: string | null;
+  defaultPayable?: string | null;
+  defaultBank?: string | null;
+  defaultCash?: string | null;
   initial?: PaymentEntryEditInitial;
 }) {
   const isEdit = Boolean(initial);
@@ -69,14 +79,52 @@ export function NewPaymentEntryForm({
   const [state, dispatch] = useFormState(boundAction, EMPTY);
   const fe = state.fieldErrors ?? {};
 
+  const bankOrCash = defaultBank || defaultCash || "";
+  const prefillFor = (type: string): { from: string; to: string } => {
+    if (type === "Receive") return { from: defaultReceivable ?? "", to: bankOrCash };
+    if (type === "Pay") return { from: bankOrCash, to: defaultPayable ?? "" };
+    return { from: "", to: "" };
+  };
+
   const [paymentType, setPaymentType] = useState(initial?.paymentType ?? "Receive");
   const [partyType, setPartyType] = useState(initial?.partyType ?? "Customer");
   const [company, setCompany] = useState(initial?.company ?? defaultCompany ?? "");
   const [paidAmount, setPaidAmount] = useState(
     initial?.paidAmount ? String(initial.paidAmount) : "",
   );
+  const [paidFrom, setPaidFrom] = useState(
+    initial?.paidFrom ?? prefillFor(initial?.paymentType ?? "Receive").from,
+  );
+  const [paidTo, setPaidTo] = useState(
+    initial?.paidTo ?? prefillFor(initial?.paymentType ?? "Receive").to,
+  );
+
+  const onPaymentTypeChange = (next: string) => {
+    const prevDefaults = prefillFor(paymentType);
+    const nextDefaults = prefillFor(next);
+    setPaymentType(next);
+    // Re-prefill a side only when the user hasn't customised it (it's
+    // blank or still the previous type's default) — keeps their picks.
+    if (!paidFrom || paidFrom === prevDefaults.from) setPaidFrom(nextDefaults.from);
+    if (!paidTo || paidTo === prevDefaults.to) setPaidTo(nextDefaults.to);
+  };
 
   const isInternal = paymentType === "Internal Transfer";
+  const sideCopy =
+    paymentType === "Receive"
+      ? {
+          fromHint: "The customer's receivable account — prefilled from your Company defaults.",
+          toHint: "Bank or cash account the money arrived into.",
+        }
+      : paymentType === "Pay"
+      ? {
+          fromHint: "Bank or cash account the money left from.",
+          toHint: "The supplier's payable account — prefilled from your Company defaults.",
+        }
+      : {
+          fromHint: "Bank or cash account the money left from.",
+          toHint: "Bank or cash account the money moved into.",
+        };
 
   const partyDoctype = partyType === "Supplier" ? "Supplier" : partyType === "Employee" ? "Employee" : "Customer";
 
@@ -102,7 +150,7 @@ export function NewPaymentEntryForm({
               name="payment_type"
               value={paymentType}
               options={paymentTypes}
-              onChange={(e) => setPaymentType(e.target.value)}
+              onChange={(e) => onPaymentTypeChange(e.target.value)}
             />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
@@ -165,26 +213,30 @@ export function NewPaymentEntryForm({
 
       <FormSection title="Accounts" description="Money flows from paid-from to paid-to. Bank/cash on one side, receivable/payable on the other.">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Paid From" htmlFor="paid_from" error={fe.paid_from}>
+          <Field label="Paid From" htmlFor="paid_from" error={fe.paid_from} hint={sideCopy.fromHint} required>
             <LinkField
               id="paid_from"
               name="paid_from"
               doctype="Colossal Account"
-              defaultValue={initial?.paidFrom ?? ""}
+              value={paidFrom}
+              onChange={setPaidFrom}
+              required
               invalid={Boolean(fe.paid_from)}
               seed={company ? { company } : undefined}
-              filters={company ? [["company", "=", company]] : undefined}
+              filters={company ? [["company", "=", company], ["is_group", "=", 0]] : [["is_group", "=", 0]]}
             />
           </Field>
-          <Field label="Paid To" htmlFor="paid_to" error={fe.paid_to}>
+          <Field label="Paid To" htmlFor="paid_to" error={fe.paid_to} hint={sideCopy.toHint} required>
             <LinkField
               id="paid_to"
               name="paid_to"
               doctype="Colossal Account"
-              defaultValue={initial?.paidTo ?? ""}
+              value={paidTo}
+              onChange={setPaidTo}
+              required
               invalid={Boolean(fe.paid_to)}
               seed={company ? { company } : undefined}
-              filters={company ? [["company", "=", company]] : undefined}
+              filters={company ? [["company", "=", company], ["is_group", "=", 0]] : [["is_group", "=", 0]]}
             />
           </Field>
           <Field label="Paid Amount" htmlFor="paid_amount" error={fe.paid_amount} required>

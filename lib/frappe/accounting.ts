@@ -696,28 +696,53 @@ export type PaymentEntryCreateInput = {
  *  fills them client-side; REST inserts must supply them or the save
  *  is rejected. Exchange rates default to 1 (single-currency books —
  *  the controller recomputes when currencies differ). */
-async function paymentAccountCurrencies(
+export type PaymentAccountInfo = {
+  from?: { currency?: string; type?: string };
+  to?: { currency?: string; type?: string };
+};
+
+/** Currency + account type for paid_from / paid_to in one query. Used
+ *  both to satisfy the mandatory *_account_currency fields and to
+ *  enforce the bank-reference rule BEFORE the insert reaches Frappe
+ *  (bank-type accounts demand reference_no + reference_date). */
+export async function getPaymentAccountInfo(
   paidFrom?: string,
   paidTo?: string,
-): Promise<{ from?: string; to?: string }> {
+): Promise<PaymentAccountInfo> {
   const names = [paidFrom, paidTo].filter(Boolean) as string[];
   if (names.length === 0) return {};
   try {
-    const rows = await frappeCall<Array<{ name: string; account_currency?: string | null }>>({
+    const rows = await frappeCall<
+      Array<{ name: string; account_currency?: string | null; account_type?: string | null }>
+    >({
       method: "frappe.client.get_list",
       as: "user",
       args: {
         doctype: "Colossal Account",
-        fields: ["name", "account_currency"],
+        fields: ["name", "account_currency", "account_type"],
         filters: [["name", "in", names]],
         limit_page_length: names.length,
       },
     });
-    const byName = new Map(rows.map((r) => [r.name, r.account_currency || undefined]));
-    return { from: paidFrom ? byName.get(paidFrom) : undefined, to: paidTo ? byName.get(paidTo) : undefined };
+    const byName = new Map(rows.map((r) => [r.name, r]));
+    const pick = (n?: string) => {
+      const r = n ? byName.get(n) : undefined;
+      return r
+        ? { currency: r.account_currency || undefined, type: r.account_type || undefined }
+        : undefined;
+    };
+    return { from: pick(paidFrom), to: pick(paidTo) };
   } catch {
     return {};
   }
+}
+
+async function paymentAccountCurrencies(
+  paidFrom?: string,
+  paidTo?: string,
+): Promise<{ from?: string; to?: string }> {
+  const info = await getPaymentAccountInfo(paidFrom, paidTo);
+  return { from: info.from?.currency, to: info.to?.currency };
 }
 
 export async function createPaymentEntry(input: PaymentEntryCreateInput): Promise<{ name: string }> {

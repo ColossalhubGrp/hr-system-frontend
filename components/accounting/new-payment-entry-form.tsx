@@ -109,6 +109,21 @@ export function NewPaymentEntryForm({
     if (!paidTo || paidTo === prevDefaults.to) setPaidTo(nextDefaults.to);
   };
 
+  const [modeOfPayment, setModeOfPayment] = useState(initial?.modeOfPayment ?? "");
+
+  // A bank-type account on either side (or a Bank-type mode of payment)
+  // makes Reference No. + Reference Date mandatory server-side. Detect
+  // it live so the fields show as required BEFORE the user hits Save.
+  const accountTypeByName = useMemo(
+    () => new Map(accounts.map((a) => [a.name, a.accountType])),
+    [accounts],
+  );
+  const modeTypeByName = useMemo(() => new Map(modes.map((m) => [m.name, m.type])), [modes]);
+  const bankInvolved =
+    accountTypeByName.get(paidFrom) === "Bank" ||
+    accountTypeByName.get(paidTo) === "Bank" ||
+    modeTypeByName.get(modeOfPayment) === "Bank";
+
   const isInternal = paymentType === "Internal Transfer";
   const sideCopy =
     paymentType === "Receive"
@@ -177,7 +192,8 @@ export function NewPaymentEntryForm({
               id="mode_of_payment"
               name="mode_of_payment"
               doctype="Colossal Mode of Payment"
-              defaultValue={initial?.modeOfPayment ?? ""}
+              value={modeOfPayment}
+              onChange={setModeOfPayment}
               invalid={Boolean(fe.mode_of_payment)}
             />
           </Field>
@@ -267,22 +283,43 @@ export function NewPaymentEntryForm({
         </div>
       </FormSection>
 
-      <FormSection title="Reference" description="Cheque number, bank ref, or invoice reference — anything to trace this payment.">
+      <FormSection
+        title="Reference"
+        description={
+          bankInvolved
+            ? "A bank account is involved, so the bank reference is required — the cheque / EFT / transfer number and its date."
+            : "Cheque number, bank ref, or invoice reference — anything to trace this payment."
+        }
+      >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Reference No." htmlFor="reference_no" error={fe.reference_no}>
+          <Field
+            label="Reference No."
+            htmlFor="reference_no"
+            error={fe.reference_no}
+            required={bankInvolved}
+            hint={bankInvolved ? "Required for bank payments." : undefined}
+          >
             <TextInput
               id="reference_no"
               name="reference_no"
               defaultValue={initial?.referenceNo ?? ""}
-              placeholder="Optional"
+              placeholder={bankInvolved ? "Cheque / EFT / transfer reference" : "Optional"}
+              required={bankInvolved}
             />
           </Field>
-          <Field label="Reference Date" htmlFor="reference_date" error={fe.reference_date}>
+          <Field
+            label="Reference Date"
+            htmlFor="reference_date"
+            error={fe.reference_date}
+            required={bankInvolved}
+            hint={bankInvolved ? "Required for bank payments." : undefined}
+          >
             <TextInput
               id="reference_date"
               name="reference_date"
               type="date"
               defaultValue={initial?.referenceDate ?? ""}
+              required={bankInvolved}
             />
           </Field>
           <Field label="Remarks" htmlFor="remarks" error={fe.remarks} wide>

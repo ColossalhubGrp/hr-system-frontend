@@ -8,6 +8,7 @@ import {
   updatePaymentEntry,
   submitPaymentEntry,
   cancelPaymentEntry,
+  getPaymentAccountInfo,
   PAYMENT_TYPES,
   type PaymentType,
 } from "@/lib/frappe/accounting";
@@ -55,6 +56,33 @@ const createSchema = z
     message: "Paid To account is required.",
     path: ["paid_to"],
   });
+
+/** Frappe demands a reference no + date whenever a bank-type account
+ *  is on either side. Enforce it BEFORE the insert so the user gets
+ *  field-level errors on the Reference inputs instead of a post-save
+ *  banner. Returns null when the payment is fine. */
+async function bankReferenceErrors(data: {
+  paid_from?: string;
+  paid_to?: string;
+  reference_no?: string;
+  reference_date?: string;
+}): Promise<FormState | null> {
+  const info = await getPaymentAccountInfo(data.paid_from, data.paid_to);
+  const bankInvolved = info.from?.type === "Bank" || info.to?.type === "Bank";
+  if (!bankInvolved) return null;
+  const fieldErrors: Record<string, string> = {};
+  if (!data.reference_no?.trim()) {
+    fieldErrors.reference_no = "Required for bank payments — the cheque / EFT / transfer reference.";
+  }
+  if (!data.reference_date?.trim()) {
+    fieldErrors.reference_date = "Required for bank payments — the date on that reference.";
+  }
+  if (Object.keys(fieldErrors).length === 0) return null;
+  return {
+    fieldErrors,
+    error: "A bank account is involved, so the payment needs its bank reference. Fill the two fields below.",
+  };
+}
 
 function toFormState(err: unknown): FormState {
   if (typeof err === "object" && err !== null) {
@@ -131,6 +159,9 @@ export async function createPaymentEntryAction(
     return { fieldErrors, error: "Please fix the highlighted fields." };
   }
 
+  const refErrors = await bankReferenceErrors(parsed.data);
+  if (refErrors) return refErrors;
+
   let created: { name: string };
   try {
     created = await createPaymentEntry({
@@ -170,6 +201,9 @@ export async function updatePaymentEntryAction(
     }
     return { fieldErrors, error: "Please fix the highlighted fields." };
   }
+
+  const refErrors = await bankReferenceErrors(parsed.data);
+  if (refErrors) return refErrors;
 
   try {
     await updatePaymentEntry(name, {

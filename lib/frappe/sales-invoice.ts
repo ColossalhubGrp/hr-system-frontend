@@ -86,6 +86,13 @@ export type SalesInvoiceDetail = {
   taxesAndCharges: string | null;
   items: SalesInvoiceItem[];
   taxes: SalesInvoiceTax[];
+  /** ZIMRA fiscalisation outcome — empty when fiscalisation is off. */
+  fiscalStatus: string | null;
+  fiscalReceiptGlobalNo: number | null;
+  fiscalDayNo: number | null;
+  fiscalQrData: string | null;
+  fiscalCnReceiptGlobalNo: number | null;
+  fiscalError: string | null;
 };
 
 export async function listSalesInvoices(opts: {
@@ -262,6 +269,14 @@ export async function getSalesInvoice(name: string): Promise<SalesInvoiceDetail 
         taxAmount: Number(r.tax_amount ?? 0),
         total: Number(r.total ?? 0),
       })),
+      fiscalStatus: (doc.fiscal_status as string | null) || null,
+      fiscalReceiptGlobalNo: doc.fiscal_receipt_global_no ? Number(doc.fiscal_receipt_global_no) : null,
+      fiscalDayNo: doc.fiscal_day_no ? Number(doc.fiscal_day_no) : null,
+      fiscalQrData: (doc.fiscal_qr_data as string | null) || null,
+      fiscalCnReceiptGlobalNo: doc.fiscal_cn_receipt_global_no
+        ? Number(doc.fiscal_cn_receipt_global_no)
+        : null,
+      fiscalError: (doc.fiscal_error as string | null) || null,
     };
   } catch (e) {
     if (e instanceof FrappeRequestError && e.status === 404) return null;
@@ -468,4 +483,17 @@ export async function listItems(opts: { search?: string; limit?: number } = {}):
     uom: String(r.stock_uom ?? "Nos"),
     standardRate: Number(r.standard_rate ?? 0),
   }));
+}
+
+/** Re-send a Failed invoice to ZIMRA via the backend's guarded retry. */
+export async function retryFiscalisation(name: string): Promise<{
+  fiscal_status: string | null;
+  fiscal_error: string | null;
+}> {
+  return await frappeCall({
+    method: "colossal_accounting.fiscalisation.retry_fiscalisation",
+    as: "user",
+    verb: "POST",
+    args: { name },
+  });
 }

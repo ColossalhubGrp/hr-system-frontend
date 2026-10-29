@@ -25,7 +25,11 @@ export type SalesTaxLine = {
   includedInPrintRate: boolean;
 };
 
-export type SalesTaxTemplateDetail = SalesTaxTemplate & { taxes: SalesTaxLine[] };
+export type SalesTaxTemplateDetail = SalesTaxTemplate & {
+  taxes: SalesTaxLine[];
+  /** FDMS tax table ID — required for invoices using this template to reach ZIMRA. */
+  zimraTaxId: number | null;
+};
 
 export async function listSalesTaxTemplates(): Promise<SalesTaxTemplate[]> {
   const rows = await frappeCall<Array<Record<string, unknown>>>({
@@ -63,6 +67,7 @@ export async function getSalesTaxTemplate(name: string): Promise<SalesTaxTemplat
       company: String(doc.company ?? ""),
       isDefault: Number(doc.is_default ?? 0) === 1,
       disabled: Number(doc.disabled ?? 0) === 1,
+      zimraTaxId: doc.zimra_tax_id ? Number(doc.zimra_tax_id) : null,
       taxes: taxes.map((r, i) => ({
         idx: Number(r.idx ?? i + 1),
         chargeType: String(r.charge_type ?? ""),
@@ -84,6 +89,7 @@ export type SalesTaxTemplateInput = {
   company: string;
   isDefault: boolean;
   disabled: boolean;
+  zimraTaxId?: number | null;
   taxes: Array<{ chargeType: string; accountHead: string; description: string; rate: number; costCenter?: string; includedInPrintRate: boolean }>;
 };
 
@@ -95,6 +101,7 @@ export async function createSalesTaxTemplate(input: SalesTaxTemplateInput): Prom
     company: input.company,
     is_default: input.isDefault ? 1 : 0,
     disabled: input.disabled ? 1 : 0,
+    zimra_tax_id: input.zimraTaxId || undefined,
     taxes: input.taxes.map((t) => ({
       charge_type: t.chargeType,
       account_head: t.accountHead,
@@ -134,6 +141,7 @@ export async function updateSalesTaxTemplate(name: string, input: SalesTaxTempla
     company: input.company,
     is_default: input.isDefault ? 1 : 0,
     disabled: input.disabled ? 1 : 0,
+    zimra_tax_id: input.zimraTaxId ?? null,
     taxes: input.taxes.map((t) => ({
       charge_type: t.chargeType,
       account_head: t.accountHead,

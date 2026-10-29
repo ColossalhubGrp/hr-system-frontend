@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { StatusPill } from "@/components/common/status-pill";
 import { getSalesInvoice } from "@/lib/frappe/sales-invoice";
 import { SalesInvoiceActions } from "@/components/accounting/sales-invoice-actions";
+import { FiscalSection } from "@/components/accounting/fiscal-section";
 import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
 export const dynamic = "force-dynamic";
@@ -134,6 +135,16 @@ export default async function SalesInvoiceDetailPage({ params }: { params: { nam
           </div>
         </section>
       )}
+
+      <FiscalSection
+        name={doc.name}
+        status={doc.fiscalStatus}
+        receiptNo={doc.fiscalReceiptGlobalNo}
+        dayNo={doc.fiscalDayNo}
+        qrData={doc.fiscalQrData}
+        creditNoteReceiptNo={doc.fiscalCnReceiptGlobalNo}
+        error={doc.fiscalError}
+      />
 
       {doc.remarks && (
         <section className="rounded-2xl border border-border/60 bg-card p-4">

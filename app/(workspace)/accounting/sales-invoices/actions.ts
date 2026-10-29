@@ -8,6 +8,7 @@ import {
   updateSalesInvoice,
   submitSalesInvoice,
   cancelSalesInvoice,
+  retryFiscalisation,
 } from "@/lib/frappe/sales-invoice";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
@@ -246,6 +247,16 @@ export async function cancelSalesInvoiceAction(name: string): Promise<FormState>
     return toFormState(err);
   }
   revalidatePath("/accounting/sales-invoices");
+  revalidatePath(`/accounting/sales-invoices/${name}`);
+  return {};
+}
+
+export async function retryFiscalisationAction(name: string): Promise<FormState> {
+  try {
+    await retryFiscalisation(name);
+  } catch (err) {
+    return toFormState(err);
+  }
   revalidatePath(`/accounting/sales-invoices/${name}`);
   return {};
 }

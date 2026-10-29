@@ -26,6 +26,10 @@ const schema = z.object({
   title: z.string().trim().min(1, "Title is required."),
   company: z.string().trim().min(1, "Company is required."),
   is_default: z.union([z.literal("on"), z.literal("")]).optional().transform((v) => v === "on"),
+  zimra_tax_id: z.preprocess(
+    (v) => (v === "" || v == null ? undefined : v),
+    z.coerce.number().int().positive("ZIMRA Tax ID must be a positive number.").optional(),
+  ),
   disabled: z.union([z.literal("on"), z.literal("")]).optional().transform((v) => v === "on"),
   taxes_json: z.string().trim().default("[]").transform((s) => { try { return JSON.parse(s); } catch { return []; } }).pipe(z.array(lineSchema).min(1, "Add at least one tax line.")),
 });
@@ -120,6 +124,7 @@ function toInput(data: z.infer<typeof schema>) {
     company: data.company,
     isDefault: data.is_default,
     disabled: data.disabled,
+    zimraTaxId: data.zimra_tax_id ?? null,
     taxes: data.taxes_json.map((t: Line) => ({
       chargeType: t.charge_type,
       accountHead: t.account_head,

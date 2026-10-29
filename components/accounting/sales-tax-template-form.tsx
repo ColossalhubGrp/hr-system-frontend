@@ -34,6 +34,7 @@ type Initial = {
   company: string;
   isDefault: boolean;
   disabled: boolean;
+  zimraTaxId: number | null;
   taxes: Line[];
 };
 
@@ -72,6 +73,23 @@ export function SalesTaxTemplateForm({
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Title" htmlFor="title" error={fe.title} required>
             <TextInput id="title" name="title" defaultValue={initial?.title ?? ""} placeholder="e.g. Zimbabwe VAT 15%" />
+          </Field>
+          <Field
+            label="ZIMRA Tax ID"
+            htmlFor="zimra_tax_id"
+            error={fe.zimra_tax_id}
+            hint="The tax code ZIMRA assigned for this rate. Needed so invoices using this template reach ZIMRA."
+          >
+            <TextInput
+              id="zimra_tax_id"
+              name="zimra_tax_id"
+              type="number"
+              min="1"
+              step="1"
+              defaultValue={initial?.zimraTaxId != null ? String(initial.zimraTaxId) : ""}
+              placeholder="e.g. 1"
+              className="tabular-nums"
+            />
           </Field>
           <Field label="Company" htmlFor="company" error={fe.company} required>
             <LinkField

@@ -6,6 +6,7 @@ import {
   ArrowRightLeft, ArrowLeftRight, ScrollText, ClipboardList,
   BadgeDollarSign, ReceiptText, BookText, FileInput, FileOutput,
   FileSpreadsheet, PieChart, RefreshCw, Package,
+  ShieldCheck,
 } from "lucide-react";
 
 export type Row = {
@@ -78,6 +79,7 @@ export const SECTIONS: Section[] = [
       { label: "Tax Category", href: "/accounting/tax/categories", icon: Layers, desc: "Bucket that Tax Rules use to pick the right template per party or region." },
       { label: "Tax Rule", href: "/accounting/tax/rules", icon: ClipboardList, desc: "Router — pick a tax template based on party, item, category or geography." },
       { label: "Tax Withholding Category", href: "/accounting/tax/withholding", icon: BadgeDollarSign, desc: "WHT/TDS bucket with per-period rates, thresholds and per-company accounts." },
+      { label: "ZIMRA Fiscalisation", href: "/accounting/masters/fiscalisation", icon: ShieldCheck, desc: "Report sales invoices to ZIMRA automatically with a fiscal receipt and QR on each." },
     ],
   },
   {

@@ -38,6 +38,7 @@ export default async function EditSalesTaxTemplatePage({ params }: { params: { n
           company: doc.company,
           isDefault: doc.isDefault,
           disabled: doc.disabled,
+          zimraTaxId: doc.zimraTaxId,
           taxes: doc.taxes.map((t) => ({
             charge_type: t.chargeType,
             account_head: t.accountHead,

@@ -50,11 +50,14 @@ export default async function WorkspaceLayout({
   };
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-canvas">
+    <div className="flex h-screen w-screen overflow-hidden bg-canvas print:block print:h-auto print:w-full print:overflow-visible print:bg-white">
       <Suspense fallback={null}>
         <NavProgress />
       </Suspense>
-      <Sidebar
+      {/* display:contents keeps the sidebar a direct flex child on
+          screen; print:hidden removes the whole subtree on paper. */}
+      <div className="contents print:hidden">
+        <Sidebar
         access={{
           isHrAdmin: access.isHrAdmin,
           isHrAny: access.isHrAny,
@@ -73,10 +76,13 @@ export default async function WorkspaceLayout({
           isEmployee: access.isEmployee,
           subscribedApps,
         }}
-      />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Topbar user={user} notifications={0} />
-        <main className="flex-1 overflow-y-auto px-6 pb-8 pt-4">
+        />
+      </div>
+      <div className="flex flex-1 flex-col overflow-hidden print:block print:overflow-visible">
+        <div className="contents print:hidden">
+          <Topbar user={user} notifications={0} />
+        </div>
+        <main className="flex-1 overflow-y-auto px-6 pb-8 pt-4 print:overflow-visible print:p-0">
           {children}
         </main>
       </div>

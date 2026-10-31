@@ -248,3 +248,40 @@
 @media (prefers-reduced-motion: reduce) {
   .auth-fade-up { animation: none; opacity: 1; transform: none; }
 }
+
+/* ── Printing ─────────────────────────────────────────────────────
+ * The workspace shell is a fixed-height scroll container, which the
+ * browser's print engine would truncate to one page. At print time
+ * the layout adds Tailwind print: utilities to flatten the shell and
+ * hide the chrome; these globals handle what utilities can't reach:
+ * page margins, page-break behaviour inside tables, and stripping
+ * decorative shadows that waste toner. */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+  html,
+  body {
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  tr,
+  img,
+  svg {
+    break-inside: avoid;
+  }
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

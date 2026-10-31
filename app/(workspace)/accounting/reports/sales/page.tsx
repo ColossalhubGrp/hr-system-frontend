@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { Route } from "next";
 import { ChevronLeft, LineChart, Search, Download } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { PrintButton } from "@/components/common/print-button";
+import { PrintableReport, formatPeriod } from "@/components/accounting/printable-report";
 import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { frappeCall } from "@/lib/frappe/client";
@@ -76,6 +78,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 print:hidden">
       <div className="flex items-center gap-2 text-sm">
         <Link
           href={"/accounting?s=reports" as Route}
@@ -99,6 +102,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
         <Field label="Company" name="company" type="select" value={company} options={companies.map((c) => c.name)} />
         <DateRangeFields fromName="from" toName="to" defaultFrom={from} defaultTo={to} />
         <div className="ml-auto flex items-end gap-2">
+          {rows.length > 0 && <PrintButton />}
           <a
             href={csvHref}
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-[12.5px] font-medium text-foreground transition hover:border-primary/40 hover:text-primary"
@@ -130,8 +134,17 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
         <Tile label="Paid" value={fmt(paid, currency)} />
         <Tile label="Outstanding" value={fmt(totals.outstanding, currency)} accent={totals.outstanding > 0 ? "warn" : "ok"} />
       </section>
+      </div>
 
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <PrintableReport
+        title="Sales Report"
+        subtitle={`${totals.count} invoices · Invoiced ${fmt(totals.invoiced, currency)} · Paid ${fmt(paid, currency)} · Outstanding ${fmt(totals.outstanding, currency)}`}
+        company={company}
+        period={formatPeriod(from, to)}
+        landscape={false}
+        showSignatures={false}
+      >
+      <div className="overflow-hidden rounded-xl border border-border bg-card print:rounded-none print:border-0">
         <table className="w-full text-[13px]">
           <thead className="border-b border-border bg-muted/40 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
             <tr>
@@ -186,6 +199,7 @@ export default async function SalesReportPage({ searchParams }: { searchParams: 
           )}
         </table>
       </div>
+      </PrintableReport>
     </div>
   );
 }

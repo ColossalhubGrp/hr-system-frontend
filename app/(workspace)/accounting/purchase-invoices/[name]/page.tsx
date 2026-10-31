@@ -39,6 +39,14 @@ export default async function PurchaseInvoiceDetailPage({ params }: { params: { 
               status={doc.status || (doc.docstatus === 0 ? "Draft" : doc.docstatus === 1 ? "Submitted" : "Cancelled")}
               tones={VOUCHER_STATUS_TONES}
             />
+            <a
+              href={`/print/purchase-invoice/${encodeURIComponent(doc.name)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 items-center gap-1.5 rounded-chip border border-input px-3 text-sm font-semibold hover:bg-muted/40"
+            >
+              Print invoice
+            </a>
             <PurchaseInvoiceActions name={doc.name} docstatus={doc.docstatus} />
           </div>
         }

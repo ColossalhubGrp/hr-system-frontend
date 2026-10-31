@@ -54,6 +54,14 @@ export default async function PaymentEntryDetailPage({
         actions={
           <div className="flex items-center gap-3">
             <StatusPill status={statusLabel} tones={VOUCHER_STATUS_TONES} />
+            <a
+              href={`/print/payment-entry/${encodeURIComponent(doc.name)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 items-center gap-1.5 rounded-chip border border-input px-3 text-sm font-semibold hover:bg-muted/40"
+            >
+              Print voucher
+            </a>
             <PaymentEntryActions name={doc.name} docstatus={doc.docstatus} />
           </div>
         }

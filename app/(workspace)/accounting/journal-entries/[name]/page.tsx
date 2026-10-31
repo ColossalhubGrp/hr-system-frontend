@@ -50,6 +50,14 @@ export default async function JournalEntryDetailPage({
         actions={
           <div className="flex items-center gap-3">
             <StatusPill status={statusLabel} tones={VOUCHER_STATUS_TONES} />
+            <a
+              href={`/print/journal-entry/${encodeURIComponent(doc.name)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-9 items-center gap-1.5 rounded-chip border border-input px-3 text-sm font-semibold hover:bg-muted/40"
+            >
+              Print voucher
+            </a>
             <JournalEntryActions name={doc.name} docstatus={doc.docstatus} />
           </div>
         }

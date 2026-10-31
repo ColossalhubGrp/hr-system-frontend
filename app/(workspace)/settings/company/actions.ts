@@ -157,6 +157,9 @@ export async function uploadCompanyLogoAction(
   try {
     await uploadCompanyLogo(id, file);
   } catch (err) {
+    // toFormState only humanises FrappeRequestError; the upload helper
+    // throws plain Errors with the real reason in the message.
+    if (err instanceof Error && err.message) return { error: err.message };
     return toFormState(err);
   }
   revalidatePath(`/settings/company/${encodeURIComponent(id)}`);

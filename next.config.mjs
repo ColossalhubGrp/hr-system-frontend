@@ -3,6 +3,13 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   experimental: {
+    serverActions: {
+      // Logo uploads go through a Server Action as multipart form
+      // data; the Next default cap is 1 MB. 4 MB covers the 2 MB app
+      // limit plus encoding overhead.
+      bodySizeLimit: "4mb",
+    },
+
     // typedRoutes is disabled because the verbatim recruitment-app port
     // builds Link hrefs from dynamic template literals (e.g.
     // `/recruitment/jobs/${id}`), which the typed-routes generator

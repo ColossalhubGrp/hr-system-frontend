@@ -129,17 +129,20 @@ export const NAV: NavItem[] = [
     ],
   },
 
-  {
-    label: "My Team",
-    href: "/team",
-    icon: Users,
-    requires: "LINE_MANAGER",
-    children: [
-      { label: "Directory", href: "/team", requires: "LINE_MANAGER" },
-      { label: "Pending leave", href: "/team/leave", requires: "LINE_MANAGER" },
-      { label: "Goals", href: "/team/goals", requires: "LINE_MANAGER" },
-    ],
-  },
+  // "My Team" hidden from the sidebar for everyone (2026-10-31, user
+  // request). The /team routes and their code stay intact — restore by
+  // uncommenting this block.
+  // {
+  //   label: "My Team",
+  //   href: "/team",
+  //   icon: Users,
+  //   requires: "LINE_MANAGER",
+  //   children: [
+  //     { label: "Directory", href: "/team", requires: "LINE_MANAGER" },
+  //     { label: "Pending leave", href: "/team/leave", requires: "LINE_MANAGER" },
+  //     { label: "Goals", href: "/team/goals", requires: "LINE_MANAGER" },
+  //   ],
+  // },
 
   {
     label: "Recruitment",

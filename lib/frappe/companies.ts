@@ -22,6 +22,8 @@ export type CompanyRow = {
 
 export type CompanyFull = CompanyRow & {
   taxId: string | null;
+  /** Attach-Image URL (/files/…) of the company logo, or null. */
+  companyLogo: string | null;
   dateOfEstablishment: string | null;
   phoneNo: string | null;
   /** Rejects Employee saves whose Date of Birth puts the person below
@@ -112,6 +114,7 @@ export async function getCompany(id: string): Promise<CompanyFull | null> {
       country: string | null;
       default_holiday_list: string | null;
       tax_id: string | null;
+      company_logo: string | null;
       date_of_establishment: string | null;
       phone_no: string | null;
       minimum_hire_age_years: number | null;
@@ -129,6 +132,7 @@ export async function getCompany(id: string): Promise<CompanyFull | null> {
       country: doc.country,
       defaultHolidayList: doc.default_holiday_list,
       taxId: doc.tax_id,
+      companyLogo: doc.company_logo ?? null,
       dateOfEstablishment: doc.date_of_establishment,
       phoneNo: doc.phone_no,
       minimumHireAgeYears: Number(doc.minimum_hire_age_years ?? 0) || 0,
@@ -251,4 +255,65 @@ function compact<T extends Record<string, unknown>>(o: T): Record<string, unknow
     out[k] = v;
   }
   return out;
+}
+
+// ---------------------------------------------------------------------------
+// Company logo
+// ---------------------------------------------------------------------------
+
+/**
+ * Upload a logo image and attach it to the Company (public file, so the
+ * letterheads on printed documents can embed it without auth). Returns
+ * the stored file URL (/files/…).
+ */
+export async function uploadCompanyLogo(companyId: string, file: File): Promise<string> {
+  const { serverEnv } = await import("@/lib/env");
+  const env = serverEnv();
+  const form = new FormData();
+  form.set("file", file, file.name);
+  form.set("doctype", "Company");
+  form.set("docname", companyId);
+  form.set("fieldname", "company_logo");
+  form.set("is_private", "0");
+
+  const resp = await fetch(new URL("/api/method/upload_file", env.FRAPPE_URL), {
+    method: "POST",
+    headers: {
+      Authorization: `token ${env.FRAPPE_API_KEY}:${env.FRAPPE_API_SECRET}`,
+      "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
+    },
+    body: form,
+    cache: "no-store",
+  });
+  if (!resp.ok) {
+    throw new Error(`Logo upload failed (${resp.status}): ${(await resp.text()).slice(0, 200)}`);
+  }
+  const data = (await resp.json()) as { message?: { file_url?: string } };
+  const fileUrl = data.message?.file_url;
+  if (!fileUrl) throw new Error("Upload succeeded but no file URL came back.");
+  // upload_file attaches the File; make sure the Company field itself
+  // carries the URL too (idempotent if the handler already set it).
+  await setCompanyLogo(companyId, fileUrl);
+  return fileUrl;
+}
+
+/** Point company_logo at a file URL, or clear it with null. */
+export async function setCompanyLogo(companyId: string, fileUrl: string | null): Promise<void> {
+  const existing = await frappeCall<Record<string, unknown>>({
+    method: "frappe.client.get",
+    as: "user",
+    args: { doctype: "Company", name: companyId },
+  });
+  const doc = {
+    ...existing,
+    doctype: "Company",
+    name: companyId,
+    company_logo: fileUrl,
+  };
+  await frappeCall<unknown>({
+    method: "frappe.client.save",
+    verb: "POST",
+    args: { doc },
+    as: "user",
+  });
 }

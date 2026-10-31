@@ -10,6 +10,8 @@ import {
   listHolidayLists,
 } from "@/lib/frappe/companies";
 import { CompanyForm } from "@/components/settings/company-form";
+import { CompanyLogoUploader } from "@/components/settings/company-logo-uploader";
+import { resolveAvatarUrl } from "@/lib/frappe/session";
 import { updateCompanyAction } from "../actions";
 
 export const metadata = {
@@ -53,6 +55,11 @@ export default async function CompanyEditPage({
           {company.abbr} · {company.country ?? "—"} · {company.defaultCurrency ?? "—"}
         </p>
       </header>
+
+      <CompanyLogoUploader
+        companyId={company.id}
+        logoUrl={resolveAvatarUrl(company.companyLogo)}
+      />
 
       <CompanyForm
         mode="edit"

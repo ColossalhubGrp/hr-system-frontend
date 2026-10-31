@@ -1,4 +1,5 @@
 import { getCompany } from "@/lib/frappe/companies";
+import { resolveAvatarUrl } from "@/lib/frappe/session";
 import { PrintPageControls } from "@/components/common/print-page-controls";
 
 /**
@@ -30,10 +31,20 @@ export async function DocumentShell({
 
       <div className="mx-auto max-w-[210mm] bg-white p-10 text-[13px] leading-relaxed text-neutral-900 shadow-xl print:max-w-none print:p-0 print:shadow-none">
         <div className="flex items-start justify-between border-b-2 border-neutral-900 pb-4">
-          <div>
-            <div className="text-2xl font-bold tracking-tight">{company}</div>
-            {info?.taxId && <div className="mt-1">VAT / TIN: {info.taxId}</div>}
-            {info?.phoneNo && <div>Tel: {info.phoneNo}</div>}
+          <div className="flex items-start gap-4">
+            {info?.companyLogo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={resolveAvatarUrl(info.companyLogo) ?? undefined}
+                alt=""
+                className="max-h-16 w-auto max-w-[160px] object-contain"
+              />
+            )}
+            <div>
+              <div className="text-2xl font-bold tracking-tight">{company}</div>
+              {info?.taxId && <div className="mt-1">VAT / TIN: {info.taxId}</div>}
+              {info?.phoneNo && <div>Tel: {info.phoneNo}</div>}
+            </div>
           </div>
           <div className="text-right">
             <div className="text-xl font-bold tracking-wide">{title}</div>

@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getSalesInvoice } from "@/lib/frappe/sales-invoice";
 import { getCompany } from "@/lib/frappe/companies";
-import { isAuthenticated } from "@/lib/frappe/session";
+import { isAuthenticated, resolveAvatarUrl } from "@/lib/frappe/session";
 import { QrCode } from "@/components/common/qr-code";
 import { PrintPageControls } from "@/components/common/print-page-controls";
 
@@ -35,10 +35,20 @@ export default async function SalesInvoicePrintPage({ params }: { params: { name
       <div className="mx-auto max-w-[210mm] bg-white p-10 text-[13px] leading-relaxed text-neutral-900 shadow-xl print:max-w-none print:p-0 print:shadow-none">
         {/* Letterhead */}
         <div className="flex items-start justify-between border-b-2 border-neutral-900 pb-4">
-          <div>
-            <div className="text-2xl font-bold tracking-tight">{doc.company}</div>
-            {company?.taxId && <div className="mt-1">VAT / TIN: {company.taxId}</div>}
-            {company?.phoneNo && <div>Tel: {company.phoneNo}</div>}
+          <div className="flex items-start gap-4">
+            {company?.companyLogo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={resolveAvatarUrl(company.companyLogo) ?? undefined}
+                alt=""
+                className="max-h-16 w-auto max-w-[160px] object-contain"
+              />
+            )}
+            <div>
+              <div className="text-2xl font-bold tracking-tight">{doc.company}</div>
+              {company?.taxId && <div className="mt-1">VAT / TIN: {company.taxId}</div>}
+              {company?.phoneNo && <div>Tel: {company.phoneNo}</div>}
+            </div>
           </div>
           <div className="text-right">
             <div className="text-xl font-bold tracking-wide">{title}</div>

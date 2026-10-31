@@ -3,6 +3,8 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { getPayslipDetail } from "@/lib/payroll-engine/payruns";
+import { getCompany } from "@/lib/frappe/companies";
+import { resolveAvatarUrl } from "@/lib/frappe/session";
 import { DownloadPayslipButton } from "@/components/payroll/download-payslip-button";
 
 export const metadata = { title: "Payslip · Payroll · Colossal HR" };
@@ -52,6 +54,8 @@ export default async function PayslipPage({
 
   const { run, company, employee, slip, earnings, deductions, timesheet } = data;
   const companyDisplay = company.legal_name || company.company_name;
+  const companyDoc = await getCompany(company.company_name).catch(() => null);
+  const logoUrl = companyDoc?.companyLogo ? resolveAvatarUrl(companyDoc.companyLogo) : null;
 
   // Snapshot values — derive what basic + pension % WERE at run time from
   // the frozen payslip totals. The Employee record may have been edited
@@ -102,7 +106,14 @@ export default async function PayslipPage({
             payslip matches the brand palette (deep ink-purple) instead
             of an off-brand emerald. */}
         <div className="flex items-start justify-between gap-4 border-b bg-primary p-6 text-primary-foreground">
-          <div>
+          <div className="flex items-start gap-4">
+            {logoUrl && (
+              <div className="rounded-lg bg-white p-1.5">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt="" className="h-12 w-auto max-w-[120px] object-contain" />
+              </div>
+            )}
+            <div>
             <div className="text-xl font-extrabold">{companyDisplay}</div>
             {company.address && (
               <div className="mt-1 text-xs text-primary-foreground/80">{company.address}</div>
@@ -111,6 +122,7 @@ export default async function PayslipPage({
               {company.bp_number && <>ZIMRA BP: {company.bp_number}</>}
               {company.bp_number && company.nssa_employer_no ? " · " : ""}
               {company.nssa_employer_no && <>NSSA: {company.nssa_employer_no}</>}
+            </div>
             </div>
           </div>
           <div className="text-right">

@@ -7,6 +7,8 @@ import {
   createCompany,
   deleteCompany,
   updateCompany,
+  uploadCompanyLogo,
+  setCompanyLogo,
   type CompanyInput,
 } from "@/lib/frappe/companies";
 import { getMyAccess } from "@/lib/frappe/roles";
@@ -130,4 +132,45 @@ export async function deleteCompanyAction(
   }
   revalidatePath("/settings/company");
   return { ok: true };
+}
+
+const LOGO_MAX_BYTES = 2 * 1024 * 1024;
+const LOGO_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
+
+export async function uploadCompanyLogoAction(
+  id: string,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const blocked = await requireWrite();
+  if (blocked) return { error: blocked };
+  const file = form.get("logo");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose an image file first." };
+  }
+  if (!LOGO_TYPES.has(file.type)) {
+    return { error: "Use a PNG, JPG, WEBP or SVG image." };
+  }
+  if (file.size > LOGO_MAX_BYTES) {
+    return { error: "That image is over 2 MB — use a smaller one." };
+  }
+  try {
+    await uploadCompanyLogo(id, file);
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath(`/settings/company/${encodeURIComponent(id)}`);
+  return {};
+}
+
+export async function removeCompanyLogoAction(id: string): Promise<FormState> {
+  const blocked = await requireWrite();
+  if (blocked) return { error: blocked };
+  try {
+    await setCompanyLogo(id, null);
+  } catch (err) {
+    return toFormState(err);
+  }
+  revalidatePath(`/settings/company/${encodeURIComponent(id)}`);
+  return {};
 }

@@ -9,7 +9,7 @@ import { usePathname } from "next/navigation";
  * workspace label.
  *
  * Matched longest-prefix-first so /recruitment/hr/dashboard reads
- * "Recruitment" rather than slipping into the "/hr" bucket.
+ * "Recruit" rather than slipping into the "/hr" bucket.
  */
 export function SectionEyebrow() {
   const pathname = usePathname();
@@ -21,12 +21,12 @@ export function SectionEyebrow() {
 }
 
 const RULES: Array<[string, string]> = [
-  ["/recruitment", "Recruitment"],
-  ["/analytics", "Analytics"],
+  ["/recruitment", "Recruit"],
+  ["/analytics", "Intelligence"],
   ["/accounting", "Accounting"],
   ["/payroll", "Payroll"],
   ["/employee/lifecycle", "Lifecycle"],
-  ["/employee/organization", "Organization"],
+  ["/employee/organization", "Organisation"],
   ["/employee", "Employee"],
   ["/hr/shift-management", "Shift management"],
   ["/hr/leaves", "Leaves"],
@@ -34,7 +34,7 @@ const RULES: Array<[string, string]> = [
   ["/hr/expense-claims", "Expense claims"],
   ["/hr/training", "Training"],
   ["/hr/performance", "Performance"],
-  ["/hr", "HR"],
+  ["/hr", "People"],
   ["/team", "My team"],
   ["/me", "My workspace"],
   ["/loans", "Loans"],

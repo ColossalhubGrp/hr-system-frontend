@@ -85,8 +85,8 @@ export const GROUP_BY_ITEM: Record<string, NavGroupId> = {
   "My Team": "workspace",
 
   "Employee": "people",
-  "HR": "people",
-  "Recruitment": "people",
+  "People": "people",
+  "Recruit": "people",
   "Payroll": "people",
   "Loans": "people",
 
@@ -98,7 +98,7 @@ export const GROUP_BY_ITEM: Record<string, NavGroupId> = {
   "Accounting": "finance",
   "Audit": "finance",
 
-  "Analytics": "intelligence",
+  "Intelligence": "intelligence",
   "Data": "intelligence",
 
   "Platform": "admin",
@@ -128,7 +128,7 @@ export const NAV: NavItem[] = [
     children: [
       { label: "Master Data", href: "/employee", requires: "HR_ANY" },
       { label: "Lifecycle", href: "/employee/lifecycle", requires: "HR_ANY" },
-      { label: "Organization Chart", href: "/employee/organization", requires: "HR_ANY" },
+      { label: "Organisation Chart", href: "/employee/organization", requires: "HR_ANY" },
     ],
   },
 
@@ -178,7 +178,7 @@ export const NAV: NavItem[] = [
   },
 
   {
-    label: "HR",
+    label: "People",
     href: "/hr",
     icon: HeartHandshake,
     requires: "HR_ANY",

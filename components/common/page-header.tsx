@@ -8,9 +8,10 @@ import { PagePrintAction } from "@/components/common/page-print-action";
  * crumb / title (those don't have semantic equivalents in shadcn), but the
  * subtitle now reads from `text-muted-foreground` so it tracks the theme.
  *
- * Every page gets a compact Print control (the global print styles hide
- * the app chrome, so what comes out is the page content on clean paper).
- * Pass `printable={false}` for pages where printing makes no sense.
+ * Printing lives on documents and reports (their own Print buttons),
+ * NOT on every page — so the compact print control is opt-in:
+ * `printable` defaults to false and only a page that explicitly asks
+ * for it renders the icon.
  */
 export function PageHeader({
   icon: Icon,
@@ -18,7 +19,7 @@ export function PageHeader({
   title,
   subtitle,
   actions,
-  printable = true,
+  printable = false,
 }: {
   icon: LucideIcon;
   crumb: string;

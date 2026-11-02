@@ -69,9 +69,8 @@ export function FiscalisationSettingsForm({ initial }: { initial: FiscalisationS
               <TextInput
                 id="default_tax_id"
                 name="default_tax_id"
-                type="number"
-                min="1"
-                step="1"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 defaultValue={initial.defaultTaxId != null ? String(initial.defaultTaxId) : ""}
                 className="tabular-nums"
               />

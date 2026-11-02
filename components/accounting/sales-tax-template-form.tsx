@@ -83,9 +83,8 @@ export function SalesTaxTemplateForm({
             <TextInput
               id="zimra_tax_id"
               name="zimra_tax_id"
-              type="number"
-              min="1"
-              step="1"
+              inputMode="numeric"
+              pattern="[0-9]*"
               defaultValue={initial?.zimraTaxId != null ? String(initial.zimraTaxId) : ""}
               placeholder="e.g. 1"
               className="tabular-nums"

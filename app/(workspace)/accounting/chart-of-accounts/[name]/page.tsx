@@ -9,7 +9,7 @@ import { AccountActions } from "./account-actions";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Account · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Account · Colossal Hub` };
 }
 
 type SP = { company?: string };

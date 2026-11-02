@@ -10,7 +10,7 @@ import { HolidayListsAdmin } from "@/components/settings/holiday-lists-admin";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
-  title: "Holiday lists · Settings · Colossal HR",
+  title: "Holiday lists · Settings · Colossal Hub",
 };
 
 /**

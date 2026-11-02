@@ -10,7 +10,7 @@ import { GrievanceTypesAdmin } from "@/components/settings/grievance-types-admin
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
-  title: "Grievance types · Settings · Colossal HR",
+  title: "Grievance types · Settings · Colossal Hub",
 };
 
 /**

@@ -39,7 +39,7 @@ import {
   goalsTabLabel,
 } from "@/components/performance/method-banner";
 
-export const metadata = { title: "Performance · Colossal HR" };
+export const metadata = { title: "Performance · Colossal Hub" };
 
 type Tab = "appraisals" | "goals" | "feedback" | "pip";
 

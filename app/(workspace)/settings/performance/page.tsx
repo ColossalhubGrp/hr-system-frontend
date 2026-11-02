@@ -7,7 +7,7 @@ import { FrameworkDefaultForm } from "@/components/settings/framework-default-fo
 import { setDefaultFrameworkAction } from "./actions";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
-export const metadata = { title: "Performance management · Settings · Colossal HR" };
+export const metadata = { title: "Performance management · Settings · Colossal Hub" };
 
 export default async function PerformanceSettingsPage() {
   // HR-policy area — explicit per-page guard on top of the SETTINGS_ANY

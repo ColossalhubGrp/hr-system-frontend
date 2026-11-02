@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { fetchDataStewardBoard } from "@/lib/frappe/data-steward";
 
-export const metadata = { title: "Data Steward · Colossal HR" };
+export const metadata = { title: "Data Steward · Colossal Hub" };
 
 export default async function DataStewardPage() {
   const board = await fetchDataStewardBoard();

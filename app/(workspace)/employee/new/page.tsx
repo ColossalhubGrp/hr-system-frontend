@@ -8,7 +8,7 @@ import { getMyAccess, PERSONA_ROLES } from "@/lib/frappe/roles";
 import { HrSetupGate } from "@/components/hr/setup-gate";
 import { createEmployeeAction } from "../actions";
 
-export const metadata = { title: "New employee · Colossal HR" };
+export const metadata = { title: "New employee · Colossal Hub" };
 
 export default async function NewEmployeePage() {
   // Creating an Employee is HR-only.

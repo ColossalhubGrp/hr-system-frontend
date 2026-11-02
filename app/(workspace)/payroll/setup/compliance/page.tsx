@@ -1,7 +1,7 @@
 import { loadComplianceSnapshot } from "@/lib/frappe/payroll-compliance";
 import { CompliancePanel } from "@/components/payroll/compliance-panel";
 
-export const metadata = { title: "ZIMRA compliance · Payroll · Colossal HR" };
+export const metadata = { title: "ZIMRA compliance · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function CompliancePage() {

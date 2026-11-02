@@ -17,7 +17,7 @@ export async function generateMetadata({
   params: { id: string };
 }) {
   const f = await getFeedback(decodeURIComponent(params.id));
-  return { title: f ? `${f.id} · Feedback · Colossal HR` : "Feedback" };
+  return { title: f ? `${f.id} · Feedback · Colossal Hub` : "Feedback" };
 }
 
 export default async function FeedbackDetailPage({

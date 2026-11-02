@@ -9,7 +9,7 @@ import { DesignationDeleteButton } from "@/components/setup/designation-delete-b
 import { deleteDesignationAction } from "./actions";
 
 export const metadata = {
-  title: "Designations · Configuration · Colossal HR",
+  title: "Designations · Configuration · Colossal Hub",
 };
 
 export default async function DesignationsPage() {

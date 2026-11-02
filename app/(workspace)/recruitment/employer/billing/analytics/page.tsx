@@ -1,7 +1,7 @@
 import { BillingAnalyticsClient } from "@/components/recruitment/billing/billing-analytics-client";
 import { fetchBillingAnalyticsForCurrentUser } from "@/lib/recruitment/server-billing";
 
-export const metadata = { title: "Employer Billing Analytics · Recruitment · Colossal HR" };
+export const metadata = { title: "Employer Billing Analytics · Recruitment · Colossal Hub" };
 
 export default async function EmployerBillingAnalyticsPage() {
   const initial = await fetchBillingAnalyticsForCurrentUser();

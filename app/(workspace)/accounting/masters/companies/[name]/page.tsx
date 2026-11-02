@@ -10,7 +10,7 @@ import { EditCompanyForm } from "@/components/accounting/edit-company-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Company · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Company · Colossal Hub` };
 }
 
 export default async function EditCompanyPage({ params }: { params: { name: string } }) {

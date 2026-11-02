@@ -5,7 +5,7 @@ import { ShareholderForm } from "@/components/accounting/shareholder-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Shareholder · Colossal HR" };
+export const metadata = { title: "New Shareholder · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewShareholderPage() {

@@ -189,7 +189,7 @@ export function ChatDrawer() {
                 <Sparkles className="h-4 w-4" />
               </span>
               <div className="min-w-0">
-                <SheetTitle>Colossal HR assistant</SheetTitle>
+                <SheetTitle>Colossal Hub assistant</SheetTitle>
                 <SheetDescription>
                   Ask about leave, payroll, policies. Answers cite the source.
                 </SheetDescription>

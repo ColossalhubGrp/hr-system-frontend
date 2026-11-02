@@ -7,7 +7,7 @@ import { requireGroup } from "@/lib/frappe/require-role";
 import { EditRolesDrawer } from "@/components/settings/edit-roles-drawer";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
-export const metadata = { title: "Users & Roles · Colossal HR" };
+export const metadata = { title: "Users & Roles · Colossal Hub" };
 
 type UserRow = {
   name: string;

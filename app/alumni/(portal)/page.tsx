@@ -3,7 +3,7 @@ import { frappeCall } from "@/lib/frappe/client";
 import { readSession } from "@/lib/frappe/session";
 import { listMyPayslips } from "@/lib/frappe/my-self-service";
 
-export const metadata = { title: "Alumni · Colossal HR" };
+export const metadata = { title: "Alumni · Colossal Hub" };
 
 type EmployeeDoc = {
   name: string;

@@ -7,7 +7,7 @@ import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { listGroupGoals } from "@/lib/frappe/performance";
 import { createGoalAction } from "../../actions";
 
-export const metadata = { title: "New goal · Colossal HR" };
+export const metadata = { title: "New goal · Colossal Hub" };
 
 export default async function NewGoalPage() {
   // Framework still drives terminology (Objective / Strategic objective /

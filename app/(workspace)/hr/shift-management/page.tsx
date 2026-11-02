@@ -35,7 +35,7 @@ import {
   listShiftSchedules,
 } from "@/lib/frappe/shift-schedules";
 
-export const metadata = { title: "Shift management · Colossal HR" };
+export const metadata = { title: "Shift management · Colossal Hub" };
 
 const TABS = [
   { id: "types", label: "Shift Types" },

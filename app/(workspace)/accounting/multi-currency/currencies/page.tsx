@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listCurrencies, type Currency } from "@/lib/frappe/multi-currency/currency";
 
-export const metadata = { title: "Currencies · Colossal HR" };
+export const metadata = { title: "Currencies · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function CurrenciesPage() {

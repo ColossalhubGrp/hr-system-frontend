@@ -10,7 +10,7 @@ import { AccountingPeriodForm } from "@/components/accounting/accounting-period-
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Accounting Period · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Accounting Period · Colossal Hub` };
 }
 
 export default async function EditAccountingPeriodPage({ params }: { params: { name: string } }) {

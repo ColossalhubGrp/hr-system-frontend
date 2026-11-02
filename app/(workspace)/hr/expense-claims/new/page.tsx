@@ -15,7 +15,7 @@ import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { getDefaultCompanyForMe } from "@/lib/frappe/payable-accounts";
 import { createExpenseClaimAction } from "../actions";
 
-export const metadata = { title: "New expense claim · Colossal HR" };
+export const metadata = { title: "New expense claim · Colossal Hub" };
 
 export default async function NewExpenseClaimPage() {
   const [expenseTypes, options, modesOfPayment, defaultCompany] = await Promise.all([

@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listJournalTemplates, type JournalEntryTemplate } from "@/lib/frappe/masters/journal-entry-template";
 
-export const metadata = { title: "Journal Entry Templates · Colossal HR" };
+export const metadata = { title: "Journal Entry Templates · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function JournalTemplatesPage() {

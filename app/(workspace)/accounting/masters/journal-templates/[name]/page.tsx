@@ -10,7 +10,7 @@ import { JournalTemplateForm } from "@/components/accounting/journal-template-fo
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Journal Entry Template · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Journal Entry Template · Colossal Hub` };
 }
 
 export default async function EditJournalTemplatePage({ params }: { params: { name: string } }) {

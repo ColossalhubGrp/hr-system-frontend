@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listMonthlyDistributions, type MonthlyDistribution } from "@/lib/frappe/budgets/monthly-distribution";
 
-export const metadata = { title: "Monthly Distributions · Colossal HR" };
+export const metadata = { title: "Monthly Distributions · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function MonthlyDistributionPage() {

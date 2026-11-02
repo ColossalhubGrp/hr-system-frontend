@@ -1151,7 +1151,7 @@ export function EmployeeForm({
           <Field
             label="Biometric device ID"
             htmlFor="attendance_device_id"
-            hint="Optional. The employee's identifier on the on-site biometric / RFID reader. Leave blank unless you run a device that syncs punches to Colossal HR."
+            hint="Optional. The employee's identifier on the on-site biometric / RFID reader. Leave blank unless you run a device that syncs punches to Colossal Hub."
           >
             <TextInput
               id="attendance_device_id"

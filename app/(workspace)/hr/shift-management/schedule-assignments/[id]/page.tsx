@@ -21,7 +21,7 @@ export async function generateMetadata({
   const a = await getShiftScheduleAssignment(decodeURIComponent(params.id));
   return {
     title: a
-      ? `${a.id} · Schedule Assignment · Colossal HR`
+      ? `${a.id} · Schedule Assignment · Colossal Hub`
       : "Schedule Assignment",
   };
 }

@@ -14,7 +14,7 @@ import {
   createRetentionBonusAction,
 } from "../actions";
 
-export const metadata = { title: "New pay adjustment · Colossal HR" };
+export const metadata = { title: "New pay adjustment · Colossal Hub" };
 
 export default async function NewAdjustmentPage({
   searchParams,

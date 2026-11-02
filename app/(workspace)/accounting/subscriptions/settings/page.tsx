@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getSubscriptionSettings } from "@/lib/frappe/subscriptions/settings";
 import { SubscriptionSettingsForm } from "@/components/accounting/subscription-settings-form";
 
-export const metadata = { title: "Subscription Settings · Colossal HR" };
+export const metadata = { title: "Subscription Settings · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function SubscriptionSettingsPage() {

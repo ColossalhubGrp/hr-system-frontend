@@ -10,7 +10,7 @@ import { BankClearanceDetail } from "@/components/accounting/bank-clearance-deta
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Bank Clearance · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Bank Clearance · Colossal Hub` };
 }
 
 export default async function BankClearancePage({ params }: { params: { name: string } }) {

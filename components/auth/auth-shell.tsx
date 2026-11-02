@@ -47,7 +47,7 @@ export function AuthShell({ children }: AuthShellProps) {
         <div className="flex items-center gap-2.5">
           <BrandMark className="h-9 w-9 ring-1 ring-hairline" />
           <span className="text-sm font-semibold tracking-tight text-foreground">
-            Colossal HR
+            Colossal Hub
           </span>
         </div>
       </header>
@@ -65,7 +65,7 @@ export function AuthShell({ children }: AuthShellProps) {
             Your data is encrypted in transit and at rest.
           </span>
           <span className="text-[11px] text-muted-foreground/70">
-            © {new Date().getFullYear()} Colossal HR. All rights reserved.
+            © {new Date().getFullYear()} Colossal Hub. All rights reserved.
           </span>
         </div>
       </footer>

@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listTaxRules, type TaxRuleRow } from "@/lib/frappe/tax/rule";
 
-export const metadata = { title: "Tax Rules · Colossal HR" };
+export const metadata = { title: "Tax Rules · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function TaxRulesPage() {

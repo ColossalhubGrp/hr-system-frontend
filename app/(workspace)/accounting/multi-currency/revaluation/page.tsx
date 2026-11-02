@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listRevaluations, type Revaluation } from "@/lib/frappe/multi-currency/revaluation";
 
-export const metadata = { title: "Exchange Rate Revaluation · Colossal HR" };
+export const metadata = { title: "Exchange Rate Revaluation · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function RevaluationPage() {

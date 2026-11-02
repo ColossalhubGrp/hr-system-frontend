@@ -6,7 +6,7 @@ import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { listCompanies } from "@/lib/frappe/lookups";
 import { createFnfAction } from "../actions";
 
-export const metadata = { title: "New FnF statement · Colossal HR" };
+export const metadata = { title: "New FnF statement · Colossal Hub" };
 
 export default async function NewFnfPage() {
   const [options, companies] = await Promise.all([

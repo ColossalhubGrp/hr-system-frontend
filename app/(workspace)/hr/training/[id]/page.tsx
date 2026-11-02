@@ -27,7 +27,7 @@ export async function generateMetadata({
 }) {
   const e = await getTrainingEvent(decodeURIComponent(params.id));
   return {
-    title: e ? `${e.eventName} · Colossal HR` : "Training · Colossal HR",
+    title: e ? `${e.eventName} · Colossal Hub` : "Training · Colossal Hub",
   };
 }
 

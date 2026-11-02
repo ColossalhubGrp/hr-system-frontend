@@ -28,7 +28,7 @@ import {
   setCycleTemplateAction,
 } from "../../actions";
 
-export const metadata = { title: "Appraisal cycle · Colossal HR" };
+export const metadata = { title: "Appraisal cycle · Colossal Hub" };
 
 export default async function CycleDetailPage({
   params,

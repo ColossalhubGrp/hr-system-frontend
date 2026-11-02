@@ -16,7 +16,7 @@ export async function generateMetadata({
 }) {
   const l = await getShiftLocation(decodeURIComponent(params.id));
   return {
-    title: l ? `${l.id} · Shift location · Colossal HR` : "Shift location",
+    title: l ? `${l.id} · Shift location · Colossal Hub` : "Shift location",
   };
 }
 

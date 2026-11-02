@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { CoaImporterForm } from "@/components/accounting/coa-importer-form";
 
-export const metadata = { title: "Chart of Accounts Importer · Colossal HR" };
+export const metadata = { title: "Chart of Accounts Importer · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function CoaImporterPage() {

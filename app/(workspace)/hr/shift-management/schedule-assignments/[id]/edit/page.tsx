@@ -11,7 +11,7 @@ import {
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { updateShiftScheduleAssignmentAction } from "../../../actions";
 
-export const metadata = { title: "Edit schedule assignment · Colossal HR" };
+export const metadata = { title: "Edit schedule assignment · Colossal Hub" };
 
 export default async function EditScheduleAssignmentPage({
   params,

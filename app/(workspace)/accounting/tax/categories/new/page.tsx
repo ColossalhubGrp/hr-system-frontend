@@ -4,7 +4,7 @@ import { TaxCategoryForm } from "@/components/accounting/tax-category-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Tax Category · Colossal HR" };
+export const metadata = { title: "New Tax Category · Colossal Hub" };
 
 export default function NewTaxCategoryPage() {
   return (

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getPayrollReadiness } from "@/lib/frappe/setup/payroll-readiness";
 import { cn } from "@/lib/cn";
 
-export const metadata = { title: "Payroll setup · Colossal Suite" };
+export const metadata = { title: "Payroll setup · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function PayrollSetupPage() {

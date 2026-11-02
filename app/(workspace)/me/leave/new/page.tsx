@@ -6,7 +6,7 @@ import { ApplyForLeaveForm } from "@/components/me/apply-for-leave-form";
 import { listLeaveTypes } from "@/lib/frappe/my-self-service";
 import { applyForLeaveAction } from "../actions";
 
-export const metadata = { title: "Apply for leave · Colossal HR" };
+export const metadata = { title: "Apply for leave · Colossal Hub" };
 
 export default async function NewLeavePage() {
   const types = await listLeaveTypes();

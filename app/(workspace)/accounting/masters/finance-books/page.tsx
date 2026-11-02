@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listFinanceBooks, type FinanceBook } from "@/lib/frappe/masters/finance-book";
 
-export const metadata = { title: "Finance Books · Colossal HR" };
+export const metadata = { title: "Finance Books · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function FinanceBooksPage() {

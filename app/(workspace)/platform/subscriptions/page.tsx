@@ -15,7 +15,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listApps, listSubscriptions } from "@/lib/subscriptions/server";
 
 export const metadata = {
-  title: "Subscriptions · Admin · Colossal HR",
+  title: "Subscriptions · Admin · Colossal Hub",
 };
 
 export default async function SubscriptionsPage() {

@@ -12,7 +12,7 @@ import { getMyAccess } from "@/lib/frappe/roles";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const f = await getFullAndFinal(decodeURIComponent(params.id));
-  return { title: f ? `${f.name} · Colossal HR` : "FnF · Colossal HR" };
+  return { title: f ? `${f.name} · Colossal Hub` : "FnF · Colossal Hub" };
 }
 
 export default async function FnfDetailPage({

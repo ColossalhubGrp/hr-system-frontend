@@ -10,7 +10,7 @@ import { SalesTaxTemplateForm } from "@/components/accounting/sales-tax-template
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Sales Tax Template · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Sales Tax Template · Colossal Hub` };
 }
 
 export default async function EditSalesTaxTemplatePage({ params }: { params: { name: string } }) {

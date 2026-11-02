@@ -5,7 +5,7 @@ import { SubscriptionPlanForm } from "@/components/accounting/subscription-plan-
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Subscription Plan · Colossal HR" };
+export const metadata = { title: "New Subscription Plan · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewPlanPage() {

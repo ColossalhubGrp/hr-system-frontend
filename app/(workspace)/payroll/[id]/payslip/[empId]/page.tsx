@@ -7,7 +7,7 @@ import { getCompany } from "@/lib/frappe/companies";
 import { resolveAvatarUrl } from "@/lib/frappe/session";
 import { DownloadPayslipButton } from "@/components/payroll/download-payslip-button";
 
-export const metadata = { title: "Payslip · Payroll · Colossal HR" };
+export const metadata = { title: "Payslip · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 const usd = (n: number) =>

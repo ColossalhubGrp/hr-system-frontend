@@ -13,7 +13,7 @@ import { BulkHolidayAssignForm } from "@/components/settings/bulk-holiday-assign
 import { bulkAssignHolidayListAction } from "@/app/(workspace)/hr/leaves/admin/actions";
 
 export const metadata = {
-  title: "Bulk assign holiday list · Configuration · Colossal HR",
+  title: "Bulk assign holiday list · Configuration · Colossal Hub",
 };
 
 export default async function BulkHolidayAssignPage() {

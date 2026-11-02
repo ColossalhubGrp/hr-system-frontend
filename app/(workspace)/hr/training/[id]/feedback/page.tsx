@@ -9,7 +9,7 @@ import { getTrainingEvent } from "@/lib/frappe/training";
 import { listTrainingFeedback } from "@/lib/frappe/finance-training";
 import { submitTrainingFeedbackAction } from "../results/actions";
 
-export const metadata = { title: "Training feedback · Colossal HR" };
+export const metadata = { title: "Training feedback · Colossal Hub" };
 
 export default async function TrainingFeedbackPage({
   params,

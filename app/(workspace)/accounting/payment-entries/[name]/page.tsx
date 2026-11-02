@@ -15,7 +15,7 @@ export async function generateMetadata({
 }: {
   params: { name: string };
 }) {
-  return { title: `${decodeURIComponent(params.name)} · Payment Entry · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Payment Entry · Colossal Hub` };
 }
 
 export default async function PaymentEntryDetailPage({

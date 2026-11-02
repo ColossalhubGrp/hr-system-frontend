@@ -19,7 +19,7 @@ export async function generateMetadata({
 }) {
   const r = await getAttendanceRequest(decodeURIComponent(params.id));
   return {
-    title: r ? `${r.id} · Attendance request · Colossal HR` : "Request",
+    title: r ? `${r.id} · Attendance request · Colossal Hub` : "Request",
   };
 }
 

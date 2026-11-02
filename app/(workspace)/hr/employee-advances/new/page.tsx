@@ -7,7 +7,7 @@ import { listModesOfPayment } from "@/lib/frappe/expense-claims";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { createEmployeeAdvanceAction } from "../actions";
 
-export const metadata = { title: "New advance · Colossal HR" };
+export const metadata = { title: "New advance · Colossal Hub" };
 
 export default async function NewAdvancePage() {
   const [currencies, modes, options] = await Promise.all([

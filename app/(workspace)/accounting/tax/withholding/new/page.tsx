@@ -5,7 +5,7 @@ import { TaxWithholdingForm } from "@/components/accounting/tax-withholding-form
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Tax Withholding Category · Colossal HR" };
+export const metadata = { title: "New Tax Withholding Category · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewTaxWithholdingPage() {

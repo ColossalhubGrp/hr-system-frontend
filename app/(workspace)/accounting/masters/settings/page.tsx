@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getAccountsSettings } from "@/lib/frappe/masters/accounts-settings";
 import { AccountsSettingsForm } from "@/components/accounting/accounts-settings-form";
 
-export const metadata = { title: "Accounts Settings · Colossal HR" };
+export const metadata = { title: "Accounts Settings · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function AccountsSettingsPage() {

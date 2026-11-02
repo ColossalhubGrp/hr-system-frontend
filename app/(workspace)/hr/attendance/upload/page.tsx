@@ -7,7 +7,7 @@ import { getMyAccess } from "@/lib/frappe/roles";
 import { UploadForm } from "@/components/attendance/upload-form";
 import { uploadAttendanceCsvAction } from "./actions";
 
-export const metadata = { title: "Upload attendance · Colossal HR" };
+export const metadata = { title: "Upload attendance · Colossal Hub" };
 
 export default async function UploadAttendancePage() {
   const access = await getMyAccess();

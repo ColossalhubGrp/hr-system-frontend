@@ -1,7 +1,7 @@
 import { Factory } from "lucide-react";
 import { ComingSoon } from "@/components/common/coming-soon";
 
-export const metadata = { title: "Manufacturing · Coming soon · Colossal Suite" };
+export const metadata = { title: "Manufacturing · Coming soon · Colossal Hub" };
 
 export default function ManufacturingComingSoonPage() {
   return (

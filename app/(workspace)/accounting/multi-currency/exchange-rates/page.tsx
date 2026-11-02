@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listCurrencyExchanges, type CurrencyExchange } from "@/lib/frappe/multi-currency/currency-exchange";
 
-export const metadata = { title: "Currency Exchange Rates · Colossal HR" };
+export const metadata = { title: "Currency Exchange Rates · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function ExchangeRatesPage() {

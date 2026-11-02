@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listCustomerGroups } from "@/lib/frappe/sales/customer-group";
 import { CustomerGroupForm } from "@/components/sales/customer-group-form";
 
-export const metadata = { title: "New Customer Group · Colossal HR" };
+export const metadata = { title: "New Customer Group · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewCustomerGroupPage() {

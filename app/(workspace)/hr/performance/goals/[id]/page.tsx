@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: { id: string };
 }) {
   const g = await getGoal(decodeURIComponent(params.id));
-  return { title: g ? `${g.goalName} · Goal · Colossal HR` : "Goal" };
+  return { title: g ? `${g.goalName} · Goal · Colossal Hub` : "Goal" };
 }
 
 export default async function GoalDetailPage({

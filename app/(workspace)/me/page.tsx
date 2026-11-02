@@ -17,7 +17,7 @@ import { frappeCall } from "@/lib/frappe/client";
 import { getLastCheckinToday } from "@/lib/frappe/checkin";
 import { clockInOrOutAction } from "./clock/actions";
 
-export const metadata = { title: "My workspace · Colossal HR" };
+export const metadata = { title: "My workspace · Colossal Hub" };
 
 type EmployeeMini = {
   name: string;

@@ -12,7 +12,7 @@ import {
 import { DepartmentsAdmin } from "@/components/settings/departments-admin";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
-export const metadata = { title: "Departments · Settings · Colossal HR" };
+export const metadata = { title: "Departments · Settings · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function DepartmentsSettingsPage() {

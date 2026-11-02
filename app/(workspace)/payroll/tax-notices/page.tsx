@@ -17,7 +17,7 @@ import {
   markPaidNoticeAction,
 } from "@/app/(workspace)/payroll/actions";
 
-export const metadata = { title: "Expected Tax Notices · Payroll · Colossal HR" };
+export const metadata = { title: "Expected Tax Notices · Payroll · Colossal Hub" };
 
 const STATUS_CLS: Record<string, string> = {
   EXPECTED: "bg-canvas text-ash-700",

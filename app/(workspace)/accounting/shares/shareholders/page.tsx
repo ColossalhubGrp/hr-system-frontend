@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listShareholders, type Shareholder } from "@/lib/frappe/shares/shareholder";
 
-export const metadata = { title: "Shareholders · Colossal HR" };
+export const metadata = { title: "Shareholders · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function ShareholdersPage() {

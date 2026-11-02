@@ -3,7 +3,7 @@ import type { Route } from "next";
 import { ChevronLeft } from "lucide-react";
 import { OffCycleWizard } from "@/components/payroll/off-cycle-wizard";
 
-export const metadata = { title: "Off-cycle pay run · Payroll · Colossal HR" };
+export const metadata = { title: "Off-cycle pay run · Payroll · Colossal Hub" };
 
 export default function OffCyclePage() {
   return (

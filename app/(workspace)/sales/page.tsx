@@ -25,7 +25,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-export const metadata = { title: "Sales · Colossal HR" };
+export const metadata = { title: "Sales · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type Row = {

@@ -5,7 +5,7 @@ import { SalesTaxTemplateForm } from "@/components/accounting/sales-tax-template
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Sales Tax Template · Colossal HR" };
+export const metadata = { title: "New Sales Tax Template · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewSalesTaxTemplatePage() {

@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listSalesTaxTemplates, type SalesTaxTemplate } from "@/lib/frappe/tax/sales-template";
 
-export const metadata = { title: "Sales Taxes Templates · Colossal HR" };
+export const metadata = { title: "Sales Taxes Templates · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function SalesTaxTemplatesPage() {

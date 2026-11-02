@@ -9,7 +9,7 @@ import { AttendanceSettingsForm } from "@/components/settings/attendance-setting
 import { saveAttendanceSettingsAction } from "./actions";
 
 export const metadata = {
-  title: "Attendance & shifts · Configuration · Colossal HR",
+  title: "Attendance & shifts · Configuration · Colossal Hub",
 };
 
 export default async function AttendanceSettingsPage() {

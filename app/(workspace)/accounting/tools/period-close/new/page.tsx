@@ -6,7 +6,7 @@ import { NewPeriodClosingForm } from "@/components/accounting/new-period-closing
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Period Closing · Colossal HR" };
+export const metadata = { title: "New Period Closing · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewPeriodClosingPage() {

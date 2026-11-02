@@ -5,7 +5,7 @@ import { ExitInterviewForm } from "@/components/exit-interview/exit-interview-fo
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { createExitInterviewAction } from "../actions";
 
-export const metadata = { title: "New exit interview · Colossal HR" };
+export const metadata = { title: "New exit interview · Colossal Hub" };
 
 export default async function NewExitInterviewPage() {
   const options = await fetchEmployeeFormOptions();

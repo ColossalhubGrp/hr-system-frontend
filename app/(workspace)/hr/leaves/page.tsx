@@ -6,7 +6,7 @@ import { LeavesTable } from "@/components/leaves/leaves-table";
 import { DirectoryPagination } from "@/components/employee/directory-pagination";
 import { fetchLeaves } from "@/lib/frappe/leaves";
 
-export const metadata = { title: "Leaves · Colossal HR" };
+export const metadata = { title: "Leaves · Colossal Hub" };
 
 type SP = {
   status?: string;

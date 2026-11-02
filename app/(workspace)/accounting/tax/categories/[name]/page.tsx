@@ -9,7 +9,7 @@ import { TaxCategoryForm } from "@/components/accounting/tax-category-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Tax Category · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Tax Category · Colossal Hub` };
 }
 
 export default async function EditTaxCategoryPage({ params }: { params: { name: string } }) {

@@ -10,7 +10,7 @@ import { listCompanies } from "@/lib/frappe/accounting";
 import { getAccountingDashboardTotals, getYtdPnl } from "@/lib/frappe/accounting-dashboard";
 import { PnlChart } from "@/components/accounting/pnl-chart";
 
-export const metadata = { title: "Accounting Dashboard · Colossal HR" };
+export const metadata = { title: "Accounting Dashboard · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { company?: string };

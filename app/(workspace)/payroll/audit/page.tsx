@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table";
 import { frappeCall } from "@/lib/frappe/client";
 
-export const metadata = { title: "Audit · Payroll · Colossal HR" };
+export const metadata = { title: "Audit · Payroll · Colossal Hub" };
 
 type AuditChange = { field: string; from: string; to: string };
 type AuditRow = {

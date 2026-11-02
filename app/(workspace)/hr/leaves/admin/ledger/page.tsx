@@ -7,7 +7,7 @@ import { LedgerTab } from "@/components/leaves/admin-hub";
 import { listLeaveLedgerEntries } from "@/lib/frappe/leave-admin";
 import { getMyAccess } from "@/lib/frappe/roles";
 
-export const metadata = { title: "Leave ledger · Colossal HR" };
+export const metadata = { title: "Leave ledger · Colossal Hub" };
 
 export default async function LeaveLedgerPage() {
   const access = await getMyAccess();

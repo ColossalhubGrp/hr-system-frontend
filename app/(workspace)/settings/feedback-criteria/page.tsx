@@ -14,7 +14,7 @@ import {
   deleteFeedbackCriterionAction,
 } from "./actions";
 
-export const metadata = { title: "Feedback criteria · Settings · Colossal HR" };
+export const metadata = { title: "Feedback criteria · Settings · Colossal Hub" };
 
 export default async function FeedbackCriteriaPage() {
   const access = await getMyAccess();

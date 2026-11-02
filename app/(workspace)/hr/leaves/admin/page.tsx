@@ -24,7 +24,7 @@ import {
 } from "@/lib/frappe/attendance-bulk";
 import { LeaveAdminHub } from "@/components/leaves/admin-hub";
 
-export const metadata = { title: "Leave admin · Colossal HR" };
+export const metadata = { title: "Leave admin · Colossal Hub" };
 
 type SP = { tab?: string; dept?: string; asOf?: string };
 

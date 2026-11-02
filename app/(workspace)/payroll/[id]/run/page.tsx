@@ -7,7 +7,7 @@ import {
 import { listTxnCodes } from "@/lib/payroll-engine/setup";
 import { RunWizard } from "@/components/payroll/run-wizard";
 
-export const metadata = { title: "Run payroll · Colossal HR" };
+export const metadata = { title: "Run payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 /**

@@ -8,7 +8,7 @@ import { EmployeeCell } from "@/components/employee/employee-cell";
 import { FilterRow } from "@/components/common/list-shell";
 import { listSkillAssessments } from "@/lib/frappe/lifecycle-ext";
 
-export const metadata = { title: "Skill assessments · Colossal HR" };
+export const metadata = { title: "Skill assessments · Colossal Hub" };
 
 type SP = { employee?: string; skill?: string };
 

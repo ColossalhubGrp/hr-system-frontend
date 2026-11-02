@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: { id: string };
 }) {
   const p = await getPip(decodeURIComponent(params.id));
-  return { title: p ? `${p.id} · PIP · Colossal HR` : "PIP · Colossal HR" };
+  return { title: p ? `${p.id} · PIP · Colossal Hub` : "PIP · Colossal Hub" };
 }
 
 export default async function PipDetailPage({

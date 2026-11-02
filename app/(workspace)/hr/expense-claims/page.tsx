@@ -21,7 +21,7 @@ import {
   EXPENSE_CLAIM_STATUSES,
 } from "@/lib/frappe/expense-claims";
 
-export const metadata = { title: "Expense Claims · Colossal HR" };
+export const metadata = { title: "Expense Claims · Colossal Hub" };
 
 type SP = { status?: string; employee?: string; page?: string };
 

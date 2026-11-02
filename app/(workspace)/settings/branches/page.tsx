@@ -10,7 +10,7 @@ import { BranchesAdmin } from "@/components/settings/branches-admin";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
-  title: "Branches · Settings · Colossal HR",
+  title: "Branches · Settings · Colossal Hub",
 };
 
 /**

@@ -8,7 +8,7 @@ import { getDefaultPerformanceFramework } from "@/lib/frappe/hr-settings";
 import { listAppraisalTemplates } from "@/lib/frappe/setup-appraisal-templates";
 import { createCycleAction } from "../../actions";
 
-export const metadata = { title: "New appraisal cycle · Colossal HR" };
+export const metadata = { title: "New appraisal cycle · Colossal Hub" };
 
 export default async function NewCyclePage() {
   // Three parallel reads: the company list for the form's company select,

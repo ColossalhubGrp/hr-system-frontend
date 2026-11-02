@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getAccountingReadiness } from "@/lib/frappe/setup/accounting-readiness";
 import { cn } from "@/lib/cn";
 
-export const metadata = { title: "Accounting setup · Colossal Suite" };
+export const metadata = { title: "Accounting setup · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function AccountingSetupPage() {

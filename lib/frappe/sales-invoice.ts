@@ -5,7 +5,7 @@ import { submitDoc } from "./submit-doc";
 /**
  * Server-side helpers for ERPNext Sales Invoice.
  *
- * Sales Invoice is a big DocType — we surface the fields Colossal HR
+ * Sales Invoice is a big DocType — we surface the fields Colossal Hub
  * users actually see: customer, posting/due dates, items grid, totals
  * and payment status. Advanced sub-tables (payment schedule, packed
  * items, batch numbers) fall through to the underlying doc via

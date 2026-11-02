@@ -13,7 +13,7 @@ import { listSupplierGroups } from "@/lib/frappe/buying/supplier-group";
 import { listCountries } from "@/lib/frappe/masters/company";
 import { SupplierForm } from "@/components/buying/supplier-form";
 
-export const metadata = { title: "New Supplier · Colossal HR" };
+export const metadata = { title: "New Supplier · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewSupplierPage() {

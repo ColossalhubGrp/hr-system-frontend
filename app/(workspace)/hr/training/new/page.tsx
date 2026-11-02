@@ -8,7 +8,7 @@ import {
 } from "@/lib/frappe/training";
 import { createTrainingEventAction } from "../actions";
 
-export const metadata = { title: "New training event · Colossal HR" };
+export const metadata = { title: "New training event · Colossal Hub" };
 
 export default async function NewTrainingEventPage() {
   const [programs, options] = await Promise.all([

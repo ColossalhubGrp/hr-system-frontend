@@ -13,7 +13,7 @@ import { frappeCall } from "@/lib/frappe/client";
 import { setCycleFrameworkAction } from "../../../actions";
 import { FrameworkCards } from "@/components/performance/framework-cards";
 
-export const metadata = { title: "Edit framework · Colossal HR" };
+export const metadata = { title: "Edit framework · Colossal Hub" };
 
 async function getCycleDoc(id: string) {
   try {

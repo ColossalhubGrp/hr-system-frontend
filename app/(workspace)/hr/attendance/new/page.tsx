@@ -6,7 +6,7 @@ import { listCompanies, listShiftTypes } from "@/lib/frappe/lookups";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createAttendanceAction } from "../actions";
 
-export const metadata = { title: "Mark attendance · Colossal HR" };
+export const metadata = { title: "Mark attendance · Colossal Hub" };
 
 export default async function MarkAttendancePage({
   searchParams,

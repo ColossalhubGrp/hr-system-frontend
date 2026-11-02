@@ -30,7 +30,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 
-export const metadata = { title: "Configuration · Colossal HR" };
+export const metadata = { title: "Configuration · Colossal Hub" };
 
 type SettingCardSpec = {
   href: string;
@@ -90,7 +90,7 @@ const COMPANY_CARDS: SettingCardSpec[] = [
     href: "/settings/payable-accounts",
     icon: <Wallet className="h-4 w-4" />,
     title: "Payable accounts",
-    desc: "Manage the Liability accounts the Expense Claim form (and any future payables flow) can post against — without leaving Colossal HR.",
+    desc: "Manage the Liability accounts the Expense Claim form (and any future payables flow) can post against — without leaving Colossal Hub.",
     show: (a) => a.isHrAdmin || a.isItAdmin,
   },
 ];

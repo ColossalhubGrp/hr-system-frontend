@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getPlaidSettings } from "@/lib/frappe/banking/plaid-settings";
 import { PlaidForm } from "@/components/accounting/plaid-form";
 
-export const metadata = { title: "Plaid Settings · Colossal HR" };
+export const metadata = { title: "Plaid Settings · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function PlaidPage() {

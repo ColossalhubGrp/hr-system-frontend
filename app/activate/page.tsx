@@ -11,7 +11,7 @@ import { AuthBrandMark, AuthShell } from "@/components/auth/auth-shell";
 import { frappeGuestCall } from "@/lib/frappe/guest-call";
 
 export const metadata: Metadata = {
-  title: "Activate account · Colossal HR",
+  title: "Activate account · Colossal Hub",
 };
 
 /**
@@ -76,7 +76,7 @@ export default async function ActivatePage({
       }
       subtitle={
         ok
-          ? "Sign in to start using your Colossal HR workspace."
+          ? "Sign in to start using your Colossal Hub workspace."
           : "The token in your email link may have expired or already been used. Request a new one from the sign-in page."
       }
     >
@@ -87,7 +87,7 @@ export default async function ActivatePage({
         message={
           ok
             ? res.data?.message ??
-              `Welcome to Colossal HR. You can now sign in with ${email}.`
+              `Welcome to Colossal Hub. You can now sign in with ${email}.`
             : errorMsg
         }
         email={email}

@@ -8,7 +8,7 @@ import { getTrainingEvent } from "@/lib/frappe/training";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { saveTrainingResultAction } from "./actions";
 
-export const metadata = { title: "Training results · Colossal HR" };
+export const metadata = { title: "Training results · Colossal Hub" };
 
 export default async function TrainingResultsPage({
   params,

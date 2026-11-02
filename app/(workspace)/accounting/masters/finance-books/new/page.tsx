@@ -4,7 +4,7 @@ import { FinanceBookForm } from "@/components/accounting/finance-book-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Finance Book · Colossal HR" };
+export const metadata = { title: "New Finance Book · Colossal Hub" };
 
 export default function NewFinanceBookPage() {
   return (

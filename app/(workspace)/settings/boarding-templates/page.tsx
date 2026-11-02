@@ -9,7 +9,7 @@ import {
   listSeparationTemplates,
 } from "@/lib/frappe/lifecycle-ext";
 
-export const metadata = { title: "Boarding templates · Colossal HR" };
+export const metadata = { title: "Boarding templates · Colossal Hub" };
 
 type SP = { kind?: string };
 

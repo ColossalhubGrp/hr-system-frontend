@@ -38,7 +38,7 @@ export function ComingSoon({
         </div>
 
         <p className="text-xs text-muted-foreground">
-          We&apos;re building this part of Colossal Suite right now — it will light up here the
+          We&apos;re building this part of Colossal Hub right now — it will light up here the
           moment it&apos;s ready. No setup needed on your side.
         </p>
 

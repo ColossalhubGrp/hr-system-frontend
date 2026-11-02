@@ -23,7 +23,7 @@ export async function generateMetadata({
 }) {
   const a = await getAppraisal(decodeURIComponent(params.id));
   return {
-    title: a ? `${a.id} · Appraisal · Colossal HR` : "Appraisal · Colossal HR",
+    title: a ? `${a.id} · Appraisal · Colossal Hub` : "Appraisal · Colossal Hub",
   };
 }
 

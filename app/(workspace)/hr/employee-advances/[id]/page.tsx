@@ -12,7 +12,7 @@ import { getMyAccess } from "@/lib/frappe/roles";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const a = await getEmployeeAdvance(decodeURIComponent(params.id));
-  return { title: a ? `${a.name} · Colossal HR` : "Advance · Colossal HR" };
+  return { title: a ? `${a.name} · Colossal Hub` : "Advance · Colossal Hub" };
 }
 
 export default async function AdvanceDetailPage({

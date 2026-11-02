@@ -26,7 +26,7 @@ import {
   TRAINING_STATUSES,
 } from "@/lib/frappe/training";
 
-export const metadata = { title: "Training · Colossal HR" };
+export const metadata = { title: "Training · Colossal Hub" };
 
 const TABS = [
   { id: "events", label: "Events" },

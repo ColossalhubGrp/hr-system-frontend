@@ -9,7 +9,7 @@ import { SubscriptionForm } from "@/components/subscriptions/subscription-form";
 import { saveSubscriptionAction } from "../actions";
 
 export const metadata = {
-  title: "Edit subscription · Admin · Colossal HR",
+  title: "Edit subscription · Admin · Colossal Hub",
 };
 
 export default async function CompanySubscriptionPage({

@@ -9,7 +9,7 @@ import { SemanticsExplorer } from "@/components/analytics/semantics/semantics-ex
  */
 
 export const metadata = {
-  title: "Semantics · Business Intelligence · Colossal HR",
+  title: "Semantics · Business Intelligence · Colossal Hub",
 };
 
 export default function SemanticsPage() {

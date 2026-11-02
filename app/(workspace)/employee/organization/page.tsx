@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listOrgEmployees } from "@/lib/frappe/org-chart";
 import { OrgTree } from "@/components/employee/org-tree";
 
-export const metadata = { title: "Organization chart · Colossal HR" };
+export const metadata = { title: "Organization chart · Colossal Hub" };
 
 export default async function OrganizationChartPage() {
   const employees = await listOrgEmployees();

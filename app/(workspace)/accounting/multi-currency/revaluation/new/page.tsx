@@ -5,7 +5,7 @@ import { NewRevaluationForm } from "@/components/accounting/new-revaluation-form
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Exchange Rate Revaluation · Colossal HR" };
+export const metadata = { title: "New Exchange Rate Revaluation · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewRevaluationPage() {

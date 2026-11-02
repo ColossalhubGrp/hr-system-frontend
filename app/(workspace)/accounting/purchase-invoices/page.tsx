@@ -11,7 +11,7 @@ import { DataTable } from "@/components/common/data-table";
 import { listPurchaseInvoices, type PurchaseInvoiceRow } from "@/lib/frappe/purchase-invoice";
 import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
-export const metadata = { title: "Purchase Invoices · Accounting · Colossal HR" };
+export const metadata = { title: "Purchase Invoices · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { status?: string; page?: string };

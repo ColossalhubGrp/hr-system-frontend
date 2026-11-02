@@ -18,7 +18,7 @@ import { SupplierForm } from "@/components/buying/supplier-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Supplier · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Supplier · Colossal Hub` };
 }
 
 export default async function EditSupplierPage({ params }: { params: { name: string } }) {

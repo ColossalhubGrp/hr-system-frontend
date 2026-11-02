@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { SharedTileView } from "@/components/analytics/dashboards/shared-tile-view";
 
 export const metadata: Metadata = {
-  title: "Shared analytics · Colossal HR",
+  title: "Shared analytics · Colossal Hub",
   robots: { index: false, follow: false },   // shared links are private-by-token
 };
 

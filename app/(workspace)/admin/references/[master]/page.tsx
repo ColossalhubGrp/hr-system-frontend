@@ -22,7 +22,7 @@ import {
 import { ValueForm } from "@/components/references/value-form";
 
 export const metadata = {
-  title: "Reference master · Admin · Colossal HR",
+  title: "Reference master · Admin · Colossal Hub",
 };
 
 type SP = { include_inactive?: string; search?: string };

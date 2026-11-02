@@ -6,7 +6,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listCostCenterAllocations, type CostCenterAllocation } from "@/lib/frappe/budgets/cost-center-allocation";
 
-export const metadata = { title: "Cost Center Allocations · Colossal HR" };
+export const metadata = { title: "Cost Center Allocations · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function CostCenterAllocationsPage() {

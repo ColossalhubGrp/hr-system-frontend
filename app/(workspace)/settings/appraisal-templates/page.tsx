@@ -9,7 +9,7 @@ import { TemplateDeleteButton } from "@/components/setup/template-delete-button"
 import { deleteAppraisalTemplateAction } from "./actions";
 
 export const metadata = {
-  title: "Appraisal templates · Settings · Colossal HR",
+  title: "Appraisal templates · Settings · Colossal Hub",
 };
 
 export default async function AppraisalTemplatesPage() {

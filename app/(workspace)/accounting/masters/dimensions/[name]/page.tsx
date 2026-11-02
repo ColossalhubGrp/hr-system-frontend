@@ -9,7 +9,7 @@ import { DimensionForm } from "@/components/accounting/dimension-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Accounting Dimension · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Accounting Dimension · Colossal Hub` };
 }
 
 export default async function EditDimensionPage({ params }: { params: { name: string } }) {

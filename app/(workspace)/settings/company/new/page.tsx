@@ -11,7 +11,7 @@ import { CompanyForm } from "@/components/settings/company-form";
 import { createCompanyAction } from "../actions";
 
 export const metadata = {
-  title: "New company · Settings · Colossal HR",
+  title: "New company · Settings · Colossal Hub",
 };
 
 export default async function NewCompanyPage() {

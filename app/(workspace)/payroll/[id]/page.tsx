@@ -18,7 +18,7 @@ import { FlowSteps } from "@/components/payroll/flow-steps";
 import { PayRunActions } from "@/components/payroll/pay-run-actions";
 import { DeltaTag } from "@/components/payroll/delta-tag";
 
-export const metadata = { title: "Pay run · Payroll · Colossal HR" };
+export const metadata = { title: "Pay run · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 const STATUS_META: Record<PayRunStatus, { label: string; cls: string }> = {

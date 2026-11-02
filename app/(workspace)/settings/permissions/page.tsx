@@ -6,7 +6,7 @@ import { ROLE } from "@/lib/frappe/roles";
 import { requireGroup } from "@/lib/frappe/require-role";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
-export const metadata = { title: "Permissions · Colossal HR" };
+export const metadata = { title: "Permissions · Colossal Hub" };
 
 type DocPermRow = {
   parent: string;

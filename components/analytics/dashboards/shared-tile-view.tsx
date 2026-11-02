@@ -12,7 +12,7 @@ import { ReviewBadge } from "./review-badge";
  * Standalone public view of a shared dashboard tile. Renders
  * OUTSIDE the workspace shell (no sidebar, no auth chrome) so an
  * anonymous browser visitor sees the answer, the reviewer badge,
- * and a lightweight "Colossal HR" header — nothing else.
+ * and a lightweight "Colossal Hub" header — nothing else.
  *
  * Distinct error states from the backend:
  *   404 → unknown token / never existed
@@ -78,7 +78,7 @@ function PublicHeader() {
         <div className="grid h-7 w-7 place-items-center rounded-full bg-primary/15 text-primary text-[11px] font-semibold">
           C
         </div>
-        <span className="text-sm font-semibold text-foreground">Colossal HR</span>
+        <span className="text-sm font-semibold text-foreground">Colossal Hub</span>
         <span className="text-[11px] text-muted-foreground">· shared analytics</span>
       </div>
     </header>
@@ -143,7 +143,7 @@ function TileBody({ payload }: { payload: SharedTilePayload }) {
 
       <p className="border-t pt-3 text-[10px] text-muted-foreground">
         This is a read-only snapshot of an analytics answer generated
-        by Colossal HR. The Adversarial Reviewer verdict at the top
+        by Colossal Hub. The Adversarial Reviewer verdict at the top
         reflects the platform&apos;s automated check for factual
         grounding at snapshot time.
       </p>

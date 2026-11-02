@@ -12,7 +12,7 @@ import { ModuleSetupGrid, type SetupCard } from "@/components/settings/module-se
 import { getMyAccess } from "@/lib/frappe/roles";
 import { redirect } from "next/navigation";
 
-export const metadata = { title: "Leaves setup · Colossal HR" };
+export const metadata = { title: "Leaves setup · Colossal Hub" };
 
 const CARDS: SetupCard[] = [
   {

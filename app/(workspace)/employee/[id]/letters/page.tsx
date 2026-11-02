@@ -6,7 +6,7 @@ import { getEmployee } from "@/lib/frappe/employees";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { LETTER_TYPES } from "@/lib/frappe/letters";
 
-export const metadata = { title: "HR Letters · Colossal HR" };
+export const metadata = { title: "HR Letters · Colossal Hub" };
 
 export default async function EmployeeLettersIndex({
   params,

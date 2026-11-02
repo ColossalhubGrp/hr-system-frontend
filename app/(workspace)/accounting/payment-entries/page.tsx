@@ -15,7 +15,7 @@ import {
 } from "@/lib/frappe/accounting";
 import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
-export const metadata = { title: "Payment Entries · Accounting · Colossal HR" };
+export const metadata = { title: "Payment Entries · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { status?: string; type?: string; page?: string };

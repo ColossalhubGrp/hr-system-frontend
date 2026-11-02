@@ -8,7 +8,7 @@ import { CostCenterTree } from "@/components/accounting/cost-center-tree";
 import { AddCostCenterDialog, type ParentOption } from "./add-cost-center-dialog";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Chart of Cost Centers · Accounting · Colossal HR" };
+export const metadata = { title: "Chart of Cost Centers · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { company?: string };

@@ -12,7 +12,7 @@ import { BudgetForm } from "@/components/accounting/budget-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Budget · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Budget · Colossal Hub` };
 }
 
 export default async function EditBudgetPage({ params }: { params: { name: string } }) {

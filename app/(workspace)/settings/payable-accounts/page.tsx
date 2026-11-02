@@ -10,7 +10,7 @@ import {
 import { listCompanies } from "@/lib/frappe/lookups";
 import { getMyAccess } from "@/lib/frappe/roles";
 
-export const metadata = { title: "Payable accounts · Settings · Colossal HR" };
+export const metadata = { title: "Payable accounts · Settings · Colossal Hub" };
 
 type SP = { company?: string };
 

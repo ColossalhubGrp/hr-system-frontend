@@ -3,7 +3,7 @@ import { AuthBrandMark, AuthShell } from "@/components/auth/auth-shell";
 import { ForgotForm } from "./forgot-form";
 
 export const metadata: Metadata = {
-  title: "Forgot password · Colossal HR",
+  title: "Forgot password · Colossal Hub",
 };
 
 export default function ForgotPasswordPage() {
@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
           password?
         </>
       }
-      subtitle="It happens to all of us. Enter the email tied to your Colossal HR account and we'll send you a reset link."
+      subtitle="It happens to all of us. Enter the email tied to your Colossal Hub account and we'll send you a reset link."
     >
       <AuthBrandMark />
       <ForgotForm />

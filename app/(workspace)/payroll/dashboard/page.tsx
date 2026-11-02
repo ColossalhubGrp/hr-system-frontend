@@ -19,7 +19,7 @@ import {
 import { NewPeriodModal } from "@/components/payroll/new-period-modal";
 import { PeriodFilter } from "@/components/payroll/period-filter";
 
-export const metadata = { title: "Payroll Dashboard · Colossal HR" };
+export const metadata = { title: "Payroll Dashboard · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 const usd = (n: number) =>

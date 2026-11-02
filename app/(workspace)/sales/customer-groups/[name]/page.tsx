@@ -9,7 +9,7 @@ import { CustomerGroupForm } from "@/components/sales/customer-group-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Customer Group · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Customer Group · Colossal Hub` };
 }
 
 export default async function EditCustomerGroupPage({ params }: { params: { name: string } }) {

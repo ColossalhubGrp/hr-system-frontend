@@ -10,7 +10,7 @@ import { FiscalYearForm } from "@/components/accounting/fiscal-year-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Fiscal Year · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Fiscal Year · Colossal Hub` };
 }
 
 export default async function EditFiscalYearPage({ params }: { params: { name: string } }) {

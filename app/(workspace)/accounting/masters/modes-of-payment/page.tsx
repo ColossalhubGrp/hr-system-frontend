@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listModesOfPayment, type ModeOfPayment } from "@/lib/frappe/masters/mode-of-payment";
 
-export const metadata = { title: "Modes of Payment · Masters · Accounting · Colossal HR" };
+export const metadata = { title: "Modes of Payment · Masters · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function ModesOfPaymentPage() {

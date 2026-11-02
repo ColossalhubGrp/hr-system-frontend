@@ -7,7 +7,7 @@ import { TaxRuleForm } from "@/components/accounting/tax-rule-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Tax Rule · Colossal HR" };
+export const metadata = { title: "New Tax Rule · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewTaxRulePage() {

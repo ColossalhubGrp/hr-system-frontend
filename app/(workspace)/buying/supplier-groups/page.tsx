@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listSupplierGroups, type SupplierGroup } from "@/lib/frappe/buying/supplier-group";
 
-export const metadata = { title: "Supplier Groups · Colossal HR" };
+export const metadata = { title: "Supplier Groups · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function SupplierGroupsPage() {

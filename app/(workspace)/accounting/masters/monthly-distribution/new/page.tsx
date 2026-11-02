@@ -5,7 +5,7 @@ import { MonthlyDistributionForm } from "@/components/accounting/monthly-distrib
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Monthly Distribution · Colossal HR" };
+export const metadata = { title: "New Monthly Distribution · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewMonthlyDistributionPage() {

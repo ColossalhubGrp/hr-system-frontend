@@ -32,7 +32,7 @@ import {
   ATTENDANCE_REQUEST_REASONS,
 } from "@/lib/frappe/attendance-list";
 
-export const metadata = { title: "Attendance · Colossal HR" };
+export const metadata = { title: "Attendance · Colossal Hub" };
 
 const ATT_TONES: Record<string, string> = {
   Present: "bg-rise/10 text-rise ring-rise/20",

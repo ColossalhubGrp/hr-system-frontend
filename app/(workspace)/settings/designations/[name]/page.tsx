@@ -17,7 +17,7 @@ export async function generateMetadata({
   params: { name: string };
 }) {
   const name = decodeURIComponent(params.name);
-  return { title: `${name} · Designations · Colossal HR` };
+  return { title: `${name} · Designations · Colossal Hub` };
 }
 
 export default async function EditDesignationPage({

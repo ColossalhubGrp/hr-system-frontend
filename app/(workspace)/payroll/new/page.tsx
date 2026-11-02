@@ -10,7 +10,7 @@ import {
 } from "@/lib/payroll-engine/doctype-helpers";
 import { PayrollSetupGate } from "@/components/payroll/setup-gate";
 
-export const metadata = { title: "New pay run · Payroll · Colossal HR" };
+export const metadata = { title: "New pay run · Payroll · Colossal Hub" };
 
 export default async function NewPayRunPage() {
   return (

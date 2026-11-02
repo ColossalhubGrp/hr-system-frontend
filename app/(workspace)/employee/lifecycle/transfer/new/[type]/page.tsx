@@ -18,9 +18,9 @@ export async function generateMetadata({
   params: { type: string };
 }) {
   if (!isTransferTypeSlug(params.type))
-    return { title: "New transfer · Colossal HR" };
+    return { title: "New transfer · Colossal Hub" };
   return {
-    title: `${TRANSFER_TYPES[params.type].label} · Colossal HR`,
+    title: `${TRANSFER_TYPES[params.type].label} · Colossal Hub`,
   };
 }
 

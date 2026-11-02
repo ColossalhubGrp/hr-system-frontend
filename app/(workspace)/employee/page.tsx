@@ -12,7 +12,7 @@ import {
 import { requireGroup } from "@/lib/frappe/require-role";
 
 export const metadata = {
-  title: "Employees · Colossal HR",
+  title: "Employees · Colossal Hub",
 };
 
 type SP = {

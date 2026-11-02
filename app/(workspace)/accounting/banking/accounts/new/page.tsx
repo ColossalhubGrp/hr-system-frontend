@@ -7,7 +7,7 @@ import { BankAccountForm } from "@/components/accounting/bank-account-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Bank Account · Colossal HR" };
+export const metadata = { title: "New Bank Account · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewBankAccountPage() {

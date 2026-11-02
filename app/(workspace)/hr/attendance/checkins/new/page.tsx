@@ -5,7 +5,7 @@ import { CheckinForm } from "@/components/attendance/checkin-form";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createCheckinAction } from "../../actions";
 
-export const metadata = { title: "Log punch · Colossal HR" };
+export const metadata = { title: "Log punch · Colossal Hub" };
 
 export default async function NewCheckinPage({
   searchParams,

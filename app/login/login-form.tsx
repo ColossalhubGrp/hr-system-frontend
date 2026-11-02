@@ -96,7 +96,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
       <div className="mt-6 space-y-3 border-t pt-5">
         <p className="text-center text-sm text-muted-foreground">
-          New to Colossal HR?{" "}
+          New to Colossal Hub?{" "}
           <Link
             href="/register"
             className="font-semibold text-primary hover:underline"

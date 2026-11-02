@@ -11,7 +11,7 @@ import {
 import { getShiftSchedule } from "@/lib/frappe/shift-schedules";
 import { updateShiftScheduleAction } from "../../../actions";
 
-export const metadata = { title: "Edit shift schedule · Colossal HR" };
+export const metadata = { title: "Edit shift schedule · Colossal Hub" };
 
 export default async function EditShiftSchedulePage({
   params,

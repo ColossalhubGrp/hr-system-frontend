@@ -6,7 +6,7 @@ import { listCurrenciesEnsured } from "@/lib/frappe/lookups";
 import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { createTravelRequestAction } from "../actions";
 
-export const metadata = { title: "New travel request · Colossal HR" };
+export const metadata = { title: "New travel request · Colossal Hub" };
 
 export default async function NewTravelPage() {
   const [currencies, options] = await Promise.all([

@@ -8,7 +8,7 @@ import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createShiftScheduleAssignmentAction } from "../../actions";
 
 export const metadata = {
-  title: "New schedule assignment · Colossal HR",
+  title: "New schedule assignment · Colossal Hub",
 };
 
 export default async function NewScheduleAssignmentPage() {

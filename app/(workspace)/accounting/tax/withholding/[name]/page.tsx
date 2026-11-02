@@ -10,7 +10,7 @@ import { TaxWithholdingForm } from "@/components/accounting/tax-withholding-form
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Tax Withholding · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Tax Withholding · Colossal Hub` };
 }
 
 export default async function EditTaxWithholdingPage({ params }: { params: { name: string } }) {

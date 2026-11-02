@@ -12,7 +12,7 @@ import { getMyAccess } from "@/lib/frappe/roles";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const t = await getTravelRequest(decodeURIComponent(params.id));
-  return { title: t ? `${t.name} · Colossal HR` : "Travel · Colossal HR" };
+  return { title: t ? `${t.name} · Colossal Hub` : "Travel · Colossal Hub" };
 }
 
 export default async function TravelDetailPage({ params }: { params: { id: string } }) {

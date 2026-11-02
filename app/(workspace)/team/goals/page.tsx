@@ -4,7 +4,7 @@ import { Target } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
 import { getMyDirectAndIndirectReports } from "@/lib/frappe/team-scope";
 
-export const metadata = { title: "Team goals · Colossal HR" };
+export const metadata = { title: "Team goals · Colossal Hub" };
 
 type GoalRow = {
   name: string;

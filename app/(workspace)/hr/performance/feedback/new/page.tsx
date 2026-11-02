@@ -6,7 +6,7 @@ import { listAppraisalCyclesNames } from "@/lib/frappe/lookups";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createFeedbackAction } from "../../actions";
 
-export const metadata = { title: "New feedback · Colossal HR" };
+export const metadata = { title: "New feedback · Colossal Hub" };
 
 export default async function NewFeedbackPage() {
   const [cycles, employeeDirectory] = await Promise.all([

@@ -4,7 +4,7 @@ import { PaymentTermForm } from "@/components/accounting/payment-term-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Payment Term · Colossal HR" };
+export const metadata = { title: "New Payment Term · Colossal Hub" };
 
 export default function NewPaymentTermPage() {
   return (

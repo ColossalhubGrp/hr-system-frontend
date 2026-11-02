@@ -9,7 +9,7 @@ import {
 } from "@/lib/payroll-engine/belina-settings";
 import { saveSettings } from "./actions";
 
-export const metadata = { title: "Settings · Payroll · Colossal HR" };
+export const metadata = { title: "Settings · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 const usd = (n: number) =>

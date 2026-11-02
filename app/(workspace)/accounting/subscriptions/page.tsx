@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listSubscriptions, type SubscriptionRow } from "@/lib/frappe/subscriptions/subscription";
 
-export const metadata = { title: "Subscriptions · Colossal HR" };
+export const metadata = { title: "Subscriptions · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function SubscriptionsPage() {

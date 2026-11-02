@@ -11,7 +11,7 @@ import { FilterRow } from "@/components/common/list-shell";
 import { PERFORMANCE_TABS, performanceHrefFor } from "@/components/performance/nav-tabs";
 import { listFullAndFinal } from "@/lib/frappe/lifecycle-ext";
 
-export const metadata = { title: "Full and Final · Colossal HR" };
+export const metadata = { title: "Full and Final · Colossal Hub" };
 
 type SP = { status?: string; employee?: string };
 

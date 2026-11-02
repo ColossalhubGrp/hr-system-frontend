@@ -10,7 +10,7 @@ import { TemplateEditor } from "@/components/setup/template-editor";
 import { upsertAppraisalTemplateAction } from "../actions";
 
 export const metadata = {
-  title: "New template · Appraisal templates · Colossal HR",
+  title: "New template · Appraisal templates · Colossal Hub",
 };
 
 export default async function NewAppraisalTemplatePage() {

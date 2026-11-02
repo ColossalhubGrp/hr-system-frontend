@@ -9,7 +9,7 @@ import { ReportTable } from "@/components/accounting/report-table";
 import { PrintableReport, formatAsOf } from "@/components/accounting/printable-report";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Balance Sheet · Accounting · Colossal HR" };
+export const metadata = { title: "Balance Sheet · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { company?: string; to?: string; periodicity?: string };

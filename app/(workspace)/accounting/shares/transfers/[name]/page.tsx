@@ -12,7 +12,7 @@ import { ShareTransferForm } from "@/components/accounting/share-transfer-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Share Transfer · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Share Transfer · Colossal Hub` };
 }
 
 export default async function EditShareTransferPage({ params }: { params: { name: string } }) {

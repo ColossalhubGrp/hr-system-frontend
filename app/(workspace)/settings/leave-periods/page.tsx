@@ -12,7 +12,7 @@ import {
   deleteLeavePeriodAction,
 } from "@/app/(workspace)/hr/leaves/admin/actions";
 
-export const metadata = { title: "Leave periods · Configuration · Colossal HR" };
+export const metadata = { title: "Leave periods · Configuration · Colossal Hub" };
 
 export default async function LeavePeriodsPage() {
   const access = await getMyAccess();

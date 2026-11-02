@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listCustomers, type CustomerRow } from "@/lib/frappe/sales/customer";
 
-export const metadata = { title: "Customers · Sales · Colossal HR" };
+export const metadata = { title: "Customers · Sales · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function CustomersPage() {

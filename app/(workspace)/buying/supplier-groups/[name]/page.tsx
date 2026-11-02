@@ -9,7 +9,7 @@ import { SupplierGroupForm } from "@/components/buying/supplier-group-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Supplier Group · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Supplier Group · Colossal Hub` };
 }
 
 export default async function EditSupplierGroupPage({ params }: { params: { name: string } }) {

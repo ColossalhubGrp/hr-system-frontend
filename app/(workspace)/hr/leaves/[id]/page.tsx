@@ -21,8 +21,8 @@ export async function generateMetadata({
   const app = await getLeaveApplication(decodeURIComponent(params.id));
   return {
     title: app
-      ? `${app.employeeName ?? app.employee} · Leave · Colossal HR`
-      : "Leave · Colossal HR",
+      ? `${app.employeeName ?? app.employee} · Leave · Colossal Hub`
+      : "Leave · Colossal Hub",
   };
 }
 

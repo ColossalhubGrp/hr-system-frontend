@@ -14,7 +14,7 @@ export async function generateMetadata({
 }) {
   const c = await getCheckin(decodeURIComponent(params.id));
   return {
-    title: c ? `${c.id} · Check-in · Colossal HR` : "Check-in · Colossal HR",
+    title: c ? `${c.id} · Check-in · Colossal Hub` : "Check-in · Colossal Hub",
   };
 }
 

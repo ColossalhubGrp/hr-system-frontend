@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/common/list-shell";
 import { StatusPill } from "@/components/common/status-pill";
 import { listMyGoals } from "@/lib/frappe/my-self-service";
 
-export const metadata = { title: "My goals · Colossal HR" };
+export const metadata = { title: "My goals · Colossal Hub" };
 
 const TONES: Record<string, string> = {
   "In Progress": "bg-ink-50 text-ash-900 ring-ink-100",

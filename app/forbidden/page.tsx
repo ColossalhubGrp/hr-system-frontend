@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-export const metadata = { title: "Forbidden · Colossal HR" };
+export const metadata = { title: "Forbidden · Colossal Hub" };
 
 const GROUP_HUMAN: Record<string, string> = {
   HR_ADMIN: "HR Manager or System Manager",

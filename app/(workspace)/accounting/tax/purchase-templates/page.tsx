@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listPurchaseTaxTemplates, type PurchaseTaxTemplate } from "@/lib/frappe/tax/purchase-template";
 
-export const metadata = { title: "Purchase Taxes Templates · Colossal HR" };
+export const metadata = { title: "Purchase Taxes Templates · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function PurchaseTaxTemplatesPage() {

@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listBudgets, type BudgetRow } from "@/lib/frappe/budgets/budget";
 
-export const metadata = { title: "Budgets · Colossal HR" };
+export const metadata = { title: "Budgets · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function BudgetsPage() {

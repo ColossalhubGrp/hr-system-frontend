@@ -7,7 +7,7 @@ import { shareBalance } from "@/lib/frappe/accounting-reports";
 import { ReportTable } from "@/components/accounting/report-table";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Share Balance · Colossal HR" };
+export const metadata = { title: "Share Balance · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { company?: string; date?: string };

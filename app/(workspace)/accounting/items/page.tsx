@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listItemsDirectory, type ItemRow } from "@/lib/frappe/item";
 
-export const metadata = { title: "Items · Accounting · Colossal HR" };
+export const metadata = { title: "Items · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function ItemsPage() {

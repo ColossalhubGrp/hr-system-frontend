@@ -7,7 +7,7 @@ import { InterviewsReviewClient } from "@/components/recruitment/interviewsrevie
 import { fetchInterviewsInitial } from "@/lib/recruitment/server-interviews";
 
 export const metadata = {
-  title: "Interview Reviews · Recruitment · Colossal HR",
+  title: "Interview Reviews · Recruitment · Colossal Hub",
 };
 
 export default async function InterviewsReviewPage() {

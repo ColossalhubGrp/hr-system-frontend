@@ -9,7 +9,7 @@ import {
 } from "@/lib/frappe/fiscalisation";
 import { FiscalisationSettingsForm } from "@/components/accounting/fiscalisation-settings-form";
 
-export const metadata = { title: "ZIMRA Fiscalisation · Accounting · Colossal HR" };
+export const metadata = { title: "ZIMRA Fiscalisation · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function FiscalisationSettingsPage() {

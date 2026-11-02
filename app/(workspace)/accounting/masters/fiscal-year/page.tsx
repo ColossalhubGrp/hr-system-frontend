@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listFiscalYears, type FiscalYear } from "@/lib/frappe/masters/fiscal-year";
 
-export const metadata = { title: "Fiscal Year · Colossal HR" };
+export const metadata = { title: "Fiscal Year · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function FiscalYearPage() {

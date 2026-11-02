@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
   return {
-    title: `Edit ${decodeURIComponent(params.name)} · Payment Entry · Colossal HR`,
+    title: `Edit ${decodeURIComponent(params.name)} · Payment Entry · Colossal Hub`,
   };
 }
 

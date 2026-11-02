@@ -5,7 +5,7 @@ import { NewCompanyForm } from "@/components/accounting/new-company-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Company · Colossal HR" };
+export const metadata = { title: "New Company · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewCompanyPage() {

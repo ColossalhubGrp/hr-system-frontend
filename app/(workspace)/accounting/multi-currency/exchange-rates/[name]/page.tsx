@@ -10,7 +10,7 @@ import { CurrencyExchangeForm } from "@/components/accounting/currency-exchange-
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Exchange Rate · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Exchange Rate · Colossal Hub` };
 }
 
 export default async function EditExchangePage({ params }: { params: { name: string } }) {

@@ -15,7 +15,7 @@ import {
   listDepartmentNames,
 } from "@/lib/frappe/lookups";
 
-export const metadata = { title: "Appraisal overview · Colossal HR" };
+export const metadata = { title: "Appraisal overview · Colossal Hub" };
 
 type SP = {
   cycle?: string;

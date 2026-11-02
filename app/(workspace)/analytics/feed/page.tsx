@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NaoChatFrame } from "@/components/analytics/nao-chat-frame";
 
 export const metadata: Metadata = {
-  title: "Feed · Analytics · Colossal HR",
+  title: "Feed · Analytics · Colossal Hub",
 };
 
 /**

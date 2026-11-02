@@ -9,7 +9,7 @@ import { shareLedger } from "@/lib/frappe/accounting-reports";
 import { ReportTable } from "@/components/accounting/report-table";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Share Ledger · Colossal HR" };
+export const metadata = { title: "Share Ledger · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { company?: string; shareholder?: string; from?: string; to?: string };

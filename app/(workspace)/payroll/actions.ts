@@ -697,7 +697,7 @@ export async function getMissingDetailsRequestDraftAction(
     `Hi ${employeeName.split(" ")[0] ?? "there"},\n\n` +
     `Payroll can't run for you in the upcoming pay run because we're missing the following details on your profile:\n\n` +
     `${bullets}\n\n` +
-    `Please sign in to Colossal HR, open your profile (Employee → your name → Salary tab), and fill these in. ` +
+    `Please sign in to Colossal Hub, open your profile (Employee → your name → Salary tab), and fill these in. ` +
     `If you need help, reply to this email and the HR team will get back to you.\n\n` +
     `Thanks.`;
   return { to, subject, body };

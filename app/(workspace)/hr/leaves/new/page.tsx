@@ -6,7 +6,7 @@ import { LeaveForm } from "@/components/leaves/leave-form";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createLeaveAction } from "../actions";
 
-export const metadata = { title: "New leave application · Colossal HR" };
+export const metadata = { title: "New leave application · Colossal Hub" };
 
 async function listLeaveTypes(): Promise<string[]> {
   try {

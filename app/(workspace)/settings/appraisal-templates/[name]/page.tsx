@@ -18,7 +18,7 @@ export async function generateMetadata({
   params: { name: string };
 }) {
   const name = decodeURIComponent(params.name);
-  return { title: `${name} · Appraisal templates · Colossal HR` };
+  return { title: `${name} · Appraisal templates · Colossal Hub` };
 }
 
 export default async function EditAppraisalTemplatePage({

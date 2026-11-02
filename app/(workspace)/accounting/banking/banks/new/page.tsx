@@ -4,7 +4,7 @@ import { BankForm } from "@/components/accounting/bank-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Bank · Colossal HR" };
+export const metadata = { title: "New Bank · Colossal Hub" };
 
 export default function NewBankPage() {
   return (

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { fetchLifecycleSummary, type LifecycleKind } from "@/lib/frappe/lifecycle";
 
-export const metadata = { title: "Employee Lifecycle · Colossal HR" };
+export const metadata = { title: "Employee Lifecycle · Colossal Hub" };
 
 const KIND_META: Record<
   LifecycleKind,

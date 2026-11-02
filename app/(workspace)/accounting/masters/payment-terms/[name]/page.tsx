@@ -9,7 +9,7 @@ import { PaymentTermForm } from "@/components/accounting/payment-term-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Payment Term · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Payment Term · Colossal Hub` };
 }
 
 export default async function EditPaymentTermPage({ params }: { params: { name: string } }) {

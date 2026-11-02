@@ -70,7 +70,7 @@ export function JournalEntryActions({
           )}
         >
           {isDraft ? <Send className="h-3.5 w-3.5" /> : <Ban className="h-3.5 w-3.5" />}
-          {pending ? (isDraft ? "Submitting…" : "Cancelling…") : isDraft ? "Submit" : "Cancel"}
+          {pending ? (isDraft ? "Posting…" : "Cancelling…") : isDraft ? "Post entry" : "Cancel"}
         </button>
       </div>
       {error && <ActionError message={error} onDismiss={() => setError(null)} />}

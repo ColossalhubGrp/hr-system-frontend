@@ -15,7 +15,7 @@ import { RecentActivity } from "./_components/recent-activity";
 import { CommandPalette } from "./_components/command-palette";
 import { CommandKChip } from "./_components/command-k-chip";
 
-export const metadata = { title: "Accounting · Colossal HR" };
+export const metadata = { title: "Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { s?: string };

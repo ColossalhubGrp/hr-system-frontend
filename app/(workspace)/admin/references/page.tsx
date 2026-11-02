@@ -19,7 +19,7 @@ import { NewMasterDialog } from "@/components/references/new-master-dialog";
 // the engineer needs to edit them they go through Frappe Desk directly.
 const CODE_LEVEL_MASTERS = new Set(["AI Model Provider"]);
 
-export const metadata = { title: "Reference data · Configuration · Colossal HR" };
+export const metadata = { title: "Reference data · Configuration · Colossal Hub" };
 
 export default async function ReferenceMastersPage() {
   const [allMasters, modules] = await Promise.all([

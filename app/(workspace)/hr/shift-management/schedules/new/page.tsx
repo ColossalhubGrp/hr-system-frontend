@@ -9,7 +9,7 @@ import {
 } from "@/lib/frappe/lookups";
 import { createShiftScheduleAction } from "../../actions";
 
-export const metadata = { title: "New shift schedule · Colossal HR" };
+export const metadata = { title: "New shift schedule · Colossal Hub" };
 
 export default async function NewShiftSchedulePage() {
   const [shiftTypes, companies, holidayLists] = await Promise.all([

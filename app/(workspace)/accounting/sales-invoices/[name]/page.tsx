@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { Receipt, ChevronLeft } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
+import { formatMoney, formatDateLong } from "@/lib/format";
 import { StatusPill } from "@/components/common/status-pill";
 import { getSalesInvoice } from "@/lib/frappe/sales-invoice";
 import { SalesInvoiceActions } from "@/components/accounting/sales-invoice-actions";
@@ -12,7 +13,7 @@ import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Sales Invoice · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Sales Invoice · Colossal Hub` };
 }
 
 export default async function SalesInvoiceDetailPage({ params }: { params: { name: string } }) {
@@ -72,8 +73,8 @@ export default async function SalesInvoiceDetailPage({ params }: { params: { nam
           <Detail label="Company" value={doc.company} />
           <Detail label="Currency" value={doc.currency} />
           <Detail label="Conversion rate" value={doc.conversionRate.toFixed(4)} />
-          <Detail label="Posting date" value={doc.postingDate} />
-          <Detail label="Due date" value={doc.dueDate ?? "—"} />
+          <Detail label="Posting date" value={formatDateLong(doc.postingDate)} />
+          <Detail label="Due date" value={doc.dueDate ? formatDateLong(doc.dueDate) : "—"} />
           <Detail label="PO no." value={doc.poNo ?? "—"} />
           <Detail label="PO date" value={doc.poDate ?? "—"} />
         </div>
@@ -91,7 +92,7 @@ export default async function SalesInvoiceDetailPage({ params }: { params: { nam
                 <th className="py-2 text-right">Rate</th>
                 <th className="py-2 text-right">Amount</th>
                 <th className="py-2 text-left">Income Account</th>
-                <th className="py-2 text-left">Cost Center</th>
+                <th className="py-2 text-left">Cost Centre</th>
               </tr>
             </thead>
             <tbody>
@@ -197,5 +198,5 @@ function Detail({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 function money(n: number, ccy: string): string {
-  return `${ccy} ${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return formatMoney(n, ccy);
 }

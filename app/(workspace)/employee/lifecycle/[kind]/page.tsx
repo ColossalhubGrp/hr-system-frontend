@@ -31,8 +31,8 @@ export async function generateMetadata({
 }: {
   params: { kind: string };
 }) {
-  if (!isKind(params.kind)) return { title: "Lifecycle · Colossal HR" };
-  return { title: `${LIFECYCLE_META[params.kind].label} · Colossal HR` };
+  if (!isKind(params.kind)) return { title: "Lifecycle · Colossal Hub" };
+  return { title: `${LIFECYCLE_META[params.kind].label} · Colossal Hub` };
 }
 
 type SP = { status?: string; page?: string };

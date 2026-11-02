@@ -6,7 +6,7 @@ import { getTrainingFormOptions } from "@/lib/frappe/training";
 import { listCompanies } from "@/lib/frappe/lookups";
 import { createTrainingProgramAction } from "../../actions";
 
-export const metadata = { title: "New training program · Colossal HR" };
+export const metadata = { title: "New training program · Colossal Hub" };
 
 export default async function NewTrainingProgramPage() {
   const [options, companies] = await Promise.all([

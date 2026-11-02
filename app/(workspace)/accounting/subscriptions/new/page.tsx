@@ -6,7 +6,7 @@ import { SubscriptionForm } from "@/components/accounting/subscription-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Subscription · Colossal HR" };
+export const metadata = { title: "New Subscription · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewSubscriptionPage() {

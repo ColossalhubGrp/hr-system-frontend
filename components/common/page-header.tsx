@@ -35,7 +35,7 @@ export function PageHeader({
           <Icon className="h-3.5 w-3.5" />
           {crumb}
         </div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-2xl font-extrabold tracking-[-0.02em] text-foreground">
           {title}
         </h1>
         {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}

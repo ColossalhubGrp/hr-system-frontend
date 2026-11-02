@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listPaymentTerms, type PaymentTerm } from "@/lib/frappe/masters/payment-term";
 
-export const metadata = { title: "Payment Terms · Masters · Accounting · Colossal HR" };
+export const metadata = { title: "Payment Terms · Masters · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function PaymentTermsPage() {

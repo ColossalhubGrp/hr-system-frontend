@@ -10,7 +10,7 @@ import { CostCenterDetailActions } from "@/components/accounting/cost-center-det
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Cost Center · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Cost Center · Colossal Hub` };
 }
 
 type SP = { company?: string };

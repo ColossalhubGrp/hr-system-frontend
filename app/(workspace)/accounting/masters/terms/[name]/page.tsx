@@ -9,7 +9,7 @@ import { TermsForm } from "@/components/accounting/terms-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Terms · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Terms · Colossal Hub` };
 }
 
 export default async function EditTermsPage({ params }: { params: { name: string } }) {

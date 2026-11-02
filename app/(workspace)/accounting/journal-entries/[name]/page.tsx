@@ -15,7 +15,7 @@ export async function generateMetadata({
 }: {
   params: { name: string };
 }) {
-  return { title: `${decodeURIComponent(params.name)} · Journal Entry · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Journal Entry · Colossal Hub` };
 }
 
 export default async function JournalEntryDetailPage({
@@ -112,7 +112,7 @@ export default async function JournalEntryDetailPage({
                 <th className="border-b border-border/60 py-2 text-left">Party</th>
                 <th className="border-b border-border/60 py-2 text-right">Debit</th>
                 <th className="border-b border-border/60 py-2 text-right">Credit</th>
-                <th className="border-b border-border/60 py-2 text-left">Cost Center</th>
+                <th className="border-b border-border/60 py-2 text-left">Cost Centre</th>
                 <th className="border-b border-border/60 py-2 text-left">Reference</th>
               </tr>
             </thead>

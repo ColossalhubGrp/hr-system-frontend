@@ -469,7 +469,7 @@ function LineRow({
         </div>
       )}
       <div className={cn(multiCurrency ? "col-span-11 md:col-span-2" : "col-span-11 md:col-span-3")}>
-        <label className="mb-1 block text-xs font-semibold text-muted-foreground">Cost Center</label>
+        <label className="mb-1 block text-xs font-semibold text-muted-foreground">Cost Centre</label>
         <LinkField
           doctype="Colossal Cost Center"
           value={line.cost_center}

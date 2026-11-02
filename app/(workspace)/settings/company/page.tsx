@@ -25,7 +25,7 @@ import { SettingsBackLink } from "@/components/settings/settings-back-link";
 import { CompanyDeleteButton } from "@/components/settings/company-delete-button";
 
 export const metadata = {
-  title: "Company profile · Settings · Colossal HR",
+  title: "Company profile · Settings · Colossal Hub",
 };
 
 /**

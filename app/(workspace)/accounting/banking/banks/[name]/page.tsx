@@ -9,7 +9,7 @@ import { BankForm } from "@/components/accounting/bank-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Bank · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Bank · Colossal Hub` };
 }
 
 export default async function EditBankPage({ params }: { params: { name: string } }) {

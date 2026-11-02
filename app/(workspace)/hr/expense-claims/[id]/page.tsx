@@ -33,8 +33,8 @@ export async function generateMetadata({
   const c = await getExpenseClaim(decodeURIComponent(params.id));
   return {
     title: c
-      ? `${c.employeeName ?? c.employee} · Claim · Colossal HR`
-      : "Expense claim · Colossal HR",
+      ? `${c.employeeName ?? c.employee} · Claim · Colossal Hub`
+      : "Expense claim · Colossal Hub",
   };
 }
 

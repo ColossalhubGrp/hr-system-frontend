@@ -11,7 +11,7 @@ import { ItemActions } from "@/components/accounting/item-actions";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Item · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Item · Colossal Hub` };
 }
 
 export default async function ItemDetailPage({

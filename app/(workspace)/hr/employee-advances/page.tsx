@@ -10,7 +10,7 @@ import { EmployeeCell } from "@/components/employee/employee-cell";
 import { FilterRow } from "@/components/common/list-shell";
 import { listEmployeeAdvances } from "@/lib/frappe/finance-training";
 
-export const metadata = { title: "Employee Advances · Colossal HR" };
+export const metadata = { title: "Employee Advances · Colossal Hub" };
 
 type SP = { status?: string; employee?: string };
 

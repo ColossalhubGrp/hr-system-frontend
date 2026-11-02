@@ -5,7 +5,7 @@ import { ModeOfPaymentForm } from "@/components/accounting/mode-of-payment-form"
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Mode of Payment · Colossal HR" };
+export const metadata = { title: "New Mode of Payment · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewModeOfPaymentPage() {

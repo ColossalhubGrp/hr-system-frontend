@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NaoChatFrame } from "@/components/analytics/nao-chat-frame";
 
 export const metadata: Metadata = {
-  title: "AI Settings · Analytics · Colossal HR",
+  title: "AI Settings · Analytics · Colossal Hub",
 };
 
 // Nao's settings surface (account / project / MCP / memory / experimental)

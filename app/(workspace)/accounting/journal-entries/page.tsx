@@ -9,7 +9,7 @@ import { DataTable } from "@/components/common/data-table";
 import { listJournalEntries, VOUCHER_TYPES, type JournalEntryRow } from "@/lib/frappe/accounting";
 import { VOUCHER_STATUS_TONES } from "@/components/accounting/status-tones";
 
-export const metadata = { title: "Journal Entries · Accounting · Colossal HR" };
+export const metadata = { title: "Journal Entries · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { status?: string; voucher?: string; page?: string };

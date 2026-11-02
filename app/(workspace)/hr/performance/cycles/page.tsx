@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { listAppraisalCyclesSummary } from "@/lib/frappe/performance";
 
-export const metadata = { title: "Appraisal cycles · Colossal HR" };
+export const metadata = { title: "Appraisal cycles · Colossal Hub" };
 
 export default async function AppraisalCyclesPage() {
   const access = await getMyAccess();

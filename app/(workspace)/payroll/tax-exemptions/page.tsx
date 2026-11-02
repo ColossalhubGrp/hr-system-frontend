@@ -19,7 +19,7 @@ import {
   toggleExemptionAction,
 } from "@/app/(workspace)/payroll/actions";
 
-export const metadata = { title: "Tax Exemptions · Payroll · Colossal HR" };
+export const metadata = { title: "Tax Exemptions · Payroll · Colossal Hub" };
 
 export default async function TaxExemptionsTab() {
   const [items, nameMap] = await Promise.all([

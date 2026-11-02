@@ -8,7 +8,7 @@
 import { CandidatesClient } from "@/components/recruitment/candidates/candidates-client";
 import { fetchCandidatesInitial } from "@/lib/recruitment/server-candidates";
 
-export const metadata = { title: "Candidates · Recruitment · Colossal HR" };
+export const metadata = { title: "Candidates · Recruitment · Colossal Hub" };
 
 export default async function CandidatesPage() {
   const initial = await fetchCandidatesInitial();

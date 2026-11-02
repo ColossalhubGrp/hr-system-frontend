@@ -4,7 +4,7 @@ import { CurrencyForm } from "@/components/accounting/currency-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Currency · Colossal HR" };
+export const metadata = { title: "New Currency · Colossal Hub" };
 
 export default function NewCurrencyPage() {
   return (

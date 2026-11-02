@@ -6,7 +6,7 @@ import { listItemGroups } from "@/lib/frappe/item";
 import { createItemGroupAction } from "@/app/(workspace)/accounting/items/actions";
 import { ItemGroupRow } from "@/components/accounting/item-group-row";
 
-export const metadata = { title: "Item Groups · Accounting · Colossal HR" };
+export const metadata = { title: "Item Groups · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function ItemGroupsPage() {

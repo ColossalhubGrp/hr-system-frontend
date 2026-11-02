@@ -10,7 +10,7 @@ import {
   listMyLeaves,
 } from "@/lib/frappe/my-self-service";
 
-export const metadata = { title: "My leave · Colossal HR" };
+export const metadata = { title: "My leave · Colossal Hub" };
 
 const LEAVE_STATUS_TONES: Record<string, string> = {
   Open: "bg-amber-100 text-amber-800 ring-amber-200",

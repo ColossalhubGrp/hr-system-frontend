@@ -8,7 +8,7 @@ import { NewPeriodModal } from "@/components/payroll/new-period-modal";
 import { ActionRequiredBanner } from "@/components/payroll/action-required-banner";
 import { PayRunsList } from "@/components/payroll/pay-runs-list";
 
-export const metadata = { title: "Pay Runs · Payroll · Colossal HR" };
+export const metadata = { title: "Pay Runs · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function PayRunsPage() {

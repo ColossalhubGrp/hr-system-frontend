@@ -54,7 +54,7 @@ async function fetchActiveShiftWindows(): Promise<Record<string, ActiveWindow[]>
   }
 }
 
-export const metadata = { title: "Bulk assign shifts · Colossal HR" };
+export const metadata = { title: "Bulk assign shifts · Colossal Hub" };
 
 type EmployeeOpt = {
   name: string;

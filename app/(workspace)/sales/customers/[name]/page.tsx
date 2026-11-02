@@ -19,7 +19,7 @@ import { CustomerForm } from "@/components/sales/customer-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Customer · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Customer · Colossal Hub` };
 }
 
 export default async function EditCustomerPage({ params }: { params: { name: string } }) {

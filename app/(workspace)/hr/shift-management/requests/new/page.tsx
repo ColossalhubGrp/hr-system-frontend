@@ -6,7 +6,7 @@ import { listShiftTypes } from "@/lib/frappe/lookups";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createShiftRequestAction } from "../../actions";
 
-export const metadata = { title: "New shift request · Colossal HR" };
+export const metadata = { title: "New shift request · Colossal Hub" };
 
 export default async function NewShiftRequestPage({
   searchParams,

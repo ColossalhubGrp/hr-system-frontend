@@ -36,7 +36,7 @@ export async function generateMetadata({
 }) {
   const a = await getAttendance(decodeURIComponent(params.id));
   return {
-    title: a ? `${a.id} · Attendance · Colossal HR` : "Attendance · Colossal HR",
+    title: a ? `${a.id} · Attendance · Colossal Hub` : "Attendance · Colossal Hub",
   };
 }
 

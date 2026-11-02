@@ -27,7 +27,7 @@ export async function generateMetadata({
   params: { id: string };
 }) {
   const t = await getShiftType(decodeURIComponent(params.id));
-  return { title: t ? `${t.id} · Shift type · Colossal HR` : "Shift type" };
+  return { title: t ? `${t.id} · Shift type · Colossal Hub` : "Shift type" };
 }
 
 export default async function ShiftTypeDetailPage({

@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getHrReadiness } from "@/lib/frappe/setup/hr-readiness";
 import { cn } from "@/lib/cn";
 
-export const metadata = { title: "HR setup · Colossal Suite" };
+export const metadata = { title: "HR setup · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function HrSetupPage() {

@@ -9,7 +9,7 @@ import { getMyAccess } from "@/lib/frappe/roles";
 import { AlumniLoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Alumni sign-in · Colossal HR",
+  title: "Alumni sign-in · Colossal Hub",
 };
 
 export default async function AlumniLoginPage() {
@@ -30,7 +30,7 @@ export default async function AlumniLoginPage() {
         <div className="flex items-center gap-2.5">
           <BrandMark className="h-9 w-9 ring-1 ring-hairline" />
           <span className="text-sm font-semibold tracking-tight text-foreground">
-            Colossal HR
+            Colossal Hub
           </span>
         </div>
       </header>
@@ -73,7 +73,7 @@ export default async function AlumniLoginPage() {
 
       <footer className="px-6 pb-6 text-xs text-muted-foreground md:px-10 md:pb-8">
         <p className="mx-auto max-w-sm text-center text-[11px] text-muted-foreground/70">
-          © {new Date().getFullYear()} Colossal HR. Alumni access is read-only.
+          © {new Date().getFullYear()} Colossal Hub. Alumni access is read-only.
         </p>
       </footer>
     </main>

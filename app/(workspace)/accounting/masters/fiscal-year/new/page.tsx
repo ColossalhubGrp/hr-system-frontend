@@ -5,7 +5,7 @@ import { FiscalYearForm } from "@/components/accounting/fiscal-year-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Fiscal Year · Colossal HR" };
+export const metadata = { title: "New Fiscal Year · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewFiscalYearPage() {

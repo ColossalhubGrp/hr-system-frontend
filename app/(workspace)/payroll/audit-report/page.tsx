@@ -5,7 +5,7 @@ import { readSession } from "@/lib/frappe/session";
 import { AuditRangePicker } from "@/components/payroll/audit-range-picker";
 import { PrintWithAudit } from "./print-with-audit";
 
-export const metadata = { title: "Payroll audit report · Colossal HR" };
+export const metadata = { title: "Payroll audit report · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 const num = (n: number) =>

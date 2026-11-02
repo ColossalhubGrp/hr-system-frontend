@@ -6,7 +6,7 @@ import { fetchEmployeeFormOptions } from "@/lib/frappe/employee-write";
 import { listSkills } from "@/lib/frappe/lookups";
 import { createSkillAssessmentAction } from "../actions";
 
-export const metadata = { title: "New skill assessment · Colossal HR" };
+export const metadata = { title: "New skill assessment · Colossal Hub" };
 
 export default async function NewSkillAssessmentPage() {
   const [options, skills] = await Promise.all([

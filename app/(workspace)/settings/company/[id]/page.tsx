@@ -15,7 +15,7 @@ import { resolveAvatarUrl } from "@/lib/frappe/session";
 import { updateCompanyAction } from "../actions";
 
 export const metadata = {
-  title: "Edit company · Settings · Colossal HR",
+  title: "Edit company · Settings · Colossal Hub",
 };
 
 export default async function CompanyEditPage({

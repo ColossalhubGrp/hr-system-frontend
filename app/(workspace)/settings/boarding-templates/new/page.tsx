@@ -5,7 +5,7 @@ import { BoardingTemplateForm } from "@/components/boarding-templates/template-f
 import { listCompanies } from "@/lib/frappe/lookups";
 import { saveBoardingTemplateAction } from "../actions";
 
-export const metadata = { title: "New boarding template · Colossal HR" };
+export const metadata = { title: "New boarding template · Colossal Hub" };
 
 export default async function NewBoardingTemplatePage({
   searchParams,

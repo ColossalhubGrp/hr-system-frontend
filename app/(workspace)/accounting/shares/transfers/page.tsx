@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listShareTransfers, type ShareTransfer } from "@/lib/frappe/shares/share-transfer";
 
-export const metadata = { title: "Share Transfers · Colossal HR" };
+export const metadata = { title: "Share Transfers · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function ShareTransfersPage() {

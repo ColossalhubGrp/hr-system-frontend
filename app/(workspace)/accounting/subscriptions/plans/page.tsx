@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listSubscriptionPlans, type SubscriptionPlan } from "@/lib/frappe/subscriptions/plan";
 
-export const metadata = { title: "Subscription Plans · Colossal HR" };
+export const metadata = { title: "Subscription Plans · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function SubscriptionPlansPage() {

@@ -10,7 +10,7 @@ import { MonthlyDistributionForm } from "@/components/accounting/monthly-distrib
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Monthly Distribution · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Monthly Distribution · Colossal Hub` };
 }
 
 export default async function EditMonthlyDistributionPage({ params }: { params: { name: string } }) {

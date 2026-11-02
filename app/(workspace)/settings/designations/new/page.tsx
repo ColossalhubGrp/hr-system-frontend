@@ -9,7 +9,7 @@ import { DesignationEditor } from "@/components/setup/designation-editor";
 import { upsertDesignationAction } from "../actions";
 
 export const metadata = {
-  title: "New designation · Designations · Colossal HR",
+  title: "New designation · Designations · Colossal Hub",
 };
 
 export default async function NewDesignationPage() {

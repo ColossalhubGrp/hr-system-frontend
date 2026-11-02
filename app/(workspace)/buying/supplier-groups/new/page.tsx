@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listSupplierGroups } from "@/lib/frappe/buying/supplier-group";
 import { SupplierGroupForm } from "@/components/buying/supplier-group-form";
 
-export const metadata = { title: "New Supplier Group · Colossal HR" };
+export const metadata = { title: "New Supplier Group · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewSupplierGroupPage() {

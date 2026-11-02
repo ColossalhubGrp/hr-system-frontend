@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { publicEnv } from "@/lib/env";
 
-export const metadata = { title: "Biometric devices · Configuration · Colossal HR" };
+export const metadata = { title: "Biometric devices · Configuration · Colossal Hub" };
 
 export default async function BiometricSetupPage() {
   const access = await getMyAccess();
@@ -42,7 +42,7 @@ export default async function BiometricSetupPage() {
         icon={Fingerprint}
         crumb="Configuration · HR policy · Biometric devices"
         title="Biometric devices"
-        subtitle="Connect on-site fingerprint / face / RFID readers so punches flow into Attendance automatically. One small Python sync tool runs on-site alongside the reader and posts logs to Colossal HR."
+        subtitle="Connect on-site fingerprint / face / RFID readers so punches flow into Attendance automatically. One small Python sync tool runs on-site alongside the reader and posts logs to Colossal Hub."
       />
 
       <Step
@@ -71,7 +71,7 @@ export default async function BiometricSetupPage() {
         <p className="text-sm text-ash-700">
           The upstream project ships a small Python daemon that pulls logs
           from ZKTeco / Essl devices over TCP/IP and forwards them to
-          Colossal HR. Any Linux, macOS or Windows machine on the same
+          Colossal Hub. Any Linux, macOS or Windows machine on the same
           LAN as the device works — a Raspberry Pi is enough.
         </p>
         <a
@@ -92,7 +92,7 @@ export default async function BiometricSetupPage() {
         title="Generate an API key for the sync tool"
       >
         <p className="text-sm text-ash-700">
-          The tool authenticates as a Colossal HR user with the{" "}
+          The tool authenticates as a Colossal Hub user with the{" "}
           <strong>HR User</strong> role. Create a dedicated service user (for
           example <code className="font-mono text-xs">biometric-sync@your-company.com</code>),
           open its profile in the admin console, and generate an API Key + API
@@ -108,7 +108,7 @@ export default async function BiometricSetupPage() {
       <Step
         n={4}
         icon={<Fingerprint className="h-4 w-4" />}
-        title="Point the sync tool at Colossal HR"
+        title="Point the sync tool at Colossal Hub"
       >
         <p className="text-sm text-ash-700">
           In the sync tool&apos;s <code className="font-mono text-xs">local_config.py</code>,

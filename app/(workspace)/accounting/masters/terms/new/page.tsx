@@ -4,7 +4,7 @@ import { TermsForm } from "@/components/accounting/terms-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Terms and Conditions · Colossal HR" };
+export const metadata = { title: "New Terms and Conditions · Colossal Hub" };
 
 export default function NewTermsPage() {
   return (

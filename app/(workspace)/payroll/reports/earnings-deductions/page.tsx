@@ -5,7 +5,7 @@ import { frappeCall } from "@/lib/frappe/client";
 import { FrappeRequestError } from "@/lib/frappe/client";
 import { DateRangeFields } from "@/components/common/date-range-fields";
 
-export const metadata = { title: "Earnings & Deductions · Payroll · Colossal Suite" };
+export const metadata = { title: "Earnings & Deductions · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { from?: string; to?: string; kind?: "EARNING" | "DEDUCTION" | "BOTH" };

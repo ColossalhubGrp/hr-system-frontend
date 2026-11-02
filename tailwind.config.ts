@@ -30,6 +30,42 @@ const config: Config = {
         // navy in light + dark). Backed by CSS vars so if we ever
         // need a theme-specific tweak, it's one file. Alpha works
         // via the slash-syntax: `bg-ink-800/40`.
+        /* ── Functional palettes (brand brief 6.2) ─────────────────
+         * The Tailwind default families the codebase already uses are
+         * REDEFINED as ramps around the brief's functional colours, so
+         * every existing emerald-/amber-/rose-/red-/sky- class complies
+         * without touching call sites:
+         *   Success #156B4E · Warning #A35A00 · Error #B3261E · Info #1B5FA8 */
+        emerald: {
+          50: "#EDF7F3", 100: "#D4EDE3", 200: "#AEDCC9", 300: "#83C7AB",
+          400: "#4FA584", 500: "#2E8A67", 600: "#1F7A58", 700: "#156B4E",
+          800: "#10543D", 900: "#0C402F",
+        },
+        green: {
+          50: "#EDF7F3", 100: "#D4EDE3", 200: "#AEDCC9", 300: "#83C7AB",
+          400: "#4FA584", 500: "#2E8A67", 600: "#1F7A58", 700: "#156B4E",
+          800: "#10543D", 900: "#0C402F",
+        },
+        amber: {
+          50: "#FBF3E8", 100: "#F5E3C8", 200: "#ECCB97", 300: "#DFAE5F",
+          400: "#C98226", 500: "#B36A08", 600: "#A35A00", 700: "#8A4C00",
+          800: "#6F3D00", 900: "#552F00",
+        },
+        rose: {
+          50: "#FBEDEC", 100: "#F6D5D3", 200: "#EDABA7", 300: "#E07E78",
+          400: "#CE4A42", 500: "#B3261E", 600: "#A1221B", 700: "#8A1D17",
+          800: "#701813", 900: "#55120E",
+        },
+        red: {
+          50: "#FBEDEC", 100: "#F6D5D3", 200: "#EDABA7", 300: "#E07E78",
+          400: "#CE4A42", 500: "#B3261E", 600: "#A1221B", 700: "#8A1D17",
+          800: "#701813", 900: "#55120E",
+        },
+        sky: {
+          50: "#EDF3FA", 100: "#D4E2F3", 200: "#A9C5E7", 300: "#7BA5D8",
+          400: "#4A82C4", 500: "#2B6DB4", 600: "#1B5FA8", 700: "#174F8C",
+          800: "#123F70", 900: "#0E3054",
+        },
         ink: {
           50:  "rgb(var(--ink-50) / <alpha-value>)",
           100: "rgb(var(--ink-100) / <alpha-value>)",

@@ -5,7 +5,7 @@ import { ItemTaxTemplateForm } from "@/components/accounting/item-tax-template-f
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Item Tax Template · Colossal HR" };
+export const metadata = { title: "New Item Tax Template · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewItemTaxTemplatePage() {

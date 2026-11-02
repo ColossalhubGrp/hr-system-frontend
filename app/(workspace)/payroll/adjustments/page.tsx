@@ -13,7 +13,7 @@ import {
   listRetentionBonuses,
 } from "@/lib/frappe/pay-adjustments";
 
-export const metadata = { title: "Pay Adjustments · Colossal HR" };
+export const metadata = { title: "Pay Adjustments · Colossal Hub" };
 
 type SP = { tab?: string };
 type Tab = "additional" | "retention" | "incentive";

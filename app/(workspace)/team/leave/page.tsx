@@ -3,7 +3,7 @@ import { LeavesTable } from "@/components/leaves/leaves-table";
 import { fetchLeaves } from "@/lib/frappe/leaves";
 import { getMyDirectAndIndirectReports } from "@/lib/frappe/team-scope";
 
-export const metadata = { title: "Team leave · Colossal HR" };
+export const metadata = { title: "Team leave · Colossal Hub" };
 
 type SP = { status?: string };
 

@@ -6,7 +6,7 @@ import { OvertimeRuleForm } from "@/components/overtime/overtime-rule-form";
 import { createOvertimeRuleAction } from "../actions";
 
 export const metadata = {
-  title: "New overtime rule · Settings · Colossal HR",
+  title: "New overtime rule · Settings · Colossal Hub",
 };
 
 export default async function NewOvertimeRulePage() {

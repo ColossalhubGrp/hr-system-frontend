@@ -13,7 +13,7 @@ const serverEnvSchema = z.object({
 });
 
 const publicEnvSchema = z.object({
-  NEXT_PUBLIC_BRAND_NAME: z.string().default("Colossal HR"),
+  NEXT_PUBLIC_BRAND_NAME: z.string().default("Colossal Hub"),
   // Needed on the client to resolve Frappe-returned `/files/...` paths to
   // absolute URLs (e.g. the profile-image preview after upload).
   NEXT_PUBLIC_FRAPPE_URL: z.string().url().default("http://localhost:8000"),

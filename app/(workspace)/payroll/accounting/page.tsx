@@ -11,7 +11,7 @@ import { cn } from "@/lib/cn";
 import { listGLMappings } from "@/lib/payroll-engine/doctype-helpers";
 import { GLMappingForm } from "@/components/payroll/gl-mapping-form";
 
-export const metadata = { title: "Accounting · Payroll · Colossal HR" };
+export const metadata = { title: "Accounting · Payroll · Colossal Hub" };
 
 const REQUIRED_CATEGORIES = [
   "Wages Expense",

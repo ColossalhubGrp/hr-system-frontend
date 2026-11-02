@@ -9,7 +9,7 @@ import { CurrencyForm } from "@/components/accounting/currency-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Currency · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Currency · Colossal Hub` };
 }
 
 export default async function EditCurrencyPage({ params }: { params: { name: string } }) {

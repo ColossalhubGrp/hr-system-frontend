@@ -8,7 +8,7 @@ import { getShiftType } from "@/lib/frappe/shifts";
 import { listShiftLocations } from "@/lib/frappe/shift-locations";
 import { updateShiftTypeAction } from "../../../actions";
 
-export const metadata = { title: "Edit shift type · Colossal HR" };
+export const metadata = { title: "Edit shift type · Colossal Hub" };
 
 export default async function EditShiftTypePage({
   params,

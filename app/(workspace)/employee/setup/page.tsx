@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { ModuleSetupGrid, type SetupCard } from "@/components/settings/module-setup-grid";
 import { getMyAccess } from "@/lib/frappe/roles";
 
-export const metadata = { title: "Employee setup · Colossal HR" };
+export const metadata = { title: "Employee setup · Colossal Hub" };
 
 const CARDS: SetupCard[] = [
   {

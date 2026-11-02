@@ -10,7 +10,7 @@ import {
 } from "@/lib/frappe/lifecycle-ext";
 import { saveBoardingTemplateAction } from "../../actions";
 
-export const metadata = { title: "Edit boarding template · Colossal HR" };
+export const metadata = { title: "Edit boarding template · Colossal Hub" };
 
 export default async function EditBoardingTemplatePage({
   params,

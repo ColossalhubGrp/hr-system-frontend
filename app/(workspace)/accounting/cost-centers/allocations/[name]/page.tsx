@@ -10,7 +10,7 @@ import { CostCenterAllocationForm } from "@/components/accounting/cost-center-al
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Allocation · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Allocation · Colossal Hub` };
 }
 
 export default async function EditAllocationPage({ params }: { params: { name: string } }) {

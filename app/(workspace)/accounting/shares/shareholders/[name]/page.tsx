@@ -10,7 +10,7 @@ import { ShareholderForm } from "@/components/accounting/shareholder-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Shareholder · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Shareholder · Colossal Hub` };
 }
 
 export default async function EditShareholderPage({ params }: { params: { name: string } }) {

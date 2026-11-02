@@ -5,7 +5,7 @@ import { JournalTemplateForm } from "@/components/accounting/journal-template-fo
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Journal Entry Template · Colossal HR" };
+export const metadata = { title: "New Journal Entry Template · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewJournalTemplatePage() {

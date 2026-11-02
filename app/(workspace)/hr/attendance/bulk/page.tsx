@@ -13,7 +13,7 @@ import { listCompanies, listShiftTypes } from "@/lib/frappe/lookups";
 import { BulkMarkForm } from "@/components/attendance/bulk-mark-form";
 import { bulkMarkAttendanceAction } from "./actions";
 
-export const metadata = { title: "Mark attendance in bulk · Colossal HR" };
+export const metadata = { title: "Mark attendance in bulk · Colossal Hub" };
 
 type SP = {
   department?: string;

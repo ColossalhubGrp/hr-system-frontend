@@ -7,7 +7,7 @@ import { listAccountTree, type AccountNode } from "@/lib/frappe/chart-of-account
 import { AccountTree } from "@/components/accounting/account-tree";
 import { AddAccountDialog, type ParentOption } from "./add-account-dialog";
 
-export const metadata = { title: "Chart of Accounts · Accounting · Colossal HR" };
+export const metadata = { title: "Chart of Accounts · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { company?: string };

@@ -15,7 +15,7 @@ import {
   listPayslipsForRun,
 } from "@/lib/payroll-engine/payruns";
 
-export const metadata = { title: "Reports · Payroll · Colossal HR" };
+export const metadata = { title: "Reports · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 const num = (n: number) =>

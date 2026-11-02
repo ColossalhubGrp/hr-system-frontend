@@ -17,7 +17,7 @@ import {
 } from "../actions";
 
 export const metadata = {
-  title: "Overtime rule · Settings · Colossal HR",
+  title: "Overtime rule · Settings · Colossal Hub",
 };
 
 export default async function OvertimeRuleEditPage({

@@ -10,7 +10,7 @@ import { ReportTable } from "@/components/accounting/report-table";
 import { PrintableReport } from "@/components/accounting/printable-report";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Budget Variance · Accounting · Colossal HR" };
+export const metadata = { title: "Budget Variance · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { company?: string; year?: string; period?: string; against?: string };
@@ -53,7 +53,7 @@ export default async function BudgetVariancePage({ searchParams }: { searchParam
           icon={LineChart}
           crumb="Accounting · Reports · Budget Variance"
           title="Budget Variance"
-          subtitle="Budget vs actuals per Cost Center / Project, sliced by period."
+          subtitle="Budget vs actuals per cost centre or project, sliced by period."
         />
 
         <form action="/accounting/reports/budget-variance" className="flex flex-wrap items-end gap-3 rounded-2xl border border-border/60 bg-card p-3">

@@ -6,7 +6,7 @@ import { AuthBrandMark, AuthShell } from "@/components/auth/auth-shell";
 import { ResetForm } from "./reset-form";
 
 export const metadata: Metadata = {
-  title: "Reset password · Colossal HR",
+  title: "Reset password · Colossal Hub",
 };
 
 /**

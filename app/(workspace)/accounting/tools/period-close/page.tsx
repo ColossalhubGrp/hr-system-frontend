@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listPeriodClosings, type PeriodClosingVoucher } from "@/lib/frappe/tools/period-closing-voucher";
 
-export const metadata = { title: "Period Closing · Colossal HR" };
+export const metadata = { title: "Period Closing · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function PeriodClosePage() {

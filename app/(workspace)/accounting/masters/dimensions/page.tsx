@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listAccountingDimensions, type AccountingDimension } from "@/lib/frappe/masters/accounting-dimension";
 
-export const metadata = { title: "Accounting Dimensions · Colossal HR" };
+export const metadata = { title: "Accounting Dimensions · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function DimensionsPage() {

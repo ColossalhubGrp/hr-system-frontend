@@ -35,7 +35,7 @@ async function loadRetrenchThresholds(): Promise<{
   }
 }
 
-export const metadata = { title: "Terminate employee · Payroll · Colossal HR" };
+export const metadata = { title: "Terminate employee · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 /**

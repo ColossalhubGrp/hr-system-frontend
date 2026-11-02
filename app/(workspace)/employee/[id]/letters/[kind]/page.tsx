@@ -13,7 +13,7 @@ import {
 } from "@/lib/frappe/letters";
 import { LetterPreviewActions } from "@/components/employee/letter-preview-actions";
 
-export const metadata = { title: "Letter preview · Colossal HR" };
+export const metadata = { title: "Letter preview · Colossal Hub" };
 
 const VALID_KINDS: LetterKind[] = ["offer", "employment", "experience"];
 
@@ -115,7 +115,7 @@ export default async function LetterPreviewPage({
       >
         <header className="letter-head">
           <div>
-            <p className="letter-brand">{emp.company ?? "Colossal HR"}</p>
+            <p className="letter-brand">{emp.company ?? "Colossal Hub"}</p>
             {ctx.companyAddress && (
               <p className="letter-brand-address">{ctx.companyAddress}</p>
             )}

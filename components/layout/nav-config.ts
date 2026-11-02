@@ -148,7 +148,7 @@ export const NAV: NavItem[] = [
   // },
 
   {
-    label: "Recruitment",
+    label: "Recruit",
     // Land on the HR Dashboard — the overview HR opens first each day.
     href: "/recruitment/hr/dashboard",
     icon: Briefcase,
@@ -197,7 +197,7 @@ export const NAV: NavItem[] = [
   // (who don't have HR_ANY) can reach it without tripping the /hr layout
   // guard. Landing surface is the AI chat — Overview was removed.
   {
-    label: "Analytics",
+    label: "Intelligence",
     href: "/analytics/ask",
     icon: Sparkles,
     requires: "EXECUTIVE_VIEWER",

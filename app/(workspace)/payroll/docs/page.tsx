@@ -16,7 +16,7 @@ import {
   listTaxNotices,
 } from "@/lib/payroll-engine/doctype-helpers";
 
-export const metadata = { title: "Docs · Payroll · Colossal HR" };
+export const metadata = { title: "Docs · Payroll · Colossal Hub" };
 
 const SECTIONS = [
   { key: "stubs", label: "Pay Stubs" },

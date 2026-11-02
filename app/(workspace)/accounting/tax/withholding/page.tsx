@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listTaxWithholding, type TaxWithholdingCategory } from "@/lib/frappe/tax/withholding";
 
-export const metadata = { title: "Tax Withholding · Colossal HR" };
+export const metadata = { title: "Tax Withholding · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function TaxWithholdingPage() {

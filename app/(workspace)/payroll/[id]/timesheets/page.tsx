@@ -3,7 +3,7 @@ import { getPayRun } from "@/lib/payroll-engine/payruns";
 import { listTimesheetsForRun } from "@/lib/frappe/payroll-timesheets";
 import { TimesheetsPage } from "@/components/payroll/timesheets-page";
 
-export const metadata = { title: "Timesheets · Payroll · Colossal HR" };
+export const metadata = { title: "Timesheets · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 /**

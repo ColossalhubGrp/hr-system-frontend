@@ -5,7 +5,7 @@ import { PurchaseTaxTemplateForm } from "@/components/accounting/purchase-tax-te
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Purchase Tax Template · Colossal HR" };
+export const metadata = { title: "New Purchase Tax Template · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewPurchaseTaxTemplatePage() {

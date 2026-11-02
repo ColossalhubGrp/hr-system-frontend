@@ -167,7 +167,7 @@ function RequestEmailModal({
         <div className="max-h-64 overflow-auto border-b p-5 text-sm">
           <p className="font-semibold text-foreground">Hi {firstName},</p>
           <p className="mt-3 text-muted-foreground">
-            Your employer at Colossal HR needs some information from you in
+            Your employer at Colossal Hub needs some information from you in
             order to run payroll and get you paid. Specifically, we&apos;re
             missing the following information:
           </p>

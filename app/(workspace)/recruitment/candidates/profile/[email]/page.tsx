@@ -1,7 +1,7 @@
 import { CandidateProfileClient } from "@/components/recruitment/candidates/candidate-profile-client";
 import { fetchCandidateProfile } from "@/lib/recruitment/server-candidates";
 
-export const metadata = { title: "Candidate Profile · Recruitment · Colossal HR" };
+export const metadata = { title: "Candidate Profile · Recruitment · Colossal Hub" };
 
 export default async function CandidateProfilePage({
   params,

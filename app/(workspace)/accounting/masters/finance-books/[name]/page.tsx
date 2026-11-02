@@ -9,7 +9,7 @@ import { FinanceBookForm } from "@/components/accounting/finance-book-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Finance Book · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Finance Book · Colossal Hub` };
 }
 
 export default async function EditFinanceBookPage({ params }: { params: { name: string } }) {

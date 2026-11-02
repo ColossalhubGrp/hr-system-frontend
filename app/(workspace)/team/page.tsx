@@ -4,7 +4,7 @@ import { Users } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
 import { getMyTeamEmployeeIds } from "@/lib/frappe/team-scope";
 
-export const metadata = { title: "My Team · Colossal HR" };
+export const metadata = { title: "My Team · Colossal Hub" };
 
 type TeamRow = {
   name: string;

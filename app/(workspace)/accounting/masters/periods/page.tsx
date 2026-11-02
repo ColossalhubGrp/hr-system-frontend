@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { listAccountingPeriods, type AccountingPeriod } from "@/lib/frappe/masters/accounting-period";
 
-export const metadata = { title: "Accounting Periods · Colossal HR" };
+export const metadata = { title: "Accounting Periods · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function AccountingPeriodsPage() {

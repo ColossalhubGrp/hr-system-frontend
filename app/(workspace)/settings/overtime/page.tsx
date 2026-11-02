@@ -13,7 +13,7 @@ import { listOvertimeRules } from "@/lib/frappe/overtime";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
-  title: "Overtime rules · Settings · Colossal HR",
+  title: "Overtime rules · Settings · Colossal Hub",
 };
 
 export default async function OvertimeRulesPage() {

@@ -9,7 +9,7 @@ import {
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createAppraisalAction } from "../../actions";
 
-export const metadata = { title: "New appraisal · Colossal HR" };
+export const metadata = { title: "New appraisal · Colossal Hub" };
 
 export default async function NewAppraisalPage() {
   const [cycles, templates, employeeDirectory] = await Promise.all([

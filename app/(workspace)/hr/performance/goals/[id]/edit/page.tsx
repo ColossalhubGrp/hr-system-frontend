@@ -11,7 +11,7 @@ import {
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { updateGoalAction } from "../../../actions";
 
-export const metadata = { title: "Edit goal · Colossal HR" };
+export const metadata = { title: "Edit goal · Colossal Hub" };
 
 export default async function EditGoalPage({
   params,

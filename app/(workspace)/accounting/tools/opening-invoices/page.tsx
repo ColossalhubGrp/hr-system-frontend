@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/common/page-header";
 import { listCompanies, listAccounts } from "@/lib/frappe/accounting";
 import { OpeningInvoiceForm } from "@/components/accounting/opening-invoice-form";
 
-export const metadata = { title: "Opening Invoice Creation Tool · Colossal HR" };
+export const metadata = { title: "Opening Invoice Creation Tool · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function OpeningInvoicesPage() {

@@ -1,7 +1,7 @@
 import { listPayrollEmployees } from "@/lib/payroll-engine/doctype-helpers";
 import { PeopleTable } from "@/components/payroll/people-table";
 
-export const metadata = { title: "People · Payroll · Colossal HR" };
+export const metadata = { title: "People · Payroll · Colossal Hub" };
 
 export default async function PeopleTab() {
   const people = await listPayrollEmployees();

@@ -12,7 +12,7 @@ import { getMyAccess } from "@/lib/frappe/roles";
 
 export async function generateMetadata({ params }: { params: { id: string } }) {
   const e = await getExitInterview(decodeURIComponent(params.id));
-  return { title: e ? `${e.name} · Colossal HR` : "Exit interview · Colossal HR" };
+  return { title: e ? `${e.name} · Colossal Hub` : "Exit interview · Colossal Hub" };
 }
 
 export default async function ExitInterviewDetailPage({

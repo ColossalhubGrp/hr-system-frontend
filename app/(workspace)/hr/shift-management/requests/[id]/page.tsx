@@ -24,8 +24,8 @@ export async function generateMetadata({
   const r = await getShiftRequest(decodeURIComponent(params.id));
   return {
     title: r
-      ? `${r.id} · Shift request · Colossal HR`
-      : "Shift request · Colossal HR",
+      ? `${r.id} · Shift request · Colossal Hub`
+      : "Shift request · Colossal Hub",
   };
 }
 

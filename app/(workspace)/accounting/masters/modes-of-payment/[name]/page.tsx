@@ -10,7 +10,7 @@ import { ModeOfPaymentForm } from "@/components/accounting/mode-of-payment-form"
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Mode of Payment · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Mode of Payment · Colossal Hub` };
 }
 
 export default async function EditModeOfPaymentPage({ params }: { params: { name: string } }) {

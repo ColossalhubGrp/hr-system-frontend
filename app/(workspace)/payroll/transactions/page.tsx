@@ -15,7 +15,7 @@ import { CaptureTransactionForm } from "@/components/payroll/capture-transaction
 import { DeleteButton } from "@/components/payroll/row-actions";
 import { deleteTransaction } from "./actions";
 
-export const metadata = { title: "Transactions · Payroll · Colossal HR" };
+export const metadata = { title: "Transactions · Payroll · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 const usd = (n: number) =>

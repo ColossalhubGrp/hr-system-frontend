@@ -35,7 +35,7 @@ export async function generateMetadata({
 }) {
   const emp = await getEmployee(decodeURIComponent(params.id));
   return {
-    title: emp ? `${emp.name} · Colossal HR` : "Employee · Colossal HR",
+    title: emp ? `${emp.name} · Colossal Hub` : "Employee · Colossal Hub",
   };
 }
 

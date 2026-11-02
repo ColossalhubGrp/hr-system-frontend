@@ -10,7 +10,7 @@ import { ItemTaxTemplateForm } from "@/components/accounting/item-tax-template-f
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Item Tax Template · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Item Tax Template · Colossal Hub` };
 }
 
 export default async function EditItemTaxTemplatePage({ params }: { params: { name: string } }) {

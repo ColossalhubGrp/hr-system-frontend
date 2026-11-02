@@ -21,7 +21,7 @@
 import { JobsClient } from "@/components/recruitment/jobs/jobs-client";
 import { fetchJobsForCurrentUser } from "@/lib/recruitment/server-jobs";
 
-export const metadata = { title: "HR Jobs · Recruitment · Colossal HR" };
+export const metadata = { title: "HR Jobs · Recruitment · Colossal Hub" };
 
 export default async function HrJobsPage() {
   const initial = await fetchJobsForCurrentUser();

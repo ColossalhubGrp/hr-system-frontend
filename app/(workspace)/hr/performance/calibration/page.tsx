@@ -9,7 +9,7 @@ import {
 import { getMyAccess } from "@/lib/frappe/roles";
 import { NineBoxGrid } from "@/components/performance/nine-box-grid";
 
-export const metadata = { title: "Calibration · Colossal HR" };
+export const metadata = { title: "Calibration · Colossal Hub" };
 
 type SP = { cycle?: string };
 

@@ -12,7 +12,7 @@ import { TaxRuleForm } from "@/components/accounting/tax-rule-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Tax Rule · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Tax Rule · Colossal Hub` };
 }
 
 export default async function EditTaxRulePage({ params }: { params: { name: string } }) {

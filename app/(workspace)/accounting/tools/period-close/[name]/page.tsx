@@ -10,7 +10,7 @@ import { PeriodClosingDetail } from "@/components/accounting/period-closing-deta
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Period Closing · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Period Closing · Colossal Hub` };
 }
 
 export default async function PeriodClosingDetailPage({ params }: { params: { name: string } }) {

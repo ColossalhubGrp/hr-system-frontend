@@ -6,7 +6,7 @@ import { listItemGroups, listUOMs } from "@/lib/frappe/item";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { ItemForm } from "@/components/accounting/item-form";
 
-export const metadata = { title: "New Item · Accounting · Colossal HR" };
+export const metadata = { title: "New Item · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewItemPage() {

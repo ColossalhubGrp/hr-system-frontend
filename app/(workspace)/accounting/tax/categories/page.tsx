@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listTaxCategories, type TaxCategory } from "@/lib/frappe/tax/category";
 
-export const metadata = { title: "Tax Categories · Colossal HR" };
+export const metadata = { title: "Tax Categories · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function TaxCategoriesPage() {

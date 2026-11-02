@@ -46,7 +46,7 @@ export default async function AlumniLayout({
           <Link href={"/alumni" as Route} className="flex items-center gap-3">
             <BrandMark className="h-8 w-8" />
             <span className="text-sm font-semibold tracking-tight text-ink-900">
-              Colossal HR · Alumni
+              Colossal Hub · Alumni
             </span>
           </Link>
           <div className="flex items-center gap-3 text-sm">

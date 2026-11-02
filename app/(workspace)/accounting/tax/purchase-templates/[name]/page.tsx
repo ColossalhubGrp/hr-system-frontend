@@ -10,7 +10,7 @@ import { PurchaseTaxTemplateForm } from "@/components/accounting/purchase-tax-te
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Purchase Tax Template · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Purchase Tax Template · Colossal Hub` };
 }
 
 export default async function EditPurchaseTaxTemplatePage({ params }: { params: { name: string } }) {

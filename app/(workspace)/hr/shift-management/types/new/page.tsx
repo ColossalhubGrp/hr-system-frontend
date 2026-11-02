@@ -6,7 +6,7 @@ import { listHolidayLists } from "@/lib/frappe/lookups";
 import { listShiftLocations } from "@/lib/frappe/shift-locations";
 import { createShiftTypeAction } from "../../actions";
 
-export const metadata = { title: "New shift type · Colossal HR" };
+export const metadata = { title: "New shift type · Colossal Hub" };
 
 export default async function NewShiftTypePage() {
   const [holidayLists, locResult] = await Promise.all([

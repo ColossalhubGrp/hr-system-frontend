@@ -4,7 +4,7 @@ import { ChevronLeft, FileText } from "lucide-react";
 import { TemplateForm } from "@/components/performance/template-form";
 import { createTemplateAction } from "../../actions";
 
-export const metadata = { title: "New appraisal template · Colossal HR" };
+export const metadata = { title: "New appraisal template · Colossal Hub" };
 
 export default function NewTemplatePage() {
   return (

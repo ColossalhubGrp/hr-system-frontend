@@ -10,7 +10,7 @@ import { RevaluationDetail } from "@/components/accounting/revaluation-detail";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Exchange Rate Revaluation · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Exchange Rate Revaluation · Colossal Hub` };
 }
 
 export default async function RevaluationDetailPage({ params }: { params: { name: string } }) {

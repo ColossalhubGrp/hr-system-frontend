@@ -36,7 +36,7 @@ export async function generateMetadata({
   params: { kind: string };
 }) {
   if (!isKind(params.kind)) return { title: "New lifecycle record" };
-  return { title: `New ${LIFECYCLE_META[params.kind].label} · Colossal HR` };
+  return { title: `New ${LIFECYCLE_META[params.kind].label} · Colossal Hub` };
 }
 
 export default async function NewLifecyclePage({

@@ -7,7 +7,7 @@ import { listCompanies } from "@/lib/frappe/lookups";
 import { getShiftLocation } from "@/lib/frappe/shift-locations";
 import { updateShiftLocationAction } from "../../../actions";
 
-export const metadata = { title: "Edit shift location · Colossal HR" };
+export const metadata = { title: "Edit shift location · Colossal Hub" };
 
 export default async function EditShiftLocationPage({
   params,

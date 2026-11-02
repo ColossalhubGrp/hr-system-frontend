@@ -9,7 +9,7 @@ import {
 } from "@/lib/frappe/checkin";
 import { clockInOrOutAction } from "./actions";
 
-export const metadata = { title: "Clock in · Colossal HR" };
+export const metadata = { title: "Clock in · Colossal Hub" };
 
 export default async function ClockPage() {
   const emp = await getClockInEmployee();

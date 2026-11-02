@@ -2,7 +2,7 @@ import { ShieldCheck } from "lucide-react";
 import { frappeCall } from "@/lib/frappe/client";
 import { AuditFilters } from "./filters";
 
-export const metadata = { title: "Audit log · Colossal HR" };
+export const metadata = { title: "Audit log · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type ActivityRow = {

@@ -14,7 +14,7 @@ import {
 import { TRANSFER_TYPES } from "@/lib/frappe/transfer-types";
 
 export const metadata = {
-  title: "Pick transfer type · Colossal HR",
+  title: "Pick transfer type · Colossal Hub",
 };
 
 /**

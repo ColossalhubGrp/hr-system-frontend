@@ -6,7 +6,7 @@ import { ShareTransferForm } from "@/components/accounting/share-transfer-form";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Share Transfer · Colossal HR" };
+export const metadata = { title: "New Share Transfer · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewShareTransferPage() {

@@ -206,7 +206,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
           // treatment.
           <div className="min-w-0 leading-tight">
             <div className="truncate text-[14px] font-bold tracking-tight text-ash-900">
-              Colossal Suite
+              Colossal Hub
             </div>
             <div className="truncate text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ash-500">
               Work operations

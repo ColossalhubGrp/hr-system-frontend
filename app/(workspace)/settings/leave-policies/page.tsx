@@ -12,7 +12,7 @@ import { LeavePoliciesAdmin } from "@/components/settings/leave-policies-admin";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
-  title: "Leave policies · Settings · Colossal HR",
+  title: "Leave policies · Settings · Colossal Hub",
 };
 
 /**

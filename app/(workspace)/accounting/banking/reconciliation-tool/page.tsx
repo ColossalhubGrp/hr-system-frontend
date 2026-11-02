@@ -9,7 +9,7 @@ import { listBankAccounts } from "@/lib/frappe/banking/bank-account";
 import { listBankTransactions } from "@/lib/frappe/banking/bank-transaction";
 import { FrappeRequestError } from "@/lib/frappe/client";
 
-export const metadata = { title: "Bank Reconciliation Tool · Colossal HR" };
+export const metadata = { title: "Bank Reconciliation Tool · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type SP = { account?: string; from?: string; to?: string; status?: string };

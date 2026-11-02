@@ -8,7 +8,7 @@ import { readSession } from "@/lib/frappe/session";
 import { frappeCall } from "@/lib/frappe/client";
 import { listMyPayslips } from "@/lib/frappe/my-self-service";
 
-export const metadata = { title: "My payslips · Colossal HR" };
+export const metadata = { title: "My payslips · Colossal Hub" };
 
 export default async function MyPayslipsPage() {
   const [rows, empId] = await Promise.all([

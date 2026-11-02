@@ -12,7 +12,7 @@ import { SubscriptionForm } from "@/components/accounting/subscription-form";
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: { name: string } }) {
-  return { title: `${decodeURIComponent(params.name)} · Subscription · Colossal HR` };
+  return { title: `${decodeURIComponent(params.name)} · Subscription · Colossal Hub` };
 }
 
 export default async function EditSubscriptionPage({ params }: { params: { name: string } }) {

@@ -6,7 +6,7 @@ import { frappeGuestCall } from "@/lib/frappe/guest-call";
 import { RegisterForm, type CompanyOption } from "./register-form";
 
 export const metadata: Metadata = {
-  title: "Create account · Colossal HR",
+  title: "Create account · Colossal Hub",
 };
 
 async function loadCompanies(): Promise<CompanyOption[]> {
@@ -32,7 +32,7 @@ export default async function RegisterPage() {
           The whole HR life-cycle.
         </>
       }
-      subtitle="Create your Colossal HR account in under a minute and pick the tools your team actually needs."
+      subtitle="Create your Colossal Hub account in under a minute and pick the tools your team actually needs."
     >
       <AuthBrandMark />
       <RegisterForm companies={companies} />

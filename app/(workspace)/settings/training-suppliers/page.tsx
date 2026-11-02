@@ -6,7 +6,7 @@ import { TrainingSuppliersAdmin } from "@/components/settings/training-suppliers
 import { listTrainingSuppliers } from "@/lib/frappe/training-suppliers";
 import { getMyAccess } from "@/lib/frappe/roles";
 
-export const metadata = { title: "Training suppliers · Settings · Colossal HR" };
+export const metadata = { title: "Training suppliers · Settings · Colossal Hub" };
 
 export default async function TrainingSuppliersPage() {
   const access = await getMyAccess();

@@ -10,7 +10,7 @@ import { LeaveBlockListsAdmin } from "@/components/settings/leave-block-lists-ad
 import { createLeaveBlockListAction } from "@/app/(workspace)/hr/leaves/admin/actions";
 
 export const metadata = {
-  title: "Leave block lists · Configuration · Colossal HR",
+  title: "Leave block lists · Configuration · Colossal Hub",
 };
 
 export default async function LeaveBlockListsPage() {

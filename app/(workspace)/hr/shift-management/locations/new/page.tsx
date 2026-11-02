@@ -5,7 +5,7 @@ import { ShiftLocationForm } from "@/components/shifts/shift-location-form";
 import { listCompanies } from "@/lib/frappe/lookups";
 import { createShiftLocationAction } from "../../actions";
 
-export const metadata = { title: "New shift location · Colossal HR" };
+export const metadata = { title: "New shift location · Colossal Hub" };
 
 export default async function NewShiftLocationPage() {
   const companies = await listCompanies();

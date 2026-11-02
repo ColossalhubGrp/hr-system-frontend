@@ -5,7 +5,7 @@ import { CostCenterAllocationForm } from "@/components/accounting/cost-center-al
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Cost Center Allocation · Colossal HR" };
+export const metadata = { title: "New Cost Center Allocation · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewAllocationPage() {

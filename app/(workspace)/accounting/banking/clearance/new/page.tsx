@@ -6,7 +6,7 @@ import { NewBankClearanceForm } from "@/components/accounting/new-bank-clearance
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Bank Clearance · Colossal HR" };
+export const metadata = { title: "New Bank Clearance · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewBankClearancePage() {

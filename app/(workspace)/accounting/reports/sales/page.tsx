@@ -8,8 +8,9 @@ import { DateRangeFields } from "@/components/common/date-range-fields";
 import { listCompanies } from "@/lib/frappe/accounting";
 import { frappeCall } from "@/lib/frappe/client";
 import { FrappeRequestError } from "@/lib/frappe/client";
+import { formatMoney } from "@/lib/format";
 
-export const metadata = { title: "Sales report · Accounting · Colossal Suite" };
+export const metadata = { title: "Sales report · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 type Row = {
@@ -301,9 +302,5 @@ function StatusPill({ status, docstatus }: { status: string; docstatus: number }
 }
 
 function fmt(n: number, ccy: string): string {
-  try {
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: ccy, maximumFractionDigits: 2 }).format(n);
-  } catch {
-    return `${ccy} ${n.toFixed(2)}`;
-  }
+  return formatMoney(n, ccy);
 }

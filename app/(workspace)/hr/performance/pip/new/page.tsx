@@ -6,7 +6,7 @@ import { listAppraisalCyclesNames } from "@/lib/frappe/lookups";
 import { listEmployeeDirectory } from "@/lib/frappe/employee-write";
 import { createPipAction } from "../../actions";
 
-export const metadata = { title: "New PIP · Colossal HR" };
+export const metadata = { title: "New PIP · Colossal Hub" };
 
 export default async function NewPipPage() {
   const [cycles, employeeDirectory] = await Promise.all([

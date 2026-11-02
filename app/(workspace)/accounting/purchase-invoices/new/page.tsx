@@ -8,7 +8,7 @@ import { AccountingSetupGate } from "@/components/accounting/setup-gate";
 import Link from "next/link";
 import type { Route } from "next";
 
-export const metadata = { title: "New Purchase Invoice · Accounting · Colossal HR" };
+export const metadata = { title: "New Purchase Invoice · Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function NewPurchaseInvoicePage() {

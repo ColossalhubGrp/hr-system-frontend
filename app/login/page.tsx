@@ -5,7 +5,7 @@ import { AuthShell, AuthBrandMark } from "@/components/auth/auth-shell";
 import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = {
-  title: "Sign in · Colossal HR",
+  title: "Sign in · Colossal Hub",
 };
 
 export default function LoginPage({
@@ -34,7 +34,7 @@ export default function LoginPage({
           Welcome back
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Sign in to your Colossal HR account.
+          Sign in to your Colossal Hub account.
         </p>
       </header>
       <LoginForm redirectTo={searchParams?.redirect} />

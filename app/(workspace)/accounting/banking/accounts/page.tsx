@@ -7,7 +7,7 @@ import { DataTable } from "@/components/common/data-table";
 import { StatusPill } from "@/components/common/status-pill";
 import { listBankAccounts, type BankAccount } from "@/lib/frappe/banking/bank-account";
 
-export const metadata = { title: "Bank Accounts · Colossal HR" };
+export const metadata = { title: "Bank Accounts · Colossal Hub" };
 export const dynamic = "force-dynamic";
 
 export default async function BankAccountsPage() {

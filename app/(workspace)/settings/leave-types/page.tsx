@@ -10,7 +10,7 @@ import { LeaveTypesAdmin } from "@/components/settings/leave-types-admin";
 import { SettingsBackLink } from "@/components/settings/settings-back-link";
 
 export const metadata = {
-  title: "Leave types · Settings · Colossal HR",
+  title: "Leave types · Settings · Colossal Hub",
 };
 
 /**

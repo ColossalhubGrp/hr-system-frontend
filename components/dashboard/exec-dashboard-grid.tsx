@@ -51,13 +51,13 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
-              label="Headcount"
+              label="Employees"
               value={fmt.format(snapshot.hr.headcount)}
               trendPct={snapshot.hr.headcountTrendPct}
               spark={snapshot.hr.spark.headcount}
             />
             <KpiCard
-              label="New Hires"
+              label="New hires"
               value={fmt.format(snapshot.hr.hires12mo)}
               trendPct={null}
               caption="Last 12 months"
@@ -70,7 +70,7 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
               trendDirection="down"
             />
             <KpiCard
-              label="Turnover Rate"
+              label="Turnover rate"
               value={`${snapshot.hr.turnoverPct}%`}
               trendPct={snapshot.hr.turnoverTrendPct}
               trendDirection={snapshot.hr.turnoverTrendPct >= 0 ? "down" : "up"}
@@ -79,25 +79,25 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ChartCard title="Headcount Trend (12 months)">
+            <ChartCard title="Employees (12 months)">
               <HeadcountTrendChart data={snapshot.hr.headcountTrend} />
             </ChartCard>
-            <ChartCard title="Hires vs Separations (12 months)">
+            <ChartCard title="Hires vs separations (12 months)">
               <FlowChart data={snapshot.hr.flow} />
             </ChartCard>
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <ChartCard title="Headcount by Department">
+            <ChartCard title="Employees by department">
               <DepartmentBarChart data={snapshot.hr.departments} />
             </ChartCard>
-            <ChartCard title="Age Distribution">
+            <ChartCard title="Age distribution">
               <BucketBarChart
                 data={snapshot.hr.ageBuckets}
                 emptyMessage="No birthdates on file yet."
               />
             </ChartCard>
-            <ChartCard title="Tenure Distribution">
+            <ChartCard title="Tenure distribution">
               <BucketBarChart
                 data={snapshot.hr.tenureBuckets}
                 emptyMessage="No join dates on file yet."
@@ -106,7 +106,7 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ChartCard title="Gender Distribution">
+            <ChartCard title="Gender distribution">
               <GenderDonut data={snapshot.hr.gender} />
             </ChartCard>
           </div>
@@ -122,19 +122,19 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <KpiCard
-              label="Payroll Cost (MTD)"
+              label="Payroll cost (this month)"
               value={money(snapshot.payroll.monthToDateGross, snapshot.payroll.currency)}
               trendPct={null}
               caption="Current month, submitted slips"
             />
             <KpiCard
-              label="Pay Runs"
+              label="Pay runs"
               value={fmt.format(snapshot.payroll.runsThisMonth)}
               trendPct={null}
               caption="Current month"
             />
             <KpiCard
-              label="Avg Gross Pay"
+              label="Average gross pay"
               value={money(snapshot.payroll.avgGrossThisMonth, snapshot.payroll.currency)}
               trendPct={null}
               caption="Per employee, current month"
@@ -152,26 +152,26 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
-              label="Receivables Outstanding"
+              label="Receivables outstanding"
               value={money(snapshot.accounting.accountsReceivableOutstanding)}
               trendPct={null}
               caption="Owed to us"
             />
             <KpiCard
-              label="Payables Outstanding"
+              label="Payables outstanding"
               value={money(snapshot.accounting.accountsPayableOutstanding)}
               trendPct={null}
               caption="Owed by us"
               trendDirection="down"
             />
             <KpiCard
-              label="Sales Billed"
+              label="Sales billed"
               value={money(snapshot.accounting.totalIncomingBills)}
               trendPct={null}
               caption="All submitted sales invoices"
             />
             <KpiCard
-              label="Purchases Billed"
+              label="Purchases billed"
               value={money(snapshot.accounting.totalOutgoingBills)}
               trendPct={null}
               caption="All submitted purchase invoices"
@@ -190,13 +190,13 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           />
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <KpiCard
-              label="Open Roles"
+              label="Open roles"
               value={fmt.format(snapshot.recruitment.openJobs)}
               trendPct={null}
               caption="Jobs currently accepting"
             />
             <KpiCard
-              label="Active Applicants"
+              label="Active applicants"
               value={fmt.format(snapshot.recruitment.activeApplicants)}
               trendPct={null}
               caption="Not yet hired or rejected"

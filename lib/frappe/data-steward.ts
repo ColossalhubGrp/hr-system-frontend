@@ -197,7 +197,7 @@ export async function fetchDataStewardBoard(): Promise<DataStewardBoard> {
   const metrics: MetricRow[] = [
     {
       id: "headcount-active",
-      label: "Active headcount",
+      label: "Active employees",
       description: "Currently-active employees across the organisation.",
       sourceDoctype: "Employee",
       filterSummary: "status = Active",

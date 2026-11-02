@@ -69,7 +69,7 @@ export function HeadcountTrendChart({ data }: { data: KpiPoint[] }) {
             color: "rgb(var(--ash-900))",
             fontSize: 12,
           }}
-          formatter={(v: number) => [v.toLocaleString("en"), "Headcount"]}
+          formatter={(v: number) => [v.toLocaleString("en"), "Employees"]}
         />
         <Area
           type="monotone"

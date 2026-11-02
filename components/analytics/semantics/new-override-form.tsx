@@ -224,7 +224,7 @@ export function NewOverrideForm({
           <textarea
             value={changeReason}
             onChange={(e) => setChangeReason(e.target.value)}
-            placeholder="e.g. We count contractors in headcount because ..."
+            placeholder="e.g. We count contractors as employees because ..."
             rows={2}
             className={textareaClass}
           />

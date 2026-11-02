@@ -36,8 +36,8 @@ import type { AnalyzeResponse, Turn } from "./types";
 const STORAGE_KEY = "colossal-analytics-turns";
 const SUGGESTIONS = [
   "How many active employees do we have?",
-  "Headcount by department",
-  "Gender split of active headcount",
+  "Employees by department",
+  "Gender split of active employees",
   "How many new hires this year?",
   "Attrition rate over the last 12 months",
 ];
@@ -198,7 +198,7 @@ function EmptyState({
           What would you like to know?
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Ask about headcount, attrition, payroll, diversity, performance —
+          Ask about employees, attrition, payroll, diversity, performance —
           answers include a chart, a plain-English narrative, and follow-up
           suggestions.
         </p>
@@ -385,7 +385,7 @@ function RefusalCard({ reason }: { reason: string | null }) {
         {reason ?? "I can't answer that from the analytics catalog."}
       </p>
       <p className="mt-1 text-xs text-muted-foreground">
-        Try asking about a specific metric — headcount, attrition, payroll cost, diversity, performance.
+        Try asking about a specific metric — employees, attrition, payroll cost, diversity, performance.
       </p>
     </div>
   );
@@ -497,7 +497,7 @@ function Composer({
             }
           }}
           rows={1}
-          placeholder="Ask about headcount, attrition, payroll, diversity, performance…"
+          placeholder="Ask about employees, attrition, payroll, diversity, performance…"
           maxLength={500}
           disabled={pending}
           className={cn(

@@ -39,13 +39,13 @@ export function DashboardGrid({ title, snapshot }: Props) {
         className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
         <KpiCard
-          label="Headcount"
+          label="Employees"
           value={headcountFmt}
           trendPct={snapshot.headcountTrendPct}
           spark={snapshot.spark.headcount}
         />
         <KpiCard
-          label="New Hires"
+          label="New hires"
           value={fmt.format(snapshot.hires12mo)}
           trendPct={null}
           caption="Last 12 months"
@@ -58,7 +58,7 @@ export function DashboardGrid({ title, snapshot }: Props) {
           trendDirection="down" // red colour semantic — separations are a cost
         />
         <KpiCard
-          label="Turnover Rate"
+          label="Turnover rate"
           value={`${snapshot.turnoverPct}%`}
           trendPct={snapshot.turnoverTrendPct}
           trendDirection={snapshot.turnoverTrendPct >= 0 ? "down" : "up"}
@@ -70,10 +70,10 @@ export function DashboardGrid({ title, snapshot }: Props) {
         aria-label="Workforce shape"
         className="grid grid-cols-1 gap-4 lg:grid-cols-2"
       >
-        <ChartCard title="Headcount by Department">
+        <ChartCard title="Employees by department">
           <DepartmentBarChart data={snapshot.departments} />
         </ChartCard>
-        <ChartCard title="Gender Distribution">
+        <ChartCard title="Gender distribution">
           <GenderDonut data={snapshot.gender} />
         </ChartCard>
       </section>
@@ -82,10 +82,10 @@ export function DashboardGrid({ title, snapshot }: Props) {
         aria-label="Workforce movement"
         className="grid grid-cols-1 gap-4 lg:grid-cols-2"
       >
-        <ChartCard title="Headcount Trend (12 months)">
+        <ChartCard title="Employees (12 months)">
           <HeadcountTrendChart data={snapshot.headcountTrend} />
         </ChartCard>
-        <ChartCard title="Hires vs Separations (12 months)">
+        <ChartCard title="Hires vs separations (12 months)">
           <FlowChart data={snapshot.flow} />
         </ChartCard>
       </section>
@@ -94,13 +94,13 @@ export function DashboardGrid({ title, snapshot }: Props) {
         aria-label="Workforce demographics"
         className="grid grid-cols-1 gap-4 lg:grid-cols-2"
       >
-        <ChartCard title="Age Distribution">
+        <ChartCard title="Age distribution">
           <BucketBarChart
             data={snapshot.ageBuckets}
             emptyMessage="No birthdates on file yet."
           />
         </ChartCard>
-        <ChartCard title="Tenure Distribution">
+        <ChartCard title="Tenure distribution">
           <BucketBarChart
             data={snapshot.tenureBuckets}
             emptyMessage="No join dates on file yet."

@@ -120,8 +120,11 @@ export function Sidebar({ access }: { access: AccessBundle }) {
   const visible: NavItem[] = useMemo(() => {
     return NAV.filter((item) => canSee(item.requires, access))
       .filter((item) => isSubscribed(item.href))
+      // Coming-soon modules stay off the rail entirely (2026-11-02,
+      // user request). Their routes and coming-soon pages remain, so a
+      // direct link still lands somewhere sensible.
+      .filter((item) => !item.soon)
       .map((item) => {
-        if (item.soon) return { ...item, children: undefined };
         if (!item.children) return item;
         const kids = item.children
           .filter((c) => canSee(c.requires, access))

@@ -121,6 +121,7 @@ export function Sidebar({ access }: { access: AccessBundle }) {
     return NAV.filter((item) => canSee(item.requires, access))
       .filter((item) => isSubscribed(item.href))
       .map((item) => {
+        if (item.soon) return { ...item, children: undefined };
         if (!item.children) return item;
         const kids = item.children
           .filter((c) => canSee(c.requires, access))
@@ -355,6 +356,11 @@ export function Sidebar({ access }: { access: AccessBundle }) {
                       )}
                     />
                     {!collapsed && <span className="truncate">{item.label}</span>}
+                    {!collapsed && item.soon && (
+                      <span className="ml-auto rounded-full bg-amber-400/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-amber-600">
+                        Soon
+                      </span>
+                    )}
                   </Link>
                 )}
 

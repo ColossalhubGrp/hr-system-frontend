@@ -1,17 +1,29 @@
-import { requireGroup } from "@/lib/frappe/require-role";
-import { requireApp } from "@/lib/subscriptions/gate";
+import { HandCoins } from "lucide-react";
+import { ComingSoon } from "@/components/common/coming-soon";
 
 /**
- * Loans area is HR-administered. SRS lists Loan management under HR scope
- * (US-15 onwards) — keep it behind an HR role. Pure Employees viewing their
- * own loan history would be a separate `/me/loans` surface in a later turn.
+ * Loans is marked COMING SOON (2026-11-02, user request): every /loans
+ * route renders the branded coming-soon page instead of the module.
+ * The module's pages and code underneath are intact — restore by
+ * putting back the original layout body:
+ *
+ *   await requireApp("loans", "/loans");
+ *   await requireGroup("HR_ANY", "/loans");
+ *   return <>{children}</>;
+ *
+ * (imports: requireGroup from "@/lib/frappe/require-role",
+ *  requireApp from "@/lib/subscriptions/gate")
  */
 export default async function LoansLayout({
-  children,
+  children: _children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireApp("loans", "/loans");
-  await requireGroup("HR_ANY", "/loans");
-  return <>{children}</>;
+  return (
+    <ComingSoon
+      icon={HandCoins}
+      title="Loans"
+      blurb="Staff loans from application to payout — approval steps, repayment schedules and automatic payroll deductions."
+    />
+  );
 }

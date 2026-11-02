@@ -44,6 +44,9 @@ export type NavItem = {
   children?: NavChild[];
   /** Same semantics as NavChild.requires — applies to the top-level item. */
   requires?: RoleGroup;
+  /** Module is on the roadmap but not built — sidebar shows a "Soon"
+   *  chip, hides children, and the route renders a coming-soon page. */
+  soon?: boolean;
 };
 
 /**
@@ -336,6 +339,7 @@ export const NAV: NavItem[] = [
     href: "/loans",
     icon: HandCoins,
     requires: "HR_ANY",
+    soon: true,
     children: [
       { label: "Loans", href: "/loans", requires: "HR_ANY" },
       { label: "Applications", href: "/loans/applications", requires: "HR_ANY" },
@@ -387,7 +391,7 @@ export const NAV: NavItem[] = [
   // further up with its own 11-section child list, so it doesn't
   // appear here.)
   { label: "Sales", href: "/sales", icon: TrendingUp, requires: "HR_ADMIN" },
-  { label: "Stock", href: "/stock", icon: Package, requires: "HR_ADMIN" },
+  { label: "Stock", href: "/stock", icon: Package, requires: "HR_ADMIN", soon: true },
   { label: "Buying", href: "/buying", icon: ShoppingCart, requires: "HR_ADMIN" },
-  { label: "Manufacturing", href: "/manufacturing", icon: Factory, requires: "HR_ADMIN" },
+  { label: "Manufacturing", href: "/manufacturing", icon: Factory, requires: "HR_ADMIN", soon: true },
 ];

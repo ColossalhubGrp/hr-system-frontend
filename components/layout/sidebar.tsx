@@ -201,15 +201,12 @@ export function Sidebar({ access }: { access: AccessBundle }) {
       >
         <BrandMark className="h-9 w-9 shrink-0" />
         {!collapsed && (
-          // Wordmark lockup — product name on top, tenant eyebrow
-          // underneath. Mirrors the FCGS reference's two-line brand
-          // treatment.
+          // The name alone: the brief sanctions no descriptor line, and
+          // the tagline is reserved for first-contact surfaces, not a
+          // rail that is on every page.
           <div className="min-w-0 leading-tight">
             <div className="truncate text-[14px] font-bold tracking-tight text-ash-900">
               Colossal Hub
-            </div>
-            <div className="truncate text-[9.5px] font-semibold uppercase tracking-[0.14em] text-ash-500">
-              Work operations
             </div>
           </div>
         )}

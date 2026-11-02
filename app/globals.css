@@ -285,3 +285,17 @@
     text-decoration: none;
   }
 }
+
+/* ── No number-input spinners, anywhere ──────────────────────────
+ * The browser's increment/decrement arrows are wrong for this app:
+ * opaque IDs, money amounts and quantities are typed, not stepped.
+ * Numeric keyboards, validation and zod coercion are unaffected. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}

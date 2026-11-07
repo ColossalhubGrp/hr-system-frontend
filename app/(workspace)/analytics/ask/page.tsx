@@ -16,6 +16,14 @@ export const metadata: Metadata = {
  * environments without nao provisioned — swap it back in here if
  * NEXT_PUBLIC_NAO_EMBED_URL is not configured for a target env.
  */
-export default function AnalyticsAskPage() {
-  return <NaoChatFrame />;
+export default function AnalyticsAskPage({
+  searchParams,
+}: {
+  searchParams?: { q?: string };
+}) {
+  const q = (searchParams?.q ?? "").trim();
+  // A question handed over from the dashboard rides into the embed
+  // as nao's own ?q= search param; nao asks it on arrival.
+  const naoPath = q ? `/?q=${encodeURIComponent(q)}` : "/";
+  return <NaoChatFrame naoPath={naoPath} />;
 }

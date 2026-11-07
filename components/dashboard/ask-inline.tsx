@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sparkles, ArrowUpRight } from "lucide-react";
 
@@ -16,8 +17,16 @@ const SUGGESTIONS = [
  */
 export function AskInline() {
   const router = useRouter();
+  const [text, setText] = useState("");
 
-  const go = () => router.push("/analytics/ask");
+  const go = (q?: string) => {
+    const question = (q ?? text).trim();
+    router.push(
+      question
+        ? `/analytics/ask?q=${encodeURIComponent(question)}`
+        : "/analytics/ask",
+    );
+  };
 
   return (
     <div className="card flex flex-col gap-3 px-5 py-4">
@@ -31,6 +40,8 @@ export function AskInline() {
         <Sparkles className="h-4 w-4 shrink-0 text-mint-800" />
         <input
           type="text"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
           placeholder="Ask your business a question — employees, payroll cost, attrition…"
           className="h-9 w-full bg-transparent text-sm text-ash-900 placeholder:text-ash-400 focus:outline-none"
           aria-label="Ask Intelligence a question"
@@ -48,7 +59,7 @@ export function AskInline() {
           <button
             key={s}
             type="button"
-            onClick={go}
+            onClick={() => go(s)}
             className="rounded-full border border-hairline px-2.5 py-0.5 text-[11px] text-ash-500 transition hover:border-ink-300 hover:text-ash-900"
           >
             {s}

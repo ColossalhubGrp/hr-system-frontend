@@ -1,4 +1,6 @@
-import { MoreHorizontal, TrendingUp, TrendingDown } from "lucide-react";
+import Link from "next/link";
+import type { Route } from "next";
+import { TrendingUp, TrendingDown } from "lucide-react";
 import { TrendSparkline } from "./trend-sparkline";
 import { cn } from "@/lib/cn";
 
@@ -9,13 +11,21 @@ type Props = {
   /** Treat a missing value (—) as flat. */
   trendDirection?: "up" | "down" | "flat";
   caption?: string;
+  /** Replaces the trend pill entirely with plain words — "up 14 on
+   *  October" says more than "+1.9%". */
+  delta?: string;
+  /** Provenance line in the footer — where the number comes from. */
+  footnote?: string;
+  /** Makes the whole card a drill-through to the records behind it. */
+  href?: string;
   spark?: { label: string; value: number }[];
 };
 
 /**
- * KPI cell matching the mockup. Big number, label above, trend pill below with
- * a sparkline in the corner. The trend pill colour follows the *direction*, not
- * the sign — for "Staff Cost to Income" a fall is good (down + green).
+ * KPI cell. Big number, label above, trend below, sparkline in the
+ * corner. The trend colour follows the *direction*, not the sign —
+ * for "Staff Cost to Income" a fall is good (down + green). With an
+ * `href` the card is a link into the filtered list it summarises.
  */
 export function KpiCard({
   label,
@@ -23,6 +33,9 @@ export function KpiCard({
   trendPct,
   trendDirection,
   caption = "Since last month",
+  delta,
+  footnote,
+  href,
   spark = [],
 }: Props) {
   const direction =
@@ -42,17 +55,10 @@ export function KpiCard({
       ? "text-fall"
       : "text-ash-500";
 
-  return (
-    <div className="card relative flex flex-col gap-4 px-5 py-4">
+  const body = (
+    <>
       <div className="flex items-start justify-between">
         <p className="text-sm font-medium text-ash-500">{label}</p>
-        <button
-          type="button"
-          className="rounded-md p-1 text-ash-400 hover:bg-canvas focus-ring"
-          aria-label="More"
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
       </div>
 
       <div className="flex items-end justify-between gap-4">
@@ -70,11 +76,12 @@ export function KpiCard({
               ) : direction === "down" ? (
                 <TrendingDown className="h-3.5 w-3.5" />
               ) : null}
-              {trendPct === null
-                ? "—"
-                : `${trendPct > 0 ? "+" : ""}${trendPct}%`}
+              {delta ??
+                (trendPct === null
+                  ? "—"
+                  : `${trendPct > 0 ? "+" : ""}${trendPct}%`)}
             </span>
-            <span className="text-ash-500">{caption}</span>
+            {!delta && <span className="text-ash-500">{caption}</span>}
           </div>
         </div>
 
@@ -86,6 +93,24 @@ export function KpiCard({
           />
         )}
       </div>
-    </div>
+
+      {footnote && (
+        <p className="text-[11px] leading-snug text-ash-400">{footnote}</p>
+      )}
+    </>
   );
+
+  const className = cn(
+    "card relative flex flex-col gap-3 px-5 py-4",
+    href && "transition hover:border-ink-300 hover:shadow-sm",
+  );
+
+  if (href) {
+    return (
+      <Link href={href as Route} className={className}>
+        {body}
+      </Link>
+    );
+  }
+  return <div className={className}>{body}</div>;
 }

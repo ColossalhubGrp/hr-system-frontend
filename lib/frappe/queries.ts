@@ -9,6 +9,9 @@ export type BucketPoint = { label: string; count: number };
 
 export type DashboardSnapshot = {
   headcount: number;
+  /** Active employees as at the end of the prior month — lets tiles
+   *  say "up 14 on October" instead of a bare percentage. */
+  headcountPrior: number;
   headcountTrendPct: number;
   staffCostToIncomePct: number | null;
   staffCostTrendPct: number | null;
@@ -329,6 +332,7 @@ export async function fetchDashboardSnapshot(): Promise<DashboardSnapshot> {
 
   return {
     headcount,
+    headcountPrior: prior,
     headcountTrendPct,
     staffCostToIncomePct: null, // Wired in a follow-up when payroll cube is exposed.
     staffCostTrendPct: null,

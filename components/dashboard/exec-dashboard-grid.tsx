@@ -5,33 +5,42 @@ import { GenderDonut } from "./gender-donut";
 import { HeadcountTrendChart } from "./headcount-trend-chart";
 import { FlowChart } from "./flow-chart";
 import { BucketBarChart } from "./bucket-bar-chart";
+import { MovementHeadline } from "./movement-headline";
+import { NeedsYou } from "./needs-you";
+import { RefreshStamp } from "./refresh-stamp";
+import { AskInline } from "./ask-inline";
+import { formatMoney } from "@/lib/format";
 import type { ExecSnapshot } from "@/lib/frappe/exec-snapshot";
 
 /**
  * Executive dashboard — the across-the-system view at `/dashboard`.
- * Each section (People / Payroll / Accounting / Recruitment)
+ * Opens with the attributed movement headline (what moved and why),
+ * then the to-do strip, then per-module sections. Each section
  * renders ONLY when the signed-in user has access to that module;
- * the layout gates each fetch, and tiles with no data drop out.
- *
- * `/hr` keeps its focused HR-only grid (DashboardGrid); /dashboard
- * uses this richer, multi-module view.
+ * tiles are drill-throughs into the records they summarise.
  */
 export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot: ExecSnapshot }) {
   const fmt = new Intl.NumberFormat("en");
   const money = (n: number, currency?: string | null) =>
-    new Intl.NumberFormat("en", {
-      style: "currency",
-      currency: currency || "USD",
-      maximumFractionDigits: 0,
-    }).format(n);
+    formatMoney(n, currency ?? "USD");
 
   const anySection =
     snapshot.hr || snapshot.payroll || snapshot.accounting || snapshot.recruitment;
 
+  const hr = snapshot.hr;
+  const employeeDelta = hr
+    ? (() => {
+        const diff = hr.headcount - hr.headcountPrior;
+        if (diff === 0) return "level with last month";
+        return `${diff > 0 ? "up" : "down"} ${Math.abs(diff)} on last month`;
+      })()
+    : undefined;
+
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold text-ash-900">{title}</h1>
+        <RefreshStamp asOf={snapshot.asOf} />
       </header>
 
       {!anySection && (
@@ -42,8 +51,12 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
         </div>
       )}
 
+      {snapshot.movement && <MovementHeadline movement={snapshot.movement} />}
+      <NeedsYou items={snapshot.needsYou} />
+      {anySection && <AskInline />}
+
       {/* ─── PEOPLE (HR) ──────────────────────────────────────── */}
-      {snapshot.hr && (
+      {hr && (
         <section aria-label="People" className="flex flex-col gap-4">
           <SectionHeading
             title="People"
@@ -52,62 +65,68 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCard
               label="Employees"
-              value={fmt.format(snapshot.hr.headcount)}
-              trendPct={snapshot.hr.headcountTrendPct}
-              spark={snapshot.hr.spark.headcount}
+              value={fmt.format(hr.headcount)}
+              trendPct={hr.headcountTrendPct}
+              delta={employeeDelta}
+              footnote={`From ${fmt.format(hr.headcount)} active employee records`}
+              href="/employee"
+              spark={hr.spark.headcount}
             />
             <KpiCard
               label="New hires"
-              value={fmt.format(snapshot.hr.hires12mo)}
+              value={fmt.format(hr.hires12mo)}
               trendPct={null}
               caption="Last 12 months"
+              href="/employee"
             />
             <KpiCard
               label="Separations"
-              value={fmt.format(snapshot.hr.separations12mo)}
+              value={fmt.format(hr.separations12mo)}
               trendPct={null}
               caption="Last 12 months"
               trendDirection="down"
+              href="/employee/lifecycle"
             />
             <KpiCard
               label="Turnover rate"
-              value={`${snapshot.hr.turnoverPct}%`}
-              trendPct={snapshot.hr.turnoverTrendPct}
-              trendDirection={snapshot.hr.turnoverTrendPct >= 0 ? "down" : "up"}
-              spark={snapshot.hr.spark.turnover}
+              value={`${hr.turnoverPct}%`}
+              trendPct={hr.turnoverTrendPct}
+              trendDirection={hr.turnoverTrendPct >= 0 ? "down" : "up"}
+              footnote="Leavers over 12 months ÷ active employees"
+              spark={hr.spark.turnover}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ChartCard title="Employees (12 months)">
-              <HeadcountTrendChart data={snapshot.hr.headcountTrend} />
+            <ChartCard title="Employees (12 months)" meta="End of each month">
+              <HeadcountTrendChart data={hr.headcountTrend} />
             </ChartCard>
-            <ChartCard title="Hires vs separations (12 months)">
-              <FlowChart data={snapshot.hr.flow} />
+            <ChartCard title="Hires vs separations (12 months)" meta="By month joined or left">
+              <FlowChart data={hr.flow} />
             </ChartCard>
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <ChartCard title="Employees by department">
-              <DepartmentBarChart data={snapshot.hr.departments} />
+            <ChartCard title="Employees by department" meta="Active only">
+              <DepartmentBarChart data={hr.departments} />
             </ChartCard>
-            <ChartCard title="Age distribution">
+            <ChartCard title="Age distribution" meta="Active only">
               <BucketBarChart
-                data={snapshot.hr.ageBuckets}
+                data={hr.ageBuckets}
                 emptyMessage="No birthdates on file yet."
               />
             </ChartCard>
-            <ChartCard title="Tenure distribution">
+            <ChartCard title="Tenure distribution" meta="Active only">
               <BucketBarChart
-                data={snapshot.hr.tenureBuckets}
+                data={hr.tenureBuckets}
                 emptyMessage="No join dates on file yet."
               />
             </ChartCard>
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ChartCard title="Gender distribution">
-              <GenderDonut data={snapshot.hr.gender} />
+            <ChartCard title="Gender distribution" meta="Active only">
+              <GenderDonut data={hr.gender} />
             </ChartCard>
           </div>
         </section>
@@ -125,19 +144,23 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
               label="Payroll cost (this month)"
               value={money(snapshot.payroll.monthToDateGross, snapshot.payroll.currency)}
               trendPct={null}
-              caption="Current month, submitted slips"
+              caption="Current month, posted slips"
+              footnote="Gross pay across posted salary slips"
+              href="/payroll/dashboard"
             />
             <KpiCard
               label="Pay runs"
               value={fmt.format(snapshot.payroll.runsThisMonth)}
               trendPct={null}
               caption="Current month"
+              href="/payroll"
             />
             <KpiCard
               label="Average gross pay"
               value={money(snapshot.payroll.avgGrossThisMonth, snapshot.payroll.currency)}
               trendPct={null}
               caption="Per employee, current month"
+              href="/payroll/dashboard"
             />
           </div>
         </section>
@@ -156,6 +179,7 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
               value={money(snapshot.accounting.accountsReceivableOutstanding)}
               trendPct={null}
               caption="Owed to us"
+              href="/accounting/sales-invoices"
             />
             <KpiCard
               label="Payables outstanding"
@@ -163,19 +187,22 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
               trendPct={null}
               caption="Owed by us"
               trendDirection="down"
+              href="/accounting/purchase-invoices"
             />
             <KpiCard
               label="Sales billed"
               value={money(snapshot.accounting.totalIncomingBills)}
               trendPct={null}
-              caption="All submitted sales invoices"
+              caption="All posted sales invoices"
+              href="/accounting/sales-invoices"
             />
             <KpiCard
               label="Purchases billed"
               value={money(snapshot.accounting.totalOutgoingBills)}
               trendPct={null}
-              caption="All submitted purchase invoices"
+              caption="All posted purchase invoices"
               trendDirection="down"
+              href="/accounting/purchase-invoices"
             />
           </div>
         </section>
@@ -194,12 +221,14 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
               value={fmt.format(snapshot.recruitment.openJobs)}
               trendPct={null}
               caption="Jobs currently accepting"
+              href="/recruitment/hr/jobs"
             />
             <KpiCard
               label="Active applicants"
               value={fmt.format(snapshot.recruitment.activeApplicants)}
               trendPct={null}
               caption="Not yet hired or rejected"
+              href="/recruitment/candidates"
             />
           </div>
         </section>

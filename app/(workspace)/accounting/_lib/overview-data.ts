@@ -36,7 +36,20 @@ export type OverviewData = {
     amount: number;
     currency: string | null;
   }>;
+  /** Outstanding AR/AP bucketed by how overdue it is (due_date vs today). */
+  ageing: {
+    ar: AgeBucket[];
+    ap: AgeBucket[];
+  };
+  /** Posted payment entries this month — the owner's cash in/out. */
+  cash: {
+    inMtd: number;
+    outMtd: number;
+    countMtd: number;
+  };
 };
+
+export type AgeBucket = { label: string; amount: number; count: number };
 
 type SI = {
   name: string;
@@ -132,7 +145,7 @@ export async function loadOverviewData(): Promise<OverviewData> {
 
   const companyFilter = company ? ["company", "=", company] as const : null;
 
-  const [si12m, pi12m, overdueSi, draftSi, draftPi, recentJE, recentPE, openPEDrafts] = await Promise.all([
+  const [si12m, pi12m, overdueSi, draftSi, draftPi, recentJE, recentPE, openPEDrafts, mtdPE] = await Promise.all([
     safeList<SI>({
       doctype: "Sales Invoice",
       fields: [
@@ -221,6 +234,16 @@ export async function loadOverviewData(): Promise<OverviewData> {
       ]),
       limit_page_length: 500,
     }),
+    safeList<{ payment_type: string | null; paid_amount: number | null }>({
+      doctype: "Payment Entry",
+      fields: ["payment_type", "paid_amount"],
+      filters: JSON.stringify([
+        ...(companyFilter ? [companyFilter] : []),
+        ["docstatus", "=", 1],
+        ["posting_date", ">=", mtdFrom],
+      ]),
+      limit_page_length: 1000,
+    }),
   ]);
 
   // KPI roll-ups
@@ -278,6 +301,36 @@ export async function loadOverviewData(): Promise<OverviewData> {
   });
   recent.sort((a, b) => (b.at || "").localeCompare(a.at || ""));
 
+  // Ageing — outstanding amounts bucketed by days past due. Items not
+  // yet due sit in "Current".
+  const ageingFor = (rows: Array<{ outstanding_amount: number | null; due_date: string | null }>): AgeBucket[] => {
+    const buckets: AgeBucket[] = [
+      { label: "Current", amount: 0, count: 0 },
+      { label: "1–30 days", amount: 0, count: 0 },
+      { label: "31–60 days", amount: 0, count: 0 },
+      { label: "61–90 days", amount: 0, count: 0 },
+      { label: "90+ days", amount: 0, count: 0 },
+    ];
+    const now = Date.now();
+    for (const r of rows) {
+      const out = Number(r.outstanding_amount ?? 0);
+      if (out <= 0) continue;
+      const due = r.due_date ? new Date(r.due_date + "T00:00:00Z").getTime() : null;
+      const days = due === null ? 0 : Math.floor((now - due) / 86400000);
+      const idx = days <= 0 ? 0 : days <= 30 ? 1 : days <= 60 ? 2 : days <= 90 ? 3 : 4;
+      buckets[idx].amount += out;
+      buckets[idx].count += 1;
+    }
+    return buckets;
+  };
+
+  const cashIn = mtdPE
+    .filter((p) => p.payment_type === "Receive")
+    .reduce((a, p) => a + Number(p.paid_amount ?? 0), 0);
+  const cashOut = mtdPE
+    .filter((p) => p.payment_type === "Pay")
+    .reduce((a, p) => a + Number(p.paid_amount ?? 0), 0);
+
   return {
     company,
     kpis: {
@@ -297,5 +350,14 @@ export async function loadOverviewData(): Promise<OverviewData> {
       openPaymentEntries: openPEDrafts.length,
     },
     recent: recent.slice(0, 10),
+    ageing: {
+      ar: ageingFor(si12m),
+      ap: ageingFor(pi12m),
+    },
+    cash: {
+      inMtd: cashIn,
+      outMtd: cashOut,
+      countMtd: mtdPE.length,
+    },
   };
 }

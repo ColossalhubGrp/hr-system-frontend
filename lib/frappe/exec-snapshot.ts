@@ -39,11 +39,33 @@ export type RecruitmentSummary = {
   activeApplicants: number;
 };
 
+/**
+ * The attributed movement headline — the brief's "why, not just what".
+ * Computed from the records, never guessed: when two months of salary
+ * slips exist the payroll cost movement is attributed to joiners /
+ * leavers / changes for existing staff; otherwise the story is the
+ * team's own movement this month, by department.
+ */
+export type Movement = {
+  headline: string;
+  parts: { label: string; detail: string }[];
+  /** Where the figures come from — rendered as the provenance line. */
+  basis: string;
+};
+
+export type NeedsYouItem = {
+  label: string;
+  count: number;
+  href: string;
+};
+
 export type ExecSnapshot = {
   hr: DashboardSnapshot | null;
   payroll: PayrollSummary | null;
   accounting: AccountingSummary | null;
   recruitment: RecruitmentSummary | null;
+  movement: Movement | null;
+  needsYou: NeedsYouItem[];
   asOf: string;
 };
 
@@ -55,20 +77,237 @@ export type ExecAccess = {
 };
 
 export async function fetchExecSnapshot(access: ExecAccess): Promise<ExecSnapshot> {
-  const [hr, payroll, accounting, recruitment] = await Promise.allSettled([
-    access.hr          ? fetchDashboardSnapshot() : Promise.resolve(null),
-    access.payroll     ? loadPayrollSummary()     : Promise.resolve(null),
-    access.accounting  ? loadAccountingSummary()  : Promise.resolve(null),
-    access.recruitment ? loadRecruitmentSummary() : Promise.resolve(null),
-  ]);
+  const [hr, payroll, accounting, recruitment, movement, needsYou] =
+    await Promise.allSettled([
+      access.hr          ? fetchDashboardSnapshot() : Promise.resolve(null),
+      access.payroll     ? loadPayrollSummary()     : Promise.resolve(null),
+      access.accounting  ? loadAccountingSummary()  : Promise.resolve(null),
+      access.recruitment ? loadRecruitmentSummary() : Promise.resolve(null),
+      access.hr || access.payroll ? loadMovement(access) : Promise.resolve(null),
+      loadNeedsYou(access),
+    ]);
 
   return {
     hr: settled(hr),
     payroll: settled(payroll),
     accounting: settled(accounting),
     recruitment: settled(recruitment),
+    movement: settled(movement),
+    needsYou: settled(needsYou) ?? [],
     asOf: new Date().toISOString(),
   };
+}
+
+// ─── Attributed movement ──────────────────────────────────────────────
+
+/** "Production - CHD" → "Production" for prose. */
+function deptLabel(v: string | null | undefined): string {
+  if (!v) return "Unassigned";
+  return v.replace(/\s+-\s+[A-Z]{2,6}$/, "");
+}
+
+function monthName(offset: number): string {
+  const d = new Date();
+  d.setUTCDate(1);
+  d.setUTCMonth(d.getUTCMonth() + offset);
+  return d.toLocaleString("en-GB", { month: "long" });
+}
+
+function monthBounds(offset: number): { start: string; end: string } {
+  const now = new Date();
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset, 1));
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + offset + 1, 0));
+  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+}
+
+async function loadMovement(access: ExecAccess): Promise<Movement | null> {
+  if (access.payroll) {
+    const m = await payrollMovement().catch(() => null);
+    if (m) return m;
+  }
+  if (access.hr) {
+    return peopleMovement().catch(() => null);
+  }
+  return null;
+}
+
+/** Payroll-cost attribution: this month vs last, split into joiners,
+ *  leavers and changes for the people on both runs. */
+async function payrollMovement(): Promise<Movement | null> {
+  type Slip = { employee: string; gross_pay?: number };
+  const fetchMonth = (offset: number) => {
+    const { start, end } = monthBounds(offset);
+    return frappeCall<Slip[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Salary Slip",
+        fields: ["employee", "gross_pay"],
+        filters: JSON.stringify([
+          ["docstatus", "=", 1],
+          ["start_date", ">=", start],
+          ["start_date", "<=", end],
+        ]),
+        limit_page_length: 0,
+      },
+      as: "user",
+    });
+  };
+  const [cur, prev] = await Promise.all([fetchMonth(0), fetchMonth(-1)]);
+  if (cur.length === 0 || prev.length === 0) return null;
+
+  const sum = (rows: Slip[]) => rows.reduce((a, s) => a + Number(s.gross_pay ?? 0), 0);
+  const curTotal = sum(cur);
+  const prevTotal = sum(prev);
+  if (prevTotal <= 0) return null;
+
+  const curBy = new Map(cur.map((s) => [s.employee, Number(s.gross_pay ?? 0)]));
+  const prevBy = new Map(prev.map((s) => [s.employee, Number(s.gross_pay ?? 0)]));
+  let joiners = 0, joinerCount = 0, leavers = 0, leaverCount = 0, existing = 0;
+  for (const [emp, g] of curBy) {
+    if (prevBy.has(emp)) existing += g - (prevBy.get(emp) ?? 0);
+    else { joiners += g; joinerCount += 1; }
+  }
+  for (const [emp, g] of prevBy) {
+    if (!curBy.has(emp)) { leavers += g; leaverCount += 1; }
+  }
+
+  const delta = curTotal - prevTotal;
+  const pct = Math.round((delta / prevTotal) * 1000) / 10;
+  const money = (n: number) =>
+    `US$${Math.abs(Math.round(n)).toLocaleString("en-GB")}`;
+  const parts: Movement["parts"] = [];
+  if (joinerCount > 0)
+    parts.push({ label: `+${money(joiners)}`, detail: `${joinerCount} new joiner${joinerCount === 1 ? "" : "s"}` });
+  if (leaverCount > 0)
+    parts.push({ label: `−${money(leavers)}`, detail: `${leaverCount} leaver${leaverCount === 1 ? "" : "s"}` });
+  if (Math.round(existing) !== 0)
+    parts.push({
+      label: `${existing >= 0 ? "+" : "−"}${money(existing)}`,
+      detail: "changes for existing staff",
+    });
+
+  return {
+    headline:
+      `Payroll cost ${delta >= 0 ? "rose" : "fell"} ${Math.abs(pct)}% on ` +
+      `${monthName(-1)} — ${money(curTotal)} this month.`,
+    parts,
+    basis: `From ${cur.length} salary slips this month and ${prev.length} last month.`,
+  };
+}
+
+/** Team movement this month, by department — the story when payroll
+ *  history is still thin. */
+async function peopleMovement(): Promise<Movement | null> {
+  type Row = { department?: string | null };
+  const { start } = monthBounds(0);
+  const [joined, left] = await Promise.all([
+    frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee",
+        fields: ["department"],
+        filters: JSON.stringify([["date_of_joining", ">=", start]]),
+        limit_page_length: 0,
+      },
+      as: "user",
+    }).catch(() => [] as Row[]),
+    frappeCall<Row[]>({
+      method: "frappe.client.get_list",
+      args: {
+        doctype: "Employee",
+        fields: ["department"],
+        filters: JSON.stringify([
+          ["status", "in", ["Left", "Inactive", "Suspended"]],
+          ["relieving_date", ">=", start],
+        ]),
+        limit_page_length: 0,
+      },
+      as: "user",
+    }).catch(() => [] as Row[]),
+  ]);
+
+  if (joined.length === 0 && left.length === 0) return null;
+
+  const tally = new Map<string, number>();
+  for (const r of joined) {
+    const d = deptLabel(r.department);
+    tally.set(d, (tally.get(d) ?? 0) + 1);
+  }
+  const top = Array.from(tally.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  const net = joined.length - left.length;
+
+  const parts: Movement["parts"] = top.map(([d, n]) => ({
+    label: `+${n}`,
+    detail: d,
+  }));
+  if (left.length > 0)
+    parts.push({ label: `−${left.length}`, detail: "left the business" });
+
+  const grewOrShrank =
+    net > 0 ? `grew by ${net}` : net < 0 ? `shrank by ${Math.abs(net)}` : "held steady";
+  return {
+    headline: `Your team ${grewOrShrank} in ${monthName(0)} — ${joined.length} joined, ${left.length} left.`,
+    parts,
+    basis: "From employee joining and leaving dates this month.",
+  };
+}
+
+// ─── Needs you today ──────────────────────────────────────────────────
+
+async function loadNeedsYou(access: ExecAccess): Promise<NeedsYouItem[]> {
+  const count = (doctype: string, filters: unknown) =>
+    frappeCall<number>({
+      method: "frappe.client.get_count",
+      args: { doctype, filters: JSON.stringify(filters) },
+      as: "user",
+    }).catch(() => 0);
+
+  const jobs: Array<Promise<NeedsYouItem | null>> = [];
+  if (access.hr) {
+    jobs.push(
+      count("Leave Application", [["status", "=", "Open"]]).then((n) => ({
+        label: "leave requests waiting",
+        count: Number(n ?? 0),
+        href: "/hr/leaves",
+      })),
+      count("Expense Claim", [
+        ["docstatus", "=", 0],
+        ["approval_status", "=", "Draft"],
+      ]).then((n) => ({
+        label: "expense claims to review",
+        count: Number(n ?? 0),
+        href: "/hr/expense-claims",
+      })),
+    );
+  }
+  if (access.accounting) {
+    jobs.push(
+      count("Sales Invoice", [["docstatus", "=", 0]]).then((n) => ({
+        label: "draft invoices to post",
+        count: Number(n ?? 0),
+        href: "/accounting/sales-invoices?docstatus=0",
+      })),
+      count("Purchase Invoice", [["docstatus", "=", 0]]).then((n) => ({
+        label: "draft bills to post",
+        count: Number(n ?? 0),
+        href: "/accounting/purchase-invoices?docstatus=0",
+      })),
+    );
+  }
+  if (access.payroll) {
+    jobs.push(
+      count("Payroll Run", [["status", "=", "OPEN"]]).then((n) => ({
+        label: "open pay runs",
+        count: Number(n ?? 0),
+        href: "/payroll",
+      })),
+    );
+  }
+
+  const settledItems = await Promise.allSettled(jobs);
+  return settledItems
+    .map((r) => (r.status === "fulfilled" ? r.value : null))
+    .filter((i): i is NeedsYouItem => !!i && i.count > 0);
 }
 
 // ─── Payroll ──────────────────────────────────────────────────────────

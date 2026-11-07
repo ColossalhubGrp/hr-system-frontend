@@ -14,6 +14,9 @@ import { MiniPnlChart } from "./_components/mini-pnl-chart";
 import { RecentActivity } from "./_components/recent-activity";
 import { CommandPalette } from "./_components/command-palette";
 import { CommandKChip } from "./_components/command-k-chip";
+import { AgeingCard } from "./_components/ageing-card";
+import { CashCard } from "./_components/cash-card";
+import { FiscalChip } from "./_components/fiscal-chip";
 
 export const metadata = { title: "Accounting · Colossal Hub" };
 export const dynamic = "force-dynamic";
@@ -50,6 +53,9 @@ export default function AccountingLandingPage({
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
+            <Suspense fallback={null}>
+              <FiscalChip />
+            </Suspense>
             <CommandKChip />
             <HeroCta href="/accounting/sales-invoices/new" icon={Receipt} label="Invoice" />
             <HeroCta href="/accounting/purchase-invoices/new" icon={FileSpreadsheet} label="Bill" />
@@ -120,6 +126,14 @@ async function OverviewPane() {
     <div className="flex flex-col gap-5">
       {/* KPI strip — six tiles with real numbers + inline sparklines */}
       <KpiStrip data={data} />
+
+      {/* Ageing + cash — the two questions an owner asks first */}
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <AgeingCard data={data} />
+        </div>
+        <CashCard data={data} />
+      </div>
 
       {/* Two-column: alerts on the left, recent activity on the right */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-5">

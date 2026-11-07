@@ -43,6 +43,55 @@ function fmtDate(iso: string | null | undefined): string {
   });
 }
 
+// ── Statutory deadlines ──────────────────────────────────────────────
+// PAYE (+AIDS levy) and NSSA are remitted by the 10th of the month
+// after the pay month; ZIMDEF is quarterly, within 30 days of the
+// quarter's end. Computed from the latest processed run's pay date.
+type Due = { label: string; date: Date };
+
+function statutoryDues(payDateIso: string | null | undefined): {
+  payeNssa: Due | null; zimdef: Due | null;
+} {
+  if (!payDateIso) return { payeNssa: null, zimdef: null };
+  const d = new Date(payDateIso.slice(0, 10) + "T00:00:00Z");
+  if (Number.isNaN(d.getTime())) return { payeNssa: null, zimdef: null };
+  const tenth = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 10));
+  const qEndMonth = Math.floor(d.getUTCMonth() / 3) * 3 + 3; // 3,6,9,12
+  const qDue = new Date(Date.UTC(d.getUTCFullYear(), qEndMonth, 0));
+  qDue.setUTCDate(qDue.getUTCDate() + 30);
+  return {
+    payeNssa: { label: "by the 10th", date: tenth },
+    zimdef: { label: "30 days after quarter end", date: qDue },
+  };
+}
+
+function dueDateLong(d: Date): string {
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "long" });
+}
+
+function DueChip({ due }: { due: Due }) {
+  const days = Math.ceil((due.date.getTime() - Date.now()) / 86400000);
+  const cls =
+    days < 0
+      ? "bg-rose-100 text-rose-700"
+      : days <= 14
+      ? "bg-amber-100 text-amber-700"
+      : "bg-emerald-100 text-emerald-700";
+  const text =
+    days < 0
+      ? `was due ${dueDateLong(due.date)}`
+      : days === 0
+      ? "due today"
+      : days === 1
+      ? "due tomorrow"
+      : `due ${dueDateLong(due.date)} · ${days} days`;
+  return (
+    <span className={`ml-2 inline-flex whitespace-nowrap rounded-full px-2 py-0.5 text-[10.5px] font-semibold ${cls}`}>
+      {text}
+    </span>
+  );
+}
+
 export default async function PayrollDashboardPage({
   searchParams,
 }: {
@@ -87,6 +136,20 @@ export default async function PayrollDashboardPage({
         },
       ].filter((s) => s.value > 0)
     : [];
+
+  const dues = statutoryDues(latest.run?.pay_date);
+
+  // Run-on-run: the last two months that actually processed.
+  const processed = trend.filter((t) => !t.isForecast);
+  const curM = processed[processed.length - 1] ?? null;
+  const prevM = processed[processed.length - 2] ?? null;
+  const employerThisRun = latest.grossUsd + latest.nssaEmployer + latest.zimdef;
+  const costPerEmployee =
+    latest.employeeCount > 0 ? employerThisRun / latest.employeeCount : 0;
+  const overheadPct =
+    latest.grossUsd > 0
+      ? ((employerThisRun - latest.grossUsd) / latest.grossUsd) * 100
+      : 0;
 
   const trendPoints = trend.map((t) => ({
     label: t.label,
@@ -196,6 +259,49 @@ export default async function PayrollDashboardPage({
         />
       </section>
 
+      {/* Run on run + unit economics */}
+      {curM && (
+        <section className="grid grid-cols-2 gap-3 rounded-xl border bg-card p-4 sm:grid-cols-5">
+          <CompareStat
+            label={prevM ? `Gross vs ${prevM.label}` : "Gross"}
+            now={curM.grossUsd}
+            prev={prevM?.grossUsd ?? null}
+          />
+          <CompareStat
+            label={prevM ? `Net vs ${prevM.label}` : "Net"}
+            now={curM.netUsd}
+            prev={prevM?.netUsd ?? null}
+          />
+          <CompareStat
+            label={prevM ? `PAYE vs ${prevM.label}` : "PAYE"}
+            now={curM.payeUsd}
+            prev={prevM?.payeUsd ?? null}
+          />
+          <div className="flex flex-col gap-0.5">
+            <div className="text-[11px] font-semibold text-muted-foreground">
+              Cost per employee — this run
+            </div>
+            <div className="text-lg font-bold tabular-nums text-foreground">
+              {usd2(costPerEmployee)}
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              Employer cost ÷ {latest.employeeCount} paid
+            </div>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            <div className="text-[11px] font-semibold text-muted-foreground">
+              Employer overhead on gross
+            </div>
+            <div className="text-lg font-bold tabular-nums text-foreground">
+              {overheadPct.toFixed(1)}%
+            </div>
+            <div className="text-[11px] text-muted-foreground">
+              NSSA (employer) + ZIMDEF
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Trend + Composition */}
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
@@ -239,9 +345,9 @@ export default async function PayrollDashboardPage({
             <div className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Statutory obligations · this run
             </div>
-            {latest.run && (
+            {latest.run && dues.payeNssa && (
               <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                Ready to remit
+                Prepared — remit by {dueDateLong(dues.payeNssa.date)}
               </span>
             )}
           </div>
@@ -251,6 +357,7 @@ export default async function PayrollDashboardPage({
               label="PAYE (income tax)"
               value={usd2(latest.payeUsd)}
               hint="Remit to ZIMRA"
+              due={dues.payeNssa}
             />
             <StatRow
               icon={<Coins className="h-4 w-4 text-fuchsia-600" />}
@@ -263,12 +370,14 @@ export default async function PayrollDashboardPage({
               label="NSSA · employee + employer"
               value={usd2(latest.nssaEmployee + latest.nssaEmployer)}
               hint={`Employee ${usd2(latest.nssaEmployee)} · Employer ${usd2(latest.nssaEmployer)}`}
+              due={dues.payeNssa}
             />
             <StatRow
               icon={<TrendingUp className="h-4 w-4 text-violet-600" />}
               label="ZIMDEF (1% of gross)"
               value={usd2(latest.zimdef)}
               hint="Employer only"
+              due={dues.zimdef}
             />
             {latest.taxCreditsUsd > 0 && (
               <StatRow
@@ -345,11 +454,13 @@ function StatRow({
   label,
   value,
   hint,
+  due,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint?: string;
+  due?: Due | null;
 }) {
   return (
     <li className="flex items-start gap-3 py-3">
@@ -357,12 +468,41 @@ function StatRow({
         {icon}
       </span>
       <div className="flex-1">
-        <div className="font-semibold text-foreground">{label}</div>
+        <div className="flex flex-wrap items-center font-semibold text-foreground">
+          {label}
+          {due && <DueChip due={due} />}
+        </div>
         {hint && <div className="text-xs text-muted-foreground">{hint}</div>}
       </div>
       <div className="whitespace-nowrap font-bold tabular-nums text-foreground">
         {value}
       </div>
     </li>
+  );
+}
+
+function CompareStat({
+  label,
+  now,
+  prev,
+}: {
+  label: string;
+  now: number;
+  prev: number | null;
+}) {
+  const delta = prev === null ? null : now - prev;
+  const pct = prev && prev !== 0 && delta !== null ? (delta / prev) * 100 : null;
+  return (
+    <div className="flex flex-col gap-0.5">
+      <div className="text-[11px] font-semibold text-muted-foreground">{label}</div>
+      <div className="text-lg font-bold tabular-nums text-foreground">{usd(now)}</div>
+      <div className="text-[11px] tabular-nums text-muted-foreground">
+        {delta === null
+          ? "first processed month"
+          : `${delta >= 0 ? "+" : "−"}${usd(Math.abs(delta))}${
+              pct !== null ? ` (${delta >= 0 ? "+" : "−"}${Math.abs(pct).toFixed(1)}%)` : ""
+            }`}
+      </div>
+    </div>
   );
 }

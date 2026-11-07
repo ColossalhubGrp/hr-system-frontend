@@ -126,7 +126,11 @@ async function loadMovement(access: ExecAccess): Promise<Movement | null> {
     if (m) return m;
   }
   if (access.hr) {
-    return peopleMovement().catch(() => null);
+    // This month first; if the month is young and quiet, last month's
+    // movement is still the freshest true story.
+    const now = await peopleMovement(0).catch(() => null);
+    if (now) return now;
+    return peopleMovement(-1).catch(() => null);
   }
   return null;
 }
@@ -197,16 +201,19 @@ async function payrollMovement(): Promise<Movement | null> {
 
 /** Team movement this month, by department — the story when payroll
  *  history is still thin. */
-async function peopleMovement(): Promise<Movement | null> {
+async function peopleMovement(offset: number): Promise<Movement | null> {
   type Row = { department?: string | null };
-  const { start } = monthBounds(0);
+  const { start, end } = monthBounds(offset);
   const [joined, left] = await Promise.all([
     frappeCall<Row[]>({
       method: "frappe.client.get_list",
       args: {
         doctype: "Employee",
         fields: ["department"],
-        filters: JSON.stringify([["date_of_joining", ">=", start]]),
+        filters: JSON.stringify([
+          ["date_of_joining", ">=", start],
+          ["date_of_joining", "<=", end],
+        ]),
         limit_page_length: 0,
       },
       as: "user",
@@ -219,6 +226,7 @@ async function peopleMovement(): Promise<Movement | null> {
         filters: JSON.stringify([
           ["status", "in", ["Left", "Inactive", "Suspended"]],
           ["relieving_date", ">=", start],
+          ["relieving_date", "<=", end],
         ]),
         limit_page_length: 0,
       },
@@ -246,9 +254,9 @@ async function peopleMovement(): Promise<Movement | null> {
   const grewOrShrank =
     net > 0 ? `grew by ${net}` : net < 0 ? `shrank by ${Math.abs(net)}` : "held steady";
   return {
-    headline: `Your team ${grewOrShrank} in ${monthName(0)} — ${joined.length} joined, ${left.length} left.`,
+    headline: `Your team ${grewOrShrank} in ${monthName(offset)} — ${joined.length} joined, ${left.length} left.`,
     parts,
-    basis: "From employee joining and leaving dates this month.",
+    basis: `From employee joining and leaving dates in ${monthName(offset)}.`,
   };
 }
 

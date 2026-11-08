@@ -2,6 +2,7 @@ import {
   Home,
   CircleUser,
   Users,
+  ContactRound,
   Briefcase,
   HeartHandshake,
   Sparkles,
@@ -83,6 +84,7 @@ export const GROUP_BY_ITEM: Record<string, NavGroupId> = {
   "My Workspace": "workspace",
   "My Team": "workspace",
 
+  "Employee": "people",
   "People": "people",
   "Recruit": "people",
   "Payroll": "people",
@@ -117,6 +119,22 @@ export const NAV: NavItem[] = [
 
   // Every signed-in employee gets a self-service hub at /me.
   { label: "My Workspace", href: "/me", icon: CircleUser },
+
+  // Employee records are the FREE product; People (below) is the
+  // subscription HR module. They stay separate entries so a customer
+  // can have one without the other (2026-11-08, user decision —
+  // overrides the brief-5 "one product, one entry" fold).
+  {
+    label: "Employee",
+    href: "/employee",
+    icon: ContactRound,
+    requires: "HR_ANY",
+    children: [
+      { label: "Master Data", href: "/employee", requires: "HR_ANY" },
+      { label: "Lifecycle", href: "/employee/lifecycle", requires: "HR_ANY" },
+      { label: "Organisation Chart", href: "/employee/organization", requires: "HR_ANY" },
+    ],
+  },
 
   // "My Team" hidden from the sidebar for everyone (2026-10-31, user
   // request). The /team routes and their code stay intact — restore by
@@ -163,17 +181,15 @@ export const NAV: NavItem[] = [
     ],
   },
 
-  // One product, one entry (brief 5): employee records and the HR
-  // surfaces live together under People. Lands on the records list.
+  // People = the subscription HR module (leaves, attendance,
+  // performance, …). Employee records live in their own free entry
+  // above.
   {
     label: "People",
-    href: "/employee",
+    href: "/hr",
     icon: HeartHandshake,
     requires: "HR_ANY",
     children: [
-      { label: "Employees", href: "/employee", requires: "HR_ANY" },
-      { label: "Lifecycle", href: "/employee/lifecycle", requires: "HR_ANY" },
-      { label: "Organisation Chart", href: "/employee/organization", requires: "HR_ANY" },
       { label: "Shift Management", href: "/hr/shift-management", requires: "SHIFT_ADMIN" },
       { label: "Leaves", href: "/hr/leaves", requires: "HR_ANY" },
       { label: "Attendance", href: "/hr/attendance", requires: "HR_ANY" },

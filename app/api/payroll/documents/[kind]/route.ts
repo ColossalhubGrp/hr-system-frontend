@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { serverEnv } from "@/lib/env";
+import { frappeBaseForRequest } from "@/lib/frappe/tenant";
 import { frappeCookieHeader } from "@/lib/frappe/session";
 
 /**
@@ -52,9 +52,9 @@ export async function GET(
   const cfg = METHODS[params.kind as keyof typeof METHODS];
   if (!cfg) return new NextResponse("Unknown document kind", { status: 404 });
 
-  const env = serverEnv();
+  const base = frappeBaseForRequest();
   const sp = new URL(req.url).searchParams;
-  const url = new URL(`/api/method/${cfg.method}`, env.FRAPPE_URL);
+  const url = new URL(`/api/method/${cfg.method}`, base);
   for (const [k, target] of Object.entries(cfg.paramMap)) {
     const v = sp.get(k);
     if (!v) {
@@ -72,7 +72,7 @@ export async function GET(
     method: "GET",
     headers: {
       Cookie: cookie,
-      "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
+      "X-Frappe-Site-Name": new URL(base).hostname,
     },
     cache: "no-store",
   });

@@ -26,6 +26,9 @@ interface FrappeRequestOptions {
   user?: string; // User identity to forward to Frappe (passed alongside sid)
   apiKey?: string; // Optional per-request API key
   apiSecret?: string; // Optional per-request API secret
+  /** Frappe base URL override — the caller's tenant site. Defaults to
+   * the control site from env. */
+  baseUrl?: string;
   /**
    * Frappe session id. When provided, the request is authenticated by
    * forwarding the user's sid cookie so Frappe applies the user's row
@@ -50,9 +53,9 @@ export async function frappeRequest<T>(
   endpoint: string,
   options: FrappeRequestOptions = {}
 ): Promise<T> {
-  const { method = 'POST', params = {}, user, apiKey, apiSecret, sid } = options;
+  const { method = 'POST', params = {}, user, apiKey, apiSecret, sid, baseUrl } = options;
 
-  let url = `${FRAPPE_API_URL}/api/method/${endpoint}`;
+  let url = `${baseUrl || FRAPPE_API_URL}/api/method/${endpoint}`;
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -137,11 +140,13 @@ export async function frappeUploadFile(
     apiSecret?: string; // Optional per-request API secret
     /** Frappe sid — when present, uploads as the user (preferred). */
     sid?: string;
+    /** Frappe base URL override — the caller's tenant site. */
+    baseUrl?: string;
   } = {}
 ): Promise<{ file_url: string }> {
-  const { apiKey, apiSecret, sid, ...fileOptions } = options;
+  const { apiKey, apiSecret, sid, baseUrl, ...fileOptions } = options;
 
-  const url = `${FRAPPE_API_URL}/api/method/upload_file`;
+  const url = `${baseUrl || FRAPPE_API_URL}/api/method/upload_file`;
 
   // Auth selection mirrors frappeRequest — sid preferred, Basic auth fallback.
   let authHeader: string | null = null;

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { serverEnv } from "@/lib/env";
 import { frappeGuestCall } from "@/lib/frappe/guest-call";
+import { TENANT_COOKIE, isValidTenantSite } from "@/lib/frappe/tenant";
 
 type State = { error?: string };
 
@@ -28,16 +29,45 @@ export async function loginAction(
   }
 
   const env = serverEnv();
-  const res = await fetch(new URL("/api/method/login", env.FRAPPE_URL), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Accept: "application/json",
-    },
-    body: new URLSearchParams({ usr, pwd }).toString(),
-    cache: "no-store",
-    redirect: "manual",
-  });
+
+  // Multi-tenant routing: ask the control site which tenant site this
+  // email belongs to. No match (or lookup failure) → control site,
+  // exactly the pre-tenant behaviour.
+  let tenantSite: string | null = null;
+  try {
+    const lookup = await frappeGuestCall<string | null>(
+      "tenant_manager.api.routing.site_for_login",
+      { email: usr },
+    );
+    if (lookup.ok && typeof lookup.data === "string" && isValidTenantSite(lookup.data)) {
+      tenantSite = lookup.data;
+    }
+  } catch {
+    // Routing must never block sign-in; control site is the fallback.
+  }
+  const loginBase = tenantSite ? `https://${tenantSite}` : env.FRAPPE_URL;
+
+  let res: Response;
+  try {
+    res = await fetch(new URL("/api/method/login", loginBase), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        Accept: "application/json",
+      },
+      body: new URLSearchParams({ usr, pwd }).toString(),
+      cache: "no-store",
+      redirect: "manual",
+    });
+  } catch {
+    // Tenant site unreachable (DNS/TLS not live yet, or the site is
+    // down). Surface it instead of crashing the action.
+    return {
+      error: tenantSite
+        ? "Your company's workspace isn't reachable right now. Try again shortly."
+        : "Couldn't reach the sign-in service. Try again shortly.",
+    };
+  }
 
   if (res.status === 401 || res.status === 403) {
     return { error: "Incorrect email or password." };
@@ -86,6 +116,19 @@ export async function loginAction(
     });
   }
 
+  // Pin (or clear) the tenant site for every later server-side call.
+  // Host-only cookie: the tenant choice belongs to this app alone.
+  if (tenantSite) {
+    jar.set(TENANT_COOKIE, tenantSite, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+  } else {
+    jar.delete(TENANT_COOKIE);
+  }
+
   // Honor the `redirect` hidden field the form passes through — that's what
   // lets a visit to /recruitment/jobs (which middleware bounces to
   // /login?redirect=/recruitment/jobs) land back where it started after
@@ -129,6 +172,7 @@ export async function resendActivationAction(
 export async function logoutAction(): Promise<void> {
   const env = serverEnv();
   const jar = cookies();
+  jar.delete(TENANT_COOKIE);
   const managed = ["sid", "user_id", "system_user", "full_name", "user_image"];
   for (const c of jar.getAll()) {
     if (!managed.includes(c.name)) continue;

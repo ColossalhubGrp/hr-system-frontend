@@ -76,10 +76,13 @@ function mapToAppRole(rawRoles: string[]): AppRole | null {
  */
 export async function resolveRoleFromSid(
   sid: string | undefined | null,
+  baseUrl?: string,
 ): Promise<ResolvedSession | null> {
   if (!sid || sid === "Guest") return null;
 
-  const cached = cache.get(sid);
+  const base = baseUrl || FRAPPE_API_URL;
+  const cacheKey = `${base}|${sid}`;
+  const cached = cache.get(cacheKey);
   const now = Date.now();
   if (cached && now - cached.fetchedAt < TTL_MS) {
     return cached;
@@ -90,7 +93,7 @@ export async function resolveRoleFromSid(
     //   { user: "...", roles: [...] }
     // It runs as the sid's user, so the result is authoritative.
     const res = await fetch(
-      `${FRAPPE_API_URL}/api/method/recruitment_app.api.me.my_roles`,
+      `${base}/api/method/recruitment_app.api.me.my_roles`,
       {
         method: "GET",
         headers: {
@@ -101,7 +104,7 @@ export async function resolveRoleFromSid(
       },
     );
     if (!res.ok) {
-      cache.delete(sid);
+      cache.delete(cacheKey);
       return null;
     }
     const payload = (await res.json()) as {
@@ -110,7 +113,7 @@ export async function resolveRoleFromSid(
     const user = payload?.message?.user;
     const roles = payload?.message?.roles ?? [];
     if (!user || user === "Guest") {
-      cache.delete(sid);
+      cache.delete(cacheKey);
       return null;
     }
     const role = mapToAppRole(roles);
@@ -120,7 +123,7 @@ export async function resolveRoleFromSid(
       rawRoles: roles.map((r) => r.toLowerCase()),
       fetchedAt: now,
     };
-    cache.set(sid, resolved);
+    cache.set(cacheKey, resolved);
     return resolved;
   } catch {
     // Network blip / Frappe down: don't cache; force a re-resolve next time.
@@ -128,7 +131,11 @@ export async function resolveRoleFromSid(
   }
 }
 
-/** Drop a cached session — call from logout. */
+/** Drop a cached session — call from logout. Cache keys are
+ * `<base>|<sid>`, so clear every base's entry for this sid. */
 export function invalidateSidCache(sid: string | undefined | null) {
-  if (sid) cache.delete(sid);
+  if (!sid) return;
+  for (const key of cache.keys()) {
+    if (key.endsWith(`|${sid}`)) cache.delete(key);
+  }
 }

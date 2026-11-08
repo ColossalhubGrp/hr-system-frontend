@@ -1,6 +1,6 @@
 "use server";
 
-import { serverEnv } from "@/lib/env";
+import { frappeBaseForRequest } from "@/lib/frappe/tenant";
 import { frappeCookieHeader } from "@/lib/frappe/session";
 
 export type UploadResult = { url?: string; error?: string };
@@ -35,7 +35,7 @@ export async function uploadEmployeeImage(
     return { error: "Your session expired — sign in again." };
   }
 
-  const env = serverEnv();
+  const base = frappeBaseForRequest();
   const upload = new FormData();
   upload.append("file", file, file.name);
   upload.append("is_private", "0");
@@ -43,11 +43,11 @@ export async function uploadEmployeeImage(
 
   let res: Response;
   try {
-    res = await fetch(new URL("/api/method/upload_file", env.FRAPPE_URL), {
+    res = await fetch(new URL("/api/method/upload_file", base), {
       method: "POST",
       headers: {
         Cookie: cookie,
-        "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
+        "X-Frappe-Site-Name": new URL(base).hostname,
       },
       body: upload,
       cache: "no-store",

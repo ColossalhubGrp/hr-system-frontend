@@ -1,6 +1,6 @@
 import "server-only";
 import { frappeCall, FrappeRequestError } from "./client";
-import { serverEnv } from "@/lib/env";
+import { frappeBaseForRequest } from "./tenant";
 import { frappeCookieHeader } from "./session";
 
 /**
@@ -13,8 +13,8 @@ import { frappeCookieHeader } from "./session";
  * log in Vercel actually shows which argument failed.
  */
 async function frappeFormPost<T>({ method, form }: { method: string; form: Record<string, string> }): Promise<T> {
-  const env = serverEnv();
-  const url = new URL(`/api/method/${method}`, env.FRAPPE_URL);
+  const base = frappeBaseForRequest();
+  const url = new URL(`/api/method/${method}`, base);
   const cookie = frappeCookieHeader();
   if (!cookie) {
     throw new FrappeRequestError(`User-scoped form POST ${method} needs a session cookie.`, 401);
@@ -25,7 +25,7 @@ async function frappeFormPost<T>({ method, form }: { method: string; form: Recor
     headers: {
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
-      "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
+      "X-Frappe-Site-Name": new URL(base).hostname,
       Cookie: cookie,
     },
     body,

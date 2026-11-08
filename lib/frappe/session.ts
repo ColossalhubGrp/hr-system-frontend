@@ -1,6 +1,6 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { serverEnv } from "@/lib/env";
+import { frappeBaseForRequest } from "./tenant";
 
 /**
  * Reads the user's Frappe session cookies from the incoming request. We carry
@@ -81,9 +81,10 @@ export function frappeCookieHeader(): string {
   return pairs.join("; ");
 }
 
-/** Absolute Frappe URL — handy for redirects and login form actions. */
+/** Absolute Frappe URL for this request — the signed-in user's tenant
+ * site when one is pinned, else the control site. */
 export function frappeBaseUrl() {
-  return serverEnv().FRAPPE_URL;
+  return frappeBaseForRequest();
 }
 
 /**
@@ -94,6 +95,6 @@ export function frappeBaseUrl() {
 export function resolveAvatarUrl(raw: string | null): string | null {
   if (!raw) return null;
   if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
-  if (raw.startsWith("/")) return new URL(raw, serverEnv().FRAPPE_URL).toString();
+  if (raw.startsWith("/")) return new URL(raw, frappeBaseForRequest()).toString();
   return null;
 }

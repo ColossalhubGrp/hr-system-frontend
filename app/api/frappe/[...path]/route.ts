@@ -7,6 +7,15 @@ import {
   logAccessDeny,
 } from '@/lib/recruitment/security/access-policy';
 import { resolveRoleFromSid } from '@/lib/recruitment/security/sid-roles';
+import { isValidTenantSite } from '@/lib/frappe/tenant';
+
+/** Tenant base for this request (multi-tenant Model 2): honour the
+ * httpOnly tenant_site cookie pinned at login, validated against our
+ * parent domain so a forged cookie can't point the proxy elsewhere. */
+function tenantBaseFrom(req: NextRequest): string | undefined {
+  const raw = req.cookies.get('tenant_site')?.value ?? '';
+  return isValidTenantSite(raw) ? `https://${raw}` : undefined;
+}
 
 const extractStatusCode = (error: unknown, fallback = 500) => {
   const message = error instanceof Error ? error.message : String(error || '');
@@ -64,7 +73,7 @@ const isGuestAllowedEndpoint = (endpoint: string) =>
 async function resolveSession(req: NextRequest) {
   const sid = req.cookies.get('sid')?.value;
   if (!sid || sid === 'Guest') return { sid: null, session: null };
-  const session = await resolveRoleFromSid(sid);
+  const session = await resolveRoleFromSid(sid, tenantBaseFrom(req));
   return { sid, session };
 }
 
@@ -108,6 +117,7 @@ export async function GET(
       params: queryParams,
       user: session?.user,
       sid: sid ?? undefined,
+      baseUrl: tenantBaseFrom(req),
     });
 
     return NextResponse.json({ message: result });
@@ -192,6 +202,7 @@ export async function POST(
       params: methodParams,
       user: allowGuest ? undefined : session?.user,
       sid: allowGuest ? undefined : sid ?? undefined,
+      baseUrl: tenantBaseFrom(req),
     });
 
     return NextResponse.json(result);
@@ -278,6 +289,7 @@ export async function PUT(
       is_private: formData.get('is_private') as string | undefined,
       user: session.user,
       sid: sid ?? undefined,
+      baseUrl: tenantBaseFrom(req),
     });
 
     return NextResponse.json(result);

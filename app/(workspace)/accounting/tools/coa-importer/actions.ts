@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { serverEnv } from "@/lib/env";
+import { frappeBaseForRequest } from "@/lib/frappe/tenant";
 import { frappeCookieHeader } from "@/lib/frappe/session";
 import { FrappeRequestError } from "@/lib/frappe/client";
 import { importChartOfAccounts } from "@/lib/frappe/tools/coa-importer";
@@ -26,14 +26,14 @@ function toFormState(err: unknown): FormState {
 }
 
 async function uploadFileToFrappe(file: File): Promise<string> {
-  const env = serverEnv();
+  const base = frappeBaseForRequest();
   const cookie = frappeCookieHeader();
   if (!cookie) throw new Error("Not signed in.");
   const fd = new FormData();
   fd.append("file", file, file.name);
   fd.append("is_private", "1");
   fd.append("doctype", "Chart of Accounts Importer");
-  const res = await fetch(new URL("/api/method/upload_file", env.FRAPPE_URL), {
+  const res = await fetch(new URL("/api/method/upload_file", base), {
     method: "POST",
     headers: { Accept: "application/json", Cookie: cookie },
     body: fd,

@@ -1,6 +1,6 @@
 import "server-only";
-import { serverEnv } from "@/lib/env";
 import { frappeCookieHeader } from "./session";
+import { frappeBaseForRequest, readTenantSite, serviceCredsFor } from "./tenant";
 
 type Method = "GET" | "POST";
 
@@ -48,9 +48,12 @@ export class FrappeRequestError extends Error {
  * methods, which we unwrap here.
  */
 export async function frappeCall<T>(opts: CallOpts): Promise<T> {
-  const env = serverEnv();
   const verb = opts.verb ?? "GET";
-  const url = new URL(`/api/method/${opts.method}`, env.FRAPPE_URL);
+  // Multi-tenant: the signed-in user's tenant site (httpOnly cookie set
+  // at login) decides which Frappe site answers; control-site users
+  // keep env.FRAPPE_URL.
+  const base = frappeBaseForRequest();
+  const url = new URL(`/api/method/${opts.method}`, base);
 
   let body: BodyInit | undefined;
   if (verb === "GET" && opts.args) {
@@ -70,7 +73,7 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
   const headers: Record<string, string> = {
     Accept: "application/json",
     "Content-Type": "application/json",
-    "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
+    "X-Frappe-Site-Name": new URL(base).hostname,
   };
 
   const as = opts.as ?? "service";
@@ -89,7 +92,11 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     // allow_guest=True. Right for public share-link resolution and
     // anywhere else that a token-in-URL is the real auth.
   } else {
-    headers.Authorization = `token ${env.FRAPPE_API_KEY}:${env.FRAPPE_API_SECRET}`;
+    // Service identity is per site: tenant sites carry their own key
+    // pair (fetched from the control plane, cached); the control site
+    // uses the env pair as always.
+    const creds = await serviceCredsFor(readTenantSite());
+    headers.Authorization = `token ${creds.apiKey}:${creds.apiSecret}`;
   }
 
   const res = await fetch(url, {

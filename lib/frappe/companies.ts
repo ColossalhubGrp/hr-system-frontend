@@ -267,9 +267,9 @@ function compact<T extends Record<string, unknown>>(o: T): Record<string, unknow
  * the stored file URL (/files/…).
  */
 export async function uploadCompanyLogo(companyId: string, file: File): Promise<string> {
-  const { serverEnv } = await import("@/lib/env");
+  const { frappeBaseForRequest } = await import("./tenant");
   const { frappeCookieHeader } = await import("./session");
-  const env = serverEnv();
+  const base = frappeBaseForRequest();
   const form = new FormData();
   form.set("file", file, file.name);
   form.set("doctype", "Company");
@@ -279,11 +279,11 @@ export async function uploadCompanyLogo(companyId: string, file: File): Promise<
 
   // Act as the signed-in user (same auth model as every other
   // user-scoped call), not the service key.
-  const resp = await fetch(new URL("/api/method/upload_file", env.FRAPPE_URL), {
+  const resp = await fetch(new URL("/api/method/upload_file", base), {
     method: "POST",
     headers: {
       Cookie: frappeCookieHeader(),
-      "X-Frappe-Site-Name": new URL(env.FRAPPE_URL).hostname,
+      "X-Frappe-Site-Name": new URL(base).hostname,
     },
     body: form,
     cache: "no-store",

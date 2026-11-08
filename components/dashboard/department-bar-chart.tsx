@@ -43,9 +43,14 @@ export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
   }));
 
   // Give the longest label the room it needs; recharts' YAxis
-  // `width` is literal pixels and doesn't auto-measure.
-  const longestChars = shaped.reduce((m, r) => Math.max(m, r.short.length), 0);
-  const yWidth = Math.min(140, Math.max(72, longestChars * 7 + 12));
+  // `width` is literal pixels and doesn't auto-measure. Labels
+  // wrap onto two lines, so the width only has to fit the longest
+  // single line after wrapping — long names never get clipped.
+  const longestLineChars = shaped.reduce(
+    (m, r) => Math.max(m, ...wrapLabel(r.short).map((l) => l.length)),
+    0,
+  );
+  const yWidth = Math.max(64, Math.round(longestLineChars * 6.6) + 12);
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -64,7 +69,7 @@ export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
           type="category"
           tickLine={false}
           axisLine={false}
-          tick={{ fill: tick, fontSize: 12 }}
+          tick={<WrapTick fill={tick} />}
           width={yWidth}
           interval={0}
         />
@@ -102,4 +107,52 @@ export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
 function shortName(full: string): string {
   const dash = full.lastIndexOf(" - ");
   return dash > 0 ? full.slice(0, dash) : full;
+}
+
+/**
+ * Pack words into at most two lines of ~14 characters each. A name
+ * that still overflows keeps everything on line two rather than
+ * dropping words, and yWidth above is measured off the longest
+ * wrapped line — so the full label always renders.
+ */
+function wrapLabel(label: string, maxChars = 14): string[] {
+  if (label.length <= maxChars) return [label];
+  const words = label.split(/\s+/);
+  if (words.length === 1) return [label];
+  let first = "";
+  let i = 0;
+  while (i < words.length) {
+    const next = first ? `${first} ${words[i]}` : words[i];
+    if (first && next.length > maxChars) break;
+    first = next;
+    i += 1;
+  }
+  const rest = words.slice(i).join(" ");
+  return rest ? [first, rest] : [first];
+}
+
+/** Two-line category tick for the Y axis — recharts' default tick
+ *  renders a single <text> line and truncates nothing gracefully. */
+function WrapTick({
+  x,
+  y,
+  payload,
+  fill,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string | number };
+  fill?: string;
+}) {
+  const lines = wrapLabel(String(payload?.value ?? ""));
+  const firstDy = lines.length > 1 ? -2 : 4;
+  return (
+    <text x={x} y={y} textAnchor="end" fill={fill} fontSize={11}>
+      {lines.map((line, idx) => (
+        <tspan key={idx} x={x} dy={idx === 0 ? firstDy : 12}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
 }

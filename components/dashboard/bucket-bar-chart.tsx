@@ -57,6 +57,7 @@ export function BucketBarChart({
           tickLine={false}
           axisLine={false}
           tick={{ fill: tick, fontSize: 11 }}
+          interval={0}
         />
         <YAxis
           tickLine={false}

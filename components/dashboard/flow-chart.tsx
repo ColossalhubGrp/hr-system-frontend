@@ -47,8 +47,8 @@ export function FlowChart({ data }: { data: FlowPoint[] }) {
           dataKey="label"
           tickLine={false}
           axisLine={false}
-          tick={{ fill: tick, fontSize: 11 }}
-          interval={1}
+          tick={{ fill: tick, fontSize: 10 }}
+          interval={0}
         />
         <YAxis
           tickLine={false}

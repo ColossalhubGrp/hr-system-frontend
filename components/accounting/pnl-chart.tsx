@@ -14,6 +14,12 @@ import {
 } from "recharts";
 import type { PnlPoint } from "@/lib/frappe/accounting-dashboard";
 
+/** "Jan 2026" → "Jan": every month fits on the axis; the tooltip
+ *  still shows the full period label on hover. */
+function shortPeriod(label: string): string {
+  return label.split(" ")[0] ?? label;
+}
+
 export function PnlChart({ data }: { data: PnlPoint[] }) {
   if (data.length === 0) {
     return (
@@ -31,7 +37,14 @@ export function PnlChart({ data }: { data: PnlPoint[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="period" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+            <XAxis
+              dataKey="period"
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 10 }}
+              interval={0}
+              tickFormatter={shortPeriod}
+            />
             <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <Tooltip
               formatter={(v: number) => v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

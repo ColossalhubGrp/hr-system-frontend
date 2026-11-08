@@ -749,7 +749,14 @@ function LineView({
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={chartData} margin={{ top: 24, right: 12, left: 0, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-        <XAxis dataKey="label" tick={AXIS_TICK} />
+        <XAxis
+          dataKey="label"
+          tick={AXIS_TICK}
+          interval={0}
+          angle={-15}
+          textAnchor="end"
+          height={54}
+        />
         <YAxis tick={AXIS_TICK} tickFormatter={(v) => formatCompact(v)} />
         <Tooltip
           cursor={{ stroke: SERIES_COLORS[0], strokeWidth: 1, strokeDasharray: "3 3" }}
@@ -814,7 +821,14 @@ function StackedLineInner({ data, viz, height }: { data: AnalyzeData; viz: VizSp
     <ResponsiveContainer width="100%" height={height}>
       <LineChart data={chartData} margin={{ top: 8, right: 12, left: 0, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-        <XAxis dataKey="label" tick={AXIS_TICK} />
+        <XAxis
+          dataKey="label"
+          tick={AXIS_TICK}
+          interval={0}
+          angle={-15}
+          textAnchor="end"
+          height={54}
+        />
         <YAxis tick={AXIS_TICK} tickFormatter={(v) => formatCompact(v)} />
         <Tooltip
           cursor={{ stroke: SERIES_COLORS[0], strokeWidth: 1, strokeDasharray: "3 3" }}
@@ -876,7 +890,14 @@ function AreaView({
           </linearGradient>
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
-        <XAxis dataKey="label" tick={AXIS_TICK} />
+        <XAxis
+          dataKey="label"
+          tick={AXIS_TICK}
+          interval={0}
+          angle={-15}
+          textAnchor="end"
+          height={54}
+        />
         <YAxis tick={AXIS_TICK} tickFormatter={(v) => formatCompact(v)} />
         <Tooltip
           cursor={{ stroke: SERIES_COLORS[0], strokeWidth: 1, strokeDasharray: "3 3" }}

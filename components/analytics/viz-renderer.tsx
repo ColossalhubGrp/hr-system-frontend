@@ -156,7 +156,20 @@ function ChartCard({
     }
   };
 
-  const effectiveType = mode === "auto" ? viz.viz_type : mode;
+  // Auto mode: a vertical bar chart with long category names (think
+  // department names) clips its labels even when slanted — flip those
+  // to horizontal bars so every label gets its own full line. An
+  // explicit toolbar choice always wins over this heuristic.
+  const autoType = useMemo(() => {
+    if (viz.viz_type !== "bar") return viz.viz_type;
+    const catField = viz.category_field ?? "";
+    const longest = activeData.rows.reduce(
+      (m, r) => Math.max(m, safeLabel(r[catField]).length),
+      0,
+    );
+    return longest > 14 || activeData.row_count > 12 ? "bar_h" : "bar";
+  }, [viz.viz_type, viz.category_field, activeData]);
+  const effectiveType = mode === "auto" ? autoType : mode;
   const hasSort = ["bar", "bar_h", "donut"].includes(effectiveType);
   const hasTopN = activeData.row_count > 5 && ["bar", "bar_h", "line", "area", "donut", "table"].includes(effectiveType);
 
@@ -642,6 +655,17 @@ function BarView({
   });
   const height = tall ? CHART_HEIGHT_TALL : CHART_HEIGHT;
   const barSize = horizontal ? 18 : hasCompare ? 22 : 40;
+  // Horizontal: size the label column off the longest wrapped line so
+  // names render in full instead of clipping at a fixed width.
+  const longestLine = horizontal
+    ? chartData.reduce(
+        (m, d) => Math.max(m, ...wrapAxisLabel(d.label).map((l) => l.length)),
+        0,
+      )
+    : 0;
+  const yWidth = horizontal
+    ? Math.min(160, Math.max(72, Math.round(longestLine * 6.4) + 12))
+    : 0;
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart
@@ -653,7 +677,13 @@ function BarView({
         {horizontal ? (
           <>
             <XAxis type="number" tick={AXIS_TICK} tickFormatter={(v) => formatCompact(v)} />
-            <YAxis dataKey="label" type="category" tick={AXIS_TICK} width={140} />
+            <YAxis
+              dataKey="label"
+              type="category"
+              tick={<WrapYTick />}
+              width={yWidth}
+              interval={0}
+            />
           </>
         ) : (
           <>
@@ -1244,6 +1274,60 @@ function toNumber(v: unknown): number {
 function safeLabel(v: unknown): string {
   if (v === null || v === undefined || v === "") return "(unset)";
   return String(v);
+}
+
+/**
+ * Pack words into lines of ~18 characters, up to three lines, for the
+ * horizontal bar chart's category axis. Nothing is dropped: a last
+ * line longer than the limit stays whole, and the axis width above is
+ * measured off the longest wrapped line.
+ */
+function wrapAxisLabel(label: string, maxChars = 18, maxLines = 3): string[] {
+  if (label.length <= maxChars) return [label];
+  const words = label.split(/\s+/);
+  const lines: string[] = [];
+  let current = "";
+  for (let i = 0; i < words.length; i++) {
+    const next = current ? `${current} ${words[i]}` : words[i];
+    if (current && next.length > maxChars && lines.length < maxLines - 1) {
+      lines.push(current);
+      current = words[i];
+    } else {
+      current = next;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+/** Multi-line category tick for horizontal bars — recharts' default
+ *  tick is a single <text> line that clips long names. */
+function WrapYTick({
+  x,
+  y,
+  payload,
+}: {
+  x?: number;
+  y?: number;
+  payload?: { value?: string | number };
+}) {
+  const lines = wrapAxisLabel(safeLabel(payload?.value));
+  const firstDy = 4 - (lines.length - 1) * 6;
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="end"
+      fill="hsl(var(--muted-foreground))"
+      fontSize={11}
+    >
+      {lines.map((line, idx) => (
+        <tspan key={idx} x={x} dy={idx === 0 ? firstDy : 12}>
+          {line}
+        </tspan>
+      ))}
+    </text>
+  );
 }
 
 function uniqueValues(rows: Record<string, unknown>[], field: string): string[] {

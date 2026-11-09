@@ -1,16 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Cantarell } from "next/font/google";
+import { Inter } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider, NO_FLASH_SCRIPT } from "@/components/theme/theme-provider";
 import "./globals.css";
 
-// Cantarell — the GNOME interface typeface (user request 2026-11-09:
-// match the desktop's system font). It ships only 400 + 700; the
-// browser maps the medium/semibold utility classes onto the nearest
-// available weight.
-const cantarell = Cantarell({
+const inter = Inter({
   subsets: ["latin"],
-  weight: ["400", "700"],
   display: "swap",
   variable: "--font-sans",
 });
@@ -37,7 +32,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={cantarell.variable} suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         {/* No-flash theme bootstrap. MUST run before React mounts
             so <html class="dark"> is set on the very first paint. */}

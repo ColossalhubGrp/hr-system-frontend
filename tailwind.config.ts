@@ -179,8 +179,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
-          "var(--font-sans)",
-          "Cantarell",
+          "Inter",
           "ui-sans-serif",
           "system-ui",
           "-apple-system",

@@ -370,18 +370,20 @@ export const NAV: NavItem[] = [
     requires: "DATA_STEWARD",
   },
 
-  // Platform — site Administrator only. NOT for per-tenant HR/IT admins;
-  // this is where the platform operator (System Manager / site owner)
-  // controls cross-company subscriptions and multi-tenant settings.
-  {
-    label: "Platform",
-    href: "/platform/subscriptions",
-    icon: Boxes,
-    requires: "PLATFORM_OPERATOR",
-    children: [
-      { label: "Subscriptions", href: "/platform/subscriptions", requires: "PLATFORM_OPERATOR" },
-    ],
-  },
+  // Platform (subscriptions / multi-tenant settings) is Desk-only
+  // (2026-11-09, user decision): the platform operator manages the
+  // Company Subscription records in the Frappe Desk, never from this
+  // app. The /platform routes also redirect away (see
+  // app/(workspace)/platform/layout.tsx). Restore by uncommenting.
+  // {
+  //   label: "Platform",
+  //   href: "/platform/subscriptions",
+  //   icon: Boxes,
+  //   requires: "PLATFORM_OPERATOR",
+  //   children: [
+  //     { label: "Subscriptions", href: "/platform/subscriptions", requires: "PLATFORM_OPERATOR" },
+  //   ],
+  // },
 
   // Configuration is shared between HR-policy admins and IT admins. The
   // landing page renders tabs (Company-wide / HR policy / IT administration)

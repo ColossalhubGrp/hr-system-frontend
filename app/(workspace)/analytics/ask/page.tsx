@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { NaoChatFrame } from "@/components/analytics/nao-chat-frame";
+import { AnalyticsAsk } from "@/components/analytics/analytics-ask";
+import { readTenantSite } from "@/lib/frappe/tenant";
 
 export const metadata: Metadata = {
   title: "Ask · Analytics · Colossal Hub",
@@ -22,6 +24,16 @@ export default function AnalyticsAskPage({
   searchParams?: { q?: string };
 }) {
   const q = (searchParams?.q ?? "").trim();
+
+  // Tenant sessions get the in-house Ask experience: the nao embed's
+  // SSO sidecar only recognises control-site sessions, so a tenant
+  // user would see a dead iframe. The in-house pipeline runs against
+  // the tenant's own database via the tenant-routed analyze API.
+  // Making nao itself tenant-aware is a later phase.
+  if (readTenantSite()) {
+    return <AnalyticsAsk initialQuestion={q || undefined} />;
+  }
+
   // A question handed over from the dashboard rides into the embed
   // as nao's own ?q= search param; nao asks it on arrival.
   const naoPath = q ? `/?q=${encodeURIComponent(q)}` : "/";

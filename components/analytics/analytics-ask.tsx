@@ -42,11 +42,12 @@ const SUGGESTIONS = [
   "Attrition rate over the last 12 months",
 ];
 
-export function AnalyticsAsk() {
+export function AnalyticsAsk({ initialQuestion }: { initialQuestion?: string }) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const autoAskedRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -117,6 +118,15 @@ export function AnalyticsAsk() {
       setPending(false);
     }
   }, [pending]);
+
+  // A question handed over in the URL (dashboard Ask bar / suggestion
+  // chips land on /analytics/ask?q=…) is asked once on arrival.
+  useEffect(() => {
+    if (!initialQuestion || autoAskedRef.current) return;
+    autoAskedRef.current = true;
+    void ask(initialQuestion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuestion]);
 
   const clearConversation = () => {
     setTurns([]);

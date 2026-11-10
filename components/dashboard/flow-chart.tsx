@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  LabelList,
   Legend,
   ResponsiveContainer,
   Tooltip,
@@ -41,7 +42,7 @@ export function FlowChart({ data }: { data: FlowPoint[] }) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <BarChart data={data} margin={{ top: 16, right: 8, bottom: 4, left: 4 }}>
+      <BarChart data={data} margin={{ top: 18, right: 8, bottom: 4, left: 8 }}>
         <CartesianGrid stroke={grid} strokeDasharray="2 4" vertical={false} />
         <XAxis
           dataKey="label"
@@ -50,13 +51,8 @@ export function FlowChart({ data }: { data: FlowPoint[] }) {
           tick={{ fill: tick, fontSize: 10 }}
           interval={0}
         />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: tick, fontSize: 11 }}
-          width={24}
-          allowDecimals={false}
-        />
+        {/* No y-axis — every bar carries its own value label. */}
+        <YAxis hide allowDecimals={false} />
         <Tooltip
           cursor={{ fill: "rgba(32, 48, 96, 0.06)" }}
           contentStyle={{
@@ -72,8 +68,22 @@ export function FlowChart({ data }: { data: FlowPoint[] }) {
           iconType="circle"
           iconSize={8}
         />
-        <Bar dataKey="hires" name="Hires" fill={CHART_MINT} radius={[6, 6, 2, 2]} maxBarSize={16} />
-        <Bar dataKey="separations" name="Separations" fill={CHART_RED} radius={[6, 6, 2, 2]} maxBarSize={16} />
+        <Bar dataKey="hires" name="Hires" fill={CHART_MINT} radius={[6, 6, 2, 2]} maxBarSize={16}>
+          <LabelList
+            dataKey="hires"
+            position="top"
+            formatter={(v: number) => (v ? v : "")}
+            style={{ fill: tick, fontSize: 9, fontWeight: 600 }}
+          />
+        </Bar>
+        <Bar dataKey="separations" name="Separations" fill={CHART_RED} radius={[6, 6, 2, 2]} maxBarSize={16}>
+          <LabelList
+            dataKey="separations"
+            position="top"
+            formatter={(v: number) => (v ? v : "")}
+            style={{ fill: tick, fontSize: 9, fontWeight: 600 }}
+          />
+        </Bar>
       </BarChart>
     </ResponsiveContainer>
   );

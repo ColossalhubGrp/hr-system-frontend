@@ -4,6 +4,7 @@ import {
   Area,
   AreaChart,
   CartesianGrid,
+  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -39,7 +40,7 @@ export function HeadcountTrendChart({ data }: { data: KpiPoint[] }) {
 
   return (
     <ResponsiveContainer width="100%" height="100%">
-      <AreaChart data={data} margin={{ top: 16, right: 8, bottom: 4, left: 4 }}>
+      <AreaChart data={data} margin={{ top: 22, right: 12, bottom: 4, left: 12 }}>
         <defs>
           <linearGradient id="hc-trend" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={CHART_NAVY} stopOpacity={0.28} />
@@ -54,12 +55,8 @@ export function HeadcountTrendChart({ data }: { data: KpiPoint[] }) {
           tick={{ fill: tick, fontSize: 10 }}
           interval={0}
         />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: tick, fontSize: 11 }}
-          width={28}
-        />
+        {/* No y-axis — every point carries its own value label. */}
+        <YAxis hide />
         <Tooltip
           cursor={{ stroke: tick, strokeDasharray: "2 4" }}
           contentStyle={{
@@ -77,7 +74,13 @@ export function HeadcountTrendChart({ data }: { data: KpiPoint[] }) {
           stroke={CHART_NAVY}
           strokeWidth={2}
           fill="url(#hc-trend)"
-        />
+        >
+          <LabelList
+            dataKey="value"
+            position="top"
+            style={{ fill: tick, fontSize: 10, fontWeight: 600 }}
+          />
+        </Area>
       </AreaChart>
     </ResponsiveContainer>
   );

@@ -33,6 +33,40 @@ const num = (n: number) =>
 const usd = (n: number) =>
   `US$${n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
+// ── Direct value labels ────────────────────────────────────────────
+// House style (matches "Employees by department"): no number axis —
+// every point/bar carries its own value instead.
+
+const valueLabelPlugin = {
+  id: "valueLabels",
+  afterDatasetsDraw(chart: ChartJS) {
+    const { ctx } = chart;
+    const horizontal =
+      (chart.options as { indexAxis?: string }).indexAxis === "y";
+    ctx.save();
+    ctx.font = "600 11px Inter, ui-sans-serif, system-ui, sans-serif";
+    ctx.fillStyle = "#64748B";
+    chart.data.datasets.forEach((ds, di) => {
+      const meta = chart.getDatasetMeta(di);
+      if (meta.hidden) return;
+      meta.data.forEach((el, i) => {
+        const v = Number(ds.data[i] ?? 0);
+        if (!v) return;
+        if (horizontal) {
+          ctx.textAlign = "left";
+          ctx.textBaseline = "middle";
+          ctx.fillText(num(v), el.x + 6, el.y);
+        } else {
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(num(v), el.x, el.y - 8);
+        }
+      });
+    });
+    ctx.restore();
+  },
+};
+
 // ── Trend chart ────────────────────────────────────────────────────
 
 export interface TrendPoint {
@@ -81,9 +115,11 @@ export function TrendChart({
       <div style={{ height }}>
         <Line
           data={data}
+          plugins={[valueLabelPlugin]}
           options={{
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { top: 18, left: 8, right: 8 } },
             plugins: {
               legend: { display: false },
               tooltip: {
@@ -93,11 +129,8 @@ export function TrendChart({
               },
             },
             scales: {
-              y: {
-                beginAtZero: true,
-                ticks: { callback: (v) => num(Number(v)) },
-                grid: { color: "rgba(0,0,0,0.06)" },
-              },
+              // No y-axis — every point carries its own value label.
+              y: { display: false, beginAtZero: true, grace: "12%" },
               x: { grid: { display: false } },
             },
           }}
@@ -238,10 +271,12 @@ export function BarsCard({
         <div style={{ height }}>
           <Bar
             data={data}
+            plugins={[valueLabelPlugin]}
             options={{
               indexAxis: "y",
               responsive: true,
               maintainAspectRatio: false,
+              layout: { padding: { right: 64 } },
               plugins: {
                 legend: { display: false },
                 tooltip: {
@@ -251,11 +286,9 @@ export function BarsCard({
                 },
               },
               scales: {
-                x: {
-                  beginAtZero: true,
-                  ticks: { callback: (v) => num(Number(v)) },
-                  grid: { color: "rgba(0,0,0,0.06)" },
-                },
+                // No number axis — the value sits at the end of each
+                // bar, like the Employees by department chart.
+                x: { display: false, beginAtZero: true, grace: "10%" },
                 y: { grid: { display: false } },
               },
             }}

@@ -59,13 +59,8 @@ export function BucketBarChart({
           tick={{ fill: tick, fontSize: 11 }}
           interval={0}
         />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tick={{ fill: tick, fontSize: 11 }}
-          width={28}
-          allowDecimals={false}
-        />
+        {/* No y-axis — the bars already carry their own value labels. */}
+        <YAxis hide allowDecimals={false} />
         <Tooltip
           cursor={{ fill: "rgba(32, 48, 96, 0.06)" }}
           contentStyle={{

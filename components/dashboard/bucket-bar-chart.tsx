@@ -4,6 +4,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   LabelList,
   ResponsiveContainer,
   Tooltip,
@@ -14,6 +15,7 @@ import type { BucketPoint } from "@/lib/frappe/queries";
 import { useTheme } from "@/components/theme/theme-provider";
 import {
   CHART_NAVY,
+  CHART_CONTEXT_GREY,
   CHART_TICK_DARK,
   CHART_TICK_LIGHT,
   CHART_GRID_DARK,
@@ -40,6 +42,7 @@ export function BucketBarChart({
   const grid = effective === "dark" ? CHART_GRID_DARK : CHART_GRID_LIGHT;
 
   const total = data.reduce((a, p) => a + p.count, 0);
+  const maxCount = data.reduce((a, p) => Math.max(a, p.count), 0);
   if (total === 0) {
     return (
       <div className="grid h-full place-items-center text-sm text-ash-500">
@@ -72,7 +75,15 @@ export function BucketBarChart({
           }}
           formatter={(v: number) => [v.toLocaleString("en"), valueLabel]}
         />
-        <Bar dataKey="count" fill={CHART_NAVY} radius={[6, 6, 2, 2]} maxBarSize={48}>
+        <Bar dataKey="count" radius={[6, 6, 2, 2]} maxBarSize={48}>
+          {/* Grey for context, accent on the largest band — the one
+              thing the eye should see (brief, Lesson 4). */}
+          {data.map((p, i) => (
+            <Cell
+              key={i}
+              fill={p.count === maxCount ? CHART_NAVY : CHART_CONTEXT_GREY}
+            />
+          ))}
           <LabelList
             dataKey="count"
             position="top"

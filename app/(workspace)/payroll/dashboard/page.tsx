@@ -13,9 +13,44 @@ import { listMissingCriticalInfo } from "@/lib/payroll-engine/payruns";
 import {
   KpiTile,
   TrendChart,
-  DonutChart,
   BarsCard,
 } from "@/components/payroll/dashboard-charts";
+
+// ── Action titles (Storytelling-with-Data brief: the title is the
+//    takeaway, not the topic) ──
+
+function trendActionTitle(points: Array<{ value: number }>): string {
+  const real = points.filter((p) => p.value > 0);
+  if (real.length < 2) return "Net pay trend";
+  const first = real[0].value;
+  const last = real[real.length - 1].value;
+  const pct = first > 0 ? ((last - first) / first) * 100 : 0;
+  const lastFmt = `US$${Math.round(last).toLocaleString("en-US")}`;
+  if (Math.abs(pct) < 2) return `Net pay is holding steady around ${lastFmt}`;
+  return pct > 0
+    ? `Net pay is up ${pct.toFixed(1)}% over the period, now ${lastFmt}`
+    : `Net pay is down ${Math.abs(pct).toFixed(1)}% over the period, now ${lastFmt}`;
+}
+
+function compositionActionTitle(
+  slices: Array<{ label: string; value: number }>,
+  grossUsd: number,
+): string {
+  const net = slices.find((s) => s.label.toLowerCase().startsWith("net"));
+  if (!net || grossUsd <= 0) return "Where the gross went";
+  const pct = Math.round((net.value / grossUsd) * 100);
+  return `${pct}% of gross reaches take-home pay`;
+}
+
+function departmentPayActionTitle(
+  rows: Array<{ label: string; netUsd: number }>,
+): string {
+  if (rows.length === 0) return "Net pay by department · this run";
+  const top = rows.reduce((a, b) => (b.netUsd > a.netUsd ? b : a));
+  const total = rows.reduce((a, r) => a + r.netUsd, 0);
+  const pct = total > 0 ? Math.round((top.netUsd / total) * 100) : 0;
+  return `${top.label} carries ${pct}% of this run's net pay`;
+}
 import { NewPeriodModal } from "@/components/payroll/new-period-modal";
 import { PeriodFilter } from "@/components/payroll/period-filter";
 
@@ -306,7 +341,7 @@ export default async function PayrollDashboardPage({
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <TrendChart
-            label={`Net pay trend · ${trend.length} month${trend.length === 1 ? "" : "s"}`}
+            label={trendActionTitle(trendPoints)}
             points={trendPoints}
             color="#059669"
           />
@@ -317,25 +352,29 @@ export default async function PayrollDashboardPage({
             No run this month
           </p>
         </div>
-        <div className="rounded-xl border bg-card p-5">
-          <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-            {latest.run
-              ? `Where the gross went · ${latest.run.period_label}`
-              : "Composition"}
-          </div>
-          {composition.length > 0 ? (
-            <DonutChart
-              slices={composition}
-              centerLabel="Gross"
-              centerValue={usd(latest.grossUsd)}
-            />
-          ) : (
+        {/* Donuts are retired per the Storytelling-with-Data brief —
+            composition reads as horizontal bars, greatest to least,
+            each carrying its own value. */}
+        {composition.length > 0 ? (
+          <BarsCard
+            title={compositionActionTitle(composition, latest.grossUsd)}
+            rows={[...composition]
+              .sort((a, b) => b.value - a.value)
+              .map((s) => ({ label: s.label, value: Math.round(s.value) }))}
+            color="#059669"
+            height={240}
+          />
+        ) : (
+          <div className="rounded-xl border bg-card p-5">
+            <div className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Composition
+            </div>
             <p className="text-sm text-muted-foreground">
               No processed runs yet. Once the first run finishes,
               you&apos;ll see the take-home vs statutory breakdown here.
             </p>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* Compliance + Departments */}
@@ -391,7 +430,7 @@ export default async function PayrollDashboardPage({
         </div>
 
         <BarsCard
-          title="Net pay by department · this run"
+          title={departmentPayActionTitle(latest.byDepartment)}
           rows={latest.byDepartment.map((d) => ({ label: d.label, value: d.netUsd }))}
           color="#4f46e5"
           emptyLabel="Once a run is processed you'll see the split by department here."

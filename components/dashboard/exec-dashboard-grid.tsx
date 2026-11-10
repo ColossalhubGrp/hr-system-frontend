@@ -1,10 +1,20 @@
 import { KpiCard } from "./kpi-card";
 import { ChartCard } from "./chart-card";
 import { DepartmentBarChart } from "./department-bar-chart";
-import { GenderDonut } from "./gender-donut";
+import { GenderSplit } from "./gender-split";
 import { HeadcountTrendChart } from "./headcount-trend-chart";
+import { HeadcountWaterfall } from "./headcount-waterfall";
 import { FlowChart } from "./flow-chart";
 import { BucketBarChart } from "./bucket-bar-chart";
+import {
+  ageTitle,
+  departmentTitle,
+  flowTitle,
+  genderTitle,
+  headcountTrendTitle,
+  tenureTitle,
+  waterfallTitle,
+} from "./action-titles";
 import { MovementHeadline } from "./movement-headline";
 import { NeedsYou } from "./needs-you";
 import { RefreshStamp } from "./refresh-stamp";
@@ -97,26 +107,51 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ChartCard title="Employees (12 months)" meta="End of each month">
+          {/* Action titles throughout (product owner's Storytelling-
+              with-Data brief): the title is the takeaway, the meta
+              slot carries the old topic/scope. */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+            <ChartCard
+              title={headcountTrendTitle(hr.headcountTrend)}
+              meta="Employees · end of each month"
+            >
               <HeadcountTrendChart data={hr.headcountTrend} />
             </ChartCard>
-            <ChartCard title="Hires vs separations (12 months)" meta="By month joined or left">
+            <ChartCard
+              title={flowTitle(hr.flow)}
+              meta="Hires vs separations · monthly"
+            >
               <FlowChart data={hr.flow} />
+            </ChartCard>
+            <ChartCard
+              title={waterfallTitle(hr.hires12mo, hr.separations12mo)}
+              meta="Headcount movement · 12 months"
+            >
+              <HeadcountWaterfall
+                headcount={hr.headcount}
+                hires={hr.hires12mo}
+                separations={hr.separations12mo}
+              />
             </ChartCard>
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <ChartCard title="Employees by department" meta="Active only">
+            <ChartCard
+              title={departmentTitle(hr.departments)}
+              meta="By department · active only"
+            >
               <DepartmentBarChart data={hr.departments} />
             </ChartCard>
-            <ChartCard title="Age distribution" meta="Active only">
+            <ChartCard title={ageTitle(hr.ageBuckets)} meta="Age bands · active only">
               <BucketBarChart
                 data={hr.ageBuckets}
                 emptyMessage="No birthdates on file yet."
               />
             </ChartCard>
-            <ChartCard title="Tenure distribution" meta="Active only">
+            <ChartCard
+              title={tenureTitle(hr.tenureBuckets)}
+              meta="Tenure bands · active only"
+            >
               <BucketBarChart
                 data={hr.tenureBuckets}
                 emptyMessage="No join dates on file yet."
@@ -125,8 +160,8 @@ export function ExecDashboardGrid({ title, snapshot }: { title: string; snapshot
           </div>
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <ChartCard title="Gender distribution" meta="Active only">
-              <GenderDonut data={hr.gender} />
+            <ChartCard title={genderTitle(hr.gender)} meta="Gender · active only">
+              <GenderSplit data={hr.gender} />
             </ChartCard>
           </div>
         </section>

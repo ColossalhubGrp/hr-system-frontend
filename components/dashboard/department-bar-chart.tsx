@@ -14,6 +14,7 @@ import type { DepartmentSlice } from "@/lib/frappe/queries";
 import { useTheme } from "@/components/theme/theme-provider";
 import {
   CHART_NAVY,
+  CHART_CONTEXT_GREY,
   CHART_TICK_LIGHT,
   CHART_TICK_DARK,
 } from "./chart-theme";
@@ -88,8 +89,10 @@ export function DepartmentBarChart({ data }: { data: DepartmentSlice[] }) {
           }
         />
         <Bar dataKey="percentage" radius={[4, 8, 8, 4]} barSize={18}>
+          {/* Grey for context, accent for the point (brief, Lesson 4):
+              only the top three departments carry the brand navy. */}
           {shaped.map((_, i) => (
-            <Cell key={i} fill={CHART_NAVY} />
+            <Cell key={i} fill={i < 3 ? CHART_NAVY : CHART_CONTEXT_GREY} />
           ))}
           <LabelList
             dataKey="percentage"

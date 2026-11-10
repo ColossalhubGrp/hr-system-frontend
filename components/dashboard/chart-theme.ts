@@ -15,6 +15,10 @@ export const CHART_NAVY = "#203060";      // brand primary — same in both them
 export const CHART_NAVY_SOFT = "#4C5F8E";  // ink-400 — second series / separations
 export const CHART_MINT = "#88D0B8";      // brand accent — "gain" series
 export const CHART_RED = "#EF4444";       // loss / separations
+/** Context bars in the grey-plus-accent pattern (Storytelling-with-
+ *  Data brief: grey out context, colour up the insight). Mid-tone so
+ *  it reads on both light and dark grounds. */
+export const CHART_CONTEXT_GREY = "#ABB5CC";
 
 /** Axis + grid-line tints that work on both grounds. */
 export const CHART_TICK_LIGHT = "#64748B"; // slate-500

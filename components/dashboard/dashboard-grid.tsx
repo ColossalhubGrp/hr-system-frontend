@@ -1,10 +1,20 @@
 import { KpiCard } from "./kpi-card";
 import { ChartCard } from "./chart-card";
 import { DepartmentBarChart } from "./department-bar-chart";
-import { GenderDonut } from "./gender-donut";
+import { GenderSplit } from "./gender-split";
 import { HeadcountTrendChart } from "./headcount-trend-chart";
+import { HeadcountWaterfall } from "./headcount-waterfall";
 import { FlowChart } from "./flow-chart";
 import { BucketBarChart } from "./bucket-bar-chart";
+import {
+  ageTitle,
+  departmentTitle,
+  flowTitle,
+  genderTitle,
+  headcountTrendTitle,
+  tenureTitle,
+  waterfallTitle,
+} from "./action-titles";
 import type { DashboardSnapshot } from "@/lib/frappe/queries";
 
 type Props = {
@@ -66,27 +76,49 @@ export function DashboardGrid({ title, snapshot }: Props) {
         />
       </section>
 
+      {/* Action titles throughout (product owner's Storytelling-with-
+          Data brief): the title is the takeaway, the meta slot carries
+          the old topic/scope. */}
       <section
         aria-label="Workforce shape"
         className="grid grid-cols-1 gap-4 lg:grid-cols-2"
       >
-        <ChartCard title="Employees by department">
+        <ChartCard
+          title={departmentTitle(snapshot.departments)}
+          meta="By department · active only"
+        >
           <DepartmentBarChart data={snapshot.departments} />
         </ChartCard>
-        <ChartCard title="Gender distribution">
-          <GenderDonut data={snapshot.gender} />
+        <ChartCard title={genderTitle(snapshot.gender)} meta="Gender · active only">
+          <GenderSplit data={snapshot.gender} />
         </ChartCard>
       </section>
 
       <section
         aria-label="Workforce movement"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-2"
+        className="grid grid-cols-1 gap-4 lg:grid-cols-3"
       >
-        <ChartCard title="Employees (12 months)">
+        <ChartCard
+          title={headcountTrendTitle(snapshot.headcountTrend)}
+          meta="Employees · end of each month"
+        >
           <HeadcountTrendChart data={snapshot.headcountTrend} />
         </ChartCard>
-        <ChartCard title="Hires vs separations (12 months)">
+        <ChartCard
+          title={flowTitle(snapshot.flow)}
+          meta="Hires vs separations · monthly"
+        >
           <FlowChart data={snapshot.flow} />
+        </ChartCard>
+        <ChartCard
+          title={waterfallTitle(snapshot.hires12mo, snapshot.separations12mo)}
+          meta="Headcount movement · 12 months"
+        >
+          <HeadcountWaterfall
+            headcount={snapshot.headcount}
+            hires={snapshot.hires12mo}
+            separations={snapshot.separations12mo}
+          />
         </ChartCard>
       </section>
 
@@ -94,13 +126,16 @@ export function DashboardGrid({ title, snapshot }: Props) {
         aria-label="Workforce demographics"
         className="grid grid-cols-1 gap-4 lg:grid-cols-2"
       >
-        <ChartCard title="Age distribution">
+        <ChartCard title={ageTitle(snapshot.ageBuckets)} meta="Age bands · active only">
           <BucketBarChart
             data={snapshot.ageBuckets}
             emptyMessage="No birthdates on file yet."
           />
         </ChartCard>
-        <ChartCard title="Tenure distribution">
+        <ChartCard
+          title={tenureTitle(snapshot.tenureBuckets)}
+          meta="Tenure bands · active only"
+        >
           <BucketBarChart
             data={snapshot.tenureBuckets}
             emptyMessage="No join dates on file yet."

@@ -160,17 +160,21 @@ export function OrgTree({
               />
             }
           >
-            {!collapsed[filteredRoot.id] &&
-              filteredRoot.children.map((c) => (
-                <TreeChild
-                  key={c.id}
-                  node={c}
-                  collapsed={collapsed}
-                  onToggle={(id) =>
-                    setCollapsed((cc) => ({ ...cc, [id]: !cc[id] }))
-                  }
-                />
-              ))}
+            {/* undefined (not false / []) when there's nothing to
+                render — the library draws a dangling stub line under
+                the card for any non-undefined children value. */}
+            {!collapsed[filteredRoot.id] && filteredRoot.children.length > 0
+              ? filteredRoot.children.map((c) => (
+                  <TreeChild
+                    key={c.id}
+                    node={c}
+                    collapsed={collapsed}
+                    onToggle={(id) =>
+                      setCollapsed((cc) => ({ ...cc, [id]: !cc[id] }))
+                    }
+                  />
+                ))
+              : undefined}
           </Tree>
         )}
       </div>
@@ -191,15 +195,16 @@ function TreeChild({
     <TreeNode
       label={<Card node={node} collapsed={collapsed} onToggle={onToggle} />}
     >
-      {!collapsed[node.id] &&
-        node.children.map((c) => (
-          <TreeChild
-            key={c.id}
-            node={c}
-            collapsed={collapsed}
-            onToggle={onToggle}
-          />
-        ))}
+      {!collapsed[node.id] && node.children.length > 0
+        ? node.children.map((c) => (
+            <TreeChild
+              key={c.id}
+              node={c}
+              collapsed={collapsed}
+              onToggle={onToggle}
+            />
+          ))
+        : undefined}
     </TreeNode>
   );
 }

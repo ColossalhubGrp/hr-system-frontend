@@ -43,16 +43,28 @@ export function AuthBrandMark(_: { subtitle?: string } = {}) {
 export function AuthShell({ children }: AuthShellProps) {
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Brand lockup top-left, theme toggle top-right — the same
-          light/dark control signed-in users have in the topbar. */}
+      {/* Brand lockup top-left (links back to the public website),
+          website link + theme toggle top-right. */}
       <header className="flex w-full items-center justify-between px-6 pt-8 md:px-10 md:pt-10">
-        <div className="flex items-center gap-2.5">
+        <a
+          href="https://www.colossalhub.com"
+          className="flex items-center gap-2.5"
+          title="Go to colossalhub.com"
+        >
           <BrandMark className="h-9 w-9 ring-1 ring-hairline" />
           <span className="text-sm font-semibold tracking-tight text-foreground">
             Colossal Hub
           </span>
+        </a>
+        <div className="flex items-center gap-4">
+          <a
+            href="https://www.colossalhub.com"
+            className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Visit colossalhub.com
+          </a>
+          <ThemeToggle />
         </div>
-        <ThemeToggle />
       </header>
 
       {/* Form sits in the vertical centre of the remaining space. */}

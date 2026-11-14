@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useRef, useTransition } from "react";
 import { Loader2, X } from "lucide-react";
 
 const OPERATIONS = ["", "Login", "Logout", "Created", "Updated", "Deleted", "Submitted", "Cancelled", "Exported"];
@@ -48,8 +48,21 @@ export function AuditFilters({
       if (v) q.set(k, v);
       else q.delete(k);
     }
-    start(() => router.push(`${pathname}?${q.toString()}`));
+    // replace, not push — typing shouldn't stack a history entry per
+    // keystroke.
+    start(() => router.replace(`${pathname}?${q.toString()}`));
   }
+
+  // Filter-as-you-type for the text fields: each keystroke re-filters
+  // after a short pause, so the feed narrows live without a submit.
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function pushDebounced(patch: Partial<typeof current>) {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => push(patch), 350);
+  }
+  useEffect(() => () => {
+    if (timer.current) clearTimeout(timer.current);
+  }, []);
 
   function clearAll() {
     const q = new URLSearchParams(params);
@@ -67,10 +80,8 @@ export function AuditFilters({
             type="text"
             placeholder="email or Administrator"
             defaultValue={current.user}
+            onChange={(e) => pushDebounced({ user: e.currentTarget.value.trim() })}
             onBlur={(e) => push({ user: e.currentTarget.value.trim() })}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-            }}
             className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 text-xs"
           />
         </Field>
@@ -101,10 +112,8 @@ export function AuditFilters({
             type="text"
             placeholder="e.g. HR-EMP-00486"
             defaultValue={current.docname}
+            onChange={(e) => pushDebounced({ docname: e.currentTarget.value.trim() })}
             onBlur={(e) => push({ docname: e.currentTarget.value.trim() })}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-            }}
             className="h-9 w-full rounded-md border border-input bg-transparent px-2.5 text-xs"
           />
         </Field>

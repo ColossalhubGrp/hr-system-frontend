@@ -274,6 +274,34 @@ export async function resendActivationAction(
 export async function logoutAction(): Promise<void> {
   const env = serverEnv();
   const jar = cookies();
+
+  // Kill the session SERVER-SIDE first (2026-11-14): deleting only the
+  // browser's cookies would leave the session record alive until the
+  // idle expiry — and with it, any stolen copy of the sid. Frappe's
+  // /api/method/logout removes the record, so every copy of this
+  // cookie everywhere dies on its next request. Best-effort with a
+  // short timeout: an unreachable backend must never trap the user in
+  // a signed-in state locally.
+  const sid = jar.get("sid")?.value;
+  if (sid && sid !== "Guest") {
+    const tenantSite = jar.get(TENANT_COOKIE)?.value;
+    const base =
+      tenantSite && isValidTenantSite(tenantSite)
+        ? `https://${tenantSite}`
+        : env.FRAPPE_URL;
+    try {
+      await fetch(new URL("/api/method/logout", base), {
+        method: "POST",
+        headers: { Cookie: `sid=${sid}`, Accept: "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(4000),
+      });
+    } catch {
+      // Backend unreachable — local sign-out still proceeds; the
+      // server session dies at the 10-minute idle expiry regardless.
+    }
+  }
+
   jar.delete(TENANT_COOKIE);
   const managed = ["sid", "user_id", "system_user", "full_name", "user_image", "last_seen"];
   for (const c of jar.getAll()) {

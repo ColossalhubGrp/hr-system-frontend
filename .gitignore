@@ -8,3 +8,4 @@ out
 .vscode
 next-env.d.ts
 .eslintcache
+tsconfig.tsbuildinfo

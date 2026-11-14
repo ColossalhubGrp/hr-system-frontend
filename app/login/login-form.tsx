@@ -120,7 +120,11 @@ export function LoginForm({
               src="https://challenges.cloudflare.com/turnstile/v0/api.js"
               strategy="afterInteractive"
             />
-            <div className="cf-turnstile" data-sitekey={turnstileKey} />
+            <div
+              className="cf-turnstile"
+              data-sitekey={turnstileKey}
+              data-theme="auto"
+            />
           </>
         )}
 

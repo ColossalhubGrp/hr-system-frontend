@@ -59,8 +59,22 @@ async function assertServiceEscalationAllowed(method: string): Promise<void> {
   for (const role of access.roles) {
     if (SERVICE_ESCALATION_ROLES.has(role)) return;
   }
+  // Technical detail goes to the server log (with the correlation id
+  // when one exists); the person sees plain words, never method paths
+  // or codes.
+  let rid = "";
+  try {
+    const { headers: reqHeaders } = await import("next/headers");
+    rid = reqHeaders().get("x-request-id") ?? "";
+  } catch {
+    /* no request scope */
+  }
+  console.error(
+    `[service-guard] blocked ${method} for ${userId}${rid ? ` (request ${rid})` : ""}`,
+  );
   throw new FrappeRequestError(
-    `Service-level call ${method} refused for this account.`,
+    "You don't have access to this part of Colossal Hub. " +
+      "If you think you should, ask your administrator.",
     403,
   );
 }

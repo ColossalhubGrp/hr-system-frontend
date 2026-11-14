@@ -38,6 +38,26 @@ const PUBLIC_PATHS = [
   "/api/analytics/shared",
 ];
 
+// Idle timeout: no authenticated request for this long → signed out.
+// Sliding window — any page view, server action or BFF call refreshes
+// it via the `last_seen` cookie below. Frappe's own session_expiry is
+// set to the same 10 minutes server-side, so the sid cookie also dies
+// on the backend after the same inactivity.
+const IDLE_LIMIT_SECONDS = 10 * 60;
+const SESSION_COOKIES = ["sid", "user_id", "system_user", "full_name", "user_image", "last_seen"];
+
+function clearSessionCookies(res: NextResponse) {
+  const domain = process.env.COOKIE_DOMAIN;
+  for (const name of SESSION_COOKIES) {
+    res.cookies.delete(name);
+    if (domain) {
+      // Domain-scoped copies (cross-subdomain SSO) need the same
+      // Domain attribute on deletion or the browser keeps them.
+      res.cookies.set(name, "", { path: "/", domain, maxAge: 0 });
+    }
+  }
+}
+
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
@@ -56,7 +76,36 @@ export function middleware(req: NextRequest) {
     }
     return NextResponse.redirect(url);
   }
-  return NextResponse.next();
+
+  // Signed in — enforce the inactivity window.
+  const now = Math.floor(Date.now() / 1000);
+  const lastSeen = Number(req.cookies.get("last_seen")?.value || 0);
+  if (lastSeen && now - lastSeen > IDLE_LIMIT_SECONDS) {
+    const url = req.nextUrl.clone();
+    url.pathname = pathname.startsWith("/alumni") ? "/alumni/login" : "/login";
+    url.search = "";
+    url.searchParams.set("timeout", "1");
+    if (pathname !== "/" && pathname !== "/dashboard") {
+      url.searchParams.set("redirect", pathname);
+    }
+    const res = NextResponse.redirect(url);
+    clearSessionCookies(res);
+    return res;
+  }
+
+  // Fresh activity (or a session from before this feature shipped —
+  // grace rather than a mass-logout on deploy): slide the window.
+  // NOTE: the cookie must OUTLIVE the idle window — if it expired with
+  // it, a long-idle browser would come back looking "fresh". A day is
+  // plenty; Frappe's server-side session_expiry is the backstop.
+  const res = NextResponse.next();
+  res.cookies.set("last_seen", String(now), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24,
+  });
+  return res;
 }
 
 export const config = {

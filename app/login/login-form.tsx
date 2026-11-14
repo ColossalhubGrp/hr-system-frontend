@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import Script from "next/script";
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import {
   AlertCircle,
   ArrowRight,
   CheckCircle2,
+  Clock,
   Mail,
 } from "lucide-react";
 import { loginAction, resendActivationAction } from "./actions";
@@ -14,13 +16,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PasswordInput } from "@/components/auth/password-input";
+import { publicEnv } from "@/lib/env";
 
 type State = { error?: string };
 const INITIAL: State = {};
 
-export function LoginForm({ redirectTo }: { redirectTo?: string }) {
+export function LoginForm({
+  redirectTo,
+  timedOut,
+}: {
+  redirectTo?: string;
+  timedOut?: boolean;
+}) {
   const [state, action] = useFormState(loginAction, INITIAL);
   const [email, setEmail] = useState("");
+  const turnstileKey = publicEnv.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   // Inline "didn't get the activation email?" resend block — same shape as
   // the recruitment app's, but it talks to a smart_hr_web Server Action.
@@ -32,6 +42,15 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
 
   return (
     <>
+      {timedOut && !state.error && (
+        <div className="mb-4 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.08] px-3 py-2.5 text-sm text-amber-800">
+          <Clock className="mt-0.5 h-4 w-4 flex-shrink-0" />
+          <p>
+            You were signed out after 10 minutes of inactivity. Sign in
+            again to carry on.
+          </p>
+        </div>
+      )}
       {state.error && (
         <div className="mb-4 flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/[0.06] px-3 py-2.5 text-sm text-destructive">
           <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -90,6 +109,20 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
             placeholder="Enter your password"
           />
         </div>
+
+        {/* Cloudflare Turnstile — renders only when the site key is
+            configured. The widget injects a hidden
+            `cf-turnstile-response` input into this form, which the
+            server action verifies. */}
+        {turnstileKey && (
+          <>
+            <Script
+              src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+              strategy="afterInteractive"
+            />
+            <div className="cf-turnstile" data-sitekey={turnstileKey} />
+          </>
+        )}
 
         <Submit />
       </form>

@@ -10,6 +10,12 @@ const serverEnvSchema = z.object({
   // Example: ".colossalhub.com" (leading dot is optional per RFC 6265).
   // Unset → cookies stay host-only (default Next.js behavior).
   COOKIE_DOMAIN: z.string().optional(),
+  // Cloudflare Turnstile CAPTCHA. BOTH keys set → the login form shows
+  // the widget and the server verifies its token. Either missing → the
+  // CAPTCHA step is skipped entirely, so a deploy without keys can
+  // never lock anyone out. Create keys at dash.cloudflare.com →
+  // Turnstile (free), hostname app.colossalhub.com.
+  TURNSTILE_SECRET_KEY: z.string().optional(),
 });
 
 const publicEnvSchema = z.object({
@@ -23,6 +29,8 @@ const publicEnvSchema = z.object({
   // the browser sends cookies scoped to .colossalhub.com along on the
   // iframe request without a redirect hop.
   NEXT_PUBLIC_NAO_EMBED_URL: z.string().url().optional(),
+  // Turnstile site key (public pair of TURNSTILE_SECRET_KEY).
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
 });
 
 let cachedServer: z.infer<typeof serverEnvSchema> | null = null;
@@ -34,6 +42,7 @@ export function serverEnv() {
     FRAPPE_API_KEY: process.env.FRAPPE_API_KEY,
     FRAPPE_API_SECRET: process.env.FRAPPE_API_SECRET,
     COOKIE_DOMAIN: process.env.COOKIE_DOMAIN,
+    TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
   });
   if (!parsed.success) {
     const issues = parsed.error.issues
@@ -51,4 +60,5 @@ export const publicEnv = publicEnvSchema.parse({
   NEXT_PUBLIC_BRAND_NAME: process.env.NEXT_PUBLIC_BRAND_NAME,
   NEXT_PUBLIC_FRAPPE_URL: process.env.NEXT_PUBLIC_FRAPPE_URL,
   NEXT_PUBLIC_NAO_EMBED_URL: process.env.NEXT_PUBLIC_NAO_EMBED_URL,
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
 });

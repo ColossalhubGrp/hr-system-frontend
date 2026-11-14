@@ -5,8 +5,42 @@ import { redirect } from "next/navigation";
 import { serverEnv } from "@/lib/env";
 import { frappeGuestCall } from "@/lib/frappe/guest-call";
 import { TENANT_COOKIE, isValidTenantSite } from "@/lib/frappe/tenant";
+import {
+  clearAttempts,
+  minutesUntilAllowed,
+  recordFailedAttempt,
+} from "@/lib/login-guard";
 
 type State = { error?: string };
+
+/**
+ * Cloudflare Turnstile server-side check. Skipped entirely when the
+ * secret key isn't configured (so a keyless deploy can't lock anyone
+ * out); when it IS configured, a missing/invalid token fails closed.
+ */
+async function captchaPasses(form: FormData): Promise<boolean> {
+  const secret = serverEnv().TURNSTILE_SECRET_KEY;
+  if (!secret) return true;
+  const token = String(form.get("cf-turnstile-response") ?? "");
+  if (!token) return false;
+  try {
+    const res = await fetch(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ secret, response: token }).toString(),
+        cache: "no-store",
+      },
+    );
+    const data = (await res.json()) as { success?: boolean };
+    return data.success === true;
+  } catch {
+    // Verification service unreachable: fail closed — the form can be
+    // resubmitted, a bot shouldn't get a free pass on an outage.
+    return false;
+  }
+}
 
 /**
  * Posts the credentials directly to Frappe's `/api/method/login`. Frappe sets
@@ -26,6 +60,21 @@ export async function loginAction(
 
   if (!usr || !pwd) {
     return { error: "Enter your email and password." };
+  }
+
+  // Per-device throttle: 3 failed attempts lock this browser out for
+  // 15 minutes. Checked before anything touches the backend.
+  const waitMinutes = minutesUntilAllowed();
+  if (waitMinutes > 0) {
+    return {
+      error:
+        `Too many sign-in attempts from this device. ` +
+        `Try again in ${waitMinutes} minute${waitMinutes === 1 ? "" : "s"}.`,
+    };
+  }
+
+  if (!(await captchaPasses(form))) {
+    return { error: "Please complete the verification box and try again." };
   }
 
   const env = serverEnv();
@@ -70,11 +119,16 @@ export async function loginAction(
   }
 
   if (res.status === 401 || res.status === 403) {
+    recordFailedAttempt();
     return { error: "Incorrect email or password." };
   }
   if (!res.ok) {
     return { error: `Sign-in failed (${res.status}). Try again.` };
   }
+
+  // Successful sign-in: clear the device throttle and start the
+  // 10-minute inactivity window the middleware enforces.
+  clearAttempts();
 
   // Frappe sets cookies via Set-Cookie headers — copy them onto our response.
   const jar = cookies();
@@ -115,6 +169,14 @@ export async function loginAction(
       ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {}),
     });
   }
+
+  // Start the inactivity clock (middleware slides it on every request).
+  jar.set("last_seen", String(Math.floor(Date.now() / 1000)), {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24,
+  });
 
   // Pin (or clear) the tenant site for every later server-side call.
   // Host-only cookie: the tenant choice belongs to this app alone.
@@ -173,7 +235,7 @@ export async function logoutAction(): Promise<void> {
   const env = serverEnv();
   const jar = cookies();
   jar.delete(TENANT_COOKIE);
-  const managed = ["sid", "user_id", "system_user", "full_name", "user_image"];
+  const managed = ["sid", "user_id", "system_user", "full_name", "user_image", "last_seen"];
   for (const c of jar.getAll()) {
     if (!managed.includes(c.name)) continue;
     // The delete cookie MUST specify the same `domain` (and `path`) as

@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function LoginPage({
   searchParams,
 }: {
-  searchParams?: { redirect?: string };
+  searchParams?: { redirect?: string; timeout?: string };
 }) {
   if (isAuthenticated()) {
     redirect(searchParams?.redirect ?? "/dashboard");
@@ -37,7 +37,10 @@ export default function LoginPage({
           Sign in to your Colossal Hub account.
         </p>
       </header>
-      <LoginForm redirectTo={searchParams?.redirect} />
+      <LoginForm
+        redirectTo={searchParams?.redirect}
+        timedOut={searchParams?.timeout === "1"}
+      />
     </AuthShell>
   );
 }

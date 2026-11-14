@@ -28,6 +28,43 @@ type CallOpts = {
   as?: "service" | "user" | "guest";
 };
 
+/** Roles allowed to trigger service-key (System Manager) calls. Back-
+ *  office personas only — rank-and-file Employee / Alumni / Guest
+ *  sessions must never reach the service identity, whatever server
+ *  action they invoke. Kept deliberately broader than any one page's
+ *  gate: the page gates decide what renders, this decides what the
+ *  service key will do. */
+const SERVICE_ESCALATION_ROLES = new Set([
+  "System Manager",
+  "HR Director", "HR Manager", "HR Operations", "HR User", "HR Officer",
+  "HR Admin", "HR Assistant",
+  "Payroll Officer", "Payroll Manager",
+  "Accounts Manager", "Accounts User", "Finance Reviewer",
+  "Recruiter", "Hiring Manager", "Line Manager",
+  "IT Admin", "Data Steward", "Auditor", "Executive Viewer",
+]);
+
+async function assertServiceEscalationAllowed(method: string): Promise<void> {
+  // No session at all → a system context (login flow, background
+  // revalidation), not a user riding the key. Middleware already
+  // blocks unauthenticated requests to every workspace route.
+  const { readSession } = await import("./session");
+  const { userId } = readSession();
+  if (!userId || userId === "Guest") return;
+
+  // Dynamic import avoids a module cycle (roles.ts uses frappeCall
+  // with as:"user", which never re-enters this guard).
+  const { getMyAccess } = await import("./roles");
+  const access = await getMyAccess();
+  for (const role of access.roles) {
+    if (SERVICE_ESCALATION_ROLES.has(role)) return;
+  }
+  throw new FrappeRequestError(
+    `Service-level call ${method} refused for this account.`,
+    403,
+  );
+}
+
 export class FrappeRequestError extends Error {
   constructor(
     message: string,
@@ -76,6 +113,19 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     "X-Frappe-Site-Name": new URL(base).hostname,
   };
 
+  // Correlation id (observability): forward the middleware-assigned
+  // request id so a slow or failing Frappe call can be matched to the
+  // exact page view that triggered it. headers() throws outside a
+  // request scope (build-time renders) — correlation simply doesn't
+  // apply there.
+  try {
+    const { headers: reqHeaders } = await import("next/headers");
+    const rid = reqHeaders().get("x-request-id");
+    if (rid) headers["X-Request-Id"] = rid;
+  } catch {
+    /* no request scope */
+  }
+
   const as = opts.as ?? "service";
   if (as === "user") {
     const cookie = frappeCookieHeader();
@@ -92,6 +142,14 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     // allow_guest=True. Right for public share-link resolution and
     // anywhere else that a token-in-URL is the real auth.
   } else {
+    // BOLA/BFLA guard (2026-11-14 security review): service calls run
+    // as System Manager, and any signed-in user can invoke any server
+    // action regardless of which page links to it — so escalating to
+    // the service key is only allowed when the SESSION USER holds an
+    // elevated role. Plain employee / alumni sessions are refused
+    // here, at the single chokepoint every service call passes
+    // through.
+    await assertServiceEscalationAllowed(opts.method);
     // Service identity is per site: tenant sites carry their own key
     // pair (fetched from the control plane, cached); the control site
     // uses the env pair as always.

@@ -36,6 +36,8 @@ const PUBLIC_PATHS = [
   // resolve the token without bouncing to /login.
   "/analytics/shared",
   "/api/analytics/shared",
+  // Uptime probe — must answer without a session.
+  "/api/health",
 ];
 
 // Idle timeout: no authenticated request for this long → signed out.
@@ -61,8 +63,19 @@ function clearSessionCookies(res: NextResponse) {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Observability: every request carries a correlation id. It rides
+  // the request headers (server components / BFF forward it to Frappe
+  // as X-Request-Id) and the response (so a user-reported error can
+  // be matched to logs).
+  const rid = req.headers.get("x-request-id") || crypto.randomUUID();
+  const reqHeaders = new Headers(req.headers);
+  reqHeaders.set("x-request-id", rid);
+  const withRid = { request: { headers: reqHeaders } };
+
   if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
-    return NextResponse.next();
+    const res = NextResponse.next(withRid);
+    res.headers.set("x-request-id", rid);
+    return res;
   }
 
   const sid = req.cookies.get("sid")?.value;
@@ -98,7 +111,8 @@ export function middleware(req: NextRequest) {
   // NOTE: the cookie must OUTLIVE the idle window — if it expired with
   // it, a long-idle browser would come back looking "fresh". A day is
   // plenty; Frappe's server-side session_expiry is the backstop.
-  const res = NextResponse.next();
+  const res = NextResponse.next(withRid);
+  res.headers.set("x-request-id", rid);
   res.cookies.set("last_seen", String(now), {
     httpOnly: true,
     sameSite: "lax",

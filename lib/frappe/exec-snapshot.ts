@@ -321,6 +321,27 @@ async function loadNeedsYou(access: ExecAccess): Promise<NeedsYouItem[]> {
 // ─── Payroll ──────────────────────────────────────────────────────────
 
 async function loadPayrollSummary(): Promise<PayrollSummary> {
+  // Belina-flow aggregate — ONE grouped SQL on the backend instead of
+  // fetching every slip row and summing in JS (2026-11-14 review).
+  // Falls back to the legacy Salary Slip path if the method isn't
+  // deployed on this site yet.
+  try {
+    const s = await frappeCall<{
+      gross_usd: number; avg_gross_usd: number; payslips: number; runs: number;
+    }>({
+      method: "tenant_manager.payroll_engine.api.stats.month_summary",
+      as: "user",
+    });
+    return {
+      monthToDateGross: Math.round(s.gross_usd * 100) / 100,
+      runsThisMonth: s.runs,
+      avgGrossThisMonth: Math.round(s.avg_gross_usd * 100) / 100,
+      currency: s.payslips > 0 ? "USD" : null,
+    };
+  } catch {
+    /* legacy fallback below */
+  }
+
   // Current calendar month, UTC — matches how start/end are stored
   // on Salary Slip.
   const now = new Date();

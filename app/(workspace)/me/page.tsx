@@ -16,6 +16,7 @@ import { readSession } from "@/lib/frappe/session";
 import { frappeCall } from "@/lib/frappe/client";
 import { getLastCheckinToday } from "@/lib/frappe/checkin";
 import { clockInOrOutAction } from "./clock/actions";
+import { SecurityCard } from "@/components/me/security-card";
 
 export const metadata = { title: "My workspace · Colossal Hub" };
 
@@ -274,6 +275,8 @@ export default async function MyWorkspacePage() {
           },
         ]}
       />
+
+      <SecurityCard />
     </div>
   );
 }

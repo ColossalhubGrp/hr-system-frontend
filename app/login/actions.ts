@@ -4,7 +4,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { serverEnv } from "@/lib/env";
 import { frappeGuestCall } from "@/lib/frappe/guest-call";
-import { TENANT_COOKIE, isValidTenantSite } from "@/lib/frappe/tenant";
+import { headers } from "next/headers";
+import { TENANT_COOKIE, isValidTenantSite, serviceCredsFor } from "@/lib/frappe/tenant";
 import {
   clearAttempts,
   minutesUntilAllowed,
@@ -177,6 +178,45 @@ export async function loginAction(
     path: "/",
     maxAge: 60 * 60 * 24,
   });
+
+  // New-device notice: no device cookie yet means this browser has
+  // never completed a sign-in here. Tag it and email the account owner
+  // (best-effort — an unreachable mail service never blocks sign-in).
+  if (!jar.get("device_id")?.value) {
+    jar.set("device_id", crypto.randomUUID(), {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+    try {
+      const h = headers();
+      const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim();
+      const agent = h.get("user-agent") ?? "";
+      const creds = tenantSite
+        ? await serviceCredsFor(tenantSite)
+        : { apiKey: env.FRAPPE_API_KEY, apiSecret: env.FRAPPE_API_SECRET };
+      await fetch(
+        new URL(
+          "/api/method/recruitment_app.api.security.notify_new_sign_in",
+          loginBase,
+        ),
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+            Authorization: `token ${creds.apiKey}:${creds.apiSecret}`,
+          },
+          body: JSON.stringify({ user_email: usr, ip, agent }),
+          cache: "no-store",
+          signal: AbortSignal.timeout(4000),
+        },
+      );
+    } catch {
+      // Best-effort only.
+    }
+  }
 
   // Pin (or clear) the tenant site for every later server-side call.
   // Host-only cookie: the tenant choice belongs to this app alone.

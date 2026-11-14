@@ -3,6 +3,7 @@ import type { Route } from "next";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { getPayslipDetail } from "@/lib/payroll-engine/payruns";
+import { frappeCall } from "@/lib/frappe/client";
 import { getCompany } from "@/lib/frappe/companies";
 import { resolveAvatarUrl } from "@/lib/frappe/session";
 import { DownloadPayslipButton } from "@/components/payroll/download-payslip-button";
@@ -53,6 +54,15 @@ export default async function PayslipPage({
   const backLabel = fromMe ? "← Back to my payslips" : "← Back to pay run";
 
   const { run, company, employee, slip, earnings, deductions, timesheet } = data;
+
+  // Audit trail: record this payslip view in Access Log (best-effort —
+  // never blocks rendering).
+  void frappeCall({
+    method: "recruitment_app.api.security.log_payslip_view",
+    verb: "POST",
+    args: { payslip: slip.name },
+    as: "user",
+  }).catch(() => {});
   const companyDisplay = company.legal_name || company.company_name;
   const companyDoc = await getCompany(company.company_name).catch(() => null);
   const logoUrl = companyDoc?.companyLogo ? resolveAvatarUrl(companyDoc.companyLogo) : null;

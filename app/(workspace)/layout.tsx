@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { isAuthenticated, readSession, resolveAvatarUrl } from "@/lib/frappe/session";
 import { getMyAccess } from "@/lib/frappe/roles";
 import { getMySubscription } from "@/lib/subscriptions/server";
+import { readTenantSite } from "@/lib/frappe/tenant";
 
 /**
  * Workspace shell: full-height purple rail on the left, scrollable canvas on
@@ -75,6 +76,7 @@ export default async function WorkspaceLayout({
           isPlatformOperator: access.isPlatformOperator,
           isEmployee: access.isEmployee,
           subscribedApps,
+          isTenant: readTenantSite() !== null,
         }}
         />
       </div>

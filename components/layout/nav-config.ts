@@ -35,6 +35,10 @@ export type NavChild = {
    *  routes under a different pathname (`/accounting/reports/*`)
    *  logically belong to the same section. */
   matchPrefixes?: string[];
+  /** Hidden for tenant sessions. The nao-backed Intelligence surfaces
+   *  only recognise control-site sign-ins (their pages redirect tenants
+   *  to /analytics/ask), so tenants shouldn't be offered the links. */
+  controlSiteOnly?: boolean;
 };
 export type NavItem = {
   label: string;
@@ -216,9 +220,9 @@ export const NAV: NavItem[] = [
       // naoPath prop. `/chats` is a route added by our fork
       // (colossal-embed branch) since upstream nao doesn't ship a
       // full-page chats list; the other two use nao's built-in routes.
-      { label: "Chats", href: "/analytics/chats", requires: "EXECUTIVE_VIEWER" },
-      { label: "Stories", href: "/analytics/stories", requires: "EXECUTIVE_VIEWER" },
-      { label: "Feed", href: "/analytics/feed", requires: "EXECUTIVE_VIEWER" },
+      { label: "Chats", href: "/analytics/chats", requires: "EXECUTIVE_VIEWER", controlSiteOnly: true },
+      { label: "Stories", href: "/analytics/stories", requires: "EXECUTIVE_VIEWER", controlSiteOnly: true },
+      { label: "Feed", href: "/analytics/feed", requires: "EXECUTIVE_VIEWER", controlSiteOnly: true },
       { label: "Dashboards", href: "/analytics/dashboards", requires: "EXECUTIVE_VIEWER" },
       { label: "Semantics", href: "/analytics/semantics", requires: "EXECUTIVE_VIEWER" },
       // AI Settings iframes nao's own settings surface (starts on the
@@ -226,7 +230,7 @@ export const NAV: NavItem[] = [
       // lives). Admin-gated because that toggle lets nao run raw
       // INSERT/UPDATE/DELETE/DDL against the DB, bypassing every
       // Frappe hook, validation and audit trail.
-      { label: "AI Settings", href: "/analytics/settings", requires: "HR_ADMIN" },
+      { label: "AI Settings", href: "/analytics/settings", requires: "HR_ADMIN", controlSiteOnly: true },
     ],
   },
 

@@ -34,6 +34,9 @@ export type AccessBundle = {
   /** App codes the user's company is subscribed to. Set elements like
    *  "hr", "recruitment", "payroll". Always-on apps (core) live here too. */
   subscribedApps: Set<string>;
+  /** True when this session belongs to a tenant site. Nav entries marked
+   *  controlSiteOnly are hidden for tenants. */
+  isTenant: boolean;
 };
 
 function canSee(
@@ -128,7 +131,8 @@ export function Sidebar({ access }: { access: AccessBundle }) {
         if (!item.children) return item;
         const kids = item.children
           .filter((c) => canSee(c.requires, access))
-          .filter((c) => isSubscribed(c.href));
+          .filter((c) => isSubscribed(c.href))
+          .filter((c) => !(c.controlSiteOnly && access.isTenant));
         if (kids.length === 0 && item.requires) return null; // collapse
         return { ...item, children: kids.length ? kids : undefined };
       })

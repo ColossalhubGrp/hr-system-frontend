@@ -1,11 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider, NO_FLASH_SCRIPT } from "@/components/theme/theme-provider";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+// Official rsms Inter, self-hosted: Google's build strips the
+// stylistic sets (ss01/cv05/cv11) that globals.css switches on, so
+// with next/font/google the brand letterforms only appeared on
+// machines with the desktop Inter installed locally.
+const inter = localFont({
+  src: [
+    { path: "./fonts/InterVariable.woff2", weight: "100 900", style: "normal" },
+    { path: "./fonts/InterVariable-Italic.woff2", weight: "100 900", style: "italic" },
+  ],
   display: "swap",
   variable: "--font-sans",
 });

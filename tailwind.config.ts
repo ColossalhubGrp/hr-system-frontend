@@ -179,6 +179,10 @@ const config: Config = {
       },
       fontFamily: {
         sans: [
+          // --font-sans is the self-hosted InterVariable registered in
+          // app/layout.tsx; the literal name only matched a locally
+          // installed Inter, so most visitors fell through to system-ui.
+          "var(--font-sans)",
           "Inter",
           "ui-sans-serif",
           "system-ui",

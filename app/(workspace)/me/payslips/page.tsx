@@ -7,13 +7,15 @@ import { EmptyState } from "@/components/common/list-shell";
 import { readSession } from "@/lib/frappe/session";
 import { frappeCall } from "@/lib/frappe/client";
 import { listMyPayslips } from "@/lib/frappe/my-self-service";
+import { PayslipPinCard } from "@/components/me/payslip-pin-card";
 
 export const metadata = { title: "My payslips · Colossal Hub" };
 
 export default async function MyPayslipsPage() {
-  const [rows, empId] = await Promise.all([
+  const [rows, empId, pin] = await Promise.all([
     listMyPayslips(),
     resolveMyEmployeeId(),
+    readPinStatus(),
   ]);
   return (
     <div className="flex flex-col gap-5">
@@ -31,6 +33,8 @@ export default async function MyPayslipsPage() {
         title="My payslips"
         subtitle="Salary slips on file. Only the slips that belong to you are visible — your colleagues' slips are never shown here."
       />
+
+      <PayslipPinCard linked={pin.linked} isSet={pin.isSet} />
 
       <section className="card overflow-hidden p-0">
         {rows.length === 0 ? (
@@ -113,6 +117,21 @@ async function resolveMyEmployeeId(): Promise<string | null> {
     return rows[0]?.name ?? null;
   } catch {
     return null;
+  }
+}
+
+/** Whether the caller is linked to an employee and has a payslip PIN
+ *  set. Never returns the PIN itself. Degrades to "not set" on error so
+ *  the card still renders. */
+async function readPinStatus(): Promise<{ linked: boolean; isSet: boolean }> {
+  try {
+    const res = await frappeCall<{ linked: boolean; set: boolean }>({
+      method: "recruitment_app.api.payslip_pin.payslip_pin_status",
+      as: "user",
+    });
+    return { linked: !!res?.linked, isSet: !!res?.set };
+  } catch {
+    return { linked: false, isSet: false };
   }
 }
 

@@ -1,41 +1,16 @@
 import "server-only";
 import { frappeCall } from "./client";
-import { readSession } from "./session";
 
 /**
- * Self-service helpers for the signed-in employee. Every function resolves
- * the user → Employee record first (cached per request) and reads its OWN
- * scoped data. Frappe's row perms also enforce this server-side, so even if
- * a caller managed to pass another employee id, the underlying API would
- * still refuse.
+ * Self-service helpers for the signed-in employee. Every read goes
+ * through recruitment_app.api.self_service — whitelisted methods that
+ * resolve the caller's OWN Employee from the session and read only that
+ * employee's data with elevated privileges. This means self-service
+ * works for a plain Employee-role user who has no read permission on
+ * the HR doctypes, and behaves the same on every tenant regardless of
+ * its row-permission setup. The employee is never taken from a
+ * parameter, so there's no way to reach anyone else's data.
  */
-
-let cachedEmpId: { sid: string; id: string | null } | null = null;
-
-async function myEmployeeId(): Promise<string | null> {
-  const session = readSession();
-  if (!session.sid || !session.userId) return null;
-  if (cachedEmpId && cachedEmpId.sid === session.sid) return cachedEmpId.id;
-  try {
-    type Row = { name: string };
-    const rows = await frappeCall<Row[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Employee",
-        fields: ["name"],
-        filters: JSON.stringify([["user_id", "=", session.userId]]),
-        limit_page_length: 1,
-      },
-      as: "user",
-    });
-    const id = rows[0]?.name ?? null;
-    cachedEmpId = { sid: session.sid, id };
-    return id;
-  } catch {
-    cachedEmpId = { sid: session.sid, id: null };
-    return null;
-  }
-}
 
 // ============================================= Leave ========================
 
@@ -50,8 +25,6 @@ export type MyLeaveRow = {
 };
 
 export async function listMyLeaves(): Promise<MyLeaveRow[]> {
-  const empId = await myEmployeeId();
-  if (!empId) return [];
   try {
     type Raw = {
       name: string;
@@ -63,18 +36,7 @@ export async function listMyLeaves(): Promise<MyLeaveRow[]> {
       description: string | null;
     };
     const rows = await frappeCall<Raw[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Leave Application",
-        // Frappe v15 restricts list-view fields. The safe projectable set
-        // for Leave Application: name, leave_type, from_date, to_date, status.
-        // `total_leave_days` + `description` are not always projectable so
-        // we omit them here and rely on get_count for balance tiles.
-        fields: ["name", "leave_type", "from_date", "to_date", "status"],
-        filters: JSON.stringify([["employee", "=", empId]]),
-        order_by: "from_date desc",
-        limit_page_length: 50,
-      },
+      method: "recruitment_app.api.self_service.my_leaves",
       as: "user",
     });
     return rows.map((r) => ({
@@ -105,44 +67,17 @@ export type MyLeaveBalance = {
  * configs, so this just rolls the raw allocation rows.
  */
 export async function listMyLeaveBalances(): Promise<MyLeaveBalance[]> {
-  const empId = await myEmployeeId();
-  if (!empId) return [];
   try {
-    type Raw = {
-      name: string;
-      leave_type: string;
-      total_leaves_allocated: number | null;
-      docstatus: 0 | 1 | 2;
-    };
+    type Raw = { leave_type: string; allocated: number; usable: boolean };
     const rows = await frappeCall<Raw[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Leave Allocation",
-        fields: [
-          "name",
-          "leave_type",
-          "total_leaves_allocated",
-          "docstatus",
-        ],
-        filters: JSON.stringify([["employee", "=", empId]]),
-        limit_page_length: 100,
-      },
+      method: "recruitment_app.api.self_service.my_leave_balances",
       as: "user",
     });
-    const grouped = new Map<string, MyLeaveBalance>();
-    for (const r of rows) {
-      const existing = grouped.get(r.leave_type) ?? {
-        leaveType: r.leave_type,
-        allocated: 0,
-        usable: false,
-      };
-      existing.allocated += Number(r.total_leaves_allocated ?? 0);
-      if (r.docstatus === 1) existing.usable = true;
-      grouped.set(r.leave_type, existing);
-    }
-    return Array.from(grouped.values()).sort((a, b) =>
-      a.leaveType.localeCompare(b.leaveType),
-    );
+    return rows.map((r) => ({
+      leaveType: r.leave_type,
+      allocated: Number(r.allocated ?? 0),
+      usable: Boolean(r.usable),
+    }));
   } catch {
     return [];
   }
@@ -151,18 +86,11 @@ export async function listMyLeaveBalances(): Promise<MyLeaveBalance[]> {
 /** Names of every Leave Type — used to populate the apply-for-leave form. */
 export async function listLeaveTypes(): Promise<string[]> {
   try {
-    type Row = { name: string };
-    const rows = await frappeCall<Row[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Leave Type",
-        fields: ["name"],
-        order_by: "name asc",
-        limit_page_length: 50,
-      },
+    const rows = await frappeCall<string[]>({
+      method: "recruitment_app.api.self_service.my_leave_types",
       as: "user",
     });
-    return rows.map((r) => r.name);
+    return rows ?? [];
   } catch {
     return [];
   }
@@ -179,26 +107,15 @@ export type ApplyForLeaveInput = {
 export async function createMyLeaveApplication(
   input: ApplyForLeaveInput,
 ): Promise<string> {
-  const empId = await myEmployeeId();
-  if (!empId) {
-    throw new Error("No Employee record linked to your user.");
-  }
-  const today = new Date();
-  const postingDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-  const doc: Record<string, unknown> = {
-    doctype: "Leave Application",
-    employee: empId,
-    leave_type: input.leave_type,
-    from_date: input.from_date,
-    to_date: input.to_date,
-    posting_date: postingDate,
-    status: "Open",
-  };
-  if (input.description) doc.description = input.description;
-  if (input.half_day) doc.half_day = 1;
   const saved = await frappeCall<{ name: string }>({
-    method: "frappe.client.insert",
-    args: { doc },
+    method: "recruitment_app.api.self_service.apply_leave",
+    args: {
+      leave_type: input.leave_type,
+      from_date: input.from_date,
+      to_date: input.to_date,
+      description: input.description ?? "",
+      half_day: input.half_day ? 1 : 0,
+    },
     verb: "POST",
     as: "user",
   });
@@ -225,54 +142,27 @@ export type MyPayslipRow = {
  * period label + pay date from the parent Payroll Run.
  */
 export async function listMyPayslips(): Promise<MyPayslipRow[]> {
-  const empId = await myEmployeeId();
-  if (!empId) return [];
   try {
-    type SlipRaw = {
-      name: string;
+    type Raw = {
+      id: string;
       payroll_run: string;
+      period_label: string;
+      pay_date: string | null;
       net_usd: number | null;
       net_zig: number | null;
-      creation: string;
     };
-    const slips = await frappeCall<SlipRaw[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Payroll Run Payslip",
-        fields: ["name", "payroll_run", "net_usd", "net_zig", "creation"],
-        filters: JSON.stringify([["employee", "=", empId]]),
-        order_by: "creation desc",
-        limit_page_length: 24,
-      },
+    const slips = await frappeCall<Raw[]>({
+      method: "recruitment_app.api.self_service.my_payslips",
       as: "user",
     });
-    if (slips.length === 0) return [];
-
-    const runNames = Array.from(new Set(slips.map((s) => s.payroll_run)));
-    type RunRaw = { name: string; period_label: string; pay_date: string | null };
-    const runs = await frappeCall<RunRaw[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Payroll Run",
-        fields: ["name", "period_label", "pay_date"],
-        filters: JSON.stringify([["name", "in", runNames]]),
-        limit_page_length: runNames.length,
-      },
-      as: "user",
-    }).catch(() => [] as RunRaw[]);
-    const runByName = new Map(runs.map((r) => [r.name, r]));
-
-    return slips.map((s) => {
-      const r = runByName.get(s.payroll_run);
-      return {
-        id: s.name,
-        payrollRun: s.payroll_run,
-        periodLabel: r?.period_label ?? s.payroll_run,
-        payDate: r?.pay_date ?? null,
-        netUsd: Number(s.net_usd ?? 0),
-        netZig: Number(s.net_zig ?? 0),
-      };
-    });
+    return slips.map((s) => ({
+      id: s.id,
+      payrollRun: s.payroll_run,
+      periodLabel: s.period_label ?? s.payroll_run,
+      payDate: s.pay_date ?? null,
+      netUsd: Number(s.net_usd ?? 0),
+      netZig: Number(s.net_zig ?? 0),
+    }));
   } catch (err) {
     console.error("[listMyPayslips] fetch failed:", err);
     return [];
@@ -292,8 +182,6 @@ export type MyGoalRow = {
 };
 
 export async function listMyGoals(): Promise<MyGoalRow[]> {
-  const empId = await myEmployeeId();
-  if (!empId) return [];
   try {
     type Raw = {
       name: string;
@@ -305,24 +193,7 @@ export async function listMyGoals(): Promise<MyGoalRow[]> {
       appraisal_cycle: string | null;
     };
     const rows = await frappeCall<Raw[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Goal",
-        // `goal` is the projectable label field in Frappe v15 — `goal_name`
-        // is the form-side title but isn't always in_list_view.
-        fields: [
-          "name",
-          "goal",
-          "status",
-          "progress",
-          "start_date",
-          "end_date",
-          "appraisal_cycle",
-        ],
-        filters: JSON.stringify([["employee", "=", empId]]),
-        order_by: "modified desc",
-        limit_page_length: 50,
-      },
+      method: "recruitment_app.api.self_service.my_goals",
       as: "user",
     });
     return rows.map((r) => ({

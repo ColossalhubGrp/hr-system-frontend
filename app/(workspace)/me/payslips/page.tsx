@@ -4,7 +4,6 @@ import { ChevronLeft, ReceiptText } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { DataTable } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/list-shell";
-import { readSession } from "@/lib/frappe/session";
 import { frappeCall } from "@/lib/frappe/client";
 import { listMyPayslips } from "@/lib/frappe/my-self-service";
 import { PayslipPinCard } from "@/components/me/payslip-pin-card";
@@ -100,21 +99,12 @@ export default async function MyPayslipsPage() {
  *  so we need the employee id to build the row link. Mirrors what
  *  listMyPayslips uses internally. */
 async function resolveMyEmployeeId(): Promise<string | null> {
-  const session = readSession();
-  if (!session.userId) return null;
   try {
-    type Row = { name: string };
-    const rows = await frappeCall<Row[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Employee",
-        fields: ["name"],
-        filters: JSON.stringify([["user_id", "=", session.userId]]),
-        limit_page_length: 1,
-      },
+    const emp = await frappeCall<{ name?: string }>({
+      method: "recruitment_app.api.self_service.my_employee",
       as: "user",
     });
-    return rows[0]?.name ?? null;
+    return emp?.name ?? null;
   } catch {
     return null;
   }

@@ -1,6 +1,5 @@
 import "server-only";
 import { frappeCall } from "./client";
-import { readSession } from "./session";
 
 export type CheckinLogType = "IN" | "OUT";
 
@@ -23,33 +22,18 @@ export type ClockInEmployee = {
  * `name`, then fetches the full doc.
  */
 export async function getClockInEmployee(): Promise<ClockInEmployee | null> {
-  const session = readSession();
-  if (!session.userId) return null;
   try {
-    type Row = { name: string };
-    const rows = await frappeCall<Row[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Employee",
-        fields: ["name"],
-        filters: JSON.stringify([["user_id", "=", session.userId]]),
-        limit_page_length: 1,
-      },
-      as: "user",
-    });
-    const id = rows[0]?.name;
-    if (!id) return null;
     type Doc = {
-      name: string;
+      name?: string;
       employee_name: string | null;
       geofence_exempt: 0 | 1 | boolean | null;
       default_shift: string | null;
     };
     const doc = await frappeCall<Doc>({
-      method: "frappe.client.get",
-      args: { doctype: "Employee", name: id },
+      method: "recruitment_app.api.self_service.my_employee",
       as: "user",
     });
+    if (!doc?.name) return null;
     return {
       id: doc.name,
       name: doc.employee_name ?? doc.name,

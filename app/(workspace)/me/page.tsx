@@ -12,9 +12,7 @@ import {
 import { PageHeader } from "@/components/common/page-header";
 import { SummaryTile } from "@/components/common/summary-tile";
 import { InlineClock } from "@/components/me/inline-clock";
-import { readSession } from "@/lib/frappe/session";
 import { frappeCall } from "@/lib/frappe/client";
-import { getLastCheckinToday } from "@/lib/frappe/checkin";
 import { clockInOrOutAction } from "./clock/actions";
 import { SecurityCard } from "@/components/me/security-card";
 
@@ -31,104 +29,33 @@ type EmployeeMini = {
 };
 
 async function getMyEmployee(): Promise<EmployeeMini | null> {
-  const session = readSession();
-  if (!session.userId) return null;
   try {
-    // Frappe v15 only allows in_list_view fields here, so we resolve `name`
-    // first and then read the rest of the doc via frappe.client.get.
-    type Row = { name: string };
-    const rows = await frappeCall<Row[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Employee",
-        fields: ["name"],
-        filters: JSON.stringify([["user_id", "=", session.userId]]),
-        limit_page_length: 1,
-      },
+    const emp = await frappeCall<EmployeeMini & { name?: string }>({
+      method: "recruitment_app.api.self_service.my_employee",
       as: "user",
     });
-    const id = rows[0]?.name;
-    if (!id) return null;
-
-    return await frappeCall<EmployeeMini>({
-      method: "frappe.client.get",
-      args: { doctype: "Employee", name: id },
-      as: "user",
-    });
+    return emp?.name ? emp : null;
   } catch {
     return null;
   }
 }
 
-async function todaysAttendance(employeeId: string): Promise<{
-  status: string | null;
-  inTime: string | null;
-  outTime: string | null;
-} | null> {
-  const today = isoToday();
+type MyDashboard = {
+  linked: boolean;
+  attendance: { status: string | null; in_time: string | null; out_time: string | null } | null;
+  last_checkin: { log_type: "IN" | "OUT" | null; time: string | null } | null;
+  open_leave: number;
+  open_goals: number;
+};
+
+async function getMyDashboard(): Promise<MyDashboard | null> {
   try {
-    type Row = {
-      name: string;
-      status: string | null;
-      in_time: string | null;
-      out_time: string | null;
-    };
-    const rows = await frappeCall<Row[]>({
-      method: "frappe.client.get_list",
-      args: {
-        doctype: "Attendance",
-        fields: ["name", "status", "in_time", "out_time"],
-        filters: JSON.stringify([
-          ["employee", "=", employeeId],
-          ["attendance_date", "=", today],
-        ]),
-        order_by: "modified desc",
-        limit_page_length: 1,
-      },
+    return await frappeCall<MyDashboard>({
+      method: "recruitment_app.api.self_service.my_dashboard",
       as: "user",
     });
-    const r = rows[0];
-    return r
-      ? { status: r.status, inTime: r.in_time, outTime: r.out_time }
-      : null;
   } catch {
     return null;
-  }
-}
-
-async function pendingLeaveCount(employeeId: string): Promise<number> {
-  try {
-    return await frappeCall<number>({
-      method: "frappe.client.get_count",
-      args: {
-        doctype: "Leave Application",
-        filters: JSON.stringify([
-          ["employee", "=", employeeId],
-          ["status", "=", "Open"],
-        ]),
-      },
-      as: "user",
-    });
-  } catch {
-    return 0;
-  }
-}
-
-async function openGoalCount(employeeId: string): Promise<number> {
-  try {
-    return await frappeCall<number>({
-      method: "frappe.client.get_count",
-      args: {
-        doctype: "Goal",
-        filters: JSON.stringify([
-          ["employee", "=", employeeId],
-          ["status", "in", ["In Progress", "Pending"]],
-        ]),
-      },
-      as: "user",
-    });
-  } catch {
-    return 0;
   }
 }
 
@@ -153,12 +80,19 @@ export default async function MyWorkspacePage() {
     );
   }
 
-  const [att, lastCheckin, pendingLeaves, openGoals] = await Promise.all([
-    todaysAttendance(emp.name),
-    getLastCheckinToday(emp.name),
-    pendingLeaveCount(emp.name),
-    openGoalCount(emp.name),
-  ]);
+  const dash = await getMyDashboard();
+  const att = dash?.attendance
+    ? {
+        status: dash.attendance.status,
+        inTime: dash.attendance.in_time,
+        outTime: dash.attendance.out_time,
+      }
+    : null;
+  const lastCheckin = dash?.last_checkin
+    ? { logType: dash.last_checkin.log_type }
+    : null;
+  const pendingLeaves = dash?.open_leave ?? 0;
+  const openGoals = dash?.open_goals ?? 0;
 
   const profileHref = `/employee/${encodeURIComponent(emp.name)}` as Route;
   // Employee Checkin is the immediate signal — Attendance is a
@@ -340,8 +274,4 @@ function ActionsTable({ rows }: { rows: ActionRow[] }) {
   );
 }
 
-function isoToday(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
 

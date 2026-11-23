@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import { KeyRound, ShieldCheck, Check } from "lucide-react";
 import { Field, TextInput } from "@/components/employee/form-bits";
@@ -24,8 +24,10 @@ function SaveButton({ isSet }: { isSet: boolean }) {
 /**
  * Lets the employee set or change the PIN that locks their WhatsApp
  * payslip PDFs. The PIN is never displayed — not before, not after
- * saving — only replaced. If no employee record is linked to the
- * account, the control explains that instead of failing on submit.
+ * saving — only replaced. After a successful save the form collapses
+ * (clearing the inputs) and a confirmation shows; an error keeps the
+ * form open so the person can correct it. If no employee record is
+ * linked, the control explains that instead of failing on submit.
  */
 export function PayslipPinCard({
   linked,
@@ -35,10 +37,29 @@ export function PayslipPinCard({
   isSet: boolean;
 }) {
   const [state, action] = useFormState(setPayslipPinAction, EMPTY);
-  // Once set, keep the form tucked away behind a button so the page
-  // reads as "done" rather than always presenting empty inputs.
   const [editing, setEditing] = useState(!isSet);
-  const saved = state.ok === true;
+  // Show the success confirmation only for the most recent save, and
+  // only while the form is closed — opening it to change the PIN again
+  // clears the banner.
+  const [showSaved, setShowSaved] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // A successful save collapses the form (which unmounts the inputs, so
+  // the PIN values are cleared from the DOM) and reveals the banner.
+  useEffect(() => {
+    if (state.ok) {
+      setEditing(false);
+      setShowSaved(true);
+    }
+  }, [state.ok]);
+
+  const hasPin = isSet || showSaved;
+
+  function startEditing() {
+    setShowSaved(false);
+    formRef.current?.reset();
+    setEditing(true);
+  }
 
   return (
     <section className="card p-5">
@@ -60,23 +81,27 @@ export function PayslipPinCard({
               Your account isn&rsquo;t linked to an employee record yet, so
               there are no payslips to protect. Your administrator can link it.
             </p>
-          ) : saved && !editing ? (
-            <p className="mt-4 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-700">
-              <Check className="h-3.5 w-3.5" />
-              Your payslip PIN is saved.
-            </p>
           ) : !editing ? (
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ash-700">
-                <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
-                A PIN is set.
-              </span>
-              <Button variant="secondary" onClick={() => setEditing(true)}>
-                Change PIN
-              </Button>
+            <div className="mt-4 flex flex-col gap-3">
+              {showSaved ? (
+                <p className="inline-flex w-fit items-center gap-1.5 rounded-card bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                  <Check className="h-3.5 w-3.5" />
+                  Your payslip PIN has been saved.
+                </p>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-ash-700">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  A PIN is set.
+                </span>
+              )}
+              <div>
+                <Button variant="secondary" onClick={startEditing}>
+                  {hasPin ? "Change PIN" : "Set a PIN"}
+                </Button>
+              </div>
             </div>
           ) : (
-            <form action={action} className="mt-4 flex flex-col gap-3">
+            <form ref={formRef} action={action} className="mt-4 flex flex-col gap-3">
               {isSet ? (
                 <Field
                   label="Current PIN"

@@ -3,10 +3,8 @@ import type { Route } from "next";
 import { ChevronLeft, Clock } from "lucide-react";
 import { PageHeader } from "@/components/common/page-header";
 import { ClockPanel } from "@/components/me/clock-panel";
-import {
-  getClockInEmployee,
-  getLastCheckinToday,
-} from "@/lib/frappe/checkin";
+import { getClockInEmployee } from "@/lib/frappe/checkin";
+import { frappeCall } from "@/lib/frappe/client";
 import { clockInOrOutAction } from "./actions";
 
 export const metadata = { title: "Clock in · Colossal Hub" };
@@ -37,7 +35,15 @@ export default async function ClockPage() {
     );
   }
 
-  const last = await getLastCheckinToday(emp.id);
+  // Last punch today, read self-scoped (works without HR perms).
+  const lastDirection = await frappeCall<{
+    last_checkin: { log_type: "IN" | "OUT" | null } | null;
+  }>({
+    method: "recruitment_app.api.self_service.my_dashboard",
+    as: "user",
+  })
+    .then((d) => d.last_checkin?.log_type ?? null)
+    .catch(() => null);
 
   return (
     <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
@@ -59,7 +65,7 @@ export default async function ClockPage() {
       <section className="card p-6">
         <ClockPanel
           action={clockInOrOutAction}
-          lastDirection={last?.logType ?? null}
+          lastDirection={lastDirection}
           geofenceExempt={emp.geofenceExempt}
           defaultShift={emp.defaultShift}
         />

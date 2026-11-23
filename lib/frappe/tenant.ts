@@ -82,3 +82,38 @@ export async function serviceCredsFor(site: string | null): Promise<ServiceCreds
   credsCache.set(site, { creds, expires: Date.now() + CREDS_TTL_MS });
   return creds;
 }
+
+/**
+ * Register a tenant-login routing entry on the control site so a user
+ * created on the current tenant can sign in through the shared
+ * frontend. No-op (returns false) for control-site sessions — those
+ * users authenticate against the control site directly and need no
+ * membership. Best-effort by design: a routing hiccup must never fail
+ * the employee create that triggered it, so callers ignore the result.
+ */
+export async function ensureTenantMembership(email: string): Promise<boolean> {
+  const site = readTenantSite();
+  if (!site || !email) return false;
+  const env = serverEnv();
+  try {
+    const res = await fetch(
+      new URL(
+        "/api/method/tenant_manager.api.routing.register_member",
+        env.FRAPPE_URL,
+      ),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Authorization: `token ${env.FRAPPE_API_KEY}:${env.FRAPPE_API_SECRET}`,
+        },
+        body: JSON.stringify({ user_email: email, site }),
+        cache: "no-store",
+      },
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}

@@ -14,6 +14,7 @@ import {
   type ChildTableUpdate,
 } from "@/lib/frappe/employees";
 import { getMyAccess, PERSONA_ROLES } from "@/lib/frappe/roles";
+import { ensureTenantMembership } from "@/lib/frappe/tenant";
 
 export type FormState = {
   error?: string;
@@ -251,6 +252,19 @@ export async function createEmployeeAction(
     return toFormState(err);
   }
 
+  // The create triggers login-account provisioning on the backend (a
+  // User is made + linked). On a tenant site, also register the control-
+  // plane routing entry so the new employee can actually sign in through
+  // the shared frontend. Best-effort: never fail the create over it.
+  const loginEmail = (
+    parsed.data.company_email ||
+    parsed.data.personal_email ||
+    ""
+  ).trim();
+  if (loginEmail) {
+    await ensureTenantMembership(loginEmail);
+  }
+
   // Best-effort role application. If it fails we still succeed the
   // whole create — the Employee is real, they have Employee (self-
   // service) via the after_insert hook, and HR can retry the persona
@@ -326,6 +340,65 @@ export async function updateEmployeeAction(
     }
   }
   redirect(`/employee/${encodeURIComponent(id)}`);
+}
+
+// ── Login account management (employee profile) ─────────────────────
+
+export type LoginAccountState = {
+  error?: string;
+  ok?: boolean;
+  email?: string;
+  created?: boolean;
+  invited?: boolean;
+  hasPassword?: boolean;
+};
+
+/**
+ * Create / link the employee's login account and optionally set a
+ * password or send an invite — then register the tenant routing entry
+ * so they can sign in through the shared frontend. HR-admin only
+ * (enforced again on the backend). Called from the Login account card
+ * on the employee profile.
+ */
+export async function provisionEmployeeLoginAction(
+  employeeId: string,
+  _prev: LoginAccountState,
+  form: FormData,
+): Promise<LoginAccountState> {
+  const password = String(form.get("password") ?? "").trim();
+  const sendInvite = form.get("send_invite") === "1";
+
+  if (password && password.length < 8) {
+    return { error: "The password must be at least 8 characters." };
+  }
+
+  let res: { user_id: string; created: boolean; invited: boolean; has_password: boolean };
+  try {
+    res = await frappeCall<typeof res>({
+      method: "recruitment_app.api.me.setup_employee_login",
+      verb: "POST",
+      args: {
+        employee: employeeId,
+        password: password || undefined,
+        send_invite: sendInvite ? 1 : 0,
+      },
+      as: "user",
+    });
+  } catch (err) {
+    return toFormState(err);
+  }
+
+  // Make the account reachable through the shared frontend on tenants.
+  if (res.user_id) await ensureTenantMembership(res.user_id);
+
+  revalidatePath(`/employee/${encodeURIComponent(employeeId)}`);
+  return {
+    ok: true,
+    email: res.user_id,
+    created: res.created,
+    invited: res.invited,
+    hasPassword: res.has_password,
+  };
 }
 
 function parseChildTables(form: FormData): ChildTableUpdate | null {

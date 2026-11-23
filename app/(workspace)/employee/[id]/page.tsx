@@ -24,6 +24,11 @@ import {
 import { getMyAccess } from "@/lib/frappe/roles";
 import { readSession } from "@/lib/frappe/session";
 import { redirect } from "next/navigation";
+import { frappeCall } from "@/lib/frappe/client";
+import {
+  LoginAccountCard,
+  type LoginStatus,
+} from "@/components/employee/login-account-card";
 import { setEmployeeGeofenceExemptAction } from "./actions";
 
 type SP = { tab?: string };
@@ -79,6 +84,13 @@ export default async function EmployeeDetailPage({
     activeTab === "skills"
       ? await getEmployeeSkillMap(emp.id).catch(() => null)
       : null;
+  // Login-account management is HR-admin only and only shown on the
+  // Contact tab, so fetch its state just for that combination.
+  const canManageLogin = access.isHrAny || access.isItAdmin;
+  const loginAccount =
+    activeTab === "contact" && canManageLogin
+      ? await getEmployeeLoginStatus(emp.id).catch(() => null)
+      : null;
 
   // `access` was resolved during the role check above; reuse it for the
   // geofence-editor visibility on the Attendance tab.
@@ -103,6 +115,7 @@ export default async function EmployeeDetailPage({
         attendance={attendance}
         skillMap={skillMap}
         canEditGeofence={access.isShiftAdmin}
+        loginAccount={loginAccount}
       />
     </div>
   );
@@ -114,6 +127,7 @@ type TabPanelProps = {
   attendance: Awaited<ReturnType<typeof fetchEmployeeAttendance>> | null;
   skillMap: EmployeeSkillMap;
   canEditGeofence: boolean;
+  loginAccount: LoginStatus | null;
 };
 
 function TabPanel({
@@ -122,6 +136,7 @@ function TabPanel({
   attendance,
   skillMap,
   canEditGeofence,
+  loginAccount,
 }: TabPanelProps) {
   const tab = EMPLOYEE_TABS.find((t) => t.id === id);
   return (
@@ -133,9 +148,25 @@ function TabPanel({
       <h2 className="mb-5 text-sm font-semibold uppercase tracking-wide text-ash-500">
         {tab?.label}
       </h2>
-      {renderTab(id, emp, attendance, skillMap, canEditGeofence)}
+      {renderTab(id, emp, attendance, skillMap, canEditGeofence, loginAccount)}
     </section>
   );
+}
+
+/** Login state for the Contact tab's Login account card, or null when
+ *  the viewer can't manage logins. Degrades silently on error. */
+async function getEmployeeLoginStatus(
+  employee: string,
+): Promise<LoginStatus | null> {
+  try {
+    return await frappeCall<LoginStatus>({
+      method: "recruitment_app.api.me.employee_login_status",
+      args: { employee },
+      as: "user",
+    });
+  } catch {
+    return null;
+  }
 }
 
 function renderTab(
@@ -144,6 +175,7 @@ function renderTab(
   attendance: TabPanelProps["attendance"],
   skillMap: EmployeeSkillMap,
   canEditGeofence: boolean,
+  loginAccount: LoginStatus | null,
 ): React.ReactNode {
   switch (id) {
     case "overview":
@@ -184,21 +216,26 @@ function renderTab(
       );
     case "contact":
       return (
-        <FieldGrid
-          fields={[
-            { label: "Company email", value: emp.email },
-            { label: "Personal email", value: emp.personalEmail },
-            { label: "Mobile", value: emp.mobile },
-            { label: "Linked user account", value: emp.userId },
-            { label: "Current address", value: emp.currentAddress, wide: true },
-            { label: "Permanent address", value: emp.permanentAddress, wide: true },
-            { label: "Emergency contact", value: emp.emergencyContactName },
-            { label: "Emergency phone", value: emp.emergencyContactNumber },
-            // Bank — used for EFT payouts
-            { label: "Paying bank", value: emp.bankName },
-            { label: "Bank account", value: emp.bankAccount },
-          ]}
-        />
+        <>
+          <FieldGrid
+            fields={[
+              { label: "Company email", value: emp.email },
+              { label: "Personal email", value: emp.personalEmail },
+              { label: "Mobile", value: emp.mobile },
+              { label: "Linked user account", value: emp.userId },
+              { label: "Current address", value: emp.currentAddress, wide: true },
+              { label: "Permanent address", value: emp.permanentAddress, wide: true },
+              { label: "Emergency contact", value: emp.emergencyContactName },
+              { label: "Emergency phone", value: emp.emergencyContactNumber },
+              // Bank — used for EFT payouts
+              { label: "Paying bank", value: emp.bankName },
+              { label: "Bank account", value: emp.bankAccount },
+            ]}
+          />
+          {loginAccount ? (
+            <LoginAccountCard employeeId={emp.id} status={loginAccount} />
+          ) : null}
+        </>
       );
     case "attendance": {
       const geofenceAction = setEmployeeGeofenceExemptAction.bind(null, emp.id);

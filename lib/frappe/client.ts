@@ -199,26 +199,25 @@ export async function frappeCall<T>(opts: CallOpts): Promise<T> {
     } catch {
       detail = await res.text();
     }
-    // TEMP DIAGNOSTIC (remove once the employee-save 500 is found):
-    // capture what we actually sent + what Frappe returned, so the
-    // real exception shows in Vercel's function logs. Logs sizes and
-    // presence flags only — never the body's PII.
+    // Frappe failures are otherwise invisible in production (the user
+    // only sees a toast). Log the method, status and Frappe's own
+    // exception string to the server log so a 500 is diagnosable
+    // without a special deploy. Frappe puts the exception class +
+    // message in `detail.exception`; never log the request body (PII).
     try {
-      const bodyStr = typeof body === "string" ? body : "";
       const exc =
         detail && typeof detail === "object"
           ? (detail as { exception?: string }).exception ?? ""
           : String(detail).slice(0, 300);
-      // eslint-disable-next-line no-console
-      console.error(
-        `[frappeCall-fail] ${verb} ${opts.method} as=${as} ` +
-          `base=${base} status=${res.status} ` +
-          `bodyLen=${bodyStr.length} hasName=${bodyStr.includes('"name"')} ` +
-          `hasPatch=${bodyStr.includes('"patch"')} ` +
-          `ctype=${headers["Content-Type"]} exc=${String(exc).slice(0, 400)}`,
-      );
+      if (res.status >= 500 || exc) {
+        // eslint-disable-next-line no-console
+        console.error(
+          `[frappeCall] ${verb} ${opts.method} → ${res.status} ` +
+            `(as=${as}) ${String(exc).slice(0, 400)}`,
+        );
+      }
     } catch {
-      /* diagnostic must never mask the real error */
+      /* logging must never mask the real error */
     }
     throw new FrappeRequestError(
       `Call ${opts.method} failed: ${res.status} ${res.statusText}`,

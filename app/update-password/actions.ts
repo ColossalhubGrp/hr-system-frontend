@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { frappeGuestCall } from "@/lib/frappe/guest-call";
+import { frappeGuestCall, tenantBaseUrl } from "@/lib/frappe/guest-call";
 
 export type UpdateState = {
   error?: string;
@@ -12,6 +12,9 @@ export type UpdateState = {
 const schema = z
   .object({
     key: z.string().trim().min(1, "This link looks broken — request a new one from the sign-in page."),
+    // Optional tenant backend host carried by tenant-site reset links
+    // (e.g. demo.colossalhub.com). Validated against an allowlist below.
+    tenant: z.string().trim().optional(),
     password: z.string().min(8, "At least 8 characters."),
     confirmPassword: z.string(),
   })
@@ -39,6 +42,7 @@ export async function updatePasswordAction(
 ): Promise<UpdateState> {
   const raw = {
     key: String(form.get("key") ?? ""),
+    tenant: form.get("tenant") ? String(form.get("tenant")) : undefined,
     password: String(form.get("password") ?? ""),
     confirmPassword: String(form.get("confirmPassword") ?? ""),
   };
@@ -52,12 +56,29 @@ export async function updatePasswordAction(
     return { error: "Check the highlighted fields.", fieldErrors };
   }
 
+  // A tenant-site link posts the key to that tenant's own backend. If a
+  // tenant was supplied it MUST resolve to an allowed *.colossalhub.com
+  // host — otherwise the link is bad (or tampered with) and we refuse
+  // rather than silently post the key to the default backend.
+  let baseUrl: string | undefined;
+  if (parsed.data.tenant) {
+    const resolved = tenantBaseUrl(parsed.data.tenant);
+    if (!resolved) {
+      return {
+        error:
+          "This link is invalid. Request a new one from the sign-in page.",
+      };
+    }
+    baseUrl = resolved;
+  }
+
   const res = await frappeGuestCall<string>(
     "frappe.core.doctype.user.user.update_password",
     {
       key: parsed.data.key,
       new_password: parsed.data.password,
     },
+    { baseUrl },
   );
   if (!res.ok) {
     // Frappe returns 410 + a plain string body like

@@ -16,7 +16,13 @@ import { updatePasswordAction, type UpdateState } from "./actions";
 
 const INITIAL: UpdateState = {};
 
-export function UpdatePasswordForm({ resetKey }: { resetKey: string }) {
+export function UpdatePasswordForm({
+  resetKey,
+  tenant,
+}: {
+  resetKey: string;
+  tenant?: string;
+}) {
   const [state, dispatch] = useFormState(updatePasswordAction, INITIAL);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -79,6 +85,9 @@ export function UpdatePasswordForm({ resetKey }: { resetKey: string }) {
 
       <form action={dispatch} className="space-y-4" noValidate>
         <input type="hidden" name="key" value={resetKey} />
+        {tenant ? (
+          <input type="hidden" name="tenant" value={tenant} />
+        ) : null}
 
         <div className="space-y-1.5">
           <Label

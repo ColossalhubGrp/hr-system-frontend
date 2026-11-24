@@ -14,11 +14,31 @@ export type GuestCallSuccess<T> = { ok: true; data: T };
 export type GuestCallFailure = { ok: false; error: string };
 export type GuestCallResult<T> = GuestCallSuccess<T> | GuestCallFailure;
 
+/**
+ * A tenant-site password-reset link carries `?tenant=<host>` so the key
+ * (minted on that tenant's own backend) is posted back to the right
+ * backend instead of the default one. That value rides in on the URL and
+ * is UNTRUSTED, so we only ever accept a `*.colossalhub.com` host — never
+ * an arbitrary origin we'd then POST a reset key + new password to.
+ * Anything else resolves to null and the caller rejects the request.
+ */
+const TENANT_HOST_RE =
+  /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9-]+)*\.colossalhub\.com$/;
+
+export function tenantBaseUrl(tenant: string | undefined | null): string | null {
+  if (!tenant) return null;
+  const host = tenant.trim().toLowerCase();
+  if (!TENANT_HOST_RE.test(host)) return null;
+  return `https://${host}`;
+}
+
 export async function frappeGuestCall<T = unknown>(
   method: string,
   args: Record<string, string | number | boolean | undefined>,
+  opts?: { baseUrl?: string },
 ): Promise<GuestCallResult<T>> {
   const env = serverEnv();
+  const baseUrl = opts?.baseUrl || env.FRAPPE_URL;
 
   // Strip undefined args; Frappe is strict about them.
   const body = new URLSearchParams();
@@ -29,7 +49,7 @@ export async function frappeGuestCall<T = unknown>(
 
   let res: Response;
   try {
-    res = await fetch(new URL(`/api/method/${method}`, env.FRAPPE_URL), {
+    res = await fetch(new URL(`/api/method/${method}`, baseUrl), {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

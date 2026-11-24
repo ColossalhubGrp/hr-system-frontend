@@ -24,9 +24,10 @@ export const metadata: Metadata = {
 export default function UpdatePasswordPage({
   searchParams,
 }: {
-  searchParams?: { key?: string };
+  searchParams?: { key?: string; tenant?: string };
 }) {
   const key = searchParams?.key?.trim();
+  const tenant = searchParams?.tenant?.trim();
 
   return (
     <AuthShell
@@ -68,7 +69,7 @@ export default function UpdatePasswordPage({
           </Button>
         </div>
       ) : (
-        <UpdatePasswordForm resetKey={key} />
+        <UpdatePasswordForm resetKey={key} tenant={tenant} />
       )}
     </AuthShell>
   );

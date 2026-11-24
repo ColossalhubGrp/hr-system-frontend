@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
@@ -59,7 +60,7 @@ export default function PublicJobsPage() {
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
             <div className="border-b border-[#E5E5E5] bg-surface">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
+                <div className="px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
                     <div>
                         <p className="text-sm text-[#1282A2] font-medium">RecrutAI</p>
                         <h1 className="text-[28px] font-bold text-[#034078]">Open Positions</h1>
@@ -77,7 +78,7 @@ export default function PublicJobsPage() {
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
+            <div className="px-6 py-8 space-y-6">
                 <Card className="border-[#E5E5E5]">
                     <CardContent className="pt-6 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -122,9 +123,7 @@ export default function PublicJobsPage() {
                 </Card>
 
                 {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                    </div>
+                    <RecruitPageSkeleton />
                 ) : jobs.length === 0 ? (
                     <Card className="border-dashed border-[#D4D4D4]">
                         <CardContent className="py-12 text-center text-sm text-[#525252]">

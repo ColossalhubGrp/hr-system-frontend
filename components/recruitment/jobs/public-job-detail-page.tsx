@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
@@ -90,16 +91,14 @@ export default function PublicJobDetailPage({ jobId }: { jobId: string }) {
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
-                <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-            </div>
+            <RecruitPageSkeleton />
         )
     }
 
     if (error || !job) {
         return (
             <div className="min-h-screen bg-[#FAFAFA]">
-                <div className="max-w-5xl mx-auto px-6 py-8 space-y-4">
+                <div className="px-6 py-8 space-y-4">
                     <Link href="/recruitment/jobs">
                         <Button variant="outline">
                             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -123,7 +122,7 @@ export default function PublicJobDetailPage({ jobId }: { jobId: string }) {
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
             <div className="border-b border-[#E5E5E5] bg-surface">
-                <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
+                <div className="px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
                     <Link href="/recruitment/jobs">
                         <Button variant="outline">
                             <ArrowLeft className="h-4 w-4 mr-2" />
@@ -143,7 +142,7 @@ export default function PublicJobDetailPage({ jobId }: { jobId: string }) {
                 </div>
             </div>
 
-            <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+            <div className="px-6 py-8 space-y-6">
                 <Card className="border-[#E5E5E5]">
                     <CardHeader className="space-y-4">
                         <div className="flex items-start justify-between gap-3 flex-wrap">

@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -180,16 +181,14 @@ export function BillingClient({
     if (loading) {
         return (
             <MainLayout>
-                <div className="flex items-center justify-center h-64">
-                    <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                </div>
+                <RecruitPageSkeleton />
             </MainLayout>
         )
     }
 
     return (
         <MainLayout>
-            <div className="mx-auto max-w-6xl space-y-6 pb-20">
+            <div className="space-y-6 pb-20">
                 {/* Header */}
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>

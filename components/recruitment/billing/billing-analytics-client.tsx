@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
@@ -215,7 +216,7 @@ export function BillingAnalyticsClient({
 
     return (
         <MainLayout>
-            <div className="mx-auto max-w-7xl space-y-6 pb-20">
+            <div className="space-y-6 pb-20">
                 {/* Top bar */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -272,9 +273,7 @@ export function BillingAnalyticsClient({
                 )}
 
                 {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                    </div>
+                    <RecruitPageSkeleton />
                 ) : analytics ? (
                     <>
                         {/* KPIs */}

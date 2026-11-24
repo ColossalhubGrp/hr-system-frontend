@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -241,7 +242,7 @@ export function CandidatesClient({
 
     return (
         <MainLayout>
-            <div className="mx-auto max-w-7xl space-y-6 pb-12">
+            <div className="space-y-6 pb-12">
                 {/* Header */}
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -345,9 +346,7 @@ export function CandidatesClient({
 
                 {/* List */}
                 {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                    </div>
+                    <RecruitPageSkeleton />
                 ) : filtered.length === 0 ? (
                     <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-[#E5E5E5] bg-surface px-6 py-16 text-center">
                         <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EFF6FF] text-[#034078]">

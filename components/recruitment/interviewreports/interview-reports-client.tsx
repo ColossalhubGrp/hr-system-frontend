@@ -281,7 +281,7 @@ export function InterviewReportsClient({
 
   return (
     <MainLayout>
-      <div className="mx-auto w-full max-w-6xl space-y-6">
+      <div className="w-full space-y-6">
         {/* Header */}
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-[#1282A2]">

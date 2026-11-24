@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
@@ -270,16 +271,14 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-40">
-          <div className="w-9 h-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-        </div>
+        <RecruitPageSkeleton />
       </MainLayout>
     )
   }
 
   return (
     <MainLayout>
-      <div className="mx-auto max-w-7xl space-y-6 pb-12">
+      <div className="space-y-6 pb-12">
         {/* Header */}
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>

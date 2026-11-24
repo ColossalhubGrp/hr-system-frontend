@@ -287,7 +287,7 @@ function UploadCVContent() {
 
     return (
         <MainLayout>
-            <div className="mx-auto max-w-3xl space-y-4 pb-12">
+            <div className="space-y-4 pb-12">
                 {/* Top bar + title in a single compact header */}
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>

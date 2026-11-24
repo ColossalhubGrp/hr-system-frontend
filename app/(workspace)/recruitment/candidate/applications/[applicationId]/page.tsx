@@ -208,7 +208,7 @@ export default function CandidateApplicationDetailsPage() {
     if (error || !application) {
         return (
             <MainLayout>
-                <div className="mx-auto w-full max-w-4xl space-y-4">
+                <div className="w-full space-y-4">
                     <Link href="/recruitment/candidate/applications">
                         <Button
                             variant="outline"
@@ -254,7 +254,7 @@ export default function CandidateApplicationDetailsPage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto w-full max-w-6xl space-y-6">
+            <div className="w-full space-y-6">
                 <Link href="/recruitment/candidate/applications">
                     <Button
                         variant="outline"

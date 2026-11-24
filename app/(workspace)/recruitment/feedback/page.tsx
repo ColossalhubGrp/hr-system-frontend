@@ -202,7 +202,7 @@ export default function FeedbackPage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto max-w-5xl space-y-6 pb-20">
+            <div className="space-y-6 pb-20">
                 {/* Header */}
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                     <div>

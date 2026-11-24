@@ -770,7 +770,7 @@ export default function InterviewReviewDetailPage() {
 
   return (
     <MainLayout>
-      <div className="mx-auto max-w-5xl space-y-6 pb-20">
+      <div className="space-y-6 pb-20">
         {/* Top bar */}
         <div className="flex items-center justify-between">
           <Link

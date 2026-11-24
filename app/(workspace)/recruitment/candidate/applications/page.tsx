@@ -175,7 +175,7 @@ export default function CandidateApplicationsPage() {
     if (error) {
         return (
             <MainLayout>
-                <div className="mx-auto w-full max-w-6xl">
+                <div className="w-full">
                     <div className="flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
                         <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                         <p>{error}</p>
@@ -187,7 +187,7 @@ export default function CandidateApplicationsPage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto w-full max-w-6xl space-y-6">
+            <div className="w-full space-y-6">
                 {/* Header */}
                 <div className="flex flex-wrap items-end justify-between gap-3">
                     <div className="min-w-0">

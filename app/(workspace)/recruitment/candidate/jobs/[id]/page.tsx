@@ -453,7 +453,7 @@ export default function CandidateJobDetailPage() {
     if (loadError || !job) {
         return (
             <PageShell isAuthenticated={isAuthenticated} isHydrated={isHydrated}>
-                <div className="max-w-4xl mx-auto space-y-4">
+                <div className="space-y-4">
                     <Card className="border-[#E5E5E5]">
                         <CardHeader>
                             <CardTitle className="text-[#0A1128]">Unable to open job details</CardTitle>

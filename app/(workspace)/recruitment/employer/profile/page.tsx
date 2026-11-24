@@ -86,7 +86,7 @@ export default function EmployerProfilePage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto w-full max-w-4xl space-y-6">
+            <div className="w-full space-y-6">
                 {/* Hero */}
                 <div className="rounded-2xl border border-[#E5E5E5] bg-surface p-6 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-4">

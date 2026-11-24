@@ -112,7 +112,7 @@ export default function EmployerTeamsPage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto w-full max-w-6xl space-y-6">
+            <div className="w-full space-y-6">
                 {/* Header */}
                 <div className="flex flex-wrap items-end justify-between gap-3">
                     <div className="min-w-0">

@@ -1,4 +1,5 @@
 ﻿"use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
@@ -208,9 +209,7 @@ export default function CandidateDashboardPage() {
     if (loading) {
         return (
             <MainLayout>
-                <div className="flex items-center justify-center h-64">
-                    <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                </div>
+                <RecruitPageSkeleton />
             </MainLayout>
         )
     }
@@ -237,7 +236,7 @@ export default function CandidateDashboardPage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto max-w-7xl space-y-6 pb-12">
+            <div className="space-y-6 pb-12">
                 {/* Hero */}
                 <section className="rounded-2xl border border-[#E5E5E5] bg-surface shadow-sm">
                     <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:gap-5">

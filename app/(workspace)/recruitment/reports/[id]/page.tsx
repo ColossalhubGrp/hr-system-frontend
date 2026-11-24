@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useEffect, useMemo, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -386,9 +387,7 @@ export default function ReportDetailPage() {
     if (loading) {
         return (
             <MainLayout>
-                <div className="flex items-center justify-center h-64">
-                    <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                </div>
+                <RecruitPageSkeleton />
             </MainLayout>
         )
     }
@@ -418,7 +417,7 @@ export default function ReportDetailPage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto max-w-7xl space-y-6 pb-20">
+            <div className="space-y-6 pb-20">
                 {/* Top bar */}
                 <div className="flex items-center justify-between no-print">
                     <Link

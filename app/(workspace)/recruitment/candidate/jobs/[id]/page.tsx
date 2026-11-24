@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
@@ -153,7 +154,7 @@ const PageShell = ({
     if (!isHydrated) {
         return (
             <div className="min-h-screen bg-[#FAFAFA]">
-                <div className="max-w-7xl mx-auto px-6 py-8">{children}</div>
+                <div className="mx-auto px-6 py-8">{children}</div>
             </div>
         )
     }
@@ -164,7 +165,7 @@ const PageShell = ({
 
     return (
         <div className="min-h-screen bg-[#FAFAFA]">
-            <div className="max-w-7xl mx-auto px-6 py-8">{children}</div>
+            <div className="mx-auto px-6 py-8">{children}</div>
         </div>
     )
 }
@@ -444,9 +445,7 @@ export default function CandidateJobDetailPage() {
     if (loading) {
         return (
             <PageShell isAuthenticated={isAuthenticated} isHydrated={isHydrated}>
-                <div className="flex items-center justify-center h-64">
-                    <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                </div>
+                <RecruitPageSkeleton />
             </PageShell>
         )
     }
@@ -493,7 +492,7 @@ export default function CandidateJobDetailPage() {
 
     return (
         <PageShell isAuthenticated={isAuthenticated} isHydrated={isHydrated}>
-            <div className="space-y-6 max-w-7xl mx-auto">
+            <div className="space-y-6 mx-auto">
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                     <Link href={isAuthenticated ? "/recruitment/candidate/jobs" : "/recruitment/jobs"}>
                         <Button variant="outline">

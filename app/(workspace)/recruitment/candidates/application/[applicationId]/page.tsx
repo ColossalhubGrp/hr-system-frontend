@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useEffect, useState } from "react"
 import { useParams, useRouter } from "next/navigation"
@@ -208,9 +209,7 @@ export default function CandidateApplicationPage() {
     if (loading) {
         return (
             <MainLayout>
-                <div className="flex items-center justify-center h-40">
-                <div className="w-9 h-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                </div>
+                <RecruitPageSkeleton />
             </MainLayout>
         )
     }

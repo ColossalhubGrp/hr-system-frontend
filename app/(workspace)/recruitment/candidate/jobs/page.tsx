@@ -300,7 +300,7 @@ export default function CandidateJobsPage() {
 
     return (
         <MainLayout>
-            <div className="mx-auto w-full max-w-7xl space-y-6">
+            <div className="mx-auto w-full space-y-6">
                 {/* Header */}
                 <div className="flex flex-wrap items-end justify-between gap-3">
                     <div className="min-w-0">

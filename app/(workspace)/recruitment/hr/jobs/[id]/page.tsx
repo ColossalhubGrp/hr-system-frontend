@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { useEffect, useState } from "react"
 import { useRouter, useParams } from "next/navigation"
@@ -557,9 +558,7 @@ function HrJobDetailPage() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-40">
-          <div className="w-9 h-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-        </div>
+        <RecruitPageSkeleton />
       </MainLayout>
     )
   }
@@ -577,7 +576,7 @@ function HrJobDetailPage() {
 
   return (
     <MainLayout>
-      <div className="mx-auto max-w-7xl space-y-6 pb-20">
+      <div className="space-y-6 pb-20">
         {/* Top bar */}
         <div className="flex items-center justify-between">
           <Link
@@ -880,9 +879,7 @@ function HrJobDetailPage() {
 
           <div className="p-5">
             {loadingApplicants ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-              </div>
+              <RecruitPageSkeleton />
             ) : (
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <div className="overflow-x-auto">

@@ -1,4 +1,5 @@
 "use client"
+import { RecruitPageSkeleton } from "@/components/recruitment/recruit-skeleton"
 
 import { Suspense, useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
@@ -557,9 +558,7 @@ export default function UploadCVPage() {
         <Suspense
             fallback={
                 <MainLayout>
-                    <div className="flex h-64 items-center justify-center">
-                        <div className="h-9 w-9 rounded-full border-2 border-[#034078] border-t-transparent animate-spin" />
-                    </div>
+                    <RecruitPageSkeleton />
                 </MainLayout>
             }
         >

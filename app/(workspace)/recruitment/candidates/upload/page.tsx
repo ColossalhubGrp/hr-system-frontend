@@ -253,7 +253,7 @@ function UploadCVContent() {
                 }
             })
 
-            xhr.addEventListener("load", () => {
+            xhr.addEventListener("load", async () => {
                 if (xhr.status === 200) {
                     try {
                         const uploadResult = JSON.parse(xhr.responseText)
@@ -262,11 +262,15 @@ function UploadCVContent() {
                             reject(new Error("File upload failed (no file_url returned)"))
                             return
                         }
-                        // Frappe's upload_file already attaches the CV to the
-                        // Candidate Application's `cv_attachment` field (via
-                        // attached_to_field). The old follow-up set_value ran
-                        // full validation/permission checks and threw, failing
-                        // every upload even though the file itself uploaded.
+                        // Attach the uploaded CV to the application and start
+                        // parsing. Uses a backend method (raw db.set_value) —
+                        // the old frappe.client.set_value was blocked by
+                        // validation/permission and left cv_attachment empty,
+                        // so every CV went unparsed.
+                        await apiClient.apiCall(
+                            "recruitment_app.api.candidate_applications.set_cv_and_parse",
+                            { application_id: appName, file_url },
+                        )
                         resolve({ success: true })
                     } catch (e) {
                         reject(

@@ -1,6 +1,14 @@
-import { openai } from "@ai-sdk/openai"
+import { createOpenAI } from "@ai-sdk/openai"
 import { streamText } from "ai"
 import { NextRequest } from "next/server"
+
+// DeepSeek exposes an OpenAI-compatible API, so we drive it through the
+// OpenAI provider with a custom base URL + the DEEPSEEK_API_KEY env var —
+// the same provider the rest of the stack uses (no OpenAI key required).
+const deepseek = createOpenAI({
+    baseURL: "https://api.deepseek.com",
+    apiKey: process.env.DEEPSEEK_API_KEY,
+})
 
 export async function POST(request: NextRequest) {
     try {
@@ -14,8 +22,15 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        if (!process.env.DEEPSEEK_API_KEY) {
+            return Response.json(
+                { error: "AI generation isn't configured yet (DEEPSEEK_API_KEY is missing)." },
+                { status: 503 }
+            )
+        }
+
         const result = await streamText({
-            model: openai("gpt-4"),
+            model: deepseek.chat("deepseek-chat"),
             temperature: 0.5,
             messages: [
                 {

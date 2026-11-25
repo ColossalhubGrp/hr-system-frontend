@@ -14,6 +14,12 @@ type AnalyzeResponse = {
   plan: unknown | null;
   refused: boolean;
   refusal_reason: string | null;
+  // Passed straight through to the page; the client types it fully in
+  // components/analytics/types.ts. Declared loosely here so the route
+  // doesn't need to re-model the whole draft shape.
+  define_measure?: unknown;
+  clarification?: unknown;
+  multi?: unknown;
   data:
     | {
         columns: string[];

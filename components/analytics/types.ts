@@ -148,6 +148,39 @@ export interface Clarification {
 }
 
 /**
+ * The confirmation-ready proposal for a measure the catalog doesn't
+ * have yet. When the planner hits an undefined measure, the backend
+ * drafts how to compute it from the tenant's own data (`draft`) — or,
+ * when the data genuinely isn't there, sets can_map=false with a plain
+ * `reason`. `can_define` is whether THIS user may save it (editor roles)
+ * vs. just being told an admin can add it.
+ */
+export interface MeasureDraft {
+  title: string;
+  description: string;
+  plain_explanation: string;
+  computation_type: "simple" | "sql" | string;
+  format: string;
+  unit: string;
+  higher_is_better: boolean;
+  base_filters: string | null;
+  source_doctype: string | null;
+  aggregation: string | null;
+  aggregation_field: string | null;
+  custom_sql: string | null;
+  suggested_domain: string | null;
+}
+
+export interface DefineMeasure {
+  phrase: string;
+  restated_question: string;
+  can_map: boolean;
+  reason: string;
+  draft: MeasureDraft | null;
+  can_define: boolean;
+}
+
+/**
  * One (plan, data, viz) triple in a multi-metric answer. The combo
  * chart renderer aligns two of these on their shared dimension.
  */
@@ -167,6 +200,7 @@ export interface AnalyzeResponse {
   refused: boolean;
   refusal_reason: string | null;
   clarification: Clarification | null;
+  define_measure: DefineMeasure | null;
   data: AnalyzeData | null;
   viz: VizSpec | null;
   multi: MultiPayload | null;
@@ -186,6 +220,7 @@ export type Turn =
       refused: boolean;
       refusal_reason: string | null;
       clarification: Clarification | null;
+      define_measure: DefineMeasure | null;
       narrative: string | null;
       data: AnalyzeData | null;
       viz: VizSpec | null;

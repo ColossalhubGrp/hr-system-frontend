@@ -18,6 +18,7 @@ import { SaveToDashboardModal } from "./dashboards/save-to-dashboard-modal";
 import { MultiMetricRenderer } from "./multi-metric-renderer";
 import { CalculationTrace } from "./calculation-trace";
 import { FollowupChips } from "./followup-chips";
+import { DefineMeasureCard } from "./define-measure-card";
 import type { AnalyzeResponse, Turn } from "./types";
 
 /**
@@ -98,6 +99,7 @@ export function AnalyticsAsk({ initialQuestion }: { initialQuestion?: string }) 
           refused: data.refused,
           refusal_reason: data.refusal_reason,
           clarification: data.clarification,
+          define_measure: data.define_measure ?? null,
           narrative: data.narrative,
           data: data.data,
           viz: data.viz,
@@ -267,9 +269,10 @@ function PendingTurn() {
 
 function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant" }>; onAsk: (q: string) => void }) {
   const [saveOpen, setSaveOpen] = useState(false);
-  // Save-to-dashboard applies to any answered turn — refused +
-  // clarification turns don't have anything to save.
-  const canSave = !turn.refused && !turn.clarification && !!turn.question;
+  // Save-to-dashboard applies to any answered turn — refused,
+  // clarification, and define-measure turns don't have anything to save.
+  const canSave =
+    !turn.refused && !turn.clarification && !turn.define_measure && !!turn.question;
   return (
     <div className="flex items-start gap-3">
       <span className="mt-0.5 grid h-8 w-8 flex-shrink-0 place-items-center rounded-full bg-primary/15 text-primary">
@@ -280,6 +283,8 @@ function AssistantTurn({ turn, onAsk }: { turn: Extract<Turn, { role: "assistant
           <RefusalCard reason={turn.refusal_reason} />
         ) : turn.clarification ? (
           <ClarificationCard clarification={turn.clarification} onPick={onAsk} />
+        ) : turn.define_measure ? (
+          <DefineMeasureCard define={turn.define_measure} onAsk={onAsk} />
         ) : (
           <>
             <div className="prose prose-sm max-w-none text-sm text-foreground">
@@ -465,6 +470,7 @@ function refusedAssistantTurn(question: string, reason: string): Turn {
     refused: true,
     refusal_reason: reason,
     clarification: null,
+    define_measure: null,
     narrative: null,
     data: null,
     viz: null,

@@ -253,7 +253,7 @@ function UploadCVContent() {
                 }
             })
 
-            xhr.addEventListener("load", async () => {
+            xhr.addEventListener("load", () => {
                 if (xhr.status === 200) {
                     try {
                         const uploadResult = JSON.parse(xhr.responseText)
@@ -262,15 +262,19 @@ function UploadCVContent() {
                             reject(new Error("File upload failed (no file_url returned)"))
                             return
                         }
-                        await apiClient.apiCall("frappe.client.set_value", {
-                            doctype: "Candidate Application",
-                            name: appName,
-                            fieldname: "cv_attachment",
-                            value: file_url,
-                        })
+                        // Frappe's upload_file already attaches the CV to the
+                        // Candidate Application's `cv_attachment` field (via
+                        // attached_to_field). The old follow-up set_value ran
+                        // full validation/permission checks and threw, failing
+                        // every upload even though the file itself uploaded.
                         resolve({ success: true })
-                    } catch {
-                        reject(new Error("Failed to process upload response"))
+                    } catch (e) {
+                        reject(
+                            new Error(
+                                "Failed to process upload response: " +
+                                    ((e as Error)?.message || "unknown"),
+                            ),
+                        )
                     }
                 } else {
                     reject(new Error(`Upload failed with status ${xhr.status}`))

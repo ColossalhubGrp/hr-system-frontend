@@ -98,6 +98,10 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
   }
 
   const handleCreateJob = async () => {
+    if (!newJob.job_title.trim()) {
+      toast.error("Please enter a job title.")
+      return
+    }
     try {
       const response = await apiClient.createJobPosting({
         ...newJob,
@@ -105,6 +109,17 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
           ? parseInt(newJob.experience_min_years)
           : undefined,
       })
+
+      // The backend returns {success:false, error} on a mandatory/validation
+      // failure WITHOUT throwing — check it so we don't silently close the
+      // dialog and make it look like nothing happened.
+      if (!response?.success) {
+        toast.error(
+          (response as { error?: string })?.error ||
+            "Couldn't create the job posting. Check the required fields and try again.",
+        )
+        return
+      }
 
       // Extract the job name from the API response
       const jobName = response?.name;

@@ -614,10 +614,17 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
                 <Input
                   id="experience"
                   type="number"
+                  min={0}
                   value={newJob.experience_min_years}
-                  onChange={(e) =>
-                    setNewJob({ ...newJob, experience_min_years: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const v = e.target.value
+                    // Years can't be negative — clamp to >= 0 (and whole).
+                    setNewJob({
+                      ...newJob,
+                      experience_min_years:
+                        v === "" ? "" : String(Math.max(0, Math.floor(Number(v)) || 0)),
+                    })
+                  }}
                   placeholder="5"
                 />
               </div>
@@ -709,13 +716,16 @@ export function JobsClient({ initial }: { initial: JobPosting[] }) {
                   <Input
                     id="edit_experience"
                     type="number"
+                    min={0}
                     value={editingJob.experience_min_years || ""}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const v = e.target.value
                       setEditingJob({
                         ...editingJob,
-                        experience_min_years: e.target.value ? parseInt(e.target.value) : undefined
+                        experience_min_years:
+                          v === "" ? undefined : Math.max(0, Math.floor(Number(v)) || 0),
                       })
-                    }
+                    }}
                     placeholder="5"
                   />
                 </div>
